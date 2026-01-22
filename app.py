@@ -1,262 +1,400 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Semiconductor News Crawler</title>
+import streamlit as st
+import pandas as pd
+import requests
+import urllib3
+from urllib.parse import quote
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta, date
+import time
+import random
+import json
+import os
+
+# Selenium & Webdriver Manager
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+
+# ==========================================
+# 0. 설정 및 CSS 스타일링 (공백 최소화, 폰트 조정)
+# ==========================================
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+st.set_page_config(layout="wide", page_title="Semiconductor News Crawler")
+
+# [CSS 수정] 상단 공백 최소화 및 폰트 사이즈 조절
+st.markdown("""
     <style>
-        /* 1. 상단 공백 최소화 및 폰트 사이즈 감소 */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;            /* 페이지 전체 여백 제거 */
-            padding: 10px;        /* 최소한의 내부 여백 */
-            font-size: 13px;      /* 전체 폰트 사이즈 축소 */
-            color: #333;
+        /* 메인 컨테이너 상단 패딩 줄이기 */
+        .block-container {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
         }
-
+        /* 전체 폰트 사이즈 약간 축소 (90%) */
+        html, body, [class*="css"] {
+            font-size: 0.95rem;
+        }
+        /* 제목(H1) 크기 조절 */
         h1 {
-            color: #0056b3;
-            margin-top: 0;        /* 제목 위 공백 제거 */
-            margin-bottom: 10px;
-            font-size: 1.4rem;    /* 제목 크기 조정 */
-            text-align: center;
+            font-size: 1.8rem !important;
+            margin-bottom: 0.5rem !important;
         }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            padding: 15px;        /* 컨테이너 내부 여백 축소 */
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        /* 부제목(H3) 크기 조절 */
+        h3 {
+            font-size: 1.3rem !important;
+            padding-top: 0.5rem !important;
         }
-
-        /* 입력창 및 버튼 스타일 */
-        .input-group {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 10px;
-            justify-content: center;
-        }
-
-        input[type="text"] {
-            padding: 5px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 250px;
-            font-size: 13px;
-        }
-
-        button {
-            padding: 5px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: background 0.3s;
-        }
-
-        .btn-add { background-color: #28a745; color: white; }
-        .btn-crawl { background-color: #007bff; color: white; }
-        .btn-add:hover { background-color: #218838; }
-        .btn-crawl:hover { background-color: #0069d9; }
-
-        /* 키워드 태그 스타일 */
-        .keyword-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-bottom: 15px;
-            justify-content: center;
-        }
-
-        .keyword-tag {
-            background-color: #e9ecef;
-            color: #495057;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            border: 1px solid #ced4da;
-        }
-
-        .keyword-tag span {
-            margin-left: 6px;
-            cursor: pointer;
-            color: #dc3545;
-            font-weight: bold;
-        }
-
-        /* 결과 테이블 스타일 (간격 축소) */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 12px; /* 테이블 폰트 더 축소 */
-        }
-        th, td {
-            padding: 6px 8px; /* 셀 간격 축소 */
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        th { background-color: #f8f9fa; }
-        
-        /* 2. 하단 서명 (Made by LSH) */
-        .footer-signature {
-            position: fixed;   /* 화면에 고정 */
-            bottom: 5px;       /* 하단에서 5px 위 */
-            left: 5px;         /* 좌측에서 5px 오른쪽 */
-            font-size: 8px;    /* 요청하신 폰트 사이즈 8 */
-            color: #888;
-            font-style: italic;
-            z-index: 100;      /* 다른 요소 위에 표시 */
+        /* Made by LSH 푸터 스타일 (사이드바 하단 고정) */
+        .sidebar-footer {
+            position: fixed;
+            bottom: 10px;
+            left: 20px;
+            font-size: 8px;
+            color: #888888;
+            z-index: 999;
         }
     </style>
-</head>
-<body>
+""", unsafe_allow_html=True)
 
-    <div class="container">
-        <h1>Semiconductor News Crawler</h1>
+CATEGORIES = [
+    "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
+    "Process Gas", "Precursor", "Metal target", "Wafer"
+]
 
-        <div class="input-group">
-            <input type="text" id="keywordInput" placeholder="키워드 입력 (예: HBM, Photoresist)">
-            <button class="btn-add" onclick="addKeyword()">키워드 추가</button>
-            <button class="btn-crawl" onclick="startCrawl()">뉴스 검색 시작</button>
-        </div>
+# ==========================================
+# 1. 키워드 저장/로드 함수 (JSON 파일 활용)
+# ==========================================
+KEYWORD_FILE = 'keywords.json'
 
-        <div class="keyword-container" id="keywordList"></div>
+def load_keywords():
+    """파일에서 키워드를 불러오거나 기본값 반환"""
+    if os.path.exists(KEYWORD_FILE):
+        try:
+            with open(KEYWORD_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            pass # 파일 읽기 실패 시 기본값 사용
+    
+    # 기본 키워드 (초기값)
+    return {cat: [] for cat in CATEGORIES}
 
-        <div id="resultArea">
-            </div>
-    </div>
+def save_keywords(keywords_dict):
+    """키워드 변경 시 파일에 저장"""
+    try:
+        with open(KEYWORD_FILE, 'w', encoding='utf-8') as f:
+            json.dump(keywords_dict, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        st.error(f"키워드 저장 실패: {e}")
 
-    <div class="footer-signature">Made by LSH</div>
+# 세션 상태 초기화 (저장된 키워드 불러오기)
+if 'keywords' not in st.session_state:
+    st.session_state.keywords = load_keywords()
 
-    <script>
-        // 페이지 로드 시 저장된 키워드 불러오기
-        document.addEventListener('DOMContentLoaded', () => {
-            loadKeywords();
+if 'news_data' not in st.session_state:
+    st.session_state.news_data = {cat: [] for cat in CATEGORIES}
+
+if 'last_update' not in st.session_state:
+    st.session_state.last_update = None
+
+# ==========================================
+# 2. 크롤링 엔진
+# ==========================================
+def get_headers():
+    user_agents = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36'
+    ]
+    return {'User-Agent': random.choice(user_agents)}
+
+def parse_date(date_str):
+    try:
+        return pd.to_datetime(date_str).to_pydatetime()
+    except:
+        return datetime.now()
+
+def crawl_ijiwei(keyword, debug_mode=False):
+    results = []
+    base_url = f"https://www.ijiwei.com/search?keyword={quote(keyword)}"
+    
+    if debug_mode:
+        st.markdown(f"**[Ijiwei]** 접속 시도: `{base_url}`")
+
+    chrome_options = Options()
+    chrome_options.add_argument("--headless") 
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36")
+    
+    driver = None
+    try:
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver.get(base_url)
+        
+        try:
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "search-item"))
+            )
+        except:
+            time.sleep(2)
+        
+        if debug_mode:
+            st.image(driver.get_screenshot_as_png(), caption=f"Ijiwei 화면 캡처: {keyword}", width=400)
             
-            // 엔터키 입력 시 키워드 추가 기능
-            document.getElementById("keywordInput").addEventListener("keypress", function(event) {
-                if (event.key === "Enter") {
-                    addKeyword();
-                }
-            });
-        });
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        
+        articles = soup.find_all('div', class_='search-item')
+        if not articles:
+             articles = soup.find_all('li', class_='news-item')
+        
+        if debug_mode:
+            st.write(f"👉 **[Ijiwei]** 발견된 태그 수: {len(articles)}개")
 
-        // 키워드 추가 함수
-        function addKeyword() {
-            const input = document.getElementById('keywordInput');
-            const keyword = input.value.trim();
+        for item in articles:
+            try:
+                title_tag = item.find('a', class_='title')
+                date_tag = item.find('span', class_='date')
+                
+                if title_tag:
+                    title = title_tag.get_text(strip=True)
+                    link = title_tag['href']
+                    if not link.startswith('http'):
+                        link = "https://www.ijiwei.com" + link
+                    date_str = date_tag.get_text(strip=True) if date_tag else str(datetime.now().date())
+                    
+                    results.append({
+                        'Title': title,
+                        'Source': 'Ijiwei (China)',
+                        'Date': parse_date(date_str),
+                        'Link': link,
+                        'Keyword': keyword
+                    })
+            except Exception:
+                continue
+    except Exception as e:
+        if debug_mode:
+            st.error(f"[Ijiwei Error] {e}")
+        print(f"Ijiwei Selenium error: {e}")
+    finally:
+        if driver:
+            driver.quit()
+    return results
 
-            if (keyword) {
-                // 이미 있는 키워드인지 확인
-                const currentKeywords = getKeywordsFromStorage();
-                if (!currentKeywords.includes(keyword)) {
-                    createKeywordElement(keyword);
-                    saveKeywordToStorage(keyword);
-                } else {
-                    alert('이미 등록된 키워드입니다.');
-                }
-                input.value = ''; // 입력창 초기화
-            }
-        }
+def crawl_google_news(keyword, country_code, language, debug_mode=False):
+    results = []
+    base_url = f"https://news.google.com/rss/search?q={quote(keyword)}&hl={language}&gl={country_code}&ceid={country_code}:{language}"
+    
+    if debug_mode:
+        st.write(f"📡 **[Google-{country_code}]** 요청 URL: `{base_url}`")
 
-        // 화면에 키워드 태그 생성
-        function createKeywordElement(text) {
-            const list = document.getElementById('keywordList');
-            const div = document.createElement('div');
-            div.className = 'keyword-tag';
-            // 텍스트와 삭제 버튼(X) 구성
-            div.innerHTML = `${text} <span onclick="removeKeyword(this, '${text}')">×</span>`;
-            list.appendChild(div);
-        }
-
-        // 키워드 삭제 함수
-        function removeKeyword(element, text) {
-            // 화면에서 제거
-            element.parentElement.remove();
-            // 저장소에서 제거
-            removeKeywordFromStorage(text);
-        }
-
-        // --- LocalStorage 관리 (저장/불러오기) ---
-
-        function getKeywordsFromStorage() {
-            const stored = localStorage.getItem('myKeywords');
-            return stored ? JSON.parse(stored) : [];
-        }
-
-        function saveKeywordToStorage(keyword) {
-            const keywords = getKeywordsFromStorage();
-            keywords.push(keyword);
-            localStorage.setItem('myKeywords', JSON.stringify(keywords));
-        }
-
-        function removeKeywordFromStorage(keywordToDelete) {
-            let keywords = getKeywordsFromStorage();
-            keywords = keywords.filter(k => k !== keywordToDelete);
-            localStorage.setItem('myKeywords', JSON.stringify(keywords));
-        }
-
-        function loadKeywords() {
-            const keywords = getKeywordsFromStorage();
-            keywords.forEach(keyword => {
-                createKeywordElement(keyword);
-            });
-        }
-
-        // --- 크롤링 요청 (Python 연동) ---
-        async function startCrawl() {
-            const keywords = getKeywordsFromStorage();
+    try:
+        response = requests.get(base_url, headers=get_headers(), timeout=10, verify=False)
+        
+        soup = BeautifulSoup(response.content, 'xml')
+        items = soup.find_all('item')
+        
+        if debug_mode:
+            st.write(f"👉 발견된 기사 수: {len(items)}개")
+        
+        for item in items:
+            title = item.title.text
+            link = item.link.text
+            pub_date = item.pubDate.text
+            source = item.source.text if item.source else "Google News"
             
-            if (keywords.length === 0) {
-                alert("키워드를 하나 이상 추가해주세요.");
-                return;
-            }
+            results.append({
+                'Title': title,
+                'Source': f"{source} ({country_code})",
+                'Date': parse_date(pub_date),
+                'Link': link,
+                'Keyword': keyword
+            })
+    except Exception as e:
+        if debug_mode:
+            st.error(f"[Google Error] {e}")
+    return results
 
-            const resultArea = document.getElementById('resultArea');
-            resultArea.innerHTML = '<p style="text-align:center;">🔍 뉴스를 검색 중입니다...</p>';
+def perform_crawling(category, start_date, end_date, debug_mode):
+    keywords = st.session_state.keywords[category]
+    collected_data = []
+    
+    start_dt = datetime.combine(start_date, datetime.min.time())
+    end_dt = datetime.combine(end_date, datetime.max.time())
+    
+    progress_bar = st.progress(0)
+    
+    if not keywords:
+        st.warning("등록된 키워드가 없습니다.")
+        return
 
-            try {
-                // app.py의 /crawl 엔드포인트로 키워드 전송
-                const response = await fetch('/crawl', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ keywords: keywords }),
-                });
+    total_steps = len(keywords) * 4
+    step = 0
+    
+    status_text = st.empty()
 
-                const data = await response.json();
-                
-                // 결과 테이블 렌더링 (예시)
-                let html = '<table><thead><tr><th>Source</th><th>Title</th><th>Link</th></tr></thead><tbody>';
-                
-                // 데이터가 비어있을 경우 처리
-                if (!data.results || data.results.length === 0) {
-                     resultArea.innerHTML = '<p style="text-align:center;">검색 결과가 없습니다.</p>';
-                     return;
-                }
+    for kw in keywords:
+        status_text.text(f"🔍 '{kw}' 검색 중... (Ijiwei)")
+        collected_data.extend(crawl_ijiwei(kw, debug_mode))
+        step += 1; progress_bar.progress(step / total_steps)
+        
+        status_text.text(f"🔍 '{kw}' 검색 중... (Korea)")
+        collected_data.extend(crawl_google_news(kw, 'KR', 'ko', debug_mode))
+        step += 1; progress_bar.progress(step / total_steps)
+        
+        status_text.text(f"🔍 '{kw}' 검색 중... (USA)")
+        collected_data.extend(crawl_google_news(kw, 'US', 'en', debug_mode))
+        step += 1; progress_bar.progress(step / total_steps)
+        
+        status_text.text(f"🔍 '{kw}' 검색 중... (Japan)")
+        collected_data.extend(crawl_google_news(kw, 'JP', 'ja', debug_mode))
+        step += 1; progress_bar.progress(step / total_steps)
+        
+    progress_bar.empty()
+    status_text.empty()
+    
+    total_found = len(collected_data)
+    
+    df = pd.DataFrame(collected_data)
+    if not df.empty:
+        df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
+        filtered_count = len(df)
+        
+        if debug_mode:
+            st.info(f"📊 **통계 리포트**\n\n- 전체 수집된 기사: {total_found}개\n- 날짜 필터({start_date}~{end_date}) 후: {filtered_count}개")
 
-                data.results.forEach(item => {
-                    html += `<tr>
-                        <td>${item.source}</td>
-                        <td>${item.title}</td>
-                        <td><a href="${item.link}" target="_blank">Link</a></td>
-                    </tr>`;
-                });
-                html += '</tbody></table>';
-                resultArea.innerHTML = html;
+        df = df.sort_values(by='Date', ascending=False)
+        df = df.head(50)
+        st.session_state.news_data[category] = df.to_dict('records')
+    else:
+        if debug_mode:
+            st.warning("수집된 데이터가 0건입니다.")
+        st.session_state.news_data[category] = []
 
-            } catch (error) {
-                console.error('Error:', error);
-                resultArea.innerHTML = '<p style="text-align:center; color:red;">오류가 발생했습니다.</p>';
-            }
-        }
-    </script>
-</body>
-</html>
+# ==========================================
+# 3. UI 레이아웃
+# ==========================================
+
+with st.sidebar:
+    st.header("📂 Categories")
+    selected_category = st.radio("항목을 선택하세요:", CATEGORIES)
+    
+    st.divider()
+    
+    st.subheader("🛠️ Debug Tools")
+    debug_mode = st.checkbox("🐞 디버깅 모드 활성화", value=False)
+    
+    st.divider()
+    st.info("""
+    💡 **검색 팁:**
+    - `Samsung HBM` (AND)
+    - `Samsung OR TSMC` (OR)
+    """)
+    
+    # [수정] 하단 "Made by LSH" 문구 추가
+    st.markdown("<div class='sidebar-footer'>Made by LSH</div>", unsafe_allow_html=True)
+
+col_title, col_btn = st.columns([4, 1])
+with col_title:
+    st.title(f"{selected_category} News")
+
+with col_btn:
+    st.write("") 
+    update_clicked = st.button("🔄 Update News", type="primary")
+
+st.divider()
+
+st.subheader("⚙️ Search Settings & Keywords")
+col_settings, col_keywords = st.columns([1, 1.5])
+
+with col_settings:
+    st.markdown("##### 📅 수집 기간 설정")
+    period_option = st.radio(
+        "기간 선택",
+        ["1개월", "3개월", "6개월", "기간지정"],
+        horizontal=True
+    )
+    
+    today = datetime.now().date()
+    start_date = today
+    end_date = today
+    
+    if period_option == "1개월":
+        start_date = today - timedelta(days=30)
+    elif period_option == "3개월":
+        start_date = today - timedelta(days=90)
+    elif period_option == "6개월":
+        start_date = today - timedelta(days=180)
+    elif period_option == "기간지정":
+        date_range = st.date_input("시작일 - 종료일 선택", (today - timedelta(days=7), today), max_value=today)
+        if len(date_range) == 2:
+            start_date, end_date = date_range
+        else:
+            start_date = date_range[0]; end_date = start_date
+
+with col_keywords:
+    st.markdown("##### 🔑 키워드 관리")
+    c_input, c_add = st.columns([3, 1])
+    with c_input:
+        new_keyword = st.text_input("새 키워드 입력", key="new_kw_input")
+    with c_add:
+        if st.button("추가", use_container_width=True):
+            if new_keyword and new_keyword not in st.session_state.keywords[selected_category]:
+                st.session_state.keywords[selected_category].append(new_keyword)
+                # [수정] 키워드 추가 시 파일 저장 호출
+                save_keywords(st.session_state.keywords)
+                st.rerun()
+
+    current_keywords = st.session_state.keywords[selected_category]
+    if current_keywords:
+        st.write("등록된 키워드:")
+        kw_cols = st.columns(4)
+        for i, kw in enumerate(current_keywords):
+            if kw_cols[i % 4].button(f"❌ {kw}", key=f"del_{kw}"):
+                st.session_state.keywords[selected_category].remove(kw)
+                # [수정] 키워드 삭제 시 파일 저장 호출
+                save_keywords(st.session_state.keywords)
+                st.rerun()
+    else:
+        st.caption("등록된 키워드가 없습니다.")
+
+# ==========================================
+# 4. 크롤링 실행
+# ==========================================
+if update_clicked:
+    if debug_mode:
+        st.warning("🐞 디버깅 모드가 켜져 있습니다. 상세 로그가 아래에 표시됩니다.")
+        
+    st.info(f"기간: {start_date} ~ {end_date} | 키워드 수: {len(current_keywords)}개")
+    
+    with st.spinner(f"'{selected_category}' 기사 수집 중..."):
+        perform_crawling(selected_category, start_date, end_date, debug_mode)
+        
+    st.session_state.last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    st.rerun()
+
+st.divider()
+
+if st.session_state.last_update:
+    st.caption(f"Last Updated: {st.session_state.last_update}")
+
+st.subheader(f"📰 Latest Articles")
+data = st.session_state.news_data.get(selected_category, [])
+
+if data:
+    df_display = pd.DataFrame(data)
+    df_display['Date'] = df_display['Date'].apply(lambda x: x.strftime('%Y-%m-%d %H:%M'))
+    
+    for index, row in df_display.iterrows():
+        with st.container():
+            st.markdown(f"**[{row['Title']}]({row['Link']})**")
+            st.caption(f"{row['Source']} | {row['Date']} | Keyword: {row['Keyword']}")
+            st.divider()
+else:
+    if st.session_state.last_update:
+        st.warning("해당 기간에 수집된 기사가 없습니다.")
+    else:
+        st.info("Update News 버튼을 눌러주세요.")
