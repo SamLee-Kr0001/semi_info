@@ -34,7 +34,7 @@ st.markdown("""
             padding-top: 1rem !important;
             padding-bottom: 1rem !important;
         }
-        /* 전체 폰트 사이즈 약간 축소 (90%) */
+        /* 전체 폰트 사이즈 약간 축소 (80%) */
         html, body, [class*="css"] {
             font-size: 0.95rem;
         }
@@ -53,7 +53,7 @@ st.markdown("""
             position: fixed;
             bottom: 10px;
             left: 20px;
-            font-size: 8px;
+            font-size: 10px;
             color: #888888;
             z-index: 999;
         }
