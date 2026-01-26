@@ -51,8 +51,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 CATEGORIES = [
-    "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
-    "Process Gas", "Precursor", "Metal target", "Wafer"
+    "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
+    "Process Gas", "Precursor", "Metal target", "Wafer", "기업정보"
 ]
 
 # ==========================================
@@ -82,63 +82,53 @@ if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] fo
 if 'last_update' not in st.session_state: st.session_state.last_update = None
 
 # ==========================================
-# 2. AI 필터링 엔진 (Google Gemini - Free)
+# 2. AI 필터링 엔진 (Google Gemini) - 프롬프트 강화
 # ==========================================
 def filter_with_gemini(articles, api_key):
-    """
-    Google Gemini API를 사용하여 반도체 관련성 검증
-    """
-    if not articles or not api_key:
-        return articles
-
+    if not articles or not api_key: return articles
     try:
-        # Gemini 설정
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
-
-        # 프롬프트 구성
-        titles = [f"{i+1}. {item['Title']} (Keyword: {item['Keyword']})" for i, item in enumerate(articles)]
-        titles_text = "\n".join(titles)
-
+        
+        # 제목만 보내면 판단이 어려울 수 있으므로 출처도 같이 보냄
+        titles = [f"{i+1}. [{item['Source']}] {item['Title']} (Search Keyword: {item['Keyword']})" for i, item in enumerate(articles)]
+        
         prompt = f"""
-        You are an expert editor in the Semiconductor industry.
-        Filter out news titles that are NOT related to semiconductor technology/manufacturing.
+        You are a highly skilled editor for a Semiconductor Market Intelligence report.
+        Your task is to review the following news list and identify strictly relevant articles.
 
-        Specific Rules:
-        1. 'TOK' means 'Tokyo Ohka Kogyo'. EXCLUDE 'TikTok', social media, or influencers.
-        2. 'Precursor' implies chemical materials, not general events.
-        3. EXCLUDE general stock buzz unless it mentions tech details.
+        Context:
+        - The user is interested in Semiconductor Manufacturing, Materials (Photoresist, Gas, etc.), and Tech.
+        - 'TOK' refers to 'Tokyo Ohka Kogyo'.
         
-        List of titles:
-        {titles_text}
-
-        OUTPUT FORMAT:
+        Filter Rules (Strict):
+        1. REJECT 'TikTok', 'Social Media', 'Music', 'Viral Video' related content immediately.
+        2. REJECT general stock market reports unless they specifically mention semiconductor technology or production capacity.
+        3. KEEP articles about new materials, fabs, yield, lithography, supply chain, and earnings of chip companies.
+        
+        Input Titles:
+        {"\n".join(titles)}
+        
+        Output Format:
         Return ONLY the numbers of the relevant articles separated by commas (e.g., 1, 3, 5).
-        If none are relevant, return 'None'.
-        Do not write any other text.
+        If no articles are relevant, return 'None'.
         """
-
-        # AI 요청
+        
         response = model.generate_content(prompt)
-        content = response.text
+        valid_indices = [int(num) - 1 for num in re.findall(r'\d+', response.text)]
         
-        # 결과 파싱
-        valid_indices = [int(num) - 1 for num in re.findall(r'\d+', content)]
-        
-        filtered_articles = []
+        filtered = []
         for idx in valid_indices:
             if 0 <= idx < len(articles):
                 articles[idx]['AI_Verified'] = True
-                filtered_articles.append(articles[idx])
-                
-        return filtered_articles
-
+                filtered.append(articles[idx])
+        return filtered
     except Exception as e:
-        st.error(f"Gemini AI Error: {e}")
+        st.error(f"AI Error: {e}")
         return articles
 
 # ==========================================
-# 3. 크롤링 엔진
+# 3. 크롤링 엔진 (Broad Search)
 # ==========================================
 def get_headers():
     return {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
@@ -156,6 +146,7 @@ def parse_date(date_str):
 
 def crawl_bing_china(keyword, debug_mode=False):
     results = []
+    # [수정] 강제 AND 제거 -> 원본 키워드로 검색 (검색 팁 활용 권장)
     search_query = f"site:ijiwei.com {keyword}"
     base_url = f"https://cn.bing.com/news/search?q={quote(search_query)}"
     
@@ -196,8 +187,11 @@ def crawl_bing_china(keyword, debug_mode=False):
 
 def crawl_google_news(keyword, country_code, language, debug_mode=False):
     results = []
+    # [수정] 강제 AND 조건 삭제. 사용자 입력 그대로 검색.
     base_url = f"https://news.google.com/rss/search?q={quote(keyword)}&hl={language}&gl={country_code}&ceid={country_code}:{language}"
-    if debug_mode: st.write(f"📡 [{country_code}] `{base_url}`")
+    
+    if debug_mode: st.write(f"📡 [{country_code}] Query: `{keyword}`")
+    
     try:
         response = requests.get(base_url, headers=get_headers(), timeout=5, verify=False)
         soup = BeautifulSoup(response.content, 'xml')
@@ -215,7 +209,6 @@ def perform_crawling(category, start_date, end_date, debug_mode, api_key):
     end_dt = datetime.combine(end_date, datetime.max.time())
     
     progress_bar = st.progress(0); status_text = st.empty()
-    
     if not keywords: st.warning("키워드가 없습니다."); return
 
     total_steps = len(keywords) * 4; step = 0
@@ -236,14 +229,18 @@ def perform_crawling(category, start_date, end_date, debug_mode, api_key):
     if not df.empty:
         df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
         df = df.sort_values(by='Date', ascending=False)
-        df = df.head(50) 
-        candidates = df.to_dict('records')
+        
+        # [중요] AI에게 보내기 전에 최대 70개까지 여유있게 확보 (노이즈 제거 후 남는 게 있도록)
+        candidates = df.head(70).to_dict('records')
     else: candidates = []
 
     if candidates and api_key:
-        status_text.text("🤖 Gemini AI가 'TikTok' 같은 노이즈를 제거 중입니다...")
+        status_text.text("🤖 Gemini AI가 내용을 분석하고 노이즈를 제거 중입니다...")
         final_data = filter_with_gemini(candidates, api_key)
-    else: final_data = candidates
+        
+        # 만약 AI 필터링 후 0개가 되면, 원본 중 상위 5개를 보여줄지 선택 가능 (여기선 0개 유지)
+    else:
+        final_data = candidates[:50] # 키 없으면 50개만
 
     progress_bar.empty(); status_text.empty()
     st.session_state.news_data[category] = final_data
@@ -257,20 +254,21 @@ with st.sidebar:
     st.divider()
     
     st.subheader("🤖 Gemini AI Filter")
-    
-    # [수정됨] Secrets에서 키 자동 로드 확인
     gemini_api_key = None
     if "GEMINI_API_KEY" in st.secrets:
         gemini_api_key = st.secrets["GEMINI_API_KEY"]
-        st.success("🔐 API Key 로드 완료 (Secrets)")
+        st.success("🔐 API Key 로드 완료")
     else:
-        # Secrets에 없으면 직접 입력
-        gemini_api_key = st.text_input("Google API Key", type="password", help="aistudio.google.com에서 무료 발급")
+        gemini_api_key = st.text_input("Google API Key", type="password")
         if not gemini_api_key: st.info("🔑 키를 입력하면 AI가 노이즈를 제거합니다.")
         
     st.divider()
-    st.subheader("🛠️ Debug")
-    debug_mode = st.checkbox("디버깅 모드", value=False)
+    st.info("""
+    **💡 노이즈 제거 팁 (입력 예시):**
+    - `TOK -TikTok` 
+    - `Resist -watch`
+    *(마이너스 기호로 불필요 단어 제외)*
+    """)
     st.markdown("<div class='sidebar-footer'>Made by LSH</div>", unsafe_allow_html=True)
 
 col_title, col_btn = st.columns([4, 1])
@@ -296,7 +294,7 @@ with col_set:
 with col_kw:
     st.markdown("##### 🔑 키워드 관리")
     c1, c2 = st.columns([3, 1])
-    new_kw = c1.text_input("입력", key="new_kw", label_visibility="collapsed", placeholder="TOK")
+    new_kw = c1.text_input("입력 (예: TOK -TikTok)", key="new_kw", label_visibility="collapsed")
     if c2.button("추가", use_container_width=True) and new_kw:
         if new_kw not in st.session_state.keywords.get(selected_category, []):
             st.session_state.keywords[selected_category].append(new_kw)
@@ -313,7 +311,7 @@ with col_kw:
                 st.rerun()
 
 if update_clicked:
-    perform_crawling(selected_category, start_date, end_date, debug_mode, gemini_api_key)
+    perform_crawling(selected_category, start_date, end_date, False, gemini_api_key)
     st.session_state.last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     st.rerun()
 
