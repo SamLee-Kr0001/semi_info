@@ -1,289 +1,367 @@
-from flask import Flask, render_template, jsonify, request
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+import streamlit as st
+import pandas as pd
+import requests
+import urllib3
+from urllib.parse import quote
 from bs4 import BeautifulSoup
-from deep_translator import GoogleTranslator
-import feedparser
+from datetime import datetime, timedelta
 import time
+import random
 import json
 import os
-import sys
-import urllib.parse
-from datetime import datetime, timedelta
 import re
 
-app = Flask(__name__)
+# Selenium (Bing 검색용)
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 
-# --- 설정 및 경로 ---
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_FILE = os.path.join(BASE_DIR, 'keywords.json')
-DRIVER_PATH = os.path.join(BASE_DIR, 'chromedriver.exe')
+# ==========================================
+# 0. 설정 및 CSS
+# ==========================================
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# 데이터 캐시 (서버 메모리에 임시 저장)
-NEWS_CACHE = {}
+st.set_page_config(layout="wide", page_title="Semiconductor News Crawler")
 
-# 초기 데이터 구조 (기업 정보 포함)
-DEFAULT_DATA = {
-    'info': {'name': "반도체 정보 & 이슈", 'keywords': []},
-    'pr': {'name': "Photoresist (PR)", 'keywords': []},
-    'wet': {'name': "Wet Chemical", 'keywords': []},
-    'slurry': {'name': "CMP Slurry", 'keywords': []},
-    'wafer': {'name': "Wafer", 'keywords': []},
-    'company': {'name': "기업 정보", 'keywords': []} 
-}
+st.markdown("""
+    <style>
+        .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+        html, body, [class*="css"] { font-size: 0.95rem; }
+        h1 { font-size: 1.8rem !important; margin-bottom: 0.5rem !important; }
+        .sidebar-footer { position: fixed; bottom: 10px; left: 20px; font-size: 8px; color: #888888; z-index: 999; }
+        a { text-decoration: none; color: #0366d6; }
+        a:hover { text-decoration: underline; }
+    </style>
+""", unsafe_allow_html=True)
 
-# --- DB 관리 (자동 병합 기능) ---
-def save_db(data):
-    with open(DB_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+# [요청 반영] '기업정보' 포함 카테고리
+CATEGORIES = [
+    "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
+    "Process Gas", "Precursor", "Metal target", "Wafer"
+]
 
-def load_db():
-    if not os.path.exists(DB_FILE):
-        with open(DB_FILE, 'w', encoding='utf-8') as f:
-            json.dump(DEFAULT_DATA, f, ensure_ascii=False, indent=4)
-        return DEFAULT_DATA
+# ==========================================
+# 1. 키워드 관리 (JSON 저장)
+# ==========================================
+KEYWORD_FILE = 'keywords.json'
 
-    with open(DB_FILE, 'r', encoding='utf-8') as f:
+def load_keywords():
+    if os.path.exists(KEYWORD_FILE):
         try:
-            data = json.load(f)
+            with open(KEYWORD_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
         except:
-            return DEFAULT_DATA
-    
-    # 새 카테고리(예: company)가 파일에 없으면 자동 추가
-    is_modified = False
-    for key, val in DEFAULT_DATA.items():
-        if key not in data:
-            data[key] = val
-            is_modified = True
-    
-    if is_modified:
-        save_db(data)
-    
-    return data
+            pass
+    return {cat: [] for cat in CATEGORIES}
 
-# --- 날짜 파싱 및 표준화 ---
-def parse_date(date_str):
-    """ 문자열 날짜를 datetime 객체로 변환 """
-    if not date_str: return datetime.min
-    now = datetime.now()
-    date_str = str(date_str).strip()
-    
+def save_keywords(keywords_dict):
     try:
-        # 1. 상대 시간 (분/시간/일 전)
-        numbers = re.findall(r'\d+', date_str)
-        if numbers and any(x in date_str for x in ['분', 'min', 'm', '分钟', '시간', 'hour', 'h', '小时', '일', 'day', 'd', '天']):
-            val = int(numbers[0])
-            if any(x in date_str for x in ['분', 'min', 'm', '分钟']): return now - timedelta(minutes=val)
-            if any(x in date_str for x in ['시간', 'hour', 'h', '小时']): return now - timedelta(hours=val)
-            if any(x in date_str for x in ['일', 'day', 'd', '天']): return now - timedelta(days=val)
-
-        # 2. 절대 날짜
-        clean_str = date_str.replace('年', '-').replace('月', '-').replace('日', '').strip()
-        for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d', '%y-%m-%d', '%d %b %Y'):
-            try: return datetime.strptime(clean_str, fmt)
-            except: continue
-    except: pass
-    
-    # 파싱 실패 시 정렬에서 뒤로 밀리도록 처리
-    return datetime.min
-
-# --- 키워드 번역 (한글 -> 중문) ---
-def translate_keywords(keywords):
-    cn_keywords = []
-    if not keywords: return []
-    try:
-        translator = GoogleTranslator(source='auto', target='zh-CN')
-        for k in keywords[:5]: 
-            cn_k = translator.translate(k)
-            cn_keywords.append(cn_k)
+        with open(KEYWORD_FILE, 'w', encoding='utf-8') as f:
+            json.dump(keywords_dict, f, ensure_ascii=False, indent=4)
     except:
-        return keywords 
-    return cn_keywords
+        pass
 
-# --- [핵심] 통합 크롤러 ---
-def get_news_via_selenium(keywords):
-    if not os.path.exists(DRIVER_PATH):
-        print("[Error] chromedriver.exe가 없습니다.")
-        return []
-    if not keywords: return []
+if 'keywords' not in st.session_state:
+    st.session_state.keywords = load_keywords()
+if 'news_data' not in st.session_state:
+    st.session_state.news_data = {cat: [] for cat in CATEGORIES}
+if 'last_update' not in st.session_state:
+    st.session_state.last_update = None
 
-    print("\n[System] 크롤링 시작 (Google, Baidu, OFweek)...")
-    cn_keywords = translate_keywords(keywords)
-    limit_date = datetime.now() - timedelta(days=180) # 6개월 제한
+# ==========================================
+# 2. 크롤링 엔진 (Bing for China, Google for Others)
+# ==========================================
+def get_headers():
+    user_agents = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    ]
+    return {'User-Agent': random.choice(user_agents)}
+
+def parse_date(date_str):
+    """날짜 파싱 (상대시간 처리 포함)"""
+    try:
+        now = datetime.now()
+        date_str = str(date_str).strip()
+        
+        # 상대 시간 처리 (예: "5 hours ago", "3일 전")
+        if '시간' in date_str or 'hour' in date_str:
+            return now
+        if '분' in date_str or 'min' in date_str:
+            return now
+        if '일 전' in date_str or 'day' in date_str:
+            days = int(re.search(r'\d+', date_str).group())
+            return now - timedelta(days=days)
+            
+        return pd.to_datetime(date_str).to_pydatetime()
+    except:
+        return datetime.now()
+
+def crawl_bing_china(keyword, debug_mode=False):
+    """
+    [핵심] Bing News China를 이용한 Ijiwei(애집미) 기사 수집
+    - 직접 접속 대신 Bing 검색을 통해 우회 접속
+    - Query: site:ijiwei.com {keyword}
+    """
+    results = []
+    # 검색어: Ijiwei 사이트 내부만 검색하도록 강제
+    search_query = f"site:ijiwei.com {keyword}"
+    base_url = f"https://cn.bing.com/news/search?q={quote(search_query)}"
     
+    if debug_mode:
+        st.write(f"🇨🇳 **[Bing China]** 검색어: `{search_query}`")
+
+    # Selenium 설정
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless") 
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    # 중국어 언어 설정 (중요)
+    chrome_options.add_argument("--lang=zh-CN")
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     
-    articles = []
     driver = None
+    try:
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver.get(base_url)
+        
+        # Bing 뉴스 카드 로딩 대기
+        try:
+            WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "news-card"))
+            )
+        except:
+            time.sleep(1) # 없으면 잠깐 대기
+
+        if debug_mode:
+            # 디버깅용: 제대로 검색되었는지 확인
+            st.image(driver.get_screenshot_as_png(), caption="Bing CN 화면", width=300)
+
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        articles = soup.find_all('div', class_='news-card')
+        
+        if debug_mode:
+            st.write(f"👉 Bing에서 발견된 기사: {len(articles)}개")
+
+        for item in articles:
+            try:
+                title_tag = item.find('a', class_='title')
+                if not title_tag: continue
+                
+                title = title_tag.get_text(strip=True)
+                link = title_tag['href']
+                
+                # 날짜/출처 추출
+                source_tag = item.find('div', class_='source')
+                date_str = str(datetime.now().date())
+                source_name = "Ijiwei (via Bing)"
+                
+                if source_tag:
+                    # Bing 구조상 span에 날짜가 있음
+                    spans = source_tag.find_all('span')
+                    if len(spans) >= 2: # [출처, 날짜] 구조인 경우
+                        # source_name = spans[0].get_text(strip=True)
+                        date_str = spans[-1].get_text(strip=True)
+                    elif len(spans) == 1:
+                         date_str = spans[0].get_text(strip=True)
+
+                results.append({
+                    'Title': title,
+                    'Source': source_name,
+                    'Date': parse_date(date_str),
+                    'Link': link,
+                    'Keyword': keyword
+                })
+            except Exception:
+                continue
+                
+    except Exception as e:
+        if debug_mode:
+            st.error(f"[Bing CN Error] {e}")
+    finally:
+        if driver:
+            driver.quit()
+            
+    return results
+
+def crawl_google_news(keyword, country_code, language, debug_mode=False):
+    """나머지 국가(한국, 미국, 일본)는 구글 뉴스 사용"""
+    results = []
+    base_url = f"https://news.google.com/rss/search?q={quote(keyword)}&hl={language}&gl={country_code}&ceid={country_code}:{language}"
+    
+    if debug_mode:
+        st.write(f"📡 **[{country_code}]** 검색: `{base_url}`")
 
     try:
-        service = Service(executable_path=DRIVER_PATH)
-        driver = webdriver.Chrome(service=service, options=chrome_options)
-        driver.set_page_load_timeout(30)
-
-        # 1. Google News
-        try:
-            query = " OR ".join([f'"{k}"' for k in keywords[:7]])
-            url = f"https://news.google.com/rss/search?q={urllib.parse.quote(query)}&hl=ko&gl=KR&ceid=KR:ko&tbs=qdr:m6"
-            print(f"[Google] 수집 중...")
-            driver.get(url)
-            feed = feedparser.parse(driver.page_source)
-            for entry in feed.entries:
-                dt_obj = datetime.min
-                if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                    dt_obj = datetime(*entry.published_parsed[:6])
-                else:
-                    dt_obj = datetime.now()
-
-                if dt_obj < limit_date: continue
-                articles.append({
-                    'title': entry.title,
-                    'link': entry.link,
-                    'date_obj': dt_obj,
-                    'date_str': dt_obj.strftime('%Y-%m-%d %H:%M'),
-                    'source': entry.source.title if hasattr(entry, 'source') else 'Google News',
-                    'engine': 'Google'
-                })
-        except Exception as e: print(f"[Google] Error: {e}")
-
-        # 2. Baidu News
-        try:
-            cn_query = " ".join(cn_keywords[:3])
-            ts_start = int(limit_date.timestamp())
-            ts_end = int(datetime.now().timestamp())
-            gpc = f"stf={ts_start},{ts_end}|st={ts_start}|et={ts_end}"
-            url = f"https://www.baidu.com/s?tn=news&wd={urllib.parse.quote(cn_query)}&gpc={urllib.parse.quote(gpc)}"
-            print(f"[Baidu] 수집 중...")
-            driver.get(url)
-            time.sleep(2)
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
-            for item in soup.select('div.result-op, div.c-container'):
-                try:
-                    title_tag = item.select_one('h3 a')
-                    if not title_tag: continue
-                    title = title_tag.get_text().strip()
-                    link = title_tag['href']
-                    date_text = 'Recent'
-                    date_tag = item.select_one('.c-age')
-                    if date_tag: date_text = date_tag.get_text().strip()
-                    
-                    dt_obj = parse_date(date_text)
-                    if dt_obj < limit_date: continue
-                    
-                    articles.append({
-                        'title': title,
-                        'link': link,
-                        'date_obj': dt_obj,
-                        'date_str': dt_obj.strftime('%Y-%m-%d %H:%M'),
-                        'source': 'Baidu',
-                        'engine': 'Baidu'
-                    })
-                except: continue
-        except Exception as e: print(f"[Baidu] Error: {e}")
-
-        # 3. OFweek (반도체/기업 전문)
-        try:
-            cn_query = cn_keywords[0] if cn_keywords else "Semiconductor"
-            url = f"https://www.ofweek.com/search/search.html?keywords={urllib.parse.quote(cn_query)}&type=1"
-            print(f"[OFweek] 수집 중...")
-            driver.get(url)
-            time.sleep(3)
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
-            for item in soup.select('div.list-article li, div.search-list li'): 
-                try:
-                    title_tag = item.select_one('h3 a')
-                    if not title_tag: continue
-                    title = title_tag.get_text().strip()
-                    href = title_tag['href']
-                    link = href if href.startswith('http') else "https:" + href
-                    
-                    date_text = 'Recent'
-                    date_tag = item.select_one('span.time')
-                    if date_tag: date_text = date_tag.get_text().strip()
-                    
-                    dt_obj = parse_date(date_text)
-                    if dt_obj < limit_date: continue
-                    
-                    articles.append({
-                        'title': title,
-                        'link': link,
-                        'date_obj': dt_obj,
-                        'date_str': dt_obj.strftime('%Y-%m-%d %H:%M'),
-                        'source': 'OFweek',
-                        'engine': 'OFweek'
-                    })
-                except: continue
-        except Exception as e: print(f"[OFweek] Error: {e}")
-
+        response = requests.get(base_url, headers=get_headers(), timeout=5, verify=False)
+        soup = BeautifulSoup(response.content, 'xml')
+        items = soup.find_all('item')
+        
+        for item in items:
+            title = item.title.text
+            link = item.link.text
+            pub_date = item.pubDate.text
+            source = item.source.text if item.source else "Google News"
+            
+            results.append({
+                'Title': title,
+                'Source': f"{source} ({country_code})",
+                'Date': parse_date(pub_date),
+                'Link': link,
+                'Keyword': keyword
+            })
     except Exception as e:
-        print(f"[Fatal Error] {e}")
-    finally:
-        if driver: driver.quit()
+        if debug_mode:
+            st.error(f"[{country_code} Error] {e}")
+            
+    return results
 
-    # [정렬] 날짜 기준 내림차순 (최신순)
-    articles.sort(key=lambda x: (x['date_obj'], x['title']), reverse=True)
+def perform_crawling(category, start_date, end_date, debug_mode):
+    keywords = st.session_state.keywords[category]
+    collected_data = []
     
-    # [제한] 50개만 반환
-    return articles[:50]
+    start_dt = datetime.combine(start_date, datetime.min.time())
+    end_dt = datetime.combine(end_date, datetime.max.time())
+    
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    if not keywords:
+        st.warning("등록된 키워드가 없습니다.")
+        return
 
-# --- API 라우트 ---
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/api/news')
-def api_news():
-    cat = request.args.get('category', 'info')
-    refresh = request.args.get('refresh', '0')
+    total_steps = len(keywords) * 4
+    step = 0
     
-    db = load_db()
-    if cat not in db: return jsonify([])
-    data = db[cat]
+    for kw in keywords:
+        # 1. 중국 (Bing News - Ijiwei Target)
+        status_text.text(f"🇨🇳 검색 중... [Ijiwei] {kw}")
+        collected_data.extend(crawl_bing_china(kw, debug_mode))
+        step += 1; progress_bar.progress(step / total_steps)
+        
+        # 2. 한국 (Google)
+        status_text.text(f"🇰🇷 검색 중... {kw}")
+        collected_data.extend(crawl_google_news(kw, 'KR', 'ko', debug_mode))
+        step += 1; progress_bar.progress(step / total_steps)
+        
+        # 3. 미국 (Google)
+        status_text.text(f"🇺🇸 검색 중... {kw}")
+        collected_data.extend(crawl_google_news(kw, 'US', 'en', debug_mode))
+        step += 1; progress_bar.progress(step / total_steps)
+        
+        # 4. 일본 (Google)
+        status_text.text(f"🇯🇵 검색 중... {kw}")
+        collected_data.extend(crawl_google_news(kw, 'JP', 'ja', debug_mode))
+        step += 1; progress_bar.progress(step / total_steps)
+        
+    progress_bar.empty()
+    status_text.empty()
     
-    # 강제 새로고침(1)이거나 캐시에 없으면 크롤링
-    if refresh == '1' or cat not in NEWS_CACHE:
-        print(f"[API] Updating '{cat}'...")
-        results = get_news_via_selenium(data['keywords'])
-        NEWS_CACHE[cat] = results
+    # 데이터 정리
+    df = pd.DataFrame(collected_data)
+    if not df.empty:
+        # 날짜 필터링
+        df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
+        
+        # 최신순 정렬
+        df = df.sort_values(by='Date', ascending=False)
+        
+        # 50개 제한
+        df = df.head(50)
+        
+        st.session_state.news_data[category] = df.to_dict('records')
+        
+        if debug_mode:
+            st.success(f"✅ 수집 완료: 총 {len(df)}건")
     else:
-        print(f"[API] Using Cache for '{cat}'")
-        results = NEWS_CACHE[cat]
+        st.session_state.news_data[category] = []
+        if debug_mode:
+            st.warning("조건에 맞는 기사가 없습니다.")
+
+# ==========================================
+# 3. UI 구성
+# ==========================================
+with st.sidebar:
+    st.header("📂 Categories")
+    selected_category = st.radio("항목을 선택하세요:", CATEGORIES)
+    st.divider()
     
-    return jsonify({
-        'name': data['name'], 
-        'keywords': data['keywords'], 
-        'articles': results
-    })
+    st.subheader("🛠️ Debug Tools")
+    debug_mode = st.checkbox("🐞 디버깅 모드", value=False)
+    st.divider()
+    
+    st.info("💡 **Tip:**\n중국 기사는 Bing News를 통해\n'Ijiwei.com'을 집중 검색합니다.")
+    st.markdown("<div class='sidebar-footer'>Made by LSH</div>", unsafe_allow_html=True)
 
-@app.route('/api/keyword', methods=['POST'])
-def add_keyword():
-    req = request.json
-    cat = req.get('category')
-    keyword = req.get('keyword')
-    db = load_db()
-    if cat in db and keyword and keyword not in db[cat]['keywords']:
-        db[cat]['keywords'].append(keyword)
-        save_db(db)
-        return jsonify({'success': True})
-    return jsonify({'success': False})
+col_title, col_btn = st.columns([4, 1])
+with col_title:
+    st.title(f"{selected_category} News")
+with col_btn:
+    st.write("") 
+    update_clicked = st.button("🔄 Update News", type="primary")
 
-@app.route('/api/keyword', methods=['DELETE'])
-def del_keyword():
-    req = request.json
-    cat = req.get('category')
-    keyword = req.get('keyword')
-    db = load_db()
-    if cat in db and keyword in db[cat]['keywords']:
-        db[cat]['keywords'].remove(keyword)
-        save_db(db)
-        return jsonify({'success': True})
-    return jsonify({'success': False})
+st.divider()
 
-if __name__ == '__main__':
-    load_db() # 실행 시 DB 체크
-    app.run(debug=True, port=5000)
+# 설정 및 키워드
+col_settings, col_keywords = st.columns([1, 1.5])
+with col_settings:
+    st.markdown("##### 📅 기간 설정")
+    period_option = st.radio("기간 선택", ["1개월", "3개월", "6개월", "기간지정"], horizontal=True)
+    today = datetime.now().date()
+    start_date, end_date = today, today
+    
+    if period_option == "1개월": start_date = today - timedelta(days=30)
+    elif period_option == "3개월": start_date = today - timedelta(days=90)
+    elif period_option == "6개월": start_date = today - timedelta(days=180)
+    elif period_option == "기간지정":
+        dr = st.date_input("날짜 선택", (today - timedelta(days=7), today), max_value=today)
+        if len(dr) == 2: start_date, end_date = dr
+        else: start_date = end_date = dr[0]
+
+with col_keywords:
+    st.markdown("##### 🔑 키워드 관리")
+    c1, c2 = st.columns([3, 1])
+    new_kw = c1.text_input("키워드 입력", key="new_kw")
+    if c2.button("추가", use_container_width=True) and new_kw:
+        if new_kw not in st.session_state.keywords[selected_category]:
+            st.session_state.keywords[selected_category].append(new_kw)
+            save_keywords(st.session_state.keywords)
+            st.rerun()
+
+    kws = st.session_state.keywords[selected_category]
+    if kws:
+        st.write("등록된 키워드:")
+        cols = st.columns(4)
+        for i, kw in enumerate(kws):
+            if cols[i%4].button(f"❌ {kw}", key=f"d_{kw}"):
+                st.session_state.keywords[selected_category].remove(kw)
+                save_keywords(st.session_state.keywords)
+                st.rerun()
+
+# 실행
+if update_clicked:
+    st.info(f"뉴스 수집 중... (중국: Bing / 그 외: Google)")
+    perform_crawling(selected_category, start_date, end_date, debug_mode)
+    st.session_state.last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    st.rerun()
+
+# 출력
+st.divider()
+if st.session_state.last_update:
+    st.caption(f"Last Updated: {st.session_state.last_update}")
+
+data = st.session_state.news_data.get(selected_category, [])
+if data:
+    for row in data:
+        with st.container():
+            st.markdown(f"**[{row['Title']}]({row['Link']})**")
+            st.markdown(f"<span style='color:#666; font-size:0.8em'>{row['Source']} | {row['Date'].strftime('%Y-%m-%d')} | {row['Keyword']}</span>", unsafe_allow_html=True)
+            st.divider()
+else:
+    if st.session_state.last_update: st.warning("기사가 없습니다.")
+    else: st.info("Update 버튼을 눌러주세요.")
