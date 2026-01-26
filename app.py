@@ -40,8 +40,8 @@ st.markdown("""
 
 # 카테고리 정의
 CATEGORIES = [
-    "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
-    "Process Gas", "Precursor", "Metal target", "Wafer"
+    "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
+    "Process Gas", "Precursor", "Metal target", "Wafer", "기업정보"
 ]
 
 # ==========================================
