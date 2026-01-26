@@ -11,7 +11,7 @@ import json
 import os
 import re
 
-# Google Gemini 라이브러리
+# Google Gemini
 import google.generativeai as genai
 
 # Selenium
@@ -47,12 +47,21 @@ st.markdown("""
             font-weight: bold;
             border: 1px solid #cce5ff;
         }
+        .snippet-text {
+            color: #555;
+            font-size: 0.85em;
+            margin-top: 2px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
 """, unsafe_allow_html=True)
 
 CATEGORIES = [
-    "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
-    "Process Gas", "Precursor", "Metal target", "Wafer", "기업정보"
+    "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
+    "Process Gas", "Precursor", "Metal target", "Wafer"
 ]
 
 # ==========================================
@@ -82,7 +91,7 @@ if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] fo
 if 'last_update' not in st.session_state: st.session_state.last_update = None
 
 # ==========================================
-# 2. AI 필터링 엔진 (Google Gemini) - 프롬프트 강화
+# 2. AI 필터링 엔진 (Google Gemini)
 # ==========================================
 def filter_with_gemini(articles, api_key):
     if not articles or not api_key: return articles
@@ -90,31 +99,33 @@ def filter_with_gemini(articles, api_key):
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        # 제목만 보내면 판단이 어려울 수 있으므로 출처도 같이 보냄
-        titles = [f"{i+1}. [{item['Source']}] {item['Title']} (Search Keyword: {item['Keyword']})" for i, item in enumerate(articles)]
+        # 제목 + 요약문을 합쳐서 AI에게 전달
+        content_block = []
+        for i, item in enumerate(articles):
+            snippet = item.get('Snippet', '')
+            content_block.append(f"Item {i+1}:\n- Title: {item['Title']}\n- Snippet: {snippet}\n- Keyword: {item['Keyword']}")
+            
+        full_text = "\n\n".join(content_block)
         
         prompt = f"""
-        You are a highly skilled editor for a Semiconductor Market Intelligence report.
-        Your task is to review the following news list and identify strictly relevant articles.
+        Act as a strict Senior Semiconductor Analyst.
+        Filter out noise. Keep ONLY articles strictly related to B2B Semiconductor Manufacturing/Materials.
 
-        Context:
-        - The user is interested in Semiconductor Manufacturing, Materials (Photoresist, Gas, etc.), and Tech.
-        - 'TOK' refers to 'Tokyo Ohka Kogyo'.
-        
-        Filter Rules (Strict):
-        1. REJECT 'TikTok', 'Social Media', 'Music', 'Viral Video' related content immediately.
-        2. REJECT general stock market reports unless they specifically mention semiconductor technology or production capacity.
-        3. KEEP articles about new materials, fabs, yield, lithography, supply chain, and earnings of chip companies.
-        
-        Input Titles:
-        {"\n".join(titles)}
-        
-        Output Format:
-        Return ONLY the numbers of the relevant articles separated by commas (e.g., 1, 3, 5).
-        If no articles are relevant, return 'None'.
+        *** RULES ***
+        1. REJECT 'TikTok', 'Social Media', 'Music', 'App' (Even if keyword is TOK).
+        2. REJECT 'Precursor' if it means 'forerunner' (Must be chemical).
+        3. REJECT general stock buzz unless it discusses fab/tech.
+        4. KEEP new materials, yield, lithography, fab equipment.
+
+        *** DATA ***
+        {full_text}
+
+        *** OUTPUT ***
+        Return ONLY numbers of valid items (e.g., 1, 3, 5). If none, return 'None'.
         """
         
         response = model.generate_content(prompt)
+        # 응답에서 숫자만 추출
         valid_indices = [int(num) - 1 for num in re.findall(r'\d+', response.text)]
         
         filtered = []
@@ -124,11 +135,12 @@ def filter_with_gemini(articles, api_key):
                 filtered.append(articles[idx])
         return filtered
     except Exception as e:
-        st.error(f"AI Error: {e}")
+        # AI 에러나면 그냥 원본 반환 (멈추지 않게)
+        print(f"AI Error: {e}")
         return articles
 
 # ==========================================
-# 3. 크롤링 엔진 (Broad Search)
+# 3. 크롤링 엔진 (Snippet 수집)
 # ==========================================
 def get_headers():
     return {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
@@ -146,7 +158,6 @@ def parse_date(date_str):
 
 def crawl_bing_china(keyword, debug_mode=False):
     results = []
-    # [수정] 강제 AND 제거 -> 원본 키워드로 검색 (검색 팁 활용 권장)
     search_query = f"site:ijiwei.com {keyword}"
     base_url = f"https://cn.bing.com/news/search?q={quote(search_query)}"
     
@@ -173,38 +184,50 @@ def crawl_bing_china(keyword, debug_mode=False):
             try:
                 title = item.find('a', class_='title').get_text(strip=True)
                 link = item.find('a', class_='title')['href']
+                snippet_tag = item.find('div', class_='snippet')
+                snippet = snippet_tag.get_text(strip=True) if snippet_tag else ""
+                
                 source_tag = item.find('div', class_='source'); date_str = str(datetime.now().date())
                 if source_tag:
                     spans = source_tag.find_all('span')
                     if len(spans) >= 1: date_str = spans[-1].get_text(strip=True)
-                results.append({'Title': title, 'Source': "Ijiwei (via Bing)", 'Date': parse_date(date_str), 'Link': link, 'Keyword': keyword, 'AI_Verified': False})
+                results.append({'Title': title, 'Source': "Ijiwei (via Bing)", 'Date': parse_date(date_str), 'Link': link, 'Keyword': keyword, 'Snippet': snippet, 'AI_Verified': False})
             except: continue
-    except Exception as e:
-        if debug_mode: st.error(f"Bing Error: {e}")
+    except: pass
     finally:
         if driver: driver.quit()
     return results
 
 def crawl_google_news(keyword, country_code, language, debug_mode=False):
     results = []
-    # [수정] 강제 AND 조건 삭제. 사용자 입력 그대로 검색.
     base_url = f"https://news.google.com/rss/search?q={quote(keyword)}&hl={language}&gl={country_code}&ceid={country_code}:{language}"
     
-    if debug_mode: st.write(f"📡 [{country_code}] Query: `{keyword}`")
+    if debug_mode: st.write(f"📡 [{country_code}] `{keyword}`")
     
     try:
         response = requests.get(base_url, headers=get_headers(), timeout=5, verify=False)
         soup = BeautifulSoup(response.content, 'xml')
         for item in soup.find_all('item'):
             source = item.source.text if item.source else "Google News"
-            results.append({'Title': item.title.text, 'Source': f"{source} ({country_code})", 'Date': parse_date(item.pubDate.text), 'Link': item.link.text, 'Keyword': keyword, 'AI_Verified': False})
-    except Exception as e:
-        if debug_mode: st.error(f"Google Error: {e}")
+            
+            # HTML 태그 제거하고 Snippet 추출
+            raw_desc = item.description.text if item.description else ""
+            snippet = BeautifulSoup(raw_desc, "html.parser").get_text(strip=True)
+
+            results.append({
+                'Title': item.title.text, 
+                'Source': f"{source} ({country_code})", 
+                'Date': parse_date(item.pubDate.text), 
+                'Link': item.link.text, 
+                'Keyword': keyword,
+                'Snippet': snippet[:200], 
+                'AI_Verified': False
+            })
+    except: pass
     return results
 
 def perform_crawling(category, start_date, end_date, debug_mode, api_key):
     keywords = st.session_state.keywords.get(category, [])
-    collected_data = []
     start_dt = datetime.combine(start_date, datetime.min.time())
     end_dt = datetime.combine(end_date, datetime.max.time())
     
@@ -229,18 +252,15 @@ def perform_crawling(category, start_date, end_date, debug_mode, api_key):
     if not df.empty:
         df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
         df = df.sort_values(by='Date', ascending=False)
-        
-        # [중요] AI에게 보내기 전에 최대 70개까지 여유있게 확보 (노이즈 제거 후 남는 게 있도록)
-        candidates = df.head(70).to_dict('records')
+        # AI 검증용 60개 추출
+        candidates = df.head(60).to_dict('records')
     else: candidates = []
 
     if candidates and api_key:
-        status_text.text("🤖 Gemini AI가 내용을 분석하고 노이즈를 제거 중입니다...")
+        status_text.text("🤖 AI가 요약문을 읽고 정밀 검증 중...")
         final_data = filter_with_gemini(candidates, api_key)
-        
-        # 만약 AI 필터링 후 0개가 되면, 원본 중 상위 5개를 보여줄지 선택 가능 (여기선 0개 유지)
     else:
-        final_data = candidates[:50] # 키 없으면 50개만
+        final_data = candidates[:50]
 
     progress_bar.empty(); status_text.empty()
     st.session_state.news_data[category] = final_data
@@ -257,18 +277,14 @@ with st.sidebar:
     gemini_api_key = None
     if "GEMINI_API_KEY" in st.secrets:
         gemini_api_key = st.secrets["GEMINI_API_KEY"]
-        st.success("🔐 API Key 로드 완료")
+        st.success("🔐 API Key 로드 완료 (Secrets)")
     else:
         gemini_api_key = st.text_input("Google API Key", type="password")
-        if not gemini_api_key: st.info("🔑 키를 입력하면 AI가 노이즈를 제거합니다.")
+        if not gemini_api_key: st.info("🔑 키를 입력하면 AI가 작동합니다.")
         
     st.divider()
-    st.info("""
-    **💡 노이즈 제거 팁 (입력 예시):**
-    - `TOK -TikTok` 
-    - `Resist -watch`
-    *(마이너스 기호로 불필요 단어 제외)*
-    """)
+    st.subheader("🛠️ Debug")
+    debug_mode = st.checkbox("디버깅 모드", value=False)
     st.markdown("<div class='sidebar-footer'>Made by LSH</div>", unsafe_allow_html=True)
 
 col_title, col_btn = st.columns([4, 1])
@@ -294,7 +310,7 @@ with col_set:
 with col_kw:
     st.markdown("##### 🔑 키워드 관리")
     c1, c2 = st.columns([3, 1])
-    new_kw = c1.text_input("입력 (예: TOK -TikTok)", key="new_kw", label_visibility="collapsed")
+    new_kw = c1.text_input("입력 (예: TOK)", key="new_kw", label_visibility="collapsed")
     if c2.button("추가", use_container_width=True) and new_kw:
         if new_kw not in st.session_state.keywords.get(selected_category, []):
             st.session_state.keywords[selected_category].append(new_kw)
@@ -311,7 +327,7 @@ with col_kw:
                 st.rerun()
 
 if update_clicked:
-    perform_crawling(selected_category, start_date, end_date, False, gemini_api_key)
+    perform_crawling(selected_category, start_date, end_date, debug_mode, gemini_api_key)
     st.session_state.last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     st.rerun()
 
@@ -324,7 +340,8 @@ if data:
         with st.container():
             ai_badge = "<span class='ai-tag'>✨ AI Verified</span>" if row.get('AI_Verified') else ""
             st.markdown(f"**[{row['Title']}]({row['Link']})** {ai_badge}", unsafe_allow_html=True)
-            st.markdown(f"<span style='color:#666; font-size:0.8em'>{row['Source']} | {row['Date'].strftime('%Y-%m-%d')} | {row['Keyword']}</span>", unsafe_allow_html=True)
+            st.markdown(f"<div class='snippet-text'>{row.get('Snippet', '')[:150]}...</div>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color:#888; font-size:0.8em'>{row['Source']} | {row['Date'].strftime('%Y-%m-%d')} | {row['Keyword']}</span>", unsafe_allow_html=True)
             st.divider()
 else:
     if st.session_state.last_update: st.warning("기사가 없습니다.")
