@@ -38,7 +38,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# [요청 반영] '기업정보' 포함 카테고리
+# 카테고리 설정
 CATEGORIES = [
     "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
     "Process Gas", "Precursor", "Metal target", "Wafer"
@@ -73,7 +73,7 @@ if 'last_update' not in st.session_state:
     st.session_state.last_update = None
 
 # ==========================================
-# 2. 크롤링 엔진 (Bing for China, Google for Others)
+# 2. 크롤링 엔진
 # ==========================================
 def get_headers():
     user_agents = [
@@ -88,39 +88,34 @@ def parse_date(date_str):
         now = datetime.now()
         date_str = str(date_str).strip()
         
-        # 상대 시간 처리 (예: "5 hours ago", "3일 전")
         if '시간' in date_str or 'hour' in date_str:
             return now
         if '분' in date_str or 'min' in date_str:
             return now
         if '일 전' in date_str or 'day' in date_str:
-            days = int(re.search(r'\d+', date_str).group())
-            return now - timedelta(days=days)
+            days_match = re.search(r'\d+', date_str)
+            if days_match:
+                days = int(days_match.group())
+                return now - timedelta(days=days)
             
         return pd.to_datetime(date_str).to_pydatetime()
     except:
         return datetime.now()
 
 def crawl_bing_china(keyword, debug_mode=False):
-    """
-    [핵심] Bing News China를 이용한 Ijiwei(애집미) 기사 수집
-    - 직접 접속 대신 Bing 검색을 통해 우회 접속
-    - Query: site:ijiwei.com {keyword}
-    """
+    """Bing News China를 이용한 Ijiwei 기사 수집"""
     results = []
-    # 검색어: Ijiwei 사이트 내부만 검색하도록 강제
     search_query = f"site:ijiwei.com {keyword}"
     base_url = f"https://cn.bing.com/news/search?q={quote(search_query)}"
     
     if debug_mode:
-        st.write(f"🇨🇳 **[Bing China]** 검색어: `{search_query}`")
+        st.write(f"🇨🇳 **[Bing China]** 검색: `{search_query}`")
 
     # Selenium 설정
     chrome_options = Options()
     chrome_options.add_argument("--headless") 
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    # 중국어 언어 설정 (중요)
     chrome_options.add_argument("--lang=zh-CN")
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     
@@ -130,24 +125,19 @@ def crawl_bing_china(keyword, debug_mode=False):
         driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.get(base_url)
         
-        # Bing 뉴스 카드 로딩 대기
         try:
             WebDriverWait(driver, 5).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "news-card"))
             )
         except:
-            time.sleep(1) # 없으면 잠깐 대기
+            time.sleep(1)
 
         if debug_mode:
-            # 디버깅용: 제대로 검색되었는지 확인
             st.image(driver.get_screenshot_as_png(), caption="Bing CN 화면", width=300)
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         articles = soup.find_all('div', class_='news-card')
         
-        if debug_mode:
-            st.write(f"👉 Bing에서 발견된 기사: {len(articles)}개")
-
         for item in articles:
             try:
                 title_tag = item.find('a', class_='title')
@@ -156,16 +146,13 @@ def crawl_bing_china(keyword, debug_mode=False):
                 title = title_tag.get_text(strip=True)
                 link = title_tag['href']
                 
-                # 날짜/출처 추출
                 source_tag = item.find('div', class_='source')
                 date_str = str(datetime.now().date())
                 source_name = "Ijiwei (via Bing)"
                 
                 if source_tag:
-                    # Bing 구조상 span에 날짜가 있음
                     spans = source_tag.find_all('span')
-                    if len(spans) >= 2: # [출처, 날짜] 구조인 경우
-                        # source_name = spans[0].get_text(strip=True)
+                    if len(spans) >= 2:
                         date_str = spans[-1].get_text(strip=True)
                     elif len(spans) == 1:
                          date_str = spans[0].get_text(strip=True)
@@ -190,7 +177,7 @@ def crawl_bing_china(keyword, debug_mode=False):
     return results
 
 def crawl_google_news(keyword, country_code, language, debug_mode=False):
-    """나머지 국가(한국, 미국, 일본)는 구글 뉴스 사용"""
+    """Google News 크롤링"""
     results = []
     base_url = f"https://news.google.com/rss/search?q={quote(keyword)}&hl={language}&gl={country_code}&ceid={country_code}:{language}"
     
@@ -239,7 +226,7 @@ def perform_crawling(category, start_date, end_date, debug_mode):
     step = 0
     
     for kw in keywords:
-        # 1. 중국 (Bing News - Ijiwei Target)
+        # 1. 중국 (Bing News)
         status_text.text(f"🇨🇳 검색 중... [Ijiwei] {kw}")
         collected_data.extend(crawl_bing_china(kw, debug_mode))
         step += 1; progress_bar.progress(step / total_steps)
@@ -265,19 +252,10 @@ def perform_crawling(category, start_date, end_date, debug_mode):
     # 데이터 정리
     df = pd.DataFrame(collected_data)
     if not df.empty:
-        # 날짜 필터링
         df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
-        
-        # 최신순 정렬
         df = df.sort_values(by='Date', ascending=False)
-        
-        # 50개 제한
         df = df.head(50)
-        
         st.session_state.news_data[category] = df.to_dict('records')
-        
-        if debug_mode:
-            st.success(f"✅ 수집 완료: 총 {len(df)}건")
     else:
         st.session_state.news_data[category] = []
         if debug_mode:
@@ -307,7 +285,6 @@ with col_btn:
 
 st.divider()
 
-# 설정 및 키워드
 col_settings, col_keywords = st.columns([1, 1.5])
 with col_settings:
     st.markdown("##### 📅 기간 설정")
@@ -343,14 +320,13 @@ with col_keywords:
                 save_keywords(st.session_state.keywords)
                 st.rerun()
 
-# 실행
+# 실행 및 출력
 if update_clicked:
     st.info(f"뉴스 수집 중... (중국: Bing / 그 외: Google)")
     perform_crawling(selected_category, start_date, end_date, debug_mode)
     st.session_state.last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     st.rerun()
 
-# 출력
 st.divider()
 if st.session_state.last_update:
     st.caption(f"Last Updated: {st.session_state.last_update}")
@@ -363,5 +339,7 @@ if data:
             st.markdown(f"<span style='color:#666; font-size:0.8em'>{row['Source']} | {row['Date'].strftime('%Y-%m-%d')} | {row['Keyword']}</span>", unsafe_allow_html=True)
             st.divider()
 else:
-    if st.session_state.last_update: st.warning("기사가 없습니다.")
-    else: st.info("Update 버튼을 눌러주세요.")
+    if st.session_state.last_update:
+        st.warning("기사가 없습니다.")
+    else:
+        st.info("Update 버튼을 눌러주세요.")
