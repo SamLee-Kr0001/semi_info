@@ -32,28 +32,19 @@ st.set_page_config(layout="wide", page_title="Semiconductor News Crawler")
 
 st.markdown("""
     <style>
-        /* 상단 여백 확보 */
         .block-container {
             padding-top: 4.5rem !important; 
             padding-bottom: 2rem !important;
         }
-        
-        /* 폰트 자동 조절 */
         h1 {
             font-size: clamp(1.5rem, 2.5vw, 3rem) !important;
             margin-bottom: 1rem !important;
             line-height: 1.2 !important;
         }
-        
-        h3 {
-            font-size: clamp(1rem, 1.5vw, 1.8rem) !important;
-        }
-
-        /* 기타 스타일 */
+        h3 { font-size: clamp(1rem, 1.5vw, 1.8rem) !important; }
         .sidebar-footer { position: fixed; bottom: 10px; left: 20px; font-size: 10px; color: #888; z-index: 999; }
         a { text-decoration: none; color: #0366d6; }
         a:hover { text-decoration: underline; }
-        
         .ai-tag {
             background-color: #092C4C;
             color: #FFFFFF;
@@ -72,11 +63,7 @@ st.markdown("""
             border-left: 3px solid #eee;
             padding-left: 10px;
         }
-        
-        /* 버튼 정렬을 위한 스타일 */
-        div.stButton > button {
-            width: 100%;
-        }
+        div.stButton > button { width: 100%; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -112,7 +99,37 @@ if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] fo
 if 'last_update' not in st.session_state: st.session_state.last_update = None
 
 # ==========================================
-# 2. AI 필터링 엔진
+# 2. 스마트 쿼리 생성기 (Pre-Screening)
+# ==========================================
+def make_smart_query(keyword, country_code):
+    """
+    [핵심 기능]
+    검색어에 '반도체 문맥'을 강제로 주입하고 '노이즈(틱톡)'를 제외하는 쿼리 생성
+    """
+    # 1. 기본 키워드 보호 (따옴표 처리 등은 검색엔진 유연성을 위해 제거)
+    base_kw = keyword
+
+    # 2. 강력한 제외어 (Negative Keywords) - 틱톡, 댄스, SNS 등 원천 차단
+    negatives = "-TikTok -틱톡 -douyin -dance -shorts -reels -viral -music -influencer -fashion"
+
+    # 3. 문맥 강제 주입 (Context Injection)
+    # 국가별로 반도체 관련 용어를 OR 조건으로 묶어서 AND 결합
+    if country_code == 'KR':
+        context = "(반도체 OR 소자 OR 공정 OR 소재 OR 파운드리 OR 팹)"
+    elif country_code == 'CN':
+        context = "(半导体 OR 芯片 OR 晶圆 OR 光刻胶)"
+    elif country_code == 'JP':
+        context = "(半導体 OR 　シリコン OR ウェーハ)" # 일본어 전각 띄어쓰기 고려
+    else: # US/Global
+        context = "(semiconductor OR chip OR fab OR foundry OR wafer OR lithography)"
+
+    # 최종 쿼리 조합: "TOK" AND (반도체 OR ...) -TikTok
+    final_query = f'{base_kw} AND {context} {negatives}'
+    
+    return final_query
+
+# ==========================================
+# 3. AI 필터링 엔진 (Post-Screening)
 # ==========================================
 def filter_with_gemini(articles, api_key):
     if not articles or not api_key: return articles
@@ -123,33 +140,28 @@ def filter_with_gemini(articles, api_key):
         
         content_text = ""
         for i, item in enumerate(articles):
-            snippet = item.get('Snippet', 'No description')
-            content_text += f"ID_{i+1} | Keyword: {item['Keyword']} | Title: {item['Title']} | Snippet: {snippet}\n"
+            snippet = item.get('Snippet', '')
+            content_text += f"ID_{i+1} | KW: {item['Keyword']} | Title: {item['Title']} | Snippet: {snippet}\n"
             
         prompt = f"""
-        You are a generic filter for a B2B Semiconductor Market Intelligence Dashboard.
-        Your GOAL is to filter out ALL consumer noise, social media garbage, and irrelevant homonyms.
+        Role: Strict Semiconductor Intelligence Analyst.
+        Task: Identify strictly relevant articles for B2B Semiconductor Manufacturing.
 
-        *** STRICT EXCLUSION RULES (The "Kill" List) ***
-        1. [Social Media]: If 'TOK' matches 'TikTok', 'Video', 'Dance', 'Viral', 'App' -> REJECT.
-        2. [Homonyms]: 
-           - 'Resist' must mean 'Photoresist'. If it means 'political resistance' -> REJECT.
-           - 'Precursor' must mean 'Chemical Precursor'. If it means 'forerunner of an event' -> REJECT.
-        3. [Consumer Tech]: Reject reviews of Phones, Games, Laptops unless they discuss the chipset architecture.
-        4. [Stock Noise]: Reject generic "Stock rose 5%" articles unless they explain the manufacturing/tech reason.
+        *** DOUBLE CHECK RULES ***
+        1. [Homonym Check] 'TOK' = 'Tokyo Ohka Kogyo'. REJECT 'TikTok', 'Social Media' immediately.
+        2. [Context Check] Must be related to Fab, Materials, Equipment, or Chip Tech.
+        3. [Noise Check] Reject stock buzz without technical reason.
 
-        *** INPUT DATA ***
+        *** DATA ***
         {content_text}
 
-        *** OUTPUT FORMAT ***
-        Return ONLY the IDs of the valid articles separated by commas. (e.g., 1, 3, 5).
-        If NO articles are valid, return exactly: None
+        *** OUTPUT ***
+        Return IDs of valid articles separated by commas (e.g., 1, 3). If none, return None.
         """
         
         response = model.generate_content(prompt)
         response_text = response.text
-        if "None" in response_text and len(response_text) < 10:
-            return []
+        if "None" in response_text and len(response_text) < 10: return []
             
         valid_indices = [int(num) - 1 for num in re.findall(r'\d+', response_text)]
         
@@ -158,15 +170,13 @@ def filter_with_gemini(articles, api_key):
             if 0 <= idx < len(articles):
                 articles[idx]['AI_Verified'] = True 
                 filtered.append(articles[idx])
-                
         return filtered
-
     except Exception as e:
-        print(f"AI Filter Error: {e}")
+        print(f"AI Error: {e}")
         return articles
 
 # ==========================================
-# 3. 크롤링 엔진
+# 4. 크롤링 엔진
 # ==========================================
 def get_headers():
     return {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
@@ -184,10 +194,13 @@ def parse_date(date_str):
 
 def crawl_bing_china(keyword, debug_mode=False):
     results = []
-    search_query = f"site:ijiwei.com {keyword}"
+    # [수정] 스마트 쿼리 적용 (중국)
+    smart_query = make_smart_query(keyword, 'CN')
+    # Ijiwei 사이트 타겟팅 + 스마트 쿼리
+    search_query = f"site:ijiwei.com {smart_query}"
     base_url = f"https://cn.bing.com/news/search?q={quote(search_query)}"
     
-    if debug_mode: st.write(f"🇨🇳 [Bing] `{search_query}`")
+    if debug_mode: st.write(f"🇨🇳 [Bing Query] `{smart_query}`")
 
     chrome_options = Options()
     chrome_options.add_argument("--headless") 
@@ -230,9 +243,12 @@ def crawl_bing_china(keyword, debug_mode=False):
 
 def crawl_google_news(keyword, country_code, language, debug_mode=False):
     results = []
-    base_url = f"https://news.google.com/rss/search?q={quote(keyword)}&hl={language}&gl={country_code}&ceid={country_code}:{language}"
+    # [수정] 스마트 쿼리 적용 (국가별)
+    smart_query = make_smart_query(keyword, country_code)
     
-    if debug_mode: st.write(f"📡 [{country_code}] `{keyword}`")
+    base_url = f"https://news.google.com/rss/search?q={quote(smart_query)}&hl={language}&gl={country_code}&ceid={country_code}:{language}"
+    
+    if debug_mode: st.write(f"📡 [{country_code} Query] `{smart_query}`")
     
     try:
         response = requests.get(base_url, headers=get_headers(), timeout=5, verify=False)
@@ -266,7 +282,7 @@ def perform_crawling(category, start_date, end_date, debug_mode, api_key):
     raw_articles = []
     
     for kw in keywords:
-        status_text.text(f"🔍 수집 중: {kw}")
+        status_text.text(f"🔍 스마트 수집 중: {kw}")
         raw_articles.extend(crawl_bing_china(kw, debug_mode))
         step += 1; progress_bar.progress(step / total_steps)
         raw_articles.extend(crawl_google_news(kw, 'KR', 'ko', debug_mode))
@@ -285,10 +301,10 @@ def perform_crawling(category, start_date, end_date, debug_mode, api_key):
     else: candidates = []
 
     if candidates and api_key:
-        status_text.text(f"🤖 AI가 {len(candidates)}개의 기사를 정밀 검수 중입니다...")
+        status_text.text(f"🤖 AI가 {len(candidates)}개의 기사를 최종 검수 중...")
         final_data = filter_with_gemini(candidates, api_key)
         if len(final_data) == 0:
-            status_text.error("검색된 기사가 모두 필터링되었습니다.")
+            status_text.error("모든 기사가 필터링되었습니다.")
     else:
         final_data = candidates[:50]
 
@@ -296,7 +312,7 @@ def perform_crawling(category, start_date, end_date, debug_mode, api_key):
     st.session_state.news_data[category] = final_data
 
 # ==========================================
-# 4. UI 구성
+# 5. UI 구성
 # ==========================================
 with st.sidebar:
     st.header("📂 Categories")
@@ -313,17 +329,13 @@ with st.sidebar:
         if not gemini_api_key: st.info("🔑 키를 입력하면 AI가 작동합니다.")
         
     st.divider()
-    st.info("💡 **강력 필터링 모드**\n요약문 기반 노이즈 제거")
+    st.info("💡 **스마트 필터 작동 중**\n검색어에 '반도체 문맥'이 자동으로 추가되며, TikTok 등 노이즈는 원천 차단됩니다.")
     st.markdown("<div class='sidebar-footer'>Made by LSH</div>", unsafe_allow_html=True)
 
-# [UI 변경] 상단 타이틀만 남김 (버튼 제거)
 st.title(f"{selected_category} News")
-
 st.divider()
 
-# [UI 변경] 키워드 추가 옆에 업데이트 버튼 배치
-col_set, col_kw = st.columns([1, 2]) # 비율 조정
-
+col_set, col_kw = st.columns([1, 2])
 with col_set:
     st.markdown("##### 📅 기간 설정")
     period = st.radio("기간", ["1개월", "3개월", "6개월", "기간지정"], horizontal=True, label_visibility="collapsed")
@@ -338,25 +350,17 @@ with col_set:
 
 with col_kw:
     st.markdown("##### 🔑 키워드 관리 및 실행")
-    # [핵심] 컬럼 3개로 분할: 입력창(3) / 추가버튼(1) / 실행버튼(1.5)
     c1, c2, c3 = st.columns([3, 1, 1.5])
-    
-    with c1:
-        new_kw = st.text_input("입력 (예: TOK)", key="new_kw", label_visibility="collapsed")
-    with c2:
-        add_clicked = st.button("추가", use_container_width=True)
-    with c3:
-        # 여기에 Update 버튼 배치
-        update_clicked = st.button("🔄 뉴스 수집", type="primary", use_container_width=True)
+    with c1: new_kw = st.text_input("입력 (예: TOK)", key="new_kw", label_visibility="collapsed")
+    with c2: add_clicked = st.button("추가", use_container_width=True)
+    with c3: update_clicked = st.button("🔄 뉴스 수집", type="primary", use_container_width=True)
 
-    # 키워드 추가 로직
     if add_clicked and new_kw:
         if new_kw not in st.session_state.keywords.get(selected_category, []):
             st.session_state.keywords[selected_category].append(new_kw)
             save_keywords(st.session_state.keywords)
             st.rerun()
     
-    # 키워드 목록 표시
     kws = st.session_state.keywords.get(selected_category, [])
     if kws:
         cols = st.columns(5)
@@ -366,7 +370,6 @@ with col_kw:
                 save_keywords(st.session_state.keywords)
                 st.rerun()
 
-# [UI 변경] 실행 로직 (위치 이동됨)
 if update_clicked:
     perform_crawling(selected_category, start_date, end_date, False, gemini_api_key)
     st.session_state.last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -385,6 +388,5 @@ if data:
             st.markdown(f"<span style='color:#888; font-size:0.8em'>{row['Source']} | {row['Date'].strftime('%Y-%m-%d')} | {row['Keyword']}</span>", unsafe_allow_html=True)
             st.divider()
 else:
-    if st.session_state.last_update: 
-        st.warning("조건에 맞는 반도체 기사가 없습니다.")
+    if st.session_state.last_update: st.warning("조건에 맞는 기사가 없습니다.")
     else: st.info("상단의 '뉴스 수집' 버튼을 눌러주세요.")
