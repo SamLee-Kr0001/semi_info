@@ -38,25 +38,41 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 카테고리 설정
+# 카테고리 정의
 CATEGORIES = [
     "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
     "Process Gas", "Precursor", "Metal target", "Wafer"
 ]
 
 # ==========================================
-# 1. 키워드 관리 (JSON 저장)
+# 1. 키워드 관리 (안전장치 추가됨)
 # ==========================================
 KEYWORD_FILE = 'keywords.json'
 
 def load_keywords():
+    """
+    JSON 파일을 불러오되, 코드에 있는 CATEGORIES와 
+    파일에 있는 키값이 다를 경우(신규 카테고리 추가 등)를 대비해
+    누락된 키를 자동으로 채워주는 로직을 추가함.
+    """
+    # 기본 구조 생성
+    data = {cat: [] for cat in CATEGORIES}
+    
     if os.path.exists(KEYWORD_FILE):
         try:
             with open(KEYWORD_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except:
+                loaded_data = json.load(f)
+                
+            # 불러온 데이터와 현재 카테고리 병합 (누락된 카테고리 방지)
+            for key, val in loaded_data.items():
+                if key in data: # 현재 존재하는 카테고리라면 데이터 복원
+                    data[key] = val
+                    
+        except Exception as e:
+            print(f"파일 로드 중 오류 (초기화됨): {e}")
             pass
-    return {cat: [] for cat in CATEGORIES}
+            
+    return data
 
 def save_keywords(keywords_dict):
     try:
@@ -65,10 +81,13 @@ def save_keywords(keywords_dict):
     except:
         pass
 
+# 세션 상태 초기화
 if 'keywords' not in st.session_state:
     st.session_state.keywords = load_keywords()
+
 if 'news_data' not in st.session_state:
     st.session_state.news_data = {cat: [] for cat in CATEGORIES}
+
 if 'last_update' not in st.session_state:
     st.session_state.last_update = None
 
@@ -83,7 +102,6 @@ def get_headers():
     return {'User-Agent': random.choice(user_agents)}
 
 def parse_date(date_str):
-    """날짜 파싱 (상대시간 처리 포함)"""
     try:
         now = datetime.now()
         date_str = str(date_str).strip()
@@ -111,7 +129,6 @@ def crawl_bing_china(keyword, debug_mode=False):
     if debug_mode:
         st.write(f"🇨🇳 **[Bing China]** 검색: `{search_query}`")
 
-    # Selenium 설정
     chrome_options = Options()
     chrome_options.add_argument("--headless") 
     chrome_options.add_argument("--no-sandbox")
@@ -166,14 +183,12 @@ def crawl_bing_china(keyword, debug_mode=False):
                 })
             except Exception:
                 continue
-                
     except Exception as e:
         if debug_mode:
             st.error(f"[Bing CN Error] {e}")
     finally:
         if driver:
             driver.quit()
-            
     return results
 
 def crawl_google_news(keyword, country_code, language, debug_mode=False):
@@ -205,11 +220,11 @@ def crawl_google_news(keyword, country_code, language, debug_mode=False):
     except Exception as e:
         if debug_mode:
             st.error(f"[{country_code} Error] {e}")
-            
     return results
 
 def perform_crawling(category, start_date, end_date, debug_mode):
-    keywords = st.session_state.keywords[category]
+    # [수정] KeyError 방지: 해당 카테고리가 키워드 사전에 없으면 빈 리스트 반환
+    keywords = st.session_state.keywords.get(category, [])
     collected_data = []
     
     start_dt = datetime.combine(start_date, datetime.min.time())
@@ -249,7 +264,6 @@ def perform_crawling(category, start_date, end_date, debug_mode):
     progress_bar.empty()
     status_text.empty()
     
-    # 데이터 정리
     df = pd.DataFrame(collected_data)
     if not df.empty:
         df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
@@ -305,12 +319,13 @@ with col_keywords:
     c1, c2 = st.columns([3, 1])
     new_kw = c1.text_input("키워드 입력", key="new_kw")
     if c2.button("추가", use_container_width=True) and new_kw:
-        if new_kw not in st.session_state.keywords[selected_category]:
+        if new_kw not in st.session_state.keywords.get(selected_category, []):
             st.session_state.keywords[selected_category].append(new_kw)
             save_keywords(st.session_state.keywords)
             st.rerun()
 
-    kws = st.session_state.keywords[selected_category]
+    # [수정] KeyError 방지를 위해 .get() 사용
+    kws = st.session_state.keywords.get(selected_category, [])
     if kws:
         st.write("등록된 키워드:")
         cols = st.columns(4)
