@@ -108,8 +108,7 @@ STOCK_CATEGORIES = {
     "🧠 Fabless & System": {
         "Nvidia": "NVDA",
         "Broadcom": "AVGO",
-        "Qnity (Q)": "Q"
-    },
+         },
     "⚙️ Equipment": {
         "ASML": "ASML",
         "AMAT": "AMAT",
@@ -125,6 +124,7 @@ STOCK_CATEGORIES = {
         "TOK": "4186.T",           # 도쿄오카공업
         "Nissan Chem": "4021.T",   # 닛산화학
         "Merck (DE)": "MRK.DE",    # 머크 (독일)
+        "Qnity (Q)": "Q", #큐니티
         "Air Liquide": "AI.PA",    # 에어리퀴드 (프랑스)
         "Linde": "LIN",            # 린데
         "Soulbrain": "357780.KS",  # 솔브레인
