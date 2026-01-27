@@ -8,21 +8,21 @@ from datetime import datetime, timedelta
 import json
 import os
 import re
+import concurrent.futures # [NEW] 병렬 처리를 위한 모듈
 
-# [필수] 번역 라이브러리 (터미널에서 pip install deep-translator 실행 필요)
+# [필수] 번역 라이브러리
 from deep_translator import GoogleTranslator
 
 # Google Gemini
 import google.generativeai as genai
 
 # ==========================================
-# 0. 페이지 설정 및 Modern CSS (Font Size Down)
+# 0. 페이지 설정 및 CSS
 # ==========================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
 
-# CSS: 폰트 사이즈 축소 및 모던 레이아웃
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
@@ -33,11 +33,9 @@ st.markdown("""
             color: #1E293B;
         }
         
-        /* 메인 배경 */
         .stApp { background-color: #F8FAFC; }
 
-        /* 1. 뉴스 카드 스타일 (네이티브 컨테이너 내부) */
-        /* 제목 스타일 (작게 조정: 16px) */
+        /* 뉴스 카드 스타일 */
         .news-title {
             font-size: 16px !important;
             font-weight: 700 !important;
@@ -52,7 +50,6 @@ st.markdown("""
             text-decoration: underline;
         }
         
-        /* 요약문 스타일 (작게 조정: 13.5px) */
         .news-snippet {
             font-size: 13.5px !important;
             color: #475569 !important;
@@ -60,24 +57,21 @@ st.markdown("""
             margin-bottom: 10px;
         }
 
-        /* 메타 정보 (날짜/출처) */
         .news-meta {
             font-size: 12px !important;
             color: #94A3B8 !important;
         }
 
-        /* 2. 컨트롤 패널 */
         .control-box {
             background-color: #FFFFFF;
-            padding: 15px 20px; /* 패딩 축소 */
+            padding: 15px 20px;
             border-radius: 12px;
             border: 1px solid #E2E8F0;
             margin-bottom: 20px;
         }
         
-        /* 3. 키워드 버튼 스타일 */
         button[kind="secondary"] {
-            height: 28px !important; /* 높이 축소 */
+            height: 28px !important;
             font-size: 12px !important;
             padding: 0 10px !important;
             border-radius: 14px !important;
@@ -86,8 +80,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 CATEGORIES = [
-    "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
-    "Process Gas", "Precursor", "Metal target", "Wafer", "Package", "기업정보"
+    "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
+    "Process Gas", "Precursor", "Metal target", "Wafer", "Package"
 ]
 
 # ==========================================
@@ -112,24 +106,62 @@ def save_keywords(data):
             json.dump(data, f, ensure_ascii=False, indent=4)
     except: pass
 
-# [수정] 번역 함수 강화 (제목 + 내용)
-def translate_text(text, target_lang='ko'):
-    if not text: return ""
-    try:
-        # 1000자 제한으로 잘라서 번역
-        translator = GoogleTranslator(source='auto', target=target_lang)
-        return translator.translate(text[:999]) 
-    except Exception as e:
-        print(f"Translation Error: {e}") # 터미널에 에러 출력 (디버깅용)
-        return text # 에러 시 원문 반환
-
 if 'keywords' not in st.session_state: st.session_state.keywords = load_keywords()
 if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] for cat in CATEGORIES}
 if 'last_update' not in st.session_state: st.session_state.last_update = None
 
 # ==========================================
-# 2. 크롤링 로직
+# 2. 로직: 크롤링 & 병렬 번역 & AI
 # ==========================================
+
+# [NEW] 단일 텍스트 번역 함수 (에러 처리 강화)
+def safe_translate(text):
+    if not text: return ""
+    try:
+        # 1000자 제한
+        return GoogleTranslator(source='auto', target='ko').translate(text[:999])
+    except:
+        return text
+
+# [NEW] 기사 리스트 병렬 번역 처리기 (속도 개선의 핵심)
+def parallel_translate_articles(articles):
+    # 번역이 필요한 기사(해외)만 식별
+    tasks = []
+    for article in articles:
+        # KR이 아닌 경우에만 번역 대상
+        if 'KR' not in article.get('Country', 'KR'):
+            tasks.append(article)
+    
+    if not tasks:
+        return articles
+
+    # ThreadPool로 병렬 처리 (최대 10개 동시 작업)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        # 제목 번역 Future 생성
+        title_futures = {executor.submit(safe_translate, a['Title']): a for a in tasks}
+        # 요약 번역 Future 생성
+        snip_futures = {executor.submit(safe_translate, a['Snippet']): a for a in tasks}
+        
+        # 결과 수집 (제목)
+        for future in concurrent.futures.as_completed(title_futures):
+            article = title_futures[future]
+            try:
+                trans_title = future.result()
+                if trans_title and trans_title != article['Title']:
+                    article['Title'] = trans_title
+            except: pass
+
+        # 결과 수집 (요약)
+        for future in concurrent.futures.as_completed(snip_futures):
+            article = snip_futures[future]
+            try:
+                trans_snip = future.result()
+                if trans_snip and trans_snip != article['Snippet']:
+                    article['Snippet'] = f"🌐 {trans_snip}"
+            except: pass
+            
+    return articles
+
 def make_smart_query(keyword, country_code):
     base_kw = keyword
     negatives = "-TikTok -틱톡 -douyin -dance -shorts -reels -viral -music -game -soccer"
@@ -186,22 +218,7 @@ def crawl_google_rss(keyword, country_code, language):
                 snip = BeautifulSoup(raw_d, "html.parser").get_text(strip=True)[:200]
                 title = item.title.text
 
-                # [핵심] 한국어가 아닌 경우 번역 실행
-                if country_code not in ['KR']:
-                    # 제목 번역
-                    try:
-                        translated_title = translate_text(title)
-                        if translated_title != title:
-                            title = f"{translated_title}" # 원문 없이 번역본만 깔끔하게
-                    except: pass
-                    
-                    # 요약 번역
-                    try:
-                        translated_snip = translate_text(snip)
-                        if translated_snip != snip:
-                            snip = f"🌐 {translated_snip}"
-                    except: pass
-
+                # [최적화] 여기서 번역하지 않고 원본만 저장
                 pub_date = item.pubDate.text if item.pubDate else str(datetime.now())
                 try: dt_obj = pd.to_datetime(pub_date).to_pydatetime()
                 except: dt_obj = datetime.now()
@@ -209,7 +226,8 @@ def crawl_google_rss(keyword, country_code, language):
                 results.append({
                     'Title': title, 'Source': src, 'Date': dt_obj,
                     'Link': item.link.text, 'Keyword': keyword, 'Snippet': snip,
-                    'AI_Verified': False
+                    'AI_Verified': False,
+                    'Country': country_code # 번역 대상 식별용
                 })
     except: pass
     return results
@@ -220,20 +238,30 @@ def perform_crawling(category, start_date, end_date, api_key):
     start_dt = datetime.combine(start_date, datetime.min.time())
     end_dt = datetime.combine(end_date, datetime.max.time())
     
-    with st.spinner(f"🔍 {category} 뉴스 수집 및 번역 중..."):
+    with st.spinner(f"🚀 '{category}' 뉴스 고속 수집 중..."):
         all_news = []
         for kw in kws:
-            # KR, US, TW, CN(중국 본토) 추가
+            # KR, US, TW, CN 등 수집
             for cc, lang in [('KR','ko'), ('US','en'), ('TW','zh-TW'), ('CN', 'zh-CN')]:
                 all_news.extend(crawl_google_rss(kw, cc, lang))
         
+        # 1. 데이터 정리 (날짜 필터 및 중복 제거)
         df = pd.DataFrame(all_news)
         if not df.empty:
             df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
             df = df.drop_duplicates(subset=['Title']).sort_values('Date', ascending=False)
+            
+            # 2. 상위 60개만 남김 (번역 대상 최소화)
             final_list = df.head(60).to_dict('records')
+            
+            # 3. [최적화] 살아남은 기사만 병렬 번역 실행
+            if final_list:
+                final_list = parallel_translate_articles(final_list)
+
+            # 4. AI 필터링
             if api_key and final_list:
                 final_list = filter_with_gemini(final_list, api_key)
+            
             st.session_state.news_data[category] = final_list
         else:
              st.session_state.news_data[category] = []
@@ -313,14 +341,13 @@ if data:
     m2.metric("AI Verified", sum(1 for d in data if d.get('AI_Verified')))
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Grid Layout
     for i in range(0, len(data), 2):
         row_items = data[i : i+2]
         cols = st.columns(2)
         for idx, item in enumerate(row_items):
             with cols[idx]:
                 with st.container(border=True):
-                    # 메타 정보 (작은 폰트)
+                    # 메타 정보
                     st.markdown(f"""
                         <div class="news-meta" style="display:flex; justify-content:space-between; margin-bottom:5px;">
                             <span>📰 {item['Source']}</span>
@@ -328,7 +355,7 @@ if data:
                         </div>
                     """, unsafe_allow_html=True)
                     
-                    # 제목 (16px, Bold)
+                    # 제목 (16px)
                     st.markdown(f'<a href="{item["Link"]}" target="_blank" class="news-title">{item["Title"]}</a>', unsafe_allow_html=True)
                     
                     # 요약 (13.5px)
