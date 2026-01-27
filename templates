@@ -1,1 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글로벌 재난 실시간 모니터링 (대륙별 분류)</title>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.6; padding: 20px; background-color: #f0f4f8; color: #333; }
+        .container { max-width: 1400px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf2f7; padding-bottom: 20px; margin-bottom: 20px; }
+        h1 { font-size: 1.8rem; color: #1a202c; margin: 0; }
+ 
+       /* Update 버튼 스타일 추가 */
+.update-btn {
+    background: #4299e1;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 10px;
+}
+.update-btn:hover {
+    background: #3182ce;
+}
+        /* 대륙별 헤더 스타일 */
+        .continent-header { background-color: #2d3748; color: white; padding: 10px 20px; margin-top: 30px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; }
+        .priority-header { background-color: #e53e3e; color: white; }
 
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid #edf2f7; }
+        th { background-color: #f7fafc; color: #4a5568; font-weight: 700; }
+        
+        /* 4개국 강조 스타일 */
+        .priority-row { background-color: #fff5f5 !important; border-left: 5px solid #e53e3e; }
+        .priority-row td { color: #c53030 !important; font-weight: bold; }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; color: white; font-weight: bold; font-size: 0.8rem; }
+        .bg-red { background-color: #e53e3e; }
+        .bg-orange { background-color: #ed8936; }
+        .bg-gray { background-color: #a0aec0; }
+
+        .time-info { font-weight: bold; color: #2d3748; }
+        .time-ago { display: block; font-size: 0.75rem; color: #718096; font-weight: normal; }
+        .location-text { font-size: 0.8rem; color: #718096; display
+: block; margin-top: 4px; font-weight: normal; }
+        .map-btn { display: inline-block; background: #ebf8ff; color: #2b6cb0; padding: 3px 7px; border-radius: 4px; text-decoration: none; font-size: 0.8rem; font-weight: bold; }
+
+        .btn-noti { background: #38a169; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        #update-time { font-size: 0.85rem; color: #a0aec0; text-align: right; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🌏 글로벌 재난 모니터링 </h1>
+        <div>
+            <button class="btn-noti" onclick="requestNotificationPermission()">🔔 4개국 긴급 알림 활성화</button>
+            <div id="update-time"></div>
+        </div>
+    </div>
+
+    <h2 style="color:#e53e3e; margin-bottom:0;">⚠️ 실시간 지진 현황 (발생 시각 기준)</h2>
+    <div id="quake-container">
+        </div>
+
+    <h2 style="color:#3182ce; margin-top:50px;">🌀 실시간 태풍 현황</h2>
+    <div id="typhoon-container">
+        <table>
+            <thead>
+                <tr><th>등급</th><th>태풍명</th><th>발생 시점</th><th>영향권 및 상세지도</th><th>좌표</th></tr>
+            </thead>
+            <tbody id="typhoon-list"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const targetCountries = ["Korea", "Japan", "Taiwan", "China"];
+    let notifiedIds = new Set();
+
+    // 대륙 판별 로직 (위도/경도 기반)
+    function getContinent(lat, lon, place) {
+        if (targetCountries.some(c => place.includes(c))) return "🚨 중점 감시 (동아시아 4개국)";
+        
+        if (lon > 60 && lon < 150 && lat > -10 && lat < 80) return "아시아 (Asia)";
+        if (lon > -170 && lon < -30) return "아메리카 (Americas)";
+        if (lon > -20 && lon < 60 && lat > -40 && lat < 80) return "유럽 & 아프리카 (Europe & Africa)";
+        if (lon > 110 &&lon < 180 && lat > -50 && lat < 10) return "오세아니아 (Oceania)";
+        if (lon > -180 && lon < -170 || lon > 170) return "오세아니아/태평양 (Oceania/Pacific)";
+        return "기타 지역 (Other Regions)";
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return `${seconds}초 전`;
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}분 전`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}시간 전`;
+        return `${Math.floor(hours / 24)}일 전`;
+    }
+
+    function requestNotificationPermission() {
+        Notification.requestPermission();
+    }
+
+    // 지진 테이블 렌더링
+    function renderQuakeData(events) {
+        const container = document.getElementById('quake-container');
+        container.innerHTML = "";
+
+        // 대륙별 그룹화
+        const groups = {};
+        const continentOrder = ["🚨 중점 감시 (동아시아 4개국)", "아시아 (Asia)", "아메리카 (Americas)", "유럽 & 아프리카 (Europe & Africa)", "오세아니아 (Oceania)", "오세아니아/태평양 (Oceania/Pacific)", "기타 지역 (Other Regions)"];
+
+        events.forEach(q => {
+            const [lon, lat] = q.geometry.coordinates;
+            const continent = getContinent(lat, lon, q.properties.place);
+            if (!groups[continent]) groups[continent] = [];
+            groups[continent].push(q);
+        });
+
+        continentOrder.forEach(name => {
+            if (!groups[name] || groups[name].length === 0) return;
+
+            const section = document.createElement('div');
+            const isPriority = name.includes("🚨");
+            section.className = `continent-header ${isPriority ? 'priority-header' : ''}`;
+            section.innerText = name;
+            container.appendChild(section);
+
+            const table = document.createElement('table');
+            table.innerHTML = `<thead><tr><th>지역</th><th>발생 시각</th><th>규모</th><th>상세지도</th><th>깊이</th></tr></thead>`;
+            const tbody = document.createElement('tbody');
+
+            groups[name].slice(0, 15).forEach(q => {
+                const p = q.properties;
+                const coords = q.geometry.coordinates;
+                const occurDate = new Date(p.time);
+                const isTarget = isPriority;
+
+                if (isTarget && !notifiedIds.has(p.ids)) {
+                    if (Notification.permission === 'granted') {
+                        new Notification(`🚨 4개국 지진 발생: ${p.place}`, { body: `규모 M ${p.mag.toFixed(1)} / 시각: ${occurDate.toLocaleTimeString()}` });
+                    }
+                    notifiedIds.add(p.ids);
+                }
+
+                const rowClass = isTarget ? "priority-row" : "";
+                const magClass = p.mag >= 5 ? 'bg-red' : (p.mag >= 3 ? 'bg-orange' : 'bg-gray');
+
+                tbody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td><strong>${p.place.split(', ').pop()}</strong></td>
+                        <td><span class="time-info">${occurDate.toLocaleString()}</span><span class="time-ago">${getTimeAgo(occurDate)}</span></td>
+                        <td><span class="badge ${magClass}">M ${p.mag.toFixed(1)}</span></td>
+                        <td><a href="${p.url}/map" target="_blank" class="map-btn">USGS 공식지도</a><span class="location-text">${p.place}</span></td>
+                        <td>${coords[2].toFixed(1)} km</td>
+                    </tr>`;
+            });
+            table.appendChild(tbody);
+            container.appendChild(table);
+        });
+    }
+
+    async function fetchData() {
+        try {
+            const qRes = await fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson");
+            const qData = await qRes.json();
+            renderQuakeData(qData.features);const tRes = await fetch("https://www.gdacs.org/gdacsapi/api/events/geteventlist/events4app?eventtypes=TC");
+            const tData = await tRes.json();
+            const tBody = document.getElementById('typhoon-list');
+            tBody.innerHTML = "";
+            
+            // 태풍 정렬 (4개국 우선)
+            const tEvents = tData.features.filter(f => f.properties.eventtype === 'TC');
+            const tPriority = tEvents.filter(t => targetCountries.some(c => t.properties.description.includes(c)));
+            const tOthers = tEvents.filter(t => !targetCountries.some(c => t.properties.description.includes(c)));
+            
+            [...tPriority, ...tOthers].forEach(t => {
+                const p = t.properties;
+                const isTarget = targetCountries.some(c => p.description.includes(c));
+                const occurDate = new Date(p.fromdate);
+                const alertClass = p.alertlevel === 'Red' ? 'bg-red' : (p.alertlevel === 'Orange' ? 'bg-orange' : 'bg-blue');
+
+                tBody.innerHTML += `
+                    <tr class="${isTarget ? 'priority-row' : ''}">
+                        <td><span class="badge ${alertClass}">${p.alertlevel}</span></td>
+                        <td><strong>${p.name}</strong></td>
+                        <td><span class="time-info">${occurDate.toLocaleString()}</span><span class="time-ago">${getTimeAgo(occurDate)}</span></td>
+                        <td><a href="https://www.gdacs.org/report.aspx?eventid=${p.eventid}&eventtype=TC" target="_blank" class="map-btn">GDACS 경로</a><div class="location-text">${p.description.split(';')[0]}</div></td>
+                        <td>${t.geometry.coordinates[1].toFixed(2)}, ${t.geometry.coordinates[0].toFixed(2)}</td>
+                    </tr>`;
+            });
+
+            document.getElementById('update-time').innerText = `최근 동기화: ${new Date().toLocaleTimeString()}`;
+        } catch (e) { console.error(e); }
+    }
+
+    fetchData();
+    setInterval(fetchData, 600000);
+</script>
+
+</body>
+</html>
