@@ -8,16 +8,17 @@ from datetime import datetime, timedelta
 import json
 import os
 import re
-import concurrent.futures # [NEW] 병렬 처리를 위한 모듈
+import concurrent.futures
 
-# [필수] 번역 라이브러리
+# [필수] 라이브러리 (requirements.txt에 yfinance 추가 필요)
 from deep_translator import GoogleTranslator
+import yfinance as yf
 
 # Google Gemini
 import google.generativeai as genai
 
 # ==========================================
-# 0. 페이지 설정 및 CSS
+# 0. 페이지 설정 및 Modern CSS
 # ==========================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -33,9 +34,10 @@ st.markdown("""
             color: #1E293B;
         }
         
+        /* 메인 배경 */
         .stApp { background-color: #F8FAFC; }
 
-        /* 뉴스 카드 스타일 */
+        /* 뉴스 타이틀 */
         .news-title {
             font-size: 16px !important;
             font-weight: 700 !important;
@@ -45,23 +47,13 @@ st.markdown("""
             display: block;
             margin-bottom: 6px;
         }
-        .news-title:hover {
-            color: #2563EB !important;
-            text-decoration: underline;
-        }
+        .news-title:hover { color: #2563EB !important; text-decoration: underline; }
         
-        .news-snippet {
-            font-size: 13.5px !important;
-            color: #475569 !important;
-            line-height: 1.5;
-            margin-bottom: 10px;
-        }
+        /* 뉴스 요약 및 메타 */
+        .news-snippet { font-size: 13.5px !important; color: #475569 !important; line-height: 1.5; margin-bottom: 10px; }
+        .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
 
-        .news-meta {
-            font-size: 12px !important;
-            color: #94A3B8 !important;
-        }
-
+        /* 컨트롤 패널 */
         .control-box {
             background-color: #FFFFFF;
             padding: 15px 20px;
@@ -70,22 +62,75 @@ st.markdown("""
             margin-bottom: 20px;
         }
         
+        /* 버튼 스타일 */
         button[kind="secondary"] {
             height: 28px !important;
             font-size: 12px !important;
             padding: 0 10px !important;
             border-radius: 14px !important;
         }
+
+        /* 주식 정보 스타일 */
+        div[data-testid="stMetricValue"] { font-size: 14px !important; }
+        div[data-testid="stMetricDelta"] { font-size: 12px !important; }
+        div[data-testid="stMetricLabel"] { font-size: 12px !important; font-weight: 600; color: #64748B; }
     </style>
 """, unsafe_allow_html=True)
 
 CATEGORIES = [
-    "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
-    "Process Gas", "Precursor", "Metal target", "Wafer", "Package", "기업정보"
+    "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
+    "Process Gas", "Precursor", "Metal target", "Wafer", "Package"
 ]
 
 # ==========================================
-# 1. 유틸리티 함수
+# 1. 주식 데이터 관리 (yfinance)
+# ==========================================
+# 티커 매핑 (Yahoo Finance 기준)
+STOCK_TICKERS = {
+    "Samsung": "005930.KS",   # 삼성전자 (KRW)
+    "SK Hynix": "000660.KS",  # SK하이닉스 (KRW)
+    "Micron": "MU",           # 마이크론 (USD)
+    "TSMC": "TSM",            # TSMC (USD ADR)
+    "ASML": "ASML",           # ASML (USD ADR)
+    "AMAT": "AMAT",           # 어플라이드 머티어리얼즈 (USD)
+    "Lam Res": "LRCX",        # 램리서치 (USD)
+    "TEL": "8035.T",          # 도쿄일렉트론 (JPY)
+    "SMIC": "0981.HK"         # SMIC (HKD)
+}
+
+@st.cache_data(ttl=600) # 10분마다 갱신
+def get_stock_prices():
+    data = []
+    try:
+        # 한 번에 모든 티커 정보 가져오기 (속도 최적화)
+        tickers = " ".join(STOCK_TICKERS.values())
+        stocks = yf.Tickers(tickers)
+        
+        for name, symbol in STOCK_TICKERS.items():
+            try:
+                # 최근 데이터 가져오기
+                hist = stocks.tickers[symbol].history(period="5d")
+                if len(hist) >= 2:
+                    current = hist['Close'].iloc[-1]
+                    prev = hist['Close'].iloc[-2]
+                    change = current - prev
+                    pct_change = (change / prev) * 100
+                    
+                    # 통화 기호
+                    currency = "₩" if ".KS" in symbol else ("$" if symbol in ["MU","TSM","ASML","AMAT","LRCX"] else ("¥" if ".T" in symbol else "HK$"))
+                    
+                    data.append({
+                        "Name": name,
+                        "Price": f"{currency}{current:,.0f}" if currency in ["₩", "¥"] else f"{currency}{current:,.2f}",
+                        "Delta": f"{change:,.2f} ({pct_change:+.2f}%)",
+                        "Color": "normal" # Streamlit metric이 알아서 색상 처리
+                    })
+            except: pass
+    except: pass
+    return data
+
+# ==========================================
+# 2. 유틸리티 및 크롤링 로직
 # ==========================================
 KEYWORD_FILE = 'keywords.json'
 
@@ -106,60 +151,31 @@ def save_keywords(data):
             json.dump(data, f, ensure_ascii=False, indent=4)
     except: pass
 
-if 'keywords' not in st.session_state: st.session_state.keywords = load_keywords()
-if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] for cat in CATEGORIES}
-if 'last_update' not in st.session_state: st.session_state.last_update = None
-
-# ==========================================
-# 2. 로직: 크롤링 & 병렬 번역 & AI
-# ==========================================
-
-# [NEW] 단일 텍스트 번역 함수 (에러 처리 강화)
 def safe_translate(text):
     if not text: return ""
     try:
-        # 1000자 제한
         return GoogleTranslator(source='auto', target='ko').translate(text[:999])
-    except:
-        return text
+    except: return text
 
-# [NEW] 기사 리스트 병렬 번역 처리기 (속도 개선의 핵심)
 def parallel_translate_articles(articles):
-    # 번역이 필요한 기사(해외)만 식별
-    tasks = []
-    for article in articles:
-        # KR이 아닌 경우에만 번역 대상
-        if 'KR' not in article.get('Country', 'KR'):
-            tasks.append(article)
-    
-    if not tasks:
-        return articles
+    tasks = [a for a in articles if 'KR' not in a.get('Country', 'KR')]
+    if not tasks: return articles
 
-    # ThreadPool로 병렬 처리 (최대 10개 동시 작업)
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        # 제목 번역 Future 생성
         title_futures = {executor.submit(safe_translate, a['Title']): a for a in tasks}
-        # 요약 번역 Future 생성
         snip_futures = {executor.submit(safe_translate, a['Snippet']): a for a in tasks}
         
-        # 결과 수집 (제목)
         for future in concurrent.futures.as_completed(title_futures):
-            article = title_futures[future]
             try:
-                trans_title = future.result()
-                if trans_title and trans_title != article['Title']:
-                    article['Title'] = trans_title
+                res = future.result()
+                if res: title_futures[future]['Title'] = res
             except: pass
 
-        # 결과 수집 (요약)
         for future in concurrent.futures.as_completed(snip_futures):
-            article = snip_futures[future]
             try:
-                trans_snip = future.result()
-                if trans_snip and trans_snip != article['Snippet']:
-                    article['Snippet'] = f"🌐 {trans_snip}"
+                res = future.result()
+                if res: snip_futures[future]['Snippet'] = f"🌐 {res}"
             except: pass
-            
     return articles
 
 def make_smart_query(keyword, country_code):
@@ -212,22 +228,18 @@ def crawl_google_rss(keyword, country_code, language):
         response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5, verify=False)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'xml')
-            for item in soup.find_all('item')[:5]: # 키워드 당 5개 제한
+            for item in soup.find_all('item')[:5]:
                 src = item.source.text if item.source else "Google"
-                raw_d = item.description.text if item.description else ""
-                snip = BeautifulSoup(raw_d, "html.parser").get_text(strip=True)[:200]
-                title = item.title.text
-
-                # [최적화] 여기서 번역하지 않고 원본만 저장
+                snip = BeautifulSoup(item.description.text if item.description else "", "html.parser").get_text(strip=True)[:200]
+                
                 pub_date = item.pubDate.text if item.pubDate else str(datetime.now())
                 try: dt_obj = pd.to_datetime(pub_date).to_pydatetime()
                 except: dt_obj = datetime.now()
 
                 results.append({
-                    'Title': title, 'Source': src, 'Date': dt_obj,
+                    'Title': item.title.text, 'Source': src, 'Date': dt_obj,
                     'Link': item.link.text, 'Keyword': keyword, 'Snippet': snip,
-                    'AI_Verified': False,
-                    'Country': country_code # 번역 대상 식별용
+                    'AI_Verified': False, 'Country': country_code
                 })
     except: pass
     return results
@@ -238,36 +250,29 @@ def perform_crawling(category, start_date, end_date, api_key):
     start_dt = datetime.combine(start_date, datetime.min.time())
     end_dt = datetime.combine(end_date, datetime.max.time())
     
-    with st.spinner(f"🚀 '{category}' 뉴스 고속 수집 중..."):
+    with st.spinner(f"🚀 '{category}' 뉴스 수집 중..."):
         all_news = []
         for kw in kws:
-            # KR, US, TW, CN 등 수집
             for cc, lang in [('KR','ko'), ('US','en'), ('TW','zh-TW'), ('CN', 'zh-CN')]:
                 all_news.extend(crawl_google_rss(kw, cc, lang))
         
-        # 1. 데이터 정리 (날짜 필터 및 중복 제거)
         df = pd.DataFrame(all_news)
         if not df.empty:
             df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
             df = df.drop_duplicates(subset=['Title']).sort_values('Date', ascending=False)
-            
-            # 2. 상위 60개만 남김 (번역 대상 최소화)
             final_list = df.head(60).to_dict('records')
-            
-            # 3. [최적화] 살아남은 기사만 병렬 번역 실행
-            if final_list:
-                final_list = parallel_translate_articles(final_list)
-
-            # 4. AI 필터링
-            if api_key and final_list:
-                final_list = filter_with_gemini(final_list, api_key)
-            
+            if final_list: final_list = parallel_translate_articles(final_list)
+            if api_key and final_list: final_list = filter_with_gemini(final_list, api_key)
             st.session_state.news_data[category] = final_list
         else:
              st.session_state.news_data[category] = []
 
+if 'keywords' not in st.session_state: st.session_state.keywords = load_keywords()
+if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] for cat in CATEGORIES}
+if 'last_update' not in st.session_state: st.session_state.last_update = None
+
 # ==========================================
-# 3. Sidebar
+# 3. Sidebar UI (메뉴 & 주식 정보)
 # ==========================================
 with st.sidebar:
     st.header("Semi-Insight")
@@ -280,6 +285,22 @@ with st.sidebar:
         if not api_key and "GEMINI_API_KEY" in st.secrets:
             api_key = st.secrets["GEMINI_API_KEY"]
             st.caption("Loaded")
+            
+    # [NEW] 사이드바 하단 주식 정보 (Expander)
+    st.markdown("---")
+    with st.expander("📉 Global Stock", expanded=False):
+        stock_data = get_stock_prices()
+        if stock_data:
+            for stock in stock_data:
+                # 2열로 깔끔하게 배치 (이름 / 가격+변동)
+                sc1, sc2 = st.columns([1, 1.5])
+                with sc1:
+                    st.caption(f"**{stock['Name']}**")
+                with sc2:
+                    st.metric(label="", value=stock['Price'], delta=stock['Delta'], label_visibility="collapsed")
+                st.markdown("<hr style='margin: 5px 0; border-top: 1px dashed #eee;'>", unsafe_allow_html=True)
+        else:
+            st.caption("데이터 로딩 중...")
 
 # ==========================================
 # 4. Main UI
@@ -290,7 +311,6 @@ with c_info:
     if st.session_state.last_update:
         st.markdown(f"<div style='text-align:right; font-size:12px; color:#888;'>Last Update<br><b>{st.session_state.last_update}</b></div>", unsafe_allow_html=True)
 
-# 컨트롤 패널
 with st.container(border=True):
     c1, c2, c3 = st.columns([1.5, 2.5, 1])
     with c1:
@@ -303,9 +323,7 @@ with st.container(border=True):
             if len(dr)==2: s, e = dr
             else: s, e = dr[0], dr[0]
             
-    with c2:
-        new_kw = st.text_input("키워드", placeholder="예: HBM", label_visibility="collapsed")
-        
+    with c2: new_kw = st.text_input("키워드", placeholder="예: HBM", label_visibility="collapsed")
     with c3:
         b1, b2 = st.columns(2)
         with b1:
@@ -320,7 +338,6 @@ with st.container(border=True):
                 st.session_state.last_update = datetime.now().strftime("%Y-%m-%d %H:%M")
                 st.rerun()
 
-    # 키워드 태그
     curr_kws = st.session_state.keywords.get(selected_category, [])
     if curr_kws:
         st.write("")
@@ -331,9 +348,7 @@ with st.container(border=True):
                 save_keywords(st.session_state.keywords)
                 st.rerun()
 
-# 결과 리스트
 data = st.session_state.news_data.get(selected_category, [])
-
 if data:
     st.divider()
     m1, m2 = st.columns(2)
@@ -347,24 +362,16 @@ if data:
         for idx, item in enumerate(row_items):
             with cols[idx]:
                 with st.container(border=True):
-                    # 메타 정보
                     st.markdown(f"""
                         <div class="news-meta" style="display:flex; justify-content:space-between; margin-bottom:5px;">
                             <span>📰 {item['Source']}</span>
                             <span>{item['Date'].strftime('%Y-%m-%d')}</span>
                         </div>
                     """, unsafe_allow_html=True)
-                    
-                    # 제목 (16px)
                     st.markdown(f'<a href="{item["Link"]}" target="_blank" class="news-title">{item["Title"]}</a>', unsafe_allow_html=True)
-                    
-                    # 요약 (13.5px)
                     if item.get('Snippet'):
                         st.markdown(f'<div class="news-snippet">{item["Snippet"]}</div>', unsafe_allow_html=True)
-                    
                     st.markdown("---")
-                    
-                    # 하단 태그
                     ft1, ft2 = st.columns([3, 1])
                     with ft1:
                         st.markdown(f"<span style='background:#F1F5F9; color:#64748B; padding:3px 8px; border-radius:4px; font-size:11px;'>#{item['Keyword']}</span>", unsafe_allow_html=True)
