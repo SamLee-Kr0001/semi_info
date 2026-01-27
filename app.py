@@ -10,7 +10,7 @@ import os
 import re
 import concurrent.futures
 
-# [필수] 라이브러리 (requirements.txt에 yfinance 추가 필요)
+# [필수] 라이브러리
 from deep_translator import GoogleTranslator
 import yfinance as yf
 
@@ -85,17 +85,31 @@ CATEGORIES = [
 # ==========================================
 # 1. 주식 데이터 관리 (yfinance)
 # ==========================================
-# 티커 매핑 (Yahoo Finance 기준)
+# [업데이트] 요청하신 모든 기업 리스트 추가
 STOCK_TICKERS = {
-    "Samsung": "005930.KS",   # 삼성전자 (KRW)
-    "SK Hynix": "000660.KS",  # SK하이닉스 (KRW)
-    "Micron": "MU",           # 마이크론 (USD)
-    "TSMC": "TSM",            # TSMC (USD ADR)
-    "ASML": "ASML",           # ASML (USD ADR)
-    "AMAT": "AMAT",           # 어플라이드 머티어리얼즈 (USD)
-    "Lam Res": "LRCX",        # 램리서치 (USD)
-    "TEL": "8035.T",          # 도쿄일렉트론 (JPY)
-    "SMIC": "0981.HK"         # SMIC (HKD)
+    # 주요 메모리/파운드리
+    "Samsung": "005930.KS",   # 삼성전자
+    "SK Hynix": "000660.KS",  # SK하이닉스
+    "Micron": "MU",           # 마이크론
+    "TSMC": "TSM",            # TSMC (ADR)
+    "SMIC": "0981.HK",        # SMIC
+    "Intel": "INTC",          # 인텔
+    
+    # 주요 팹리스/시스템
+    "Nvidia": "NVDA",         # 엔비디아
+    "Broadcom": "AVGO",       # 브로드컴
+    
+    # 장비 (Global)
+    "ASML": "ASML",           # ASML
+    "AMAT": "AMAT",           # 어플라이드 머티어리얼즈
+    "Lam Res": "LRCX",        # 램리서치
+    "TEL": "8035.T",          # 도쿄일렉트론
+    
+    # 국내 소재/부품 (K-Materials)
+    "Dongjin": "005290.KS",   # 동진쎄미켐
+    "Soulbrain": "357780.KS", # 솔브레인
+    "ENF": "102710.KS",       # 이엔에프테크놀로지
+    "Ycchem": "232140.KS"     # 와이씨켐
 }
 
 @st.cache_data(ttl=600) # 10분마다 갱신
@@ -116,14 +130,17 @@ def get_stock_prices():
                     change = current - prev
                     pct_change = (change / prev) * 100
                     
-                    # 통화 기호
-                    currency = "₩" if ".KS" in symbol else ("$" if symbol in ["MU","TSM","ASML","AMAT","LRCX"] else ("¥" if ".T" in symbol else "HK$"))
+                    # [개선] 통화 기호 자동 매핑 로직
+                    if ".KS" in symbol: currency = "₩"
+                    elif ".T" in symbol: currency = "¥"
+                    elif ".HK" in symbol: currency = "HK$"
+                    else: currency = "$" # 나머지는 USD로 간주
                     
                     data.append({
                         "Name": name,
                         "Price": f"{currency}{current:,.0f}" if currency in ["₩", "¥"] else f"{currency}{current:,.2f}",
                         "Delta": f"{change:,.2f} ({pct_change:+.2f}%)",
-                        "Color": "normal" # Streamlit metric이 알아서 색상 처리
+                        "Color": "normal"
                     })
             except: pass
     except: pass
@@ -286,14 +303,14 @@ with st.sidebar:
             api_key = st.secrets["GEMINI_API_KEY"]
             st.caption("Loaded")
             
-    # [NEW] 사이드바 하단 주식 정보 (Expander)
+    # [NEW] 사이드바 하단 주식 정보
     st.markdown("---")
     with st.expander("📉 Global Stock", expanded=False):
         stock_data = get_stock_prices()
         if stock_data:
             for stock in stock_data:
-                # 2열로 깔끔하게 배치 (이름 / 가격+변동)
-                sc1, sc2 = st.columns([1, 1.5])
+                # 2열 배치: 이름 | 가격(등락)
+                sc1, sc2 = st.columns([1, 1.3])
                 with sc1:
                     st.caption(f"**{stock['Name']}**")
                 with sc2:
