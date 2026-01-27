@@ -109,7 +109,7 @@ STOCK_TICKERS = {
     "Dongjin": "005290.KS",   # 동진쎄미켐
     "Soulbrain": "357780.KS", # 솔브레인
     "ENF": "102710.KS",       # 이엔에프테크놀로지
-    "Ycchem": "232140.KS"     # 와이씨켐
+    "Ycchem": "112290.KS"     # 와이씨켐
 }
 
 @st.cache_data(ttl=600) # 10분마다 갱신
