@@ -71,58 +71,85 @@ st.markdown("""
         }
 
         /* 주식 정보 스타일 */
-        div[data-testid="stMetricValue"] { font-size: 14px !important; }
-        div[data-testid="stMetricDelta"] { font-size: 12px !important; }
-        div[data-testid="stMetricLabel"] { font-size: 12px !important; font-weight: 600; color: #64748B; }
+        div[data-testid="stMetricValue"] { font-size: 13px !important; }
+        div[data-testid="stMetricDelta"] { font-size: 11px !important; }
+        div[data-testid="stMetricLabel"] { font-size: 11px !important; font-weight: 600; color: #64748B; }
+        
+        /* 주식 카테고리 헤더 */
+        .stock-header {
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #E2E8F0;
+            padding-bottom: 4px;
+        }
     </style>
 """, unsafe_allow_html=True)
 
 CATEGORIES = [
-    "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
+     "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
     "Process Gas", "Precursor", "Metal target", "Wafer", "Package", "기업정보"
 ]
 
 # ==========================================
-# 1. 주식 데이터 관리 (yfinance)
+# 1. 주식 데이터 관리 (카테고리형 구조)
 # ==========================================
-# [업데이트] 요청하신 모든 기업 리스트 추가
-STOCK_TICKERS = {
-    # 주요 메모리/파운드리
-    "Samsung": "005930.KS",   # 삼성전자
-    "SK Hynix": "000660.KS",  # SK하이닉스
-    "Micron": "MU",           # 마이크론
-    "TSMC": "TSM",            # TSMC (ADR)
-    "SMIC": "0981.HK",        # SMIC
-    "Intel": "INTC",          # 인텔
-    
-    # 주요 팹리스/시스템
-    "Nvidia": "NVDA",         # 엔비디아
-    "Broadcom": "AVGO",       # 브로드컴
-    
-    # 장비 (Global)
-    "ASML": "ASML",           # ASML
-    "AMAT": "AMAT",           # 어플라이드 머티어리얼즈
-    "Lam Res": "LRCX",        # 램리서치
-    "TEL": "8035.T",          # 도쿄일렉트론
-    
-    # 국내 소재/부품 (K-Materials)
-    "Dongjin": "005290.KS",   # 동진쎄미켐
-    "Soulbrain": "357780.KS", # 솔브레인
-    "ENF": "102710.KS",       # 이엔에프테크놀로지
-    "Ycchem": "112290.KS"     # 와이씨켐
+STOCK_CATEGORIES = {
+    "🏭 Chipmakers (IDM/Foundry)": {
+        "Samsung": "005930.KS",
+        "SK Hynix": "000660.KS",
+        "Micron": "MU",
+        "TSMC": "TSM",
+        "Intel": "INTC",
+        "SMIC": "0981.HK"
+    },
+    "🧠 Fabless & System": {
+        "Nvidia": "NVDA",
+        "Broadcom": "AVGO",
+        "Qnity (Q)": "Q"
+    },
+    "⚙️ Equipment": {
+        "ASML": "ASML",
+        "AMAT": "AMAT",
+        "Lam Res": "LRCX",
+        "TEL": "8035.T",
+        "KLA Corp": "KLAC",
+        "Hanmi Semi": "042700.KS",
+        "Jusung Eng": "036930.KS"
+    },
+    "🧪 Materials": {
+        "Shin-Etsu": "4063.T",     # 신에츠
+        "Sumitomo": "4005.T",      # 스미토모
+        "TOK": "4186.T",           # 도쿄오카공업
+        "Nissan Chem": "4021.T",   # 닛산화학
+        "Merck (DE)": "MRK.DE",    # 머크 (독일)
+        "Air Liquide": "AI.PA",    # 에어리퀴드 (프랑스)
+        "Linde": "LIN",            # 린데
+        "Soulbrain": "357780.KS",  # 솔브레인
+        "Dongjin": "005290.KS",    # 동진쎄미켐
+        "ENF Tech": "102710.KS",   # 이엔에프
+        "Samsung SDI": "006400.KS", #삼성 SDI
+        "Ycchem": "232140.KS"      # 와이씨켐
+    }
 }
 
-@st.cache_data(ttl=600) # 10분마다 갱신
-def get_stock_prices():
-    data = []
+@st.cache_data(ttl=600)
+def get_stock_prices_grouped():
+    # 1. 모든 티커 추출 및 데이터 한 번에 요청
+    all_tickers = []
+    for cat in STOCK_CATEGORIES.values():
+        all_tickers.extend(cat.values())
+    
+    ticker_str = " ".join(all_tickers)
+    
+    result_map = {} # {티커: {price, delta}} 저장용
     try:
-        # 한 번에 모든 티커 정보 가져오기 (속도 최적화)
-        tickers = " ".join(STOCK_TICKERS.values())
-        stocks = yf.Tickers(tickers)
-        
-        for name, symbol in STOCK_TICKERS.items():
+        stocks = yf.Tickers(ticker_str)
+        # 각 티커별 데이터 가공
+        for symbol in all_tickers:
             try:
-                # 최근 데이터 가져오기
                 hist = stocks.tickers[symbol].history(period="5d")
                 if len(hist) >= 2:
                     current = hist['Close'].iloc[-1]
@@ -130,21 +157,21 @@ def get_stock_prices():
                     change = current - prev
                     pct_change = (change / prev) * 100
                     
-                    # [개선] 통화 기호 자동 매핑 로직
+                    # 통화 기호
                     if ".KS" in symbol: currency = "₩"
                     elif ".T" in symbol: currency = "¥"
                     elif ".HK" in symbol: currency = "HK$"
-                    else: currency = "$" # 나머지는 USD로 간주
+                    elif ".DE" in symbol or ".PA" in symbol: currency = "€" # 독일/프랑스
+                    else: currency = "$"
                     
-                    data.append({
-                        "Name": name,
-                        "Price": f"{currency}{current:,.0f}" if currency in ["₩", "¥"] else f"{currency}{current:,.2f}",
-                        "Delta": f"{change:,.2f} ({pct_change:+.2f}%)",
-                        "Color": "normal"
-                    })
+                    price_str = f"{currency}{current:,.0f}" if currency in ["₩", "¥"] else f"{currency}{current:,.2f}"
+                    delta_str = f"{change:,.2f} ({pct_change:+.2f}%)"
+                    
+                    result_map[symbol] = {"Price": price_str, "Delta": delta_str}
             except: pass
     except: pass
-    return data
+    
+    return result_map
 
 # ==========================================
 # 2. 유틸리티 및 크롤링 로직
@@ -289,7 +316,7 @@ if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] fo
 if 'last_update' not in st.session_state: st.session_state.last_update = None
 
 # ==========================================
-# 3. Sidebar UI (메뉴 & 주식 정보)
+# 3. Sidebar UI
 # ==========================================
 with st.sidebar:
     st.header("Semi-Insight")
@@ -303,21 +330,26 @@ with st.sidebar:
             api_key = st.secrets["GEMINI_API_KEY"]
             st.caption("Loaded")
             
-    # [NEW] 사이드바 하단 주식 정보
+    # [NEW] 사이드바 하단 주식 정보 (기본 Open & 구분자 적용)
     st.markdown("---")
-    with st.expander("📉 Global Stock", expanded=False):
-        stock_data = get_stock_prices()
-        if stock_data:
-            for stock in stock_data:
-                # 2열 배치: 이름 | 가격(등락)
-                sc1, sc2 = st.columns([1, 1.3])
-                with sc1:
-                    st.caption(f"**{stock['Name']}**")
-                with sc2:
-                    st.metric(label="", value=stock['Price'], delta=stock['Delta'], label_visibility="collapsed")
-                st.markdown("<hr style='margin: 5px 0; border-top: 1px dashed #eee;'>", unsafe_allow_html=True)
+    # expanded=True로 기본 펼침 설정
+    with st.expander("📉 Global Stock", expanded=True):
+        stock_map = get_stock_prices_grouped()
+        
+        if stock_map:
+            # 카테고리별로 순회하며 표시
+            for cat_name, items in STOCK_CATEGORIES.items():
+                st.markdown(f"<div class='stock-header'>{cat_name}</div>", unsafe_allow_html=True)
+                
+                for name, symbol in items.items():
+                    data = stock_map.get(symbol)
+                    if data:
+                        sc1, sc2 = st.columns([1, 1.2])
+                        with sc1: st.caption(f"**{name}**")
+                        with sc2: st.metric("", data['Price'], data['Delta'], label_visibility="collapsed")
+                        st.markdown("<hr style='margin: 2px 0; border-top: 1px dashed #f1f5f9;'>", unsafe_allow_html=True)
         else:
-            st.caption("데이터 로딩 중...")
+            st.caption("⏳ Loading...")
 
 # ==========================================
 # 4. Main UI
