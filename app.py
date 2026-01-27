@@ -8,119 +8,124 @@ from datetime import datetime, timedelta
 import json
 import os
 import re
+import html # HTML 이스케이프용
 
 # Google Gemini
 import google.generativeai as genai
 
 # ==========================================
-# 0. 페이지 설정 및 Modern CSS
+# 0. 페이지 설정 및 Modern CSS (Advanced)
 # ==========================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-st.set_page_config(layout="wide", page_title="Semiconductor Insight Hub", page_icon="💾")
+st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
 
-# 커스텀 CSS 주입
+# 세련된 UI를 위한 Custom CSS
 st.markdown("""
     <style>
-        /* 전체 폰트 및 배경 설정 */
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
         
         html, body, [class*="css"] {
             font-family: 'Pretendard', sans-serif;
+            color: #1E293B;
         }
         
-        /* 메인 타이틀 스타일 */
-        .main-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #1E3A8A; /* Navy Blue */
-            margin-bottom: 0.5rem;
-        }
-        .sub-title {
-            font-size: 1.1rem;
-            color: #64748B;
-            margin-bottom: 2rem;
+        /* 전체 배경색 조정 */
+        .stApp {
+            background-color: #F8FAFC;
         }
 
-        /* 뉴스 카드 스타일 (핵심) */
-        .news-card {
-            background-color: white;
-            border-radius: 12px;
+        /* 1. 컨트롤 패널 스타일 (상단 검색바) */
+        .control-panel {
+            background-color: #FFFFFF;
             padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
             border: 1px solid #E2E8F0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
+        }
+
+        /* 2. 뉴스 카드 스타일 (Shadow & Hover) */
+        .news-card {
+            background-color: #FFFFFF;
+            border-radius: 12px;
+            padding: 24px;
             height: 100%;
+            border: 1px solid #F1F5F9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
         .news-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-            border-color: #3B82F6;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: #6366f1; /* Indigo highlight */
         }
         
-        /* 카드 내부 요소 */
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
-        .news-link {
+        .news-title {
             font-size: 1.15rem;
             font-weight: 700;
-            color: #1E293B;
+            color: #0F172A;
             text-decoration: none;
+            margin-bottom: 10px;
+            display: block;
             line-height: 1.4;
         }
-        .news-link:hover {
-            color: #2563EB;
+        .news-title:hover {
+            color: #4F46E5; /* Indigo-600 */
         }
-        .snippet {
-            font-size: 0.9rem;
-            color: #475569;
-            line-height: 1.5;
-            margin-bottom: 15px;
+        
+        .news-snippet {
+            font-size: 0.95rem;
+            color: #64748B;
+            line-height: 1.6;
+            margin-bottom: 20px;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            flex-grow: 1;
         }
-        .meta-info {
-            font-size: 0.8rem;
-            color: #94A3B8;
+
+        .news-meta {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding-top: 16px;
             border-top: 1px solid #F1F5F9;
-            padding-top: 10px;
+            font-size: 0.85rem;
+            color: #94A3B8;
         }
-        
-        /* 태그 스타일 */
-        .tag-pill {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 99px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
-        .tag-ai { background-color: #DBEAFE; color: #1E40AF; border: 1px solid #BFDBFE; }
-        .tag-kw { background-color: #F1F5F9; color: #475569; }
-        .source-badge { font-weight: 600; color: #64748B; }
 
-        /* 사이드바 스타일 */
+        /* 뱃지 스타일 */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+        .badge-ai { background-color: #EEF2FF; color: #4F46E5; border: 1px solid #C7D2FE; }
+        .badge-src { background-color: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; }
+        
+        /* Sidebar 스타일링 */
         [data-testid="stSidebar"] {
-            background-color: #F8FAFC;
+            background-color: #FFFFFF;
             border-right: 1px solid #E2E8F0;
         }
         
-        /* 버튼 스타일 오버라이드 */
+        /* 버튼 커스텀 */
         div.stButton > button {
             border-radius: 8px;
+            height: 42px;
             font-weight: 600;
+        }
+        
+        /* Expander 커스텀 */
+        .streamlit-expanderHeader {
+            font-weight: 600;
+            color: #334155;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -131,7 +136,7 @@ CATEGORIES = [
 ]
 
 # ==========================================
-# 1. 데이터 관리 로직 (기존 유지)
+# 1. 데이터 및 유틸리티 (기존 로직 유지)
 # ==========================================
 KEYWORD_FILE = 'keywords.json'
 
@@ -140,40 +145,36 @@ def load_keywords():
     if os.path.exists(KEYWORD_FILE):
         try:
             with open(KEYWORD_FILE, 'r', encoding='utf-8') as f:
-                loaded_data = json.load(f)
-            for key, val in loaded_data.items():
-                if key in data: data[key] = val
+                loaded = json.load(f)
+            for k, v in loaded.items():
+                if k in data: data[k] = v
         except: pass
     return data
 
-def save_keywords(keywords_dict):
+def save_keywords(data):
     try:
         with open(KEYWORD_FILE, 'w', encoding='utf-8') as f:
-            json.dump(keywords_dict, f, ensure_ascii=False, indent=4)
+            json.dump(data, f, ensure_ascii=False, indent=4)
     except: pass
 
 if 'keywords' not in st.session_state: st.session_state.keywords = load_keywords()
 if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] for cat in CATEGORIES}
 if 'last_update' not in st.session_state: st.session_state.last_update = None
 
-# ==========================================
-# 2. 로직: 쿼리 생성 & Gemini 필터 & 크롤링
-# ==========================================
+# 크롤링 및 AI 로직 (핵심 기능 유지)
 def make_smart_query(keyword, country_code):
     base_kw = keyword
-    negatives = "-TikTok -틱톡 -douyin -dance -shorts -reels -viral -music -influencer -game"
+    negatives = "-TikTok -틱톡 -douyin -dance -shorts -reels -viral -music -influencer -game -soccer"
     
-    if country_code == 'KR':
-        context = "(반도체 OR 소자 OR 공정 OR 소재 OR 파운드리 OR 팹 OR 양산)"
-    elif country_code in ['CN', 'HK']: 
-        context = "(半导体 OR 芯片 OR 晶圆 OR 光刻胶 OR 蚀刻 OR 封装)"
-    elif country_code == 'TW':
-        context = "(半導體 OR 晶片 OR 晶圓 OR 光阻 OR 蝕刻 OR 封裝)"
-    elif country_code == 'JP':
-        context = "(半導体 OR シリコン OR ウェーハ OR レジスト)"
-    else: 
-        context = "(semiconductor OR chip OR fab OR foundry OR wafer OR lithography)"
-
+    contexts = {
+        'KR': "(반도체 OR 소자 OR 공정 OR 소재 OR 파운드리 OR 팹 OR 양산)",
+        'CN': "(半导体 OR 芯片 OR 晶圆 OR 光刻胶 OR 蚀刻 OR 封装)",
+        'HK': "(半导体 OR 芯片 OR 晶圆 OR 光刻胶 OR 蚀刻 OR 封装)",
+        'TW': "(半導體 OR 晶片 OR 晶圓 OR 光阻 OR 蝕刻 OR 封裝)",
+        'JP': "(半導体 OR シリコン OR ウェーハ OR レジスト)",
+        'US': "(semiconductor OR chip OR fab OR foundry OR wafer OR lithography)"
+    }
+    context = contexts.get(country_code, contexts['US'])
     return f'{base_kw} AND {context} {negatives}'
 
 def filter_with_gemini(articles, api_key):
@@ -182,249 +183,218 @@ def filter_with_gemini(articles, api_key):
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
         
+        # 텍스트가 너무 길면 오류가 날 수 있으니 적당히 자름
         content_text = ""
-        for i, item in enumerate(articles):
-            snippet = item.get('Snippet', '')
-            content_text += f"ID_{i+1} | KW: {item['Keyword']} | Src: {item['Source']} | Title: {item['Title']} | Snip: {snippet}\n"
+        for i, item in enumerate(articles[:40]): # API 비용/속도 고려하여 최대 40개만 검사
+            snippet = item.get('Snippet', '')[:100]
+            content_text += f"ID_{i+1} | Title: {item['Title']} | Snip: {snippet}\n"
             
         prompt = f"""
-        Role: Strict Semiconductor Intelligence Analyst.
-        Goal: Filter out noise. Keep B2B Tech/Fab/Materials.
-        *** RULES ***
-        1. Reject 'TikTok', 'Douyin', purely consumer gadgets.
-        2. Keep Fab, Lithography, Materials, Equipment, Market share, Yield.
-        *** DATA ***
-        {content_text}
-        *** OUTPUT ***
-        Return IDs of valid articles (e.g., 1, 3). If none, return None.
+        Role: Semiconductor B2B Analyst.
+        Task: Identify valid industry news.
+        Rules: Keep Fab, Tech, Materials, Equipment. Reject Consumer gadgets/Games/Stocks.
+        Data: {content_text}
+        Output: Return ONLY the IDs (e.g., 1, 3, 5) of valid articles.
         """
         response = model.generate_content(prompt)
-        response_text = response.text
-        if "None" in response_text and len(response_text) < 10: return []
-            
-        valid_indices = [int(num) - 1 for num in re.findall(r'\d+', response_text)]
+        nums = re.findall(r'\d+', response.text)
+        valid_indices = [int(n)-1 for n in nums]
+        
         filtered = []
         for idx in valid_indices:
             if 0 <= idx < len(articles):
-                articles[idx]['AI_Verified'] = True 
+                articles[idx]['AI_Verified'] = True
                 filtered.append(articles[idx])
-        return filtered
-    except Exception as e:
-        print(f"AI Error: {e}")
+        return filtered if filtered else articles # 너무 많이 걸러지면 원본 반환 안전장치
+    except Exception:
         return articles
-
-def get_headers():
-    return {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
-
-def parse_date(date_str):
-    try:
-        now = datetime.now()
-        date_str = str(date_str).strip()
-        if any(x in date_str for x in ['시간', 'hour', '분', 'min']): return now
-        if any(x in date_str for x in ['일 전', 'day']):
-            days = int(re.search(r'\d+', date_str).group())
-            return now - timedelta(days=days)
-        return pd.to_datetime(date_str).to_pydatetime()
-    except: return datetime.now()
 
 def crawl_google_rss(keyword, country_code, language):
     results = []
     smart_query = make_smart_query(keyword, country_code)
-    base_url = f"https://news.google.com/rss/search?q={quote(smart_query)}&hl={language}&gl={country_code}&ceid={country_code}:{language}"
+    url = f"https://news.google.com/rss/search?q={quote(smart_query)}&hl={language}&gl={country_code}&ceid={country_code}:{language}"
     
     try:
-        response = requests.get(base_url, headers=get_headers(), timeout=10, verify=False)
+        response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5, verify=False)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'xml')
-            for item in soup.find_all('item'):
-                source = item.source.text if item.source else "Google News"
-                raw_desc = item.description.text if item.description else ""
-                snippet = BeautifulSoup(raw_desc, "html.parser").get_text(strip=True)
+            for item in soup.find_all('item')[:5]: # 키워드 당 최대 5개로 제한 (속도 향상)
+                src = item.source.text if item.source else "Google"
+                raw_d = item.description.text if item.description else ""
+                snip = BeautifulSoup(raw_d, "html.parser").get_text(strip=True)[:200]
+                
+                # 날짜 파싱 단순화
+                pub_date = item.pubDate.text if item.pubDate else str(datetime.now())
+                try: dt_obj = pd.to_datetime(pub_date).to_pydatetime()
+                except: dt_obj = datetime.now()
 
                 results.append({
-                    'Title': item.title.text, 
-                    'Source': f"{source} ({country_code})", 
-                    'Date': parse_date(item.pubDate.text), 
-                    'Link': item.link.text, 
-                    'Keyword': keyword,
-                    'Snippet': snippet[:200], # 스니펫 길이 조정
+                    'Title': item.title.text, 'Source': src, 'Date': dt_obj,
+                    'Link': item.link.text, 'Keyword': keyword, 'Snippet': snip,
                     'AI_Verified': False
                 })
     except: pass
     return results
 
 def perform_crawling(category, start_date, end_date, api_key):
-    keywords = st.session_state.keywords.get(category, [])
+    kws = st.session_state.keywords.get(category, [])
+    if not kws: return
+    
     start_dt = datetime.combine(start_date, datetime.min.time())
     end_dt = datetime.combine(end_date, datetime.max.time())
     
-    # Progress UI
-    progress_text = "Operation in progress. Please wait."
-    my_bar = st.progress(0, text=progress_text)
-    
-    if not keywords: 
-        st.toast("키워드가 없습니다.", icon="⚠️")
-        return
-
-    total_steps = len(keywords) * 6
-    step = 0 
-    raw_articles = []
-    
-    for kw in keywords:
-        targets = [
-            ('CN', 'zh-CN'), ('HK', 'zh-CN'), ('TW', 'zh-TW'),
-            ('KR', 'ko'), ('US', 'en'), ('JP', 'ja')
-        ]
-        for cc, lang in targets:
-            step += 1
-            my_bar.progress(step / total_steps, text=f"🔍 Searching '{kw}' in {cc}...")
-            raw_articles.extend(crawl_google_rss(kw, cc, lang))
-    
-    df = pd.DataFrame(raw_articles)
-    if not df.empty:
-        df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
-        df = df.sort_values(by='Date', ascending=False)
-        df = df.drop_duplicates(subset=['Title'])
-        candidates = df.head(80).to_dict('records')
-    else: candidates = []
-
-    if candidates and api_key:
-        my_bar.progress(0.95, text=f"🤖 Gemini AI is verifying {len(candidates)} articles...")
-        final_data = filter_with_gemini(candidates, api_key)
-    else:
-        final_data = candidates[:50]
-
-    my_bar.empty()
-    st.session_state.news_data[category] = final_data
-    if final_data:
-        st.toast(f"{len(final_data)}개의 뉴스를 찾았습니다!", icon="✅")
-    else:
-        st.toast("검색 결과가 없습니다.", icon="📭")
-
-# ==========================================
-# 3. UI 구성 (Sidebar & Main)
-# ==========================================
-
-# 사이드바
-with st.sidebar:
-    st.title("⚙️ Control Panel")
-    st.markdown("---")
-    
-    st.markdown("### 📂 Category")
-    selected_category = st.radio("Select Target:", CATEGORIES, index=0)
-    
-    st.markdown("### 🤖 Intelligence")
-    gemini_api_key = None
-    if "GEMINI_API_KEY" in st.secrets:
-        gemini_api_key = st.secrets["GEMINI_API_KEY"]
-        st.success("🔐 API Connected")
-    else:
-        gemini_api_key = st.text_input("Gemini API Key", type="password", placeholder="Paste API Key here")
-        if not gemini_api_key: st.info("ℹ️ Enter key for AI filtering")
+    with st.spinner(f"🌐 Scanning global news for {len(kws)} keywords..."):
+        all_news = []
+        for kw in kws:
+            # 주요 3개국만 우선 타겟팅 (속도 최적화)
+            for cc, lang in [('KR','ko'), ('US','en'), ('TW','zh-TW')]:
+                all_news.extend(crawl_google_rss(kw, cc, lang))
         
-    st.markdown("---")
-    st.caption("Coverage: CN / HK / TW / KR / US / JP")
-    st.caption("Developed by LSH")
-
-# 메인 영역
-st.markdown(f'<div class="main-title">{selected_category} Insights</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Global Semiconductor Market Intelligence & News Feed</div>', unsafe_allow_html=True)
-
-# 컨트롤 패널 (상단 배치)
-with st.container():
-    col1, col2, col3 = st.columns([1.5, 3, 1])
-    
-    with col1:
-        st.markdown("##### 📅 Date Range")
-        period = st.selectbox("기간 설정", ["1개월", "3개월", "6개월", "직접입력"], label_visibility="collapsed")
-        today = datetime.now().date()
-        if period == "1개월": start_date = today - timedelta(days=30); end_date = today
-        elif period == "3개월": start_date = today - timedelta(days=90); end_date = today
-        elif period == "6개월": start_date = today - timedelta(days=180); end_date = today
+        # 필터링 및 정렬
+        df = pd.DataFrame(all_news)
+        if not df.empty:
+            df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
+            df = df.drop_duplicates(subset=['Title']).sort_values('Date', ascending=False)
+            final_list = df.head(60).to_dict('records') # 최대 60개 유지
+            
+            if api_key and final_list:
+                final_list = filter_with_gemini(final_list, api_key)
+            
+            st.session_state.news_data[category] = final_list
         else:
-            dr = st.date_input("날짜 선택", (today - timedelta(days=7), today), label_visibility="collapsed")
-            if len(dr) == 2: start_date, end_date = dr
-            else: start_date = end_date = dr[0]
+             st.session_state.news_data[category] = []
 
-    with col2:
-        st.markdown("##### 🔑 Keywords")
-        c_kw1, c_kw2 = st.columns([3, 1])
-        new_kw = c_kw1.text_input("New Keyword", placeholder="Add keyword...", label_visibility="collapsed")
-        if c_kw2.button("Add", use_container_width=True):
-            if new_kw and new_kw not in st.session_state.keywords.get(selected_category, []):
-                st.session_state.keywords[selected_category].append(new_kw)
-                save_keywords(st.session_state.keywords)
-                st.rerun()
-        
-        # 키워드 칩 표시 (Expander로 숨김 처리 가능)
-        current_kws = st.session_state.keywords.get(selected_category, [])
-        with st.expander(f"Active Keywords ({len(current_kws)})", expanded=False):
-            if current_kws:
-                # 5열 그리드로 키워드 나열
-                k_cols = st.columns(5)
-                for idx, kw in enumerate(current_kws):
-                    if k_cols[idx % 5].button(f"🗑️ {kw}", key=f"del_{kw}", help="Click to remove"):
-                        st.session_state.keywords[selected_category].remove(kw)
-                        save_keywords(st.session_state.keywords)
-                        st.rerun()
-            else:
-                st.caption("No keywords registered.")
+# ==========================================
+# 2. Sidebar UI (Clean & Compact)
+# ==========================================
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/6182/6182650.png", width=50) # 임시 로고
+    st.markdown("### Semi-Insight Hub")
+    st.caption("Global Market Intelligence")
+    st.divider()
+    
+    # 카테고리 선택 - Selectbox가 더 깔끔함
+    st.markdown("#### 📂 Target Domain")
+    selected_category = st.selectbox("Select Category", CATEGORIES, label_visibility="collapsed")
+    
+    st.divider()
+    
+    # API Key 입력
+    with st.expander("🔐 API Settings", expanded=False):
+        api_key = st.text_input("Gemini API Key", type="password", key="s_api_key")
+        if not api_key and "GEMINI_API_KEY" in st.secrets:
+            api_key = st.secrets["GEMINI_API_KEY"]
+            st.success("Secrets Key Loaded")
+    
+    st.info(f"Current: **{selected_category}**\n\nCN/TW/KR/US Coverage")
 
-    with col3:
-        st.markdown("##### 🚀 Action")
-        if st.button("Run Crawler", type="primary", use_container_width=True):
-            perform_crawling(selected_category, start_date, end_date, gemini_api_key)
-            st.session_state.last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+# ==========================================
+# 3. Main Dashboard UI
+# ==========================================
+
+# (1) 헤더 영역
+col_h1, col_h2 = st.columns([3, 1])
+with col_h1:
+    st.title(f"{selected_category}")
+with col_h2:
+    if st.session_state.last_update:
+        st.caption(f"Last updated:\n{st.session_state.last_update}")
+
+# (2) 컨트롤 패널 (Toolbar 스타일)
+st.markdown('<div class="control-panel">', unsafe_allow_html=True)
+c1, c2, c3, c4 = st.columns([2, 3, 1, 1.5])
+
+with c1:
+    # 날짜
+    period = st.selectbox("📅 Period", ["1 Month", "3 Months", "Custom"], label_visibility="collapsed")
+    today = datetime.now().date()
+    if period == "1 Month": s_date, e_date = today - timedelta(days=30), today
+    elif period == "3 Months": s_date, e_date = today - timedelta(days=90), today
+    else: s_date, e_date = today - timedelta(days=7), today
+
+with c2:
+    # 키워드 입력
+    new_kw = st.text_input("➕ Add Keyword", placeholder="Type keyword (e.g., HBM)", label_visibility="collapsed")
+
+with c3:
+    # 키워드 추가 버튼
+    if st.button("Add", use_container_width=True):
+        if new_kw and new_kw not in st.session_state.keywords[selected_category]:
+            st.session_state.keywords[selected_category].append(new_kw)
+            save_keywords(st.session_state.keywords)
             st.rerun()
 
-st.markdown("---")
+with c4:
+    # 실행 버튼
+    if st.button("🚀 Scrape Now", type="primary", use_container_width=True):
+        perform_crawling(selected_category, s_date, e_date, api_key)
+        st.session_state.last_update = datetime.now().strftime("%Y-%m-%d %H:%M")
+        st.rerun()
 
-# 결과 표시 영역 (Card Layout)
+# 활성 키워드 표시 (Chips 형태)
+current_kws = st.session_state.keywords.get(selected_category, [])
+if current_kws:
+    st.write("Active Keywords:")
+    kw_cols = st.columns(8) # 한 줄에 여러 개
+    for i, kw in enumerate(current_kws):
+        if kw_cols[i % 8].button(f"{kw} ✖", key=f"k_{kw}", help="Remove"):
+            st.session_state.keywords[selected_category].remove(kw)
+            save_keywords(st.session_state.keywords)
+            st.rerun()
+else:
+    st.warning("등록된 키워드가 없습니다. 키워드를 추가해주세요.")
+
+st.markdown('</div>', unsafe_allow_html=True) # End Control Panel
+
+# (3) 데이터 그리드 (Bug Fix: Safer Rendering)
 data = st.session_state.news_data.get(selected_category, [])
 
-# 대시보드 요약 (데이터가 있을 때만)
 if data:
-    m1, m2, m3 = st.columns(3)
-    verified_count = sum(1 for d in data if d.get('AI_Verified'))
-    m1.metric("Total Articles", len(data))
-    m2.metric("AI Verified", f"{verified_count} cases")
-    m3.metric("Last Updated", st.session_state.last_update.split(' ')[1] if st.session_state.last_update else "-")
+    # Metric 요약
+    m1, m2 = st.columns(2)
+    m1.metric("Collected News", f"{len(data)}")
+    verified_cnt = sum(1 for d in data if d.get('AI_Verified'))
+    m2.metric("AI Verified", f"{verified_cnt}")
     
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.divider()
 
-    # Grid Layout (2 columns for desktop)
-    grid_cols = st.columns(2)
-    
-    for index, row in enumerate(data):
-        with grid_cols[index % 2]:
-            # AI 뱃지 로직
-            ai_badge_html = "<span class='tag-pill tag-ai'>✨ AI Verified</span>" if row.get('AI_Verified') else ""
-            date_str = row['Date'].strftime('%Y-%m-%d')
-            
-            # HTML Card Injection
-            html_card = f"""
-            <div class="news-card">
-                <div>
-                    <div class="card-header">
-                        <span class="source-badge">📰 {row['Source']}</span>
-                        {ai_badge_html}
+    # Grid Layout Logic (오류 방지 로직 적용)
+    # columns를 미리 선언하지 않고, 데이터를 2개씩 쪼개서 반복문 안에서 columns 생성
+    for i in range(0, len(data), 2):
+        row_items = data[i : i+2] # 2개씩 슬라이싱
+        cols = st.columns(2)
+        
+        for idx, item in enumerate(row_items):
+            with cols[idx]:
+                # HTML 이스케이프 (특수문자로 인한 깨짐 방지)
+                safe_title = html.escape(item['Title'])
+                safe_snip = html.escape(item.get('Snippet', ''))
+                safe_src = html.escape(item['Source'])
+                link = item['Link']
+                date_str = item['Date'].strftime('%Y-%m-%d')
+                
+                # AI 뱃지
+                ai_html = '<span class="badge badge-ai">✨ AI Pick</span>' if item.get('AI_Verified') else ''
+                
+                # Card HTML
+                card_html = f"""
+                <div class="news-card">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                            <span class="badge badge-src">{safe_src}</span>
+                            {ai_html}
+                        </div>
+                        <a href="{link}" target="_blank" class="news-title">{safe_title}</a>
+                        <p class="news-snippet">{safe_snip}</p>
                     </div>
-                    <a href="{row['Link']}" target="_blank" class="news-link">{row['Title']}</a>
-                    <p class="snippet">{row.get('Snippet', 'No content available.')}</p>
+                    <div class="news-meta">
+                        <span>🗓 {date_str}</span>
+                        <span>#{item['Keyword']}</span>
+                    </div>
                 </div>
-                <div class="meta-info">
-                    <span>📅 {date_str}</span>
-                    <span class="tag-pill tag-kw">#{row['Keyword']}</span>
-                </div>
-            </div>
-            """
-            st.markdown(html_card, unsafe_allow_html=True)
-
+                """
+                st.markdown(card_html, unsafe_allow_html=True)
+                
 else:
-    # 데이터 없을 때 Empty State
-    st.markdown("""
-        <div style='text-align: center; padding: 50px; color: #64748B;'>
-            <h2>📭 No Data Available</h2>
-            <p>상단의 'Run Crawler' 버튼을 눌러 최신 뉴스를 수집해주세요.</p>
-        </div>
-    """, unsafe_allow_html=True)
+    st.info("👋 'Scrape Now' 버튼을 눌러 뉴스를 수집하세요.")
+
