@@ -8,20 +8,18 @@ from datetime import datetime, timedelta
 import json
 import os
 import re
-import html
-import textwrap  # [핵심 수정] 들여쓰기 제거용 모듈
 
 # Google Gemini
 import google.generativeai as genai
 
 # ==========================================
-# 0. 페이지 설정 및 CSS
+# 0. 페이지 설정 및 기본 CSS
 # ==========================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
 
-# CSS: 카드 스타일 및 다크모드 대응
+# 복잡한 HTML 카드 CSS를 제거하고, 전체적인 폰트와 레이아웃만 다듬습니다.
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
@@ -30,71 +28,43 @@ st.markdown("""
             font-family: 'Pretendard', sans-serif;
         }
 
-        /* 뉴스 카드 컨테이너 */
-        .news-card-box {
-            background-color: #ffffff; 
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 0px;
-            height: 100%; 
-            min-height: 240px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: transform 0.2s;
-        }
-        
-        .news-card-box:hover {
-            transform: translateY(-5px);
-            border-color: #6366f1;
-            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
-        }
-
-        /* 텍스트 스타일 (다크모드에서도 강제로 잘 보이게 설정) */
-        .card-title-link {
-            font-size: 1.15rem !important;
-            font-weight: 700 !important;
-            color: #111827 !important; /* 검정 계열 */
+        /* 링크 스타일 */
+        a {
             text-decoration: none;
-            margin-bottom: 10px;
-            display: block;
-            line-height: 1.4;
+            color: #2563EB !important;
+            transition: color 0.2s;
         }
-        .card-title-link:hover {
-            color: #4f46e5 !important; /* 인디고 색상 */
+        a:hover {
+            color: #1D4ED8 !important;
+            text-decoration: underline;
+        }
+
+        /* 컨트롤 패널 스타일 */
+        .control-panel-container {
+            background-color: var(--secondary-background-color);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
         }
         
-        .card-snippet-text {
-            font-size: 0.95rem !important;
-            color: #4b5563 !important; /* 회색 */
-            line-height: 1.6;
-            margin-bottom: 15px;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        /* 사이드바 라디오 버튼 스타일 */
+         div.row-widget.stRadio > div[role="radiogroup"] > label > div:first-child {
+            display: none;
         }
-
-        .card-meta-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.8rem !important;
-            color: #9ca3af !important;
-            border-top: 1px solid #f3f4f6;
-            padding-top: 12px;
-            margin-top: auto;
+        div.row-widget.stRadio > div[role="radiogroup"] > label {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            transition: background-color 0.2s;
+            cursor: pointer;
         }
-
-        .badge-source {
-            background-color: #f3f4f6;
-            color: #374151;
-            padding: 4px 8px;
-            border-radius: 6px;
+        div.row-widget.stRadio > div[role="radiogroup"] > label:hover {
+             background-color: var(--secondary-background-color);
+        }
+        div.row-widget.stRadio > div[role="radiogroup"] > label[data-baseweb="radio"] {
+            background-color: var(--primary-color-light);
             font-weight: 600;
-            font-size: 0.75rem;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -105,7 +75,7 @@ CATEGORIES = [
 ]
 
 # ==========================================
-# 1. 데이터 및 유틸리티
+# 1. 데이터 관리 및 유틸리티 (기존 유지)
 # ==========================================
 KEYWORD_FILE = 'keywords.json'
 
@@ -131,7 +101,7 @@ if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] fo
 if 'last_update' not in st.session_state: st.session_state.last_update = None
 
 # ==========================================
-# 2. 크롤링 및 AI 로직
+# 2. 크롤링 및 AI 로직 (기존 유지)
 # ==========================================
 def make_smart_query(keyword, country_code):
     base_kw = keyword
@@ -206,7 +176,7 @@ def perform_crawling(category, start_date, end_date, api_key):
     start_dt = datetime.combine(start_date, datetime.min.time())
     end_dt = datetime.combine(end_date, datetime.max.time())
     
-    with st.spinner(f"🌐 수집 중..."):
+    with st.spinner(f"🌐 뉴스 수집 중... ({category})"):
         all_news = []
         for kw in kws:
             for cc, lang in [('KR','ko'), ('US','en'), ('TW','zh-TW')]:
@@ -228,24 +198,26 @@ def perform_crawling(category, start_date, end_date, api_key):
 # ==========================================
 with st.sidebar:
     st.header("Semi-Insight")
+    st.caption("Global Market Intelligence")
     st.divider()
-    # 요청하신 대로 '라디오 버튼' 양식 유지하되 스타일 적용
     selected_category = st.radio("Target Domain", CATEGORIES)
     st.divider()
     with st.expander("API Key"):
         api_key = st.text_input("Key", type="password")
         if not api_key and "GEMINI_API_KEY" in st.secrets:
             api_key = st.secrets["GEMINI_API_KEY"]
-            st.caption("Auto-loaded")
+            st.caption("Auto-loaded from secrets")
 
-# 메인 화면
+# 메인 헤더
 c_head, c_date = st.columns([3, 1])
 with c_head: st.title(selected_category)
 with c_date: 
     if st.session_state.last_update: st.caption(f"Updated: {st.session_state.last_update}")
 
-# 컨트롤 바
+# 컨트롤 패널 (네이티브 컨테이너 활용)
 with st.container():
+    # CSS 클래스 적용을 위한 트릭 (st.markdown으로 감싸기)
+    st.markdown('<div class="control-panel-container">', unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns([2, 3, 1, 1.5])
     with c1:
         period = st.selectbox("기간", ["1 Month", "3 Months", "Custom"], label_visibility="collapsed")
@@ -267,60 +239,60 @@ with st.container():
             st.session_state.last_update = datetime.now().strftime("%H:%M")
             st.rerun()
 
-# 키워드 삭제 버튼
-kws = st.session_state.keywords.get(selected_category, [])
-if kws:
-    cols = st.columns(8)
-    for i, kw in enumerate(kws):
-        if cols[i%8].button(f"{kw} ✖", key=f"d_{kw}"):
-            st.session_state.keywords[selected_category].remove(kw)
-            save_keywords(st.session_state.keywords)
-            st.rerun()
-st.divider()
+    # 키워드 칩
+    kws = st.session_state.keywords.get(selected_category, [])
+    if kws:
+        st.write("") # 간격 띄우기
+        cols = st.columns(8)
+        for i, kw in enumerate(kws):
+            if cols[i%8].button(f"{kw} ✖", key=f"d_{kw}", help="삭제"):
+                st.session_state.keywords[selected_category].remove(kw)
+                save_keywords(st.session_state.keywords)
+                st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True) # 컨테이너 닫기
 
 # ==========================================
-# 4. 결과 디스플레이 (수정된 핵심 부분)
+# 4. 결과 디스플레이 (완전히 새로운 방식)
 # ==========================================
 data = st.session_state.news_data.get(selected_category, [])
 
 if data:
-    # 2열 그리드 루프
+    st.divider()
+    
+    # 2열 그리드 루프 (안정적인 방식)
     for i in range(0, len(data), 2):
         row_items = data[i : i+2]
-        cols = st.columns(2)
+        cols = st.columns(2) # 2개의 컬럼 생성
         
         for idx, item in enumerate(row_items):
             with cols[idx]:
-                # 1. HTML 특수문자 이스케이프 (필수)
-                safe_title = html.escape(item['Title'])
-                safe_snippet = html.escape(item.get('Snippet', ''))
-                safe_source = html.escape(item['Source'])
-                link = item['Link']
-                date_str = item['Date'].strftime('%Y-%m-%d')
-                
-                ai_badge = ""
-                if item.get('AI_Verified'):
-                    ai_badge = '<span style="color:#4F46E5; font-weight:bold; font-size:0.8em; margin-left:5px;">✨ AI Pick</span>'
+                # [핵심 변경] HTML 문자열 대신 Streamlit 네이티브 컨테이너 사용
+                # border=True 옵션으로 깔끔한 카드 모양 구현 (테마 자동 대응)
+                with st.container(border=True):
+                    # 1. 상단 정보 (출처 및 날짜)
+                    meta_c1, meta_c2 = st.columns([3, 2])
+                    with meta_c1:
+                        st.caption(f"📰 {item['Source']}")
+                    with meta_c2:
+                        st.caption(f"🗓️ {item['Date'].strftime('%Y-%m-%d')}")
+                    
+                    # 2. 제목 (링크 포함된 마크다운 헤더)
+                    st.markdown(f"#### [{item['Title']}]({item['Link']})")
+                    
+                    # 3. 본문 요약
+                    if item.get('Snippet'):
+                        st.write(item['Snippet'])
+                        
+                    st.divider()
+                    
+                    # 4. 하단 정보 (키워드 및 AI 뱃지)
+                    foot_c1, foot_c2 = st.columns([3, 1])
+                    with foot_c1:
+                        st.caption(f"🏷️ #{item['Keyword']}")
+                    with foot_c2:
+                        if item.get('AI_Verified'):
+                            # 네이티브 방식으로 AI 뱃지 표시
+                            st.markdown(":sparkles: **AI Pick**")
 
-                # [핵심 수정] textwrap.dedent를 사용하여 들여쓰기(공백)를 완벽하게 제거
-                # 이것이 없으면 Streamlit은 들여쓰기된 HTML을 '코드 블록'으로 인식하여 텍스트로 출력해버림
-                card_html = textwrap.dedent(f"""
-                    <div class="news-card-box">
-                        <div>
-                            <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
-                                <span class="badge-source">{safe_source}</span>
-                                {ai_badge}
-                            </div>
-                            <a href="{link}" target="_blank" class="card-title-link">{safe_title}</a>
-                            <div class="card-snippet-text">{safe_snippet}</div>
-                        </div>
-                        <div class="card-meta-info">
-                            <span>📅 {date_str}</span>
-                            <span>#{item['Keyword']}</span>
-                        </div>
-                    </div>
-                """)
-                
-                st.markdown(card_html, unsafe_allow_html=True)
 else:
-    st.info("데이터가 없습니다.")
+    st.info("표시할 데이터가 없습니다. 상단의 '🚀 실행' 버튼을 눌러주세요.")
