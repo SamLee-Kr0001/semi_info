@@ -80,8 +80,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 CATEGORIES = [
-    "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
-    "Process Gas", "Precursor", "Metal target", "Wafer", "Package"
+    "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
+    "Process Gas", "Precursor", "Metal target", "Wafer", "Package", "기업정보"
 ]
 
 # ==========================================
