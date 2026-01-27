@@ -14,15 +14,6 @@ import re
 # Google Gemini
 import google.generativeai as genai
 
-# Selenium
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
-
 # ==========================================
 # 0. 설정 및 CSS
 # ==========================================
@@ -68,8 +59,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 CATEGORIES = [
-    "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
-    "Process Gas", "Precursor", "Metal target", "Wafer", "기업정보"
+    "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
+    "Process Gas", "Precursor", "Metal target", "Wafer"
 ]
 
 # ==========================================
@@ -99,37 +90,37 @@ if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] fo
 if 'last_update' not in st.session_state: st.session_state.last_update = None
 
 # ==========================================
-# 2. 스마트 쿼리 생성기 (Pre-Screening)
+# 2. 스마트 쿼리 생성기 (대만 번체 지원 추가)
 # ==========================================
 def make_smart_query(keyword, country_code):
     """
-    [핵심 기능]
-    검색어에 '반도체 문맥'을 강제로 주입하고 '노이즈(틱톡)'를 제외하는 쿼리 생성
+    [기능 강화]
+    1. CN/HK: 간체자 반도체 용어
+    2. TW: 번체자 반도체 용어 (TSMC 등 대만 뉴스용)
     """
-    # 1. 기본 키워드 보호 (따옴표 처리 등은 검색엔진 유연성을 위해 제거)
     base_kw = keyword
 
-    # 2. 강력한 제외어 (Negative Keywords) - 틱톡, 댄스, SNS 등 원천 차단
-    negatives = "-TikTok -틱톡 -douyin -dance -shorts -reels -viral -music -influencer -fashion"
+    # 제외어
+    negatives = "-TikTok -틱톡 -douyin -dance -shorts -reels -viral -music -influencer -game"
 
-    # 3. 문맥 강제 주입 (Context Injection)
-    # 국가별로 반도체 관련 용어를 OR 조건으로 묶어서 AND 결합
     if country_code == 'KR':
-        context = "(반도체 OR 소자 OR 공정 OR 소재 OR 파운드리 OR 팹)"
-    elif country_code == 'CN':
-        context = "(半导体 OR 芯片 OR 晶圆 OR 光刻胶)"
+        context = "(반도체 OR 소자 OR 공정 OR 소재 OR 파운드리 OR 팹 OR 양산)"
+    elif country_code in ['CN', 'HK']: 
+        # 중국, 홍콩 -> 간체 위주
+        context = "(半导体 OR 芯片 OR 晶圆 OR 光刻胶 OR 蚀刻 OR 封装)"
+    elif country_code == 'TW':
+        # 대만 -> 번체 위주 (晶片=칩, 晶圓=웨이퍼)
+        context = "(半導體 OR 晶片 OR 晶圓 OR 光阻 OR 蝕刻 OR 封裝)"
     elif country_code == 'JP':
-        context = "(半導体 OR 　シリコン OR ウェーハ)" # 일본어 전각 띄어쓰기 고려
-    else: # US/Global
+        context = "(半導体 OR シリコン OR ウェーハ OR レジスト)"
+    else: 
         context = "(semiconductor OR chip OR fab OR foundry OR wafer OR lithography)"
 
-    # 최종 쿼리 조합: "TOK" AND (반도체 OR ...) -TikTok
     final_query = f'{base_kw} AND {context} {negatives}'
-    
     return final_query
 
 # ==========================================
-# 3. AI 필터링 엔진 (Post-Screening)
+# 3. AI 필터링 엔진
 # ==========================================
 def filter_with_gemini(articles, api_key):
     if not articles or not api_key: return articles
@@ -141,22 +132,22 @@ def filter_with_gemini(articles, api_key):
         content_text = ""
         for i, item in enumerate(articles):
             snippet = item.get('Snippet', '')
-            content_text += f"ID_{i+1} | KW: {item['Keyword']} | Title: {item['Title']} | Snippet: {snippet}\n"
+            content_text += f"ID_{i+1} | KW: {item['Keyword']} | Src: {item['Source']} | Title: {item['Title']} | Snip: {snippet}\n"
             
         prompt = f"""
         Role: Strict Semiconductor Intelligence Analyst.
-        Task: Identify strictly relevant articles for B2B Semiconductor Manufacturing.
+        Goal: Filter out noise (Consumer tech, Social media, Stocks). Keep B2B Tech/Fab/Materials.
 
-        *** DOUBLE CHECK RULES ***
-        1. [Homonym Check] 'TOK' = 'Tokyo Ohka Kogyo'. REJECT 'TikTok', 'Social Media' immediately.
-        2. [Context Check] Must be related to Fab, Materials, Equipment, or Chip Tech.
-        3. [Noise Check] Reject stock buzz without technical reason.
+        *** RULES ***
+        1. [Homonym] 'TOK' = 'Tokyo Ohka Kogyo'. REJECT 'TikTok', 'Douyin'.
+        2. [Context] Keep Fab, Lithography, Materials (Resist/Gas), Equipment, Yield.
+        3. [Noise] Reject pure stock movements or product reviews (phones/games).
 
         *** DATA ***
         {content_text}
 
         *** OUTPUT ***
-        Return IDs of valid articles separated by commas (e.g., 1, 3). If none, return None.
+        Return IDs of valid articles (e.g., 1, 3). If none, return None.
         """
         
         response = model.generate_content(prompt)
@@ -176,7 +167,7 @@ def filter_with_gemini(articles, api_key):
         return articles
 
 # ==========================================
-# 4. 크롤링 엔진
+# 4. 크롤링 엔진 (중화권 3중망 적용)
 # ==========================================
 def get_headers():
     return {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
@@ -192,82 +183,36 @@ def parse_date(date_str):
         return pd.to_datetime(date_str).to_pydatetime()
     except: return datetime.now()
 
-def crawl_bing_china(keyword, debug_mode=False):
+def crawl_google_rss(keyword, country_code, language, debug_mode=False):
     results = []
-    # [수정] 스마트 쿼리 적용 (중국)
-    smart_query = make_smart_query(keyword, 'CN')
-    # Ijiwei 사이트 타겟팅 + 스마트 쿼리
-    search_query = f"site:ijiwei.com {smart_query}"
-    base_url = f"https://cn.bing.com/news/search?q={quote(search_query)}"
-    
-    if debug_mode: st.write(f"🇨🇳 [Bing Query] `{smart_query}`")
-
-    chrome_options = Options()
-    chrome_options.add_argument("--headless") 
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--lang=zh-CN")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    
-    driver = None
-    try:
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=chrome_options)
-        driver.get(base_url)
-        try: WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "news-card")))
-        except: time.sleep(1)
-
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
-        articles = soup.find_all('div', class_='news-card')
-        for item in articles:
-            try:
-                title = item.find('a', class_='title').get_text(strip=True)
-                link = item.find('a', class_='title')['href']
-                snippet_tag = item.find('div', class_='snippet')
-                snippet = snippet_tag.get_text(strip=True) if snippet_tag else ""
-                
-                source_tag = item.find('div', class_='source'); date_str = str(datetime.now().date())
-                if source_tag:
-                    spans = source_tag.find_all('span')
-                    if len(spans) >= 1: date_str = spans[-1].get_text(strip=True)
-                
-                results.append({
-                    'Title': title, 'Source': "Ijiwei (via Bing)", 'Date': parse_date(date_str), 
-                    'Link': link, 'Keyword': keyword, 'Snippet': snippet, 'AI_Verified': False
-                })
-            except: continue
-    except: pass
-    finally:
-        if driver: driver.quit()
-    return results
-
-def crawl_google_news(keyword, country_code, language, debug_mode=False):
-    results = []
-    # [수정] 스마트 쿼리 적용 (국가별)
     smart_query = make_smart_query(keyword, country_code)
     
+    # RSS URL
     base_url = f"https://news.google.com/rss/search?q={quote(smart_query)}&hl={language}&gl={country_code}&ceid={country_code}:{language}"
     
-    if debug_mode: st.write(f"📡 [{country_code} Query] `{smart_query}`")
+    if debug_mode: st.write(f"📡 [{country_code}] Query: `{smart_query}`")
     
     try:
-        response = requests.get(base_url, headers=get_headers(), timeout=5, verify=False)
-        soup = BeautifulSoup(response.content, 'xml')
-        for item in soup.find_all('item'):
-            source = item.source.text if item.source else "Google News"
-            raw_desc = item.description.text if item.description else ""
-            snippet = BeautifulSoup(raw_desc, "html.parser").get_text(strip=True)
+        response = requests.get(base_url, headers=get_headers(), timeout=10, verify=False)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'xml')
+            for item in soup.find_all('item'):
+                source = item.source.text if item.source else "Google News"
+                raw_desc = item.description.text if item.description else ""
+                snippet = BeautifulSoup(raw_desc, "html.parser").get_text(strip=True)
 
-            results.append({
-                'Title': item.title.text, 
-                'Source': f"{source} ({country_code})", 
-                'Date': parse_date(item.pubDate.text), 
-                'Link': item.link.text, 
-                'Keyword': keyword,
-                'Snippet': snippet[:300], 
-                'AI_Verified': False
-            })
-    except: pass
+                results.append({
+                    'Title': item.title.text, 
+                    'Source': f"{source} ({country_code})", 
+                    'Date': parse_date(item.pubDate.text), 
+                    'Link': item.link.text, 
+                    'Keyword': keyword,
+                    'Snippet': snippet[:300], 
+                    'AI_Verified': False
+                })
+    except Exception as e:
+        if debug_mode: st.error(f"Err {country_code}: {e}")
+        
     return results
 
 def perform_crawling(category, start_date, end_date, debug_mode, api_key):
@@ -278,33 +223,54 @@ def perform_crawling(category, start_date, end_date, debug_mode, api_key):
     progress_bar = st.progress(0); status_text = st.empty()
     if not keywords: st.warning("키워드가 없습니다."); return
 
-    total_steps = len(keywords) * 4; step = 0
+    total_steps = len(keywords) * 6; step = 0 # 단계 수 증가 (CN, HK, TW 추가)
     raw_articles = []
     
     for kw in keywords:
-        status_text.text(f"🔍 스마트 수집 중: {kw}")
-        raw_articles.extend(crawl_bing_china(kw, debug_mode))
+        # [핵심] 중화권 3중망 (CN + HK + TW)
+        # 1. 중국 본토 (CN)
+        status_text.text(f"🔍 수집 중 (China): {kw}")
+        raw_articles.extend(crawl_google_rss(kw, 'CN', 'zh-CN', debug_mode))
         step += 1; progress_bar.progress(step / total_steps)
-        raw_articles.extend(crawl_google_news(kw, 'KR', 'ko', debug_mode))
+        
+        # 2. 홍콩 (HK) - 중국어 기사 백업
+        status_text.text(f"🔍 수집 중 (Hong Kong): {kw}")
+        raw_articles.extend(crawl_google_rss(kw, 'HK', 'zh-CN', debug_mode))
         step += 1; progress_bar.progress(step / total_steps)
-        raw_articles.extend(crawl_google_news(kw, 'US', 'en', debug_mode))
+
+        # 3. 대만 (Taiwan) - 반도체 핵심 (번체)
+        status_text.text(f"🔍 수집 중 (Taiwan): {kw}")
+        raw_articles.extend(crawl_google_rss(kw, 'TW', 'zh-TW', debug_mode))
         step += 1; progress_bar.progress(step / total_steps)
-        raw_articles.extend(crawl_google_news(kw, 'JP', 'ja', debug_mode))
+        
+        # 4. 한국, 미국, 일본
+        status_text.text(f"🔍 수집 중 (Korea): {kw}")
+        raw_articles.extend(crawl_google_rss(kw, 'KR', 'ko', debug_mode))
+        step += 1; progress_bar.progress(step / total_steps)
+        
+        status_text.text(f"🔍 수집 중 (USA): {kw}")
+        raw_articles.extend(crawl_google_rss(kw, 'US', 'en', debug_mode))
+        step += 1; progress_bar.progress(step / total_steps)
+        
+        status_text.text(f"🔍 수집 중 (Japan): {kw}")
+        raw_articles.extend(crawl_google_rss(kw, 'JP', 'ja', debug_mode))
         step += 1; progress_bar.progress(step / total_steps)
     
+    # 데이터 정리
     df = pd.DataFrame(raw_articles)
     if not df.empty:
         df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
         df = df.sort_values(by='Date', ascending=False)
+        # 제목 기준 중복 제거 (CN, HK, TW 기사가 겹칠 경우 대비)
         df = df.drop_duplicates(subset=['Title'])
-        candidates = df.head(60).to_dict('records')
+        candidates = df.head(80).to_dict('records') # 후보군 늘림
     else: candidates = []
 
     if candidates and api_key:
         status_text.text(f"🤖 AI가 {len(candidates)}개의 기사를 최종 검수 중...")
         final_data = filter_with_gemini(candidates, api_key)
         if len(final_data) == 0:
-            status_text.error("모든 기사가 필터링되었습니다.")
+            status_text.error("필터링 결과 기사가 없습니다.")
     else:
         final_data = candidates[:50]
 
@@ -329,7 +295,7 @@ with st.sidebar:
         if not gemini_api_key: st.info("🔑 키를 입력하면 AI가 작동합니다.")
         
     st.divider()
-    st.info("💡 **스마트 필터 작동 중**\n검색어에 '반도체 문맥'이 자동으로 추가되며, TikTok 등 노이즈는 원천 차단됩니다.")
+    st.info("💡 **수집 범위 확장**\nCN(중국) + HK(홍콩) + TW(대만) 3곳을 동시에 검색하여 중화권 뉴스를 빠짐없이 수집합니다.")
     st.markdown("<div class='sidebar-footer'>Made by LSH</div>", unsafe_allow_html=True)
 
 st.title(f"{selected_category} News")
@@ -351,7 +317,7 @@ with col_set:
 with col_kw:
     st.markdown("##### 🔑 키워드 관리 및 실행")
     c1, c2, c3 = st.columns([3, 1, 1.5])
-    with c1: new_kw = st.text_input("입력 (예: TOK)", key="new_kw", label_visibility="collapsed")
+    with c1: new_kw = st.text_input("입력 (예: Xiaomi)", key="new_kw", label_visibility="collapsed")
     with c2: add_clicked = st.button("추가", use_container_width=True)
     with c3: update_clicked = st.button("🔄 뉴스 수집", type="primary", use_container_width=True)
 
