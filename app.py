@@ -85,69 +85,66 @@ st.markdown("""
             border-bottom: 1px solid #E2E8F0;
             padding-bottom: 4px;
         }
+
+        /* [NEW] 리포트 스타일 */
+        .report-box {
+            background-color: #FFFFFF;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            line-height: 1.8;
+            color: #334155;
+        }
+        .report-header {
+            border-bottom: 2px solid #3B82F6;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #1E3A8A;
+        }
     </style>
 """, unsafe_allow_html=True)
 
+# [수정] "Daily" 카테고리 추가
 CATEGORIES = [
-     "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
-    "Process Gas", "Precursor", "Metal target", "Wafer", "Package", "기업정보"
+    "Daily", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
+    "Process Gas", "Precursor", "Metal target", "Wafer", "Package"
 ]
 
 # ==========================================
-# 1. 주식 데이터 관리 (카테고리형 구조)
+# 1. 주식 데이터 관리
 # ==========================================
 STOCK_CATEGORIES = {
     "🏭 Chipmakers (IDM/Foundry)": {
-        "Samsung": "005930.KS",
-        "SK Hynix": "000660.KS",
-        "Micron": "MU",
-        "TSMC": "TSM",
-        "Intel": "INTC",
-        "SMIC": "0981.HK"
+        "Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"
     },
     "🧠 Fabless & System": {
-        "Nvidia": "NVDA",
-        "Broadcom": "AVGO",
-         },
-    "⚙️ Equipment": {
-        "ASML": "ASML",
-        "AMAT": "AMAT",
-        "Lam Res": "LRCX",
-        "TEL": "8035.T",
-        "KLA Corp": "KLAC",
-        "Hanmi Semi": "042700.KS",
-        "Jusung Eng": "036930.KS"
+        "Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q"
     },
-    "🧪 Materials": {
-        "Shin-Etsu": "4063.T",     # 신에츠
-        "Sumitomo": "4005.T",      # 스미토모
-        "TOK": "4186.T",           # 도쿄오카공업
-        "Nissan Chem": "4021.T",   # 닛산화학
-        "Merck (DE)": "MRK.DE",    # 머크 (독일)
-        "Qnity (Q)": "Q", #큐니티
-        "Air Liquide": "AI.PA",    # 에어리퀴드 (프랑스)
-        "Linde": "LIN",            # 린데
-        "Soulbrain": "357780.KS",  # 솔브레인
-        "Dongjin": "005290.KS",    # 동진쎄미켐
-        "ENF Tech": "102710.KS",   # 이엔에프
-        "Samsung SDI": "006400.KS", #삼성 SDI
-        "Ycchem": "232140.KS"      # 와이씨켐
+    "⚙️ Equipment (Global/Korea)": {
+        "ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA Corp": "KLAC", "Hanmi Semi": "042700.KS", "Jusung Eng": "036930.KS"
+    },
+    "🧪 Materials & Chemicals": {
+        "Shin-Etsu": "4063.T", "Sumitomo": "4005.T", "TOK": "4186.T", "Nissan Chem": "4021.T", 
+        "Merck (DE)": "MRK.DE", "Air Liquide": "AI.PA", "Linde": "LIN", 
+        "Soulbrain": "357780.KS", "Dongjin": "005290.KS", "ENF Tech": "102710.KS", "Ycchem": "232140.KS"
+    },
+    "🔋 Battery & Others": {
+        "Samsung SDI": "006400.KS"
     }
 }
 
 @st.cache_data(ttl=600)
 def get_stock_prices_grouped():
-    # 1. 모든 티커 추출 및 데이터 한 번에 요청
     all_tickers = []
-    for cat in STOCK_CATEGORIES.values():
-        all_tickers.extend(cat.values())
-    
+    for cat in STOCK_CATEGORIES.values(): all_tickers.extend(cat.values())
     ticker_str = " ".join(all_tickers)
-    
-    result_map = {} # {티커: {price, delta}} 저장용
+    result_map = {}
     try:
         stocks = yf.Tickers(ticker_str)
-        # 각 티커별 데이터 가공
         for symbol in all_tickers:
             try:
                 hist = stocks.tickers[symbol].history(period="5d")
@@ -157,20 +154,17 @@ def get_stock_prices_grouped():
                     change = current - prev
                     pct_change = (change / prev) * 100
                     
-                    # 통화 기호
                     if ".KS" in symbol: currency = "₩"
                     elif ".T" in symbol: currency = "¥"
                     elif ".HK" in symbol: currency = "HK$"
-                    elif ".DE" in symbol or ".PA" in symbol: currency = "€" # 독일/프랑스
+                    elif ".DE" in symbol or ".PA" in symbol: currency = "€"
                     else: currency = "$"
                     
                     price_str = f"{currency}{current:,.0f}" if currency in ["₩", "¥"] else f"{currency}{current:,.2f}"
                     delta_str = f"{change:,.2f} ({pct_change:+.2f}%)"
-                    
                     result_map[symbol] = {"Price": price_str, "Delta": delta_str}
             except: pass
     except: pass
-    
     return result_map
 
 # ==========================================
@@ -204,21 +198,14 @@ def safe_translate(text):
 def parallel_translate_articles(articles):
     tasks = [a for a in articles if 'KR' not in a.get('Country', 'KR')]
     if not tasks: return articles
-
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         title_futures = {executor.submit(safe_translate, a['Title']): a for a in tasks}
         snip_futures = {executor.submit(safe_translate, a['Snippet']): a for a in tasks}
-        
         for future in concurrent.futures.as_completed(title_futures):
-            try:
-                res = future.result()
-                if res: title_futures[future]['Title'] = res
+            try: res = future.result(); title_futures[future]['Title'] = res if res else title_futures[future]['Title']
             except: pass
-
         for future in concurrent.futures.as_completed(snip_futures):
-            try:
-                res = future.result()
-                if res: snip_futures[future]['Snippet'] = f"🌐 {res}"
+            try: res = future.result(); snip_futures[future]['Snippet'] = f"🌐 {res}" if res else snip_futures[future]['Snippet']
             except: pass
     return articles
 
@@ -245,7 +232,6 @@ def filter_with_gemini(articles, api_key):
         for i, item in enumerate(articles[:40]):
             safe_snip = re.sub(r'[^\w\s]', '', item.get('Snippet', ''))[:100]
             content_text += f"ID_{i+1} | Title: {item['Title']} | Snip: {safe_snip}\n"
-            
         prompt = f"""
         Role: Semiconductor Analyst.
         Task: Filter noise. Keep B2B Tech/Fab/Materials.
@@ -263,11 +249,45 @@ def filter_with_gemini(articles, api_key):
         return filtered if filtered else articles
     except: return articles
 
+# [NEW] Daily 리포트 생성 함수
+def generate_daily_report(articles, api_key):
+    if not articles or not api_key: return "API Key가 필요하거나 기사가 충분하지 않습니다."
+    
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # 기사 내용 요약해서 프롬프트에 넣기
+        context = ""
+        for i, item in enumerate(articles[:30]): # 최대 30개만 참조
+            context += f"- {item['Title']}: {item.get('Snippet', '')}\n"
+            
+        prompt = f"""
+        당신은 반도체 산업 수석 애널리스트입니다. 
+        아래 수집된 오늘의 뉴스들을 바탕으로 '일일 반도체 산업 브리핑 리포트'를 작성해주세요.
+        
+        [작성 규칙]
+        1. 언어: 한국어 (전문적인 어조)
+        2. 형식: Markdown
+        3. 구조:
+           - 📊 Executive Summary (3줄 요약)
+           - 🌍 Global Market Trends (주요 시장 동향)
+           - 🏢 Key Corporate Moves (주요 기업 동향)
+           - 💡 Tech & Materials Insight (기술 및 소재 이슈)
+        
+        [뉴스 데이터]
+        {context}
+        """
+        
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"리포트 생성 중 오류 발생: {str(e)}"
+
 def crawl_google_rss(keyword, country_code, language):
     results = []
     smart_query = make_smart_query(keyword, country_code)
     url = f"https://news.google.com/rss/search?q={quote(smart_query)}&hl={language}&gl={country_code}&ceid={country_code}:{language}"
-    
     try:
         response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5, verify=False)
         if response.status_code == 200:
@@ -275,11 +295,9 @@ def crawl_google_rss(keyword, country_code, language):
             for item in soup.find_all('item')[:5]:
                 src = item.source.text if item.source else "Google"
                 snip = BeautifulSoup(item.description.text if item.description else "", "html.parser").get_text(strip=True)[:200]
-                
                 pub_date = item.pubDate.text if item.pubDate else str(datetime.now())
                 try: dt_obj = pd.to_datetime(pub_date).to_pydatetime()
                 except: dt_obj = datetime.now()
-
                 results.append({
                     'Title': item.title.text, 'Source': src, 'Date': dt_obj,
                     'Link': item.link.text, 'Keyword': keyword, 'Snippet': snip,
@@ -289,6 +307,8 @@ def crawl_google_rss(keyword, country_code, language):
     return results
 
 def perform_crawling(category, start_date, end_date, api_key):
+    # Daily 모드일 경우, 모든 키워드를 다 가져오거나, 주요 키워드만 가져올 수 있음.
+    # 여기서는 사용자가 'Daily' 카테고리에 등록한 키워드를 사용하도록 함.
     kws = st.session_state.keywords.get(category, [])
     if not kws: return
     start_dt = datetime.combine(start_date, datetime.min.time())
@@ -304,7 +324,11 @@ def perform_crawling(category, start_date, end_date, api_key):
         if not df.empty:
             df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
             df = df.drop_duplicates(subset=['Title']).sort_values('Date', ascending=False)
-            final_list = df.head(60).to_dict('records')
+            
+            # Daily 리포트용으로는 좀 더 많은 데이터를 가져와도 됨
+            limit = 80 if category == "Daily" else 60
+            final_list = df.head(limit).to_dict('records')
+            
             if final_list: final_list = parallel_translate_articles(final_list)
             if api_key and final_list: final_list = filter_with_gemini(final_list, api_key)
             st.session_state.news_data[category] = final_list
@@ -314,6 +338,7 @@ def perform_crawling(category, start_date, end_date, api_key):
 if 'keywords' not in st.session_state: st.session_state.keywords = load_keywords()
 if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] for cat in CATEGORIES}
 if 'last_update' not in st.session_state: st.session_state.last_update = None
+if 'daily_report_text' not in st.session_state: st.session_state.daily_report_text = ""
 
 # ==========================================
 # 3. Sidebar UI
@@ -323,6 +348,7 @@ with st.sidebar:
     st.divider()
     st.subheader("📂 Category")
     selected_category = st.radio("카테고리", CATEGORIES, label_visibility="collapsed")
+    
     st.divider()
     with st.expander("🔐 API Key"):
         api_key = st.text_input("Key", type="password")
@@ -330,17 +356,12 @@ with st.sidebar:
             api_key = st.secrets["GEMINI_API_KEY"]
             st.caption("Loaded")
             
-    # [NEW] 사이드바 하단 주식 정보 (기본 Open & 구분자 적용)
     st.markdown("---")
-    # expanded=True로 기본 펼침 설정
     with st.expander("📉 Global Stock", expanded=True):
         stock_map = get_stock_prices_grouped()
-        
         if stock_map:
-            # 카테고리별로 순회하며 표시
             for cat_name, items in STOCK_CATEGORIES.items():
                 st.markdown(f"<div class='stock-header'>{cat_name}</div>", unsafe_allow_html=True)
-                
                 for name, symbol in items.items():
                     data = stock_map.get(symbol)
                     if data:
@@ -363,14 +384,19 @@ with c_info:
 with st.container(border=True):
     c1, c2, c3 = st.columns([1.5, 2.5, 1])
     with c1:
-        period = st.selectbox("기간", ["1 Month", "3 Months", "Custom"], label_visibility="collapsed")
-        today = datetime.now().date()
-        if period == "1 Month": s, e = today - timedelta(days=30), today
-        elif period == "3 Months": s, e = today - timedelta(days=90), today
+        # Daily일 경우 기간 설정을 좀 더 직관적으로 (기본 Today)
+        if selected_category == "Daily":
+            st.info("📅 Daily Mode: 오늘/최근 뉴스 기반")
+            start_date, end_date = datetime.now().date(), datetime.now().date()
         else:
-            dr = st.date_input("날짜", (today-timedelta(7), today), label_visibility="collapsed")
-            if len(dr)==2: s, e = dr
-            else: s, e = dr[0], dr[0]
+            period = st.selectbox("기간", ["1 Month", "3 Months", "Custom"], label_visibility="collapsed")
+            today = datetime.now().date()
+            if period == "1 Month": start_date, end_date = today - timedelta(days=30), today
+            elif period == "3 Months": start_date, end_date = today - timedelta(days=90), today
+            else:
+                dr = st.date_input("날짜", (today-timedelta(7), today), label_visibility="collapsed")
+                if len(dr)==2: start_date, end_date = dr
+                else: start_date, end_date = dr[0], dr[0]
             
     with c2: new_kw = st.text_input("키워드", placeholder="예: HBM", label_visibility="collapsed")
     with c3:
@@ -382,8 +408,18 @@ with st.container(border=True):
                     save_keywords(st.session_state.keywords)
                     st.rerun()
         with b2:
-            if st.button("실행", type="primary", use_container_width=True):
-                perform_crawling(selected_category, s, e, api_key)
+            # Daily 모드일 때 버튼 이름 변경
+            btn_label = "리포트 생성" if selected_category == "Daily" else "실행"
+            if st.button(btn_label, type="primary", use_container_width=True):
+                # 1. 크롤링 실행
+                perform_crawling(selected_category, start_date, end_date, api_key)
+                
+                # 2. Daily 모드면 리포트 생성 추가 실행
+                if selected_category == "Daily" and st.session_state.news_data.get("Daily"):
+                    with st.spinner("🤖 AI가 일일 리포트를 작성 중입니다..."):
+                        report = generate_daily_report(st.session_state.news_data["Daily"], api_key)
+                        st.session_state.daily_report_text = report
+                
                 st.session_state.last_update = datetime.now().strftime("%Y-%m-%d %H:%M")
                 st.rerun()
 
@@ -397,36 +433,66 @@ with st.container(border=True):
                 save_keywords(st.session_state.keywords)
                 st.rerun()
 
+# ==========================================
+# 5. 결과 디스플레이 (Daily vs 일반)
+# ==========================================
 data = st.session_state.news_data.get(selected_category, [])
+
 if data:
     st.divider()
-    m1, m2 = st.columns(2)
-    m1.metric("Collected", len(data))
-    m2.metric("AI Verified", sum(1 for d in data if d.get('AI_Verified')))
-    st.markdown("<br>", unsafe_allow_html=True)
     
-    for i in range(0, len(data), 2):
-        row_items = data[i : i+2]
-        cols = st.columns(2)
-        for idx, item in enumerate(row_items):
-            with cols[idx]:
-                with st.container(border=True):
-                    st.markdown(f"""
-                        <div class="news-meta" style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                            <span>📰 {item['Source']}</span>
-                            <span>{item['Date'].strftime('%Y-%m-%d')}</span>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    st.markdown(f'<a href="{item["Link"]}" target="_blank" class="news-title">{item["Title"]}</a>', unsafe_allow_html=True)
-                    if item.get('Snippet'):
-                        st.markdown(f'<div class="news-snippet">{item["Snippet"]}</div>', unsafe_allow_html=True)
-                    st.markdown("---")
-                    ft1, ft2 = st.columns([3, 1])
-                    with ft1:
-                        st.markdown(f"<span style='background:#F1F5F9; color:#64748B; padding:3px 8px; border-radius:4px; font-size:11px;'>#{item['Keyword']}</span>", unsafe_allow_html=True)
-                    with ft2:
-                        if item.get('AI_Verified'):
-                            st.markdown("<span style='color:#4F46E5; font-size:11px; font-weight:bold;'>✨ AI Pick</span>", unsafe_allow_html=True)
+    # [CASE 1] Daily 모드: AI 리포트 + 링크 리스트
+    if selected_category == "Daily":
+        if st.session_state.daily_report_text:
+            # 리포트 박스
+            st.markdown(f"""
+                <div class="report-box">
+                    <div class="report-header">📑 {datetime.now().strftime('%Y-%m-%d')} Daily Briefing</div>
+                    {st.session_state.daily_report_text} # 마크다운 렌더링은 아래에서 별도 처리 필요
+                </div>
+            """, unsafe_allow_html=True)
+            # 마크다운 텍스트를 HTML 안에 넣으면 스타일이 깨질 수 있어 별도 렌더링
+            st.markdown(st.session_state.daily_report_text) 
+            
+            st.markdown("---")
+            st.subheader("🔗 Reference Links")
+            
+            # 링크 리스트업
+            for i, item in enumerate(data):
+                with st.container():
+                    st.markdown(f"{i+1}. [{item['Title']}]({item['Link']}) - <span style='color:#666; font-size:0.9em'>{item['Source']}</span>", unsafe_allow_html=True)
+        else:
+            st.info("데이터는 수집되었으나 리포트가 아직 생성되지 않았습니다. '리포트 생성' 버튼을 눌러주세요.")
+
+    # [CASE 2] 일반 모드: 카드 Grid
+    else:
+        m1, m2 = st.columns(2)
+        m1.metric("Collected", len(data))
+        m2.metric("AI Verified", sum(1 for d in data if d.get('AI_Verified')))
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        for i in range(0, len(data), 2):
+            row_items = data[i : i+2]
+            cols = st.columns(2)
+            for idx, item in enumerate(row_items):
+                with cols[idx]:
+                    with st.container(border=True):
+                        st.markdown(f"""
+                            <div class="news-meta" style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span>📰 {item['Source']}</span>
+                                <span>{item['Date'].strftime('%Y-%m-%d')}</span>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        st.markdown(f'<a href="{item["Link"]}" target="_blank" class="news-title">{item["Title"]}</a>', unsafe_allow_html=True)
+                        if item.get('Snippet'):
+                            st.markdown(f'<div class="news-snippet">{item["Snippet"]}</div>', unsafe_allow_html=True)
+                        st.markdown("---")
+                        ft1, ft2 = st.columns([3, 1])
+                        with ft1:
+                            st.markdown(f"<span style='background:#F1F5F9; color:#64748B; padding:3px 8px; border-radius:4px; font-size:11px;'>#{item['Keyword']}</span>", unsafe_allow_html=True)
+                        with ft2:
+                            if item.get('AI_Verified'):
+                                st.markdown("<span style='color:#4F46E5; font-size:11px; font-weight:bold;'>✨ AI Pick</span>", unsafe_allow_html=True)
 else:
     with st.container(border=True):
         st.markdown("<div style='text-align:center; padding:30px; color:#999;'>데이터가 없습니다.<br>상단의 '실행' 버튼을 눌러주세요.</div>", unsafe_allow_html=True)
