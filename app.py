@@ -10,7 +10,7 @@ import os
 import re
 import concurrent.futures
 
-# [필수] 라이브러리
+# [필수] 라이브러리 (requirements.txt 확인: deep-translator, yfinance, google-generativeai)
 from deep_translator import GoogleTranslator
 import yfinance as yf
 
@@ -34,7 +34,6 @@ st.markdown("""
             color: #1E293B;
         }
         
-        /* 메인 배경 */
         .stApp { background-color: #F8FAFC; }
 
         /* 뉴스 타이틀 */
@@ -49,11 +48,9 @@ st.markdown("""
         }
         .news-title:hover { color: #2563EB !important; text-decoration: underline; }
         
-        /* 뉴스 요약 및 메타 */
         .news-snippet { font-size: 13.5px !important; color: #475569 !important; line-height: 1.5; margin-bottom: 10px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
 
-        /* 컨트롤 패널 */
         .control-box {
             background-color: #FFFFFF;
             padding: 15px 20px;
@@ -62,7 +59,6 @@ st.markdown("""
             margin-bottom: 20px;
         }
         
-        /* 버튼 스타일 */
         button[kind="secondary"] {
             height: 28px !important;
             font-size: 12px !important;
@@ -75,7 +71,6 @@ st.markdown("""
         div[data-testid="stMetricDelta"] { font-size: 11px !important; }
         div[data-testid="stMetricLabel"] { font-size: 11px !important; font-weight: 600; color: #64748B; }
         
-        /* 주식 카테고리 헤더 */
         .stock-header {
             font-size: 12px;
             font-weight: 700;
@@ -86,7 +81,7 @@ st.markdown("""
             padding-bottom: 4px;
         }
 
-        /* [NEW] 리포트 스타일 */
+        /* [NEW] Daily 리포트 스타일 */
         .report-box {
             background-color: #FFFFFF;
             padding: 30px;
@@ -108,14 +103,14 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# [수정] "Daily" 카테고리 추가
+# [확인 포인트] Daily가 맨 앞에 있어야 합니다.
 CATEGORIES = [
     "Daily", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
     "Process Gas", "Precursor", "Metal target", "Wafer", "Package"
 ]
 
 # ==========================================
-# 1. 주식 데이터 관리
+# 1. 주식 데이터 관리 (섹터별 구분)
 # ==========================================
 STOCK_CATEGORIES = {
     "🏭 Chipmakers (IDM/Foundry)": {
@@ -257,32 +252,26 @@ def generate_daily_report(articles, api_key):
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        # 기사 내용 요약해서 프롬프트에 넣기
         context = ""
-        for i, item in enumerate(articles[:30]): # 최대 30개만 참조
+        for i, item in enumerate(articles[:30]):
             context += f"- {item['Title']}: {item.get('Snippet', '')}\n"
             
         prompt = f"""
         당신은 반도체 산업 수석 애널리스트입니다. 
-        아래 수집된 오늘의 뉴스들을 바탕으로 '일일 반도체 산업 브리핑 리포트'를 작성해주세요.
+        아래 뉴스들을 바탕으로 '일일 반도체 산업 브리핑 리포트'를 작성해주세요.
         
         [작성 규칙]
-        1. 언어: 한국어 (전문적인 어조)
+        1. 언어: 한국어 (전문적 어조)
         2. 형식: Markdown
-        3. 구조:
-           - 📊 Executive Summary (3줄 요약)
-           - 🌍 Global Market Trends (주요 시장 동향)
-           - 🏢 Key Corporate Moves (주요 기업 동향)
-           - 💡 Tech & Materials Insight (기술 및 소재 이슈)
+        3. 내용: Executive Summary(3줄 요약), Global Trends, Tech/Materials Issues
         
         [뉴스 데이터]
         {context}
         """
-        
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"리포트 생성 중 오류 발생: {str(e)}"
+        return f"리포트 생성 오류: {str(e)}"
 
 def crawl_google_rss(keyword, country_code, language):
     results = []
@@ -307,8 +296,6 @@ def crawl_google_rss(keyword, country_code, language):
     return results
 
 def perform_crawling(category, start_date, end_date, api_key):
-    # Daily 모드일 경우, 모든 키워드를 다 가져오거나, 주요 키워드만 가져올 수 있음.
-    # 여기서는 사용자가 'Daily' 카테고리에 등록한 키워드를 사용하도록 함.
     kws = st.session_state.keywords.get(category, [])
     if not kws: return
     start_dt = datetime.combine(start_date, datetime.min.time())
@@ -325,7 +312,7 @@ def perform_crawling(category, start_date, end_date, api_key):
             df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
             df = df.drop_duplicates(subset=['Title']).sort_values('Date', ascending=False)
             
-            # Daily 리포트용으로는 좀 더 많은 데이터를 가져와도 됨
+            # Daily 모드면 데이터를 더 많이 수집
             limit = 80 if category == "Daily" else 60
             final_list = df.head(limit).to_dict('records')
             
@@ -347,6 +334,7 @@ with st.sidebar:
     st.header("Semi-Insight")
     st.divider()
     st.subheader("📂 Category")
+    # 카테고리 선택
     selected_category = st.radio("카테고리", CATEGORIES, label_visibility="collapsed")
     
     st.divider()
@@ -357,6 +345,7 @@ with st.sidebar:
             st.caption("Loaded")
             
     st.markdown("---")
+    # 주식 정보 (기본 펼침)
     with st.expander("📉 Global Stock", expanded=True):
         stock_map = get_stock_prices_grouped()
         if stock_map:
@@ -384,9 +373,8 @@ with c_info:
 with st.container(border=True):
     c1, c2, c3 = st.columns([1.5, 2.5, 1])
     with c1:
-        # Daily일 경우 기간 설정을 좀 더 직관적으로 (기본 Today)
         if selected_category == "Daily":
-            st.info("📅 Daily Mode: 오늘/최근 뉴스 기반")
+            st.info("📅 Daily Mode: 오늘 기준")
             start_date, end_date = datetime.now().date(), datetime.now().date()
         else:
             period = st.selectbox("기간", ["1 Month", "3 Months", "Custom"], label_visibility="collapsed")
@@ -408,15 +396,14 @@ with st.container(border=True):
                     save_keywords(st.session_state.keywords)
                     st.rerun()
         with b2:
-            # Daily 모드일 때 버튼 이름 변경
+            # 버튼 이름 변경
             btn_label = "리포트 생성" if selected_category == "Daily" else "실행"
             if st.button(btn_label, type="primary", use_container_width=True):
-                # 1. 크롤링 실행
                 perform_crawling(selected_category, start_date, end_date, api_key)
                 
-                # 2. Daily 모드면 리포트 생성 추가 실행
+                # Daily 리포트 생성 로직
                 if selected_category == "Daily" and st.session_state.news_data.get("Daily"):
-                    with st.spinner("🤖 AI가 일일 리포트를 작성 중입니다..."):
+                    with st.spinner("🤖 AI 리포트 작성 중..."):
                         report = generate_daily_report(st.session_state.news_data["Daily"], api_key)
                         st.session_state.daily_report_text = report
                 
@@ -434,37 +421,31 @@ with st.container(border=True):
                 st.rerun()
 
 # ==========================================
-# 5. 결과 디스플레이 (Daily vs 일반)
+# 5. 결과 디스플레이
 # ==========================================
 data = st.session_state.news_data.get(selected_category, [])
 
 if data:
     st.divider()
     
-    # [CASE 1] Daily 모드: AI 리포트 + 링크 리스트
+    # [CASE 1] Daily 모드
     if selected_category == "Daily":
         if st.session_state.daily_report_text:
-            # 리포트 박스
             st.markdown(f"""
                 <div class="report-box">
                     <div class="report-header">📑 {datetime.now().strftime('%Y-%m-%d')} Daily Briefing</div>
-                    {st.session_state.daily_report_text} # 마크다운 렌더링은 아래에서 별도 처리 필요
                 </div>
             """, unsafe_allow_html=True)
-            # 마크다운 텍스트를 HTML 안에 넣으면 스타일이 깨질 수 있어 별도 렌더링
-            st.markdown(st.session_state.daily_report_text) 
+            st.markdown(st.session_state.daily_report_text)
             
             st.markdown("---")
             st.subheader("🔗 Reference Links")
-            
-            # 링크 리스트업
             for i, item in enumerate(data):
-                with st.container():
-                    st.markdown(f"{i+1}. [{item['Title']}]({item['Link']}) - <span style='color:#666; font-size:0.9em'>{item['Source']}</span>", unsafe_allow_html=True)
+                st.markdown(f"{i+1}. [{item['Title']}]({item['Link']}) - <span style='color:#888'>{item['Source']}</span>", unsafe_allow_html=True)
         else:
-            st.info("데이터는 수집되었으나 리포트가 아직 생성되지 않았습니다. '리포트 생성' 버튼을 눌러주세요.")
+            st.info("뉴스 수집 완료! '리포트 생성' 버튼을 한 번 더 누르거나 기다려주세요.")
 
-    # [CASE 2] 일반 모드: 카드 Grid
+    # [CASE 2] 일반 모드
     else:
         m1, m2 = st.columns(2)
         m1.metric("Collected", len(data))
