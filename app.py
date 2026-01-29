@@ -10,7 +10,7 @@ import os
 import re
 import concurrent.futures
 
-# [필수] 라이브러리 (requirements.txt 확인: deep-translator, yfinance, google-generativeai)
+# [필수] 라이브러리
 from deep_translator import GoogleTranslator
 import yfinance as yf
 
@@ -33,24 +33,15 @@ st.markdown("""
             background-color: #F8FAFC;
             color: #1E293B;
         }
-        
         .stApp { background-color: #F8FAFC; }
 
-        /* 뉴스 타이틀 */
-        .news-title {
-            font-size: 16px !important;
-            font-weight: 700 !important;
-            color: #111827 !important;
-            text-decoration: none;
-            line-height: 1.4;
-            display: block;
-            margin-bottom: 6px;
-        }
+        /* 뉴스 스타일 */
+        .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
         .news-title:hover { color: #2563EB !important; text-decoration: underline; }
-        
         .news-snippet { font-size: 13.5px !important; color: #475569 !important; line-height: 1.5; margin-bottom: 10px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
 
+        /* 컨트롤 패널 */
         .control-box {
             background-color: #FFFFFF;
             padding: 15px 20px;
@@ -59,77 +50,62 @@ st.markdown("""
             margin-bottom: 20px;
         }
         
-        button[kind="secondary"] {
-            height: 28px !important;
-            font-size: 12px !important;
-            padding: 0 10px !important;
-            border-radius: 14px !important;
-        }
+        /* 버튼 스타일 */
+        button[kind="secondary"] { height: 28px !important; font-size: 12px !important; padding: 0 10px !important; border-radius: 14px !important; }
 
-        /* 주식 정보 스타일 */
+        /* 주식 정보 */
         div[data-testid="stMetricValue"] { font-size: 13px !important; }
         div[data-testid="stMetricDelta"] { font-size: 11px !important; }
         div[data-testid="stMetricLabel"] { font-size: 11px !important; font-weight: 600; color: #64748B; }
-        
-        .stock-header {
-            font-size: 12px;
-            font-weight: 700;
-            color: #475569;
-            margin-top: 15px;
-            margin-bottom: 8px;
-            border-bottom: 1px solid #E2E8F0;
-            padding-bottom: 4px;
-        }
+        .stock-header { font-size: 12px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
 
-        /* [NEW] Daily 리포트 스타일 */
+        /* 리포트 스타일 */
         .report-box {
             background-color: #FFFFFF;
-            padding: 30px;
+            padding: 40px;
             border-radius: 12px;
             border: 1px solid #E2E8F0;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             margin-bottom: 30px;
             line-height: 1.8;
             color: #334155;
         }
         .report-header {
             border-bottom: 2px solid #3B82F6;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-            font-weight: bold;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            font-weight: 800;
             color: #1E3A8A;
         }
+        .report-sub { font-size: 0.9em; color: #64748B; margin-bottom: 20px; }
     </style>
 """, unsafe_allow_html=True)
 
-# [확인 포인트] Daily가 맨 앞에 있어야 합니다.
 CATEGORIES = [
     "Daily", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
     "Process Gas", "Precursor", "Metal target", "Wafer", "Package"
 ]
 
+# Daily 기본 키워드 지정
+DAILY_DEFAULT_KEYWORDS = [
+    "반도체 소재", "소재 공급망", "희토류 제한", "EUV", 
+    "중국 반도체", "일본 반도체", "중국 광물", "반도체 규제"
+]
+
 # ==========================================
-# 1. 주식 데이터 관리 (섹터별 구분)
+# 1. 주식 데이터 관리
 # ==========================================
 STOCK_CATEGORIES = {
-    "🏭 Chipmakers (IDM/Foundry)": {
-        "Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"
-    },
-    "🧠 Fabless & System": {
-        "Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q"
-    },
-    "⚙️ Equipment (Global/Korea)": {
-        "ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA Corp": "KLAC", "Hanmi Semi": "042700.KS", "Jusung Eng": "036930.KS"
-    },
-    "🧪 Materials & Chemicals": {
+    "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"},
+    "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q"},
+    "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Hanmi": "042700.KS", "Jusung": "036930.KS"},
+    "🧪 Materials": {
         "Shin-Etsu": "4063.T", "Sumitomo": "4005.T", "TOK": "4186.T", "Nissan Chem": "4021.T", 
-        "Merck (DE)": "MRK.DE", "Air Liquide": "AI.PA", "Linde": "LIN", 
-        "Soulbrain": "357780.KS", "Dongjin": "005290.KS", "ENF Tech": "102710.KS", "Ycchem": "232140.KS"
+        "Merck": "MRK.DE", "Air Liquide": "AI.PA", "Linde": "LIN", 
+        "Soulbrain": "357780.KS", "Dongjin": "005290.KS", "ENF": "102710.KS", "Ycchem": "232140.KS"
     },
-    "🔋 Battery & Others": {
-        "Samsung SDI": "006400.KS"
-    }
+    "🔋 Others": {"Samsung SDI": "006400.KS"}
 }
 
 @st.cache_data(ttl=600)
@@ -169,6 +145,7 @@ KEYWORD_FILE = 'keywords.json'
 
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
+    # 파일이 있으면 로드
     if os.path.exists(KEYWORD_FILE):
         try:
             with open(KEYWORD_FILE, 'r', encoding='utf-8') as f:
@@ -176,6 +153,11 @@ def load_keywords():
             for k, v in loaded.items():
                 if k in data: data[k] = v
         except: pass
+    
+    # [중요] Daily 항목이 비어있으면 기본값 강제 주입
+    if not data["Daily"]:
+        data["Daily"] = DAILY_DEFAULT_KEYWORDS
+        
     return data
 
 def save_keywords(data):
@@ -244,35 +226,6 @@ def filter_with_gemini(articles, api_key):
         return filtered if filtered else articles
     except: return articles
 
-# [NEW] Daily 리포트 생성 함수
-def generate_daily_report(articles, api_key):
-    if not articles or not api_key: return "API Key가 필요하거나 기사가 충분하지 않습니다."
-    
-    try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        context = ""
-        for i, item in enumerate(articles[:30]):
-            context += f"- {item['Title']}: {item.get('Snippet', '')}\n"
-            
-        prompt = f"""
-        당신은 반도체 산업 수석 애널리스트입니다. 
-        아래 뉴스들을 바탕으로 '일일 반도체 산업 브리핑 리포트'를 작성해주세요.
-        
-        [작성 규칙]
-        1. 언어: 한국어 (전문적 어조)
-        2. 형식: Markdown
-        3. 내용: Executive Summary(3줄 요약), Global Trends, Tech/Materials Issues
-        
-        [뉴스 데이터]
-        {context}
-        """
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"리포트 생성 오류: {str(e)}"
-
 def crawl_google_rss(keyword, country_code, language):
     results = []
     smart_query = make_smart_query(keyword, country_code)
@@ -295,6 +248,68 @@ def crawl_google_rss(keyword, country_code, language):
     except: pass
     return results
 
+# [NEW] Daily 자동 실행을 위한 캐싱 함수 (핵심)
+# date와 keywords가 바뀌면 자동으로 재실행됨
+@st.cache_data(ttl=3600*12, show_spinner=False)
+def auto_generate_daily_report(target_date, keywords, api_key):
+    # 1. 크롤링
+    start_dt = datetime.combine(target_date, datetime.min.time())
+    end_dt = datetime.combine(target_date, datetime.max.time())
+    
+    all_news = []
+    for kw in keywords:
+        # 주요 4개국 대상 크롤링
+        for cc, lang in [('KR','ko'), ('US','en'), ('TW','zh-TW'), ('CN', 'zh-CN')]:
+            all_news.extend(crawl_google_rss(kw, cc, lang))
+            
+    df = pd.DataFrame(all_news)
+    final_articles = []
+    report_text = ""
+    
+    if not df.empty:
+        df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
+        df = df.drop_duplicates(subset=['Title']).sort_values('Date', ascending=False)
+        
+        # 리포트용으로 충분한 양 확보 (최대 80개)
+        final_articles = df.head(80).to_dict('records')
+        
+        # 번역 & 필터링
+        if final_articles: final_articles = parallel_translate_articles(final_articles)
+        if api_key and final_articles: final_articles = filter_with_gemini(final_articles, api_key)
+        
+        # 2. 리포트 생성
+        if api_key and final_articles:
+            try:
+                genai.configure(api_key=api_key)
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                context = ""
+                for i, item in enumerate(final_articles[:40]): # 상위 40개 참조
+                    context += f"- {item['Title']}: {item.get('Snippet', '')}\n"
+                    
+                prompt = f"""
+                역할: 반도체 산업 수석 애널리스트
+                작업: '{target_date.strftime('%Y-%m-%d')}' 기준 반도체 공급망 및 이슈 일일 브리핑 작성.
+                
+                [작성 지침]
+                1. 톤앤매너: 전문적, 통찰력 있음, 핵심 위주
+                2. 형식: 깔끔한 Markdown
+                3. 필수 섹션:
+                   - 🚨 Key Headlines (오늘의 핵심 뉴스 3가지)
+                   - 🌍 Global Supply Chain (공급망/소재/규제 이슈 분석)
+                   - 📈 Tech & Market (기술 및 시장 동향)
+                   - 📝 Analyst Note (종합 의견 한 줄)
+                
+                [참고 뉴스]
+                {context}
+                """
+                response = model.generate_content(prompt)
+                report_text = response.text
+            except Exception as e:
+                report_text = f"⚠️ 리포트 생성 실패: {str(e)}"
+    
+    return final_articles, report_text
+
 def perform_crawling(category, start_date, end_date, api_key):
     kws = st.session_state.keywords.get(category, [])
     if not kws: return
@@ -311,11 +326,7 @@ def perform_crawling(category, start_date, end_date, api_key):
         if not df.empty:
             df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
             df = df.drop_duplicates(subset=['Title']).sort_values('Date', ascending=False)
-            
-            # Daily 모드면 데이터를 더 많이 수집
-            limit = 80 if category == "Daily" else 60
-            final_list = df.head(limit).to_dict('records')
-            
+            final_list = df.head(60).to_dict('records')
             if final_list: final_list = parallel_translate_articles(final_list)
             if api_key and final_list: final_list = filter_with_gemini(final_list, api_key)
             st.session_state.news_data[category] = final_list
@@ -325,7 +336,6 @@ def perform_crawling(category, start_date, end_date, api_key):
 if 'keywords' not in st.session_state: st.session_state.keywords = load_keywords()
 if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] for cat in CATEGORIES}
 if 'last_update' not in st.session_state: st.session_state.last_update = None
-if 'daily_report_text' not in st.session_state: st.session_state.daily_report_text = ""
 
 # ==========================================
 # 3. Sidebar UI
@@ -333,8 +343,6 @@ if 'daily_report_text' not in st.session_state: st.session_state.daily_report_te
 with st.sidebar:
     st.header("Semi-Insight")
     st.divider()
-    st.subheader("📂 Category")
-    # 카테고리 선택
     selected_category = st.radio("카테고리", CATEGORIES, label_visibility="collapsed")
     
     st.divider()
@@ -345,7 +353,6 @@ with st.sidebar:
             st.caption("Loaded")
             
     st.markdown("---")
-    # 주식 정보 (기본 펼침)
     with st.expander("📉 Global Stock", expanded=True):
         stock_map = get_stock_prices_grouped()
         if stock_map:
@@ -362,91 +369,123 @@ with st.sidebar:
             st.caption("⏳ Loading...")
 
 # ==========================================
-# 4. Main UI
+# 4. Main UI & Logic (자동 실행 분기)
 # ==========================================
 c_head, c_info = st.columns([3, 1])
 with c_head: st.title(selected_category)
-with c_info: 
-    if st.session_state.last_update:
-        st.markdown(f"<div style='text-align:right; font-size:12px; color:#888;'>Last Update<br><b>{st.session_state.last_update}</b></div>", unsafe_allow_html=True)
 
-with st.container(border=True):
-    c1, c2, c3 = st.columns([1.5, 2.5, 1])
-    with c1:
-        if selected_category == "Daily":
-            st.info("📅 Daily Mode: 오늘 기준")
-            start_date, end_date = datetime.now().date(), datetime.now().date()
-        else:
-            period = st.selectbox("기간", ["1 Month", "3 Months", "Custom"], label_visibility="collapsed")
-            today = datetime.now().date()
-            if period == "1 Month": start_date, end_date = today - timedelta(days=30), today
-            elif period == "3 Months": start_date, end_date = today - timedelta(days=90), today
-            else:
-                dr = st.date_input("날짜", (today-timedelta(7), today), label_visibility="collapsed")
-                if len(dr)==2: start_date, end_date = dr
-                else: start_date, end_date = dr[0], dr[0]
-            
-    with c2: new_kw = st.text_input("키워드", placeholder="예: HBM", label_visibility="collapsed")
-    with c3:
-        b1, b2 = st.columns(2)
-        with b1:
+# ----------------------------------------------------------------
+# [Logic A] Daily 모드: 6시 기준 자동 실행 & 리포트 표시
+# ----------------------------------------------------------------
+if selected_category == "Daily":
+    # 1. 6시 기준 날짜 계산
+    now = datetime.now()
+    if now.hour < 6:
+        target_date = (now - timedelta(days=1)).date() # 6시 전이면 어제 날짜
+    else:
+        target_date = now.date() # 6시 이후면 오늘 날짜
+        
+    with c_info:
+        st.markdown(f"<div style='text-align:right; font-size:12px; color:#888;'>Target Date<br><b>{target_date} (06:00 AM)</b></div>", unsafe_allow_html=True)
+
+    # 2. 키워드 관리 (Daily 전용)
+    with st.container(border=True):
+        st.markdown("##### ⚙️ Daily Report Settings")
+        c_k1, c_k2 = st.columns([3, 1])
+        with c_k1:
+            new_kw = st.text_input("키워드 추가 (리포트에 자동 반영됩니다)", placeholder="예: HBM, 전력반도체", label_visibility="collapsed")
+        with c_k2:
             if st.button("추가", use_container_width=True):
-                if new_kw and new_kw not in st.session_state.keywords[selected_category]:
-                    st.session_state.keywords[selected_category].append(new_kw)
+                if new_kw and new_kw not in st.session_state.keywords["Daily"]:
+                    st.session_state.keywords["Daily"].append(new_kw)
+                    save_keywords(st.session_state.keywords)
+                    st.rerun() # 키워드 변경 시 재실행을 위해 리로드
+
+        # 키워드 태그
+        daily_kws = st.session_state.keywords["Daily"]
+        if daily_kws:
+            st.write("")
+            cols = st.columns(8)
+            for i, kw in enumerate(daily_kws):
+                if cols[i%8].button(f"{kw} ×", key=f"d_{kw}", type="secondary"):
+                    st.session_state.keywords["Daily"].remove(kw)
                     save_keywords(st.session_state.keywords)
                     st.rerun()
-        with b2:
-            # 버튼 이름 변경
-            btn_label = "리포트 생성" if selected_category == "Daily" else "실행"
-            if st.button(btn_label, type="primary", use_container_width=True):
-                perform_crawling(selected_category, start_date, end_date, api_key)
-                
-                # Daily 리포트 생성 로직
-                if selected_category == "Daily" and st.session_state.news_data.get("Daily"):
-                    with st.spinner("🤖 AI 리포트 작성 중..."):
-                        report = generate_daily_report(st.session_state.news_data["Daily"], api_key)
-                        st.session_state.daily_report_text = report
-                
-                st.session_state.last_update = datetime.now().strftime("%Y-%m-%d %H:%M")
-                st.rerun()
 
-    curr_kws = st.session_state.keywords.get(selected_category, [])
-    if curr_kws:
-        st.write("")
-        cols = st.columns(8)
-        for i, kw in enumerate(curr_kws):
-            if cols[i%8].button(f"{kw} ×", key=f"d_{kw}", type="secondary"):
-                st.session_state.keywords[selected_category].remove(kw)
-                save_keywords(st.session_state.keywords)
-                st.rerun()
-
-# ==========================================
-# 5. 결과 디스플레이
-# ==========================================
-data = st.session_state.news_data.get(selected_category, [])
-
-if data:
-    st.divider()
-    
-    # [CASE 1] Daily 모드
-    if selected_category == "Daily":
-        if st.session_state.daily_report_text:
+    # 3. [핵심] 자동 리포트 생성 및 캐싱 호출
+    if api_key:
+        with st.spinner(f"☕ {target_date}자 일일 브리핑을 준비 중입니다... (최초 1회 생성 시 시간 소요)"):
+            # 키워드 리스트를 튜플로 변환하여 캐시 키로 사용 (리스트 변경 시 자동 갱신됨)
+            articles, report_text = auto_generate_daily_report(target_date, tuple(daily_kws), api_key)
+            
+        if report_text:
+            # 리포트 출력
             st.markdown(f"""
                 <div class="report-box">
-                    <div class="report-header">📑 {datetime.now().strftime('%Y-%m-%d')} Daily Briefing</div>
+                    <div class="report-header">📑 {target_date} Daily Briefing</div>
+                    <div class="report-sub">Generated by AI based on {len(articles)} articles</div>
                 </div>
             """, unsafe_allow_html=True)
-            st.markdown(st.session_state.daily_report_text)
+            st.markdown(report_text)
             
             st.markdown("---")
-            st.subheader("🔗 Reference Links")
-            for i, item in enumerate(data):
-                st.markdown(f"{i+1}. [{item['Title']}]({item['Link']}) - <span style='color:#888'>{item['Source']}</span>", unsafe_allow_html=True)
+            st.subheader("🔗 Reference Headlines")
+            for i, item in enumerate(articles):
+                with st.container():
+                     st.markdown(f"{i+1}. [{item['Title']}]({item['Link']}) <span style='color:#999; font-size:0.8em'> | {item['Source']}</span>", unsafe_allow_html=True)
         else:
-            st.info("뉴스 수집 완료! '리포트 생성' 버튼을 한 번 더 누르거나 기다려주세요.")
-
-    # [CASE 2] 일반 모드
+            st.warning("수집된 뉴스가 없거나 리포트를 생성할 수 없습니다.")
     else:
+        st.error("🔐 API Key가 필요합니다. 사이드바에서 키를 입력해주세요.")
+
+# ----------------------------------------------------------------
+# [Logic B] 일반 카테고리 모드: 수동 실행
+# ----------------------------------------------------------------
+else:
+    with c_info: 
+        if st.session_state.last_update:
+            st.markdown(f"<div style='text-align:right; font-size:12px; color:#888;'>Last Update<br><b>{st.session_state.last_update}</b></div>", unsafe_allow_html=True)
+
+    with st.container(border=True):
+        c1, c2, c3 = st.columns([1.5, 2.5, 1])
+        with c1:
+            period = st.selectbox("기간", ["1 Month", "3 Months", "Custom"], label_visibility="collapsed")
+            today = datetime.now().date()
+            if period == "1 Month": s, e = today - timedelta(days=30), today
+            elif period == "3 Months": s, e = today - timedelta(days=90), today
+            else:
+                dr = st.date_input("날짜", (today-timedelta(7), today), label_visibility="collapsed")
+                if len(dr)==2: s, e = dr
+                else: s, e = dr[0], dr[0]
+        with c2: new_kw = st.text_input("키워드", placeholder="예: HBM", label_visibility="collapsed")
+        with c3:
+            b1, b2 = st.columns(2)
+            with b1:
+                if st.button("추가", use_container_width=True):
+                    if new_kw and new_kw not in st.session_state.keywords[selected_category]:
+                        st.session_state.keywords[selected_category].append(new_kw)
+                        save_keywords(st.session_state.keywords)
+                        st.rerun()
+            with b2:
+                if st.button("실행", type="primary", use_container_width=True):
+                    perform_crawling(selected_category, s, e, api_key)
+                    st.session_state.last_update = datetime.now().strftime("%Y-%m-%d %H:%M")
+                    st.rerun()
+
+        curr_kws = st.session_state.keywords.get(selected_category, [])
+        if curr_kws:
+            st.write("")
+            cols = st.columns(8)
+            for i, kw in enumerate(curr_kws):
+                if cols[i%8].button(f"{kw} ×", key=f"d_{kw}", type="secondary"):
+                    st.session_state.keywords[selected_category].remove(kw)
+                    save_keywords(st.session_state.keywords)
+                    st.rerun()
+
+    # 결과 디스플레이 (일반 모드)
+    data = st.session_state.news_data.get(selected_category, [])
+    if data:
+        st.divider()
         m1, m2 = st.columns(2)
         m1.metric("Collected", len(data))
         m2.metric("AI Verified", sum(1 for d in data if d.get('AI_Verified')))
@@ -474,6 +513,6 @@ if data:
                         with ft2:
                             if item.get('AI_Verified'):
                                 st.markdown("<span style='color:#4F46E5; font-size:11px; font-weight:bold;'>✨ AI Pick</span>", unsafe_allow_html=True)
-else:
-    with st.container(border=True):
-        st.markdown("<div style='text-align:center; padding:30px; color:#999;'>데이터가 없습니다.<br>상단의 '실행' 버튼을 눌러주세요.</div>", unsafe_allow_html=True)
+    else:
+        with st.container(border=True):
+            st.markdown("<div style='text-align:center; padding:30px; color:#999;'>데이터가 없습니다.<br>상단의 '실행' 버튼을 눌러주세요.</div>", unsafe_allow_html=True)
