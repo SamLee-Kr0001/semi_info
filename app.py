@@ -4,7 +4,7 @@ import requests
 import urllib3
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 import os
 import re
@@ -77,13 +77,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# [조건 5] Daily -> Daily Report 로 변경
 CATEGORIES = [
     "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
     "Process Gas", "Precursor", "Metal target", "Wafer", "Package", "Daily Report"
 ]
 
-# Daily 리포트용 핵심 키워드 (한국 웹사이트 검색용)
 DAILY_DEFAULT_KEYWORDS = [
     "반도체 소재", "소재 공급망", "희토류 제한", "EUV", 
     "중국 반도체", "일본 반도체", "중국 광물", "반도체 규제"
@@ -150,11 +148,8 @@ def load_keywords():
             for k, v in loaded.items():
                 if k in data: data[k] = v
         except: pass
-    # 키 변경 대응 (Daily -> Daily Report)
-    if "Daily" in data:
-        data["Daily Report"] = data.pop("Daily")
-    if not data.get("Daily Report"): 
-        data["Daily Report"] = DAILY_DEFAULT_KEYWORDS
+    if "Daily" in data: data["Daily Report"] = data.pop("Daily")
+    if not data.get("Daily Report"): data["Daily Report"] = DAILY_DEFAULT_KEYWORDS
     return data
 
 def save_keywords(data):
@@ -173,20 +168,14 @@ def load_daily_history():
 
 def save_daily_history(new_report_data):
     history = load_daily_history()
-    # [조건 4] 기존 Report 삭제 없이 누적 (단, 동일 날짜 중복 생성 시 덮어쓰기)
-    # 날짜가 같은게 있으면 지우고 새로 추가 (최신화)
+    # 날짜 중복 시 덮어쓰기
     history = [h for h in history if h['date'] != new_report_data['date']]
-    # 최신 리포트가 리스트의 맨 앞에 오도록 insert(0)
     history.insert(0, new_report_data) 
     try:
         with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
             json.dump(history, f, ensure_ascii=False, indent=4)
     except: pass
     return history
-
-def make_smart_query(keyword):
-    # [조건 1] 한국 웹사이트 대상 (Google 검색 연산자 활용)
-    return f'{keyword} site:.kr OR site:co.kr OR source:google_news_kr'
 
 def get_gemini_model(api_key):
     genai.configure(api_key=api_key)
@@ -196,7 +185,6 @@ def get_gemini_model(api_key):
         return genai.GenerativeModel('gemini-pro')
 
 def filter_with_gemini(articles, api_key):
-    # 일반 카테고리용 단순 필터
     if not articles or not api_key: return articles
     try:
         model = get_gemini_model(api_key)
@@ -217,104 +205,107 @@ def filter_with_gemini(articles, api_key):
     except: return articles
 
 # ==========================================
-# 3. Daily Report 전용 크롤러 (조건 충족)
+# 3. Daily Report 전용 크롤러 (로직 수정됨)
 # ==========================================
-def crawl_korean_daily(keyword, start_dt, end_dt):
-    # [조건 1] 한국 웹사이트 중심
-    url = f"https://news.google.com/rss/search?q={quote(keyword)}&hl=ko&gl=KR&ceid=KR:ko"
+def crawl_korean_daily(keyword, start_dt_kst, end_dt_kst):
+    # [조건 1] 한국 웹사이트 중심 (검색어 뒤에 when:1d 추가하여 최신성 확보)
+    url = f"https://news.google.com/rss/search?q={quote(keyword)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
     
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
     
     try:
-        response = requests.get(url, headers=headers, timeout=10, verify=False)
+        response = requests.get(url, headers=headers, timeout=5, verify=False)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'xml')
             items = soup.find_all('item')
             
             parsed = []
             for item in items:
-                # 날짜 파싱
                 try: 
+                    # RSS 날짜는 GMT 기준임. KST로 변환해야 함.
                     pub_date_str = item.pubDate.text
-                    pub_date = pd.to_datetime(pub_date_str).to_pydatetime()
-                    # KST 보정 (구글 RSS는 보통 GMT)
-                    # 만약 서버가 UTC라면 +9시간 해야 한국시간
-                    # 여기서는 timestamp 비교를 위해 naive datetime으로 통일
-                    if pub_date.tzinfo:
-                        pub_date = pub_date.replace(tzinfo=None) + timedelta(hours=9)
+                    # 포맷 예: Fri, 02 Feb 2024 08:00:00 GMT
+                    pub_date_utc = pd.to_datetime(pub_date_str).replace(tzinfo=timezone.utc)
+                    pub_date_kst = pub_date_utc + timedelta(hours=9)
+                    
+                    # timezone-aware끼리 비교하기 위해 naive로 통일 (비교 편의성)
+                    pub_date_kst_naive = pub_date_kst.replace(tzinfo=None)
+                    
                 except: 
-                    continue
+                    # 날짜 파싱 실패시 현재 시간으로 가정 (데이터 유실 방지)
+                    pub_date_kst_naive = datetime.now() + timedelta(hours=9)
 
                 # [조건 2] 수집 기간: 전일 12:00 ~ 금일 06:00
-                if start_dt <= pub_date <= end_dt:
+                if start_dt_kst <= pub_date_kst_naive <= end_dt_kst:
                     src = item.source.text if item.source else "Google"
                     snip = BeautifulSoup(item.description.text if item.description else "", "html.parser").get_text(strip=True)[:300]
                     
                     parsed.append({
                         'Title': item.title.text,
                         'Source': src,
-                        'Date': pub_date,
+                        'Date': pub_date_kst_naive,
                         'Link': item.link.text,
                         'Keyword': keyword,
                         'Snippet': snip,
                         'Country': 'KR'
                     })
             return parsed
-    except:
+    except Exception as e:
+        print(f"Crawl Error: {e}")
         pass
     return []
 
 # [핵심] 리포트 생성 프로세스
-def generate_daily_report_process(target_date, keywords, api_key):
-    progress_bar = st.progress(0)
-    status_text = st.empty()
+def generate_daily_report_process(target_date_kst, keywords, api_key):
+    # 진행 상황 UI
+    status_box = st.status("🚀 리포트 생성 작업을 시작합니다...", expanded=True)
     
-    # [조건 2] 시간 설정: 전일 12:00 ~ 금일 06:00
-    # target_date가 '금일'임.
-    # 금일 06:00
-    end_dt = datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6)
-    # 전일 12:00 (18시간 전)
+    # [조건 2] 시간 설정 (KST 기준)
+    # target_date_kst는 '오늘 날짜'임.
+    # 종료: 오늘 06:00
+    end_dt = datetime.combine(target_date_kst, datetime.min.time()) + timedelta(hours=6)
+    # 시작: 어제 12:00 (18시간 전)
     start_dt = end_dt - timedelta(hours=18)
     
+    status_box.write(f"📅 수집 구간: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')} (KST)")
+    
     all_news = []
+    total_kws = len(keywords)
     
-    status_text.text(f"🔍 [KR] 기간: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')} 데이터 수집 중...")
-    
-    # 순차 수집 (안정성)
+    # 1. 크롤링
     for idx, kw in enumerate(keywords):
-        progress_bar.progress((idx + 1) / len(keywords))
-        
-        # 한국어 검색 실행
+        status_box.write(f"running... [{idx+1}/{total_kws}] 키워드 검색: {kw}")
         items = crawl_korean_daily(kw, start_dt, end_dt)
         all_news.extend(items)
-        time.sleep(0.2) # 차단 방지
+        time.sleep(0.3) # 차단 방지 딜레이
             
     if not all_news:
-        progress_bar.empty()
-        status_text.error("해당 기간에 수집된 뉴스가 없습니다.")
+        status_box.update(label="❌ 수집된 기사가 없습니다.", state="error")
         return [], None
 
-    # 중복 제거 및 정리
+    # 2. 데이터 정리
     df = pd.DataFrame(all_news)
     df = df.drop_duplicates(subset=['Title'])
-    # 상위 30개 (AI 토큰 제한 고려)
-    final_articles = df.head(30).to_dict('records')
+    df = df.sort_values(by='Date', ascending=False)
     
-    # 리포트 생성 단계
-    status_text.text(f"📝 수집된 {len(final_articles)}건의 기사를 바탕으로 리포트 작성 중...")
+    # AI에게 보낼 기사 선정 (최대 40개)
+    final_articles = df.head(40).to_dict('records')
+    status_box.write(f"✅ 총 {len(final_articles)}건의 유효 기사 수집 완료. AI 분석 시작...")
     
+    # 3. 리포트 생성
     try:
         model = get_gemini_model(api_key)
         
         context = ""
         for i, item in enumerate(final_articles):
-            context += f"- {item['Title']} ({item['Source']}): {item.get('Snippet', '')}\n"
+            date_str = item['Date'].strftime('%H:%M')
+            context += f"- [{date_str}] {item['Title']} ({item['Source']}): {item.get('Snippet', '')}\n"
             
         prompt = f"""
-        당신은 한국 반도체 산업 전문 애널리스트입니다.
-        제공된 뉴스 데이터는 **{start_dt.strftime('%Y-%m-%d %H:%M')}부터 {end_dt.strftime('%Y-%m-%d %H:%M')}까지** 한국 웹사이트에서 수집된 정보입니다.
+        당신은 대한민국 최고의 반도체 산업 애널리스트입니다.
+        제공된 뉴스 데이터는 **{start_dt.strftime('%Y-%m-%d %H:%M')}부터 {end_dt.strftime('%Y-%m-%d %H:%M')}까지** 수집된 한국 기사입니다.
         
         이 정보를 바탕으로 **[일일 반도체 산업 브리핑]**을 작성하세요.
         
@@ -326,7 +317,7 @@ def generate_daily_report_process(target_date, keywords, api_key):
         (전체 흐름을 3문장으로 요약)
         
         ## 🚨 주요 이슈 (Key Headlines)
-        (가장 중요한 기사 3~4개를 선정하여 심층 분석)
+        (가장 중요한 기사 3개를 선정하여 심층 분석)
         
         ## 📉 시장 및 공급망 동향
         (소재, 부품, 장비 및 기업 동향 정리)
@@ -338,20 +329,20 @@ def generate_daily_report_process(target_date, keywords, api_key):
         response = model.generate_content(prompt)
         report_text = response.text
         
-        # 저장 (날짜 기준)
+        # 4. 저장 (날짜 기준)
         save_data = {
-            'date': target_date.strftime('%Y-%m-%d'),
+            'date': target_date_kst.strftime('%Y-%m-%d'),
             'report': report_text,
             'articles': final_articles
         }
         save_daily_history(save_data)
         
-        progress_bar.empty()
-        status_text.empty()
+        status_box.update(label="🎉 리포트 생성이 완료되었습니다!", state="complete", expanded=False)
         return final_articles, report_text
         
     except Exception as e:
-        status_text.error(f"리포트 작성 중 오류 발생: {e}")
+        status_box.update(label="⚠️ 리포트 생성 중 오류 발생", state="error")
+        st.error(f"Error Details: {str(e)}")
         return final_articles, None
 
 # 일반 크롤링 (기존 유지)
@@ -362,7 +353,6 @@ def perform_crawling_general(category, api_key):
     prog = st.progress(0)
     all_res = []
     
-    # 일반 크롤링 URL 생성기 (기존 로직 사용)
     def crawl_simple(kw, cc, lang):
         url = f"https://news.google.com/rss/search?q={quote(kw)}&hl={lang}&gl={cc}&ceid={cc}:{lang}"
         try:
@@ -442,14 +432,15 @@ with c_head: st.title(selected_category)
 # [Logic A] Daily Report 모드
 # ----------------------------------------------------------------
 if selected_category == "Daily Report":
-    # 1. 타겟 날짜 계산 (6시 기준: 현재시간 + 9시간(KST보정) -> 6시 이전이면 어제, 이후면 오늘)
-    # Streamlit Cloud는 UTC 기준이므로 KST로 변환
-    kst_now = datetime.utcnow() + timedelta(hours=9)
+    # 1. 타겟 날짜 계산 (KST 기준)
+    # Streamlit Cloud는 UTC이므로 +9시간 보정
+    now_kst = datetime.utcnow() + timedelta(hours=9)
     
-    if kst_now.hour < 6:
-        target_date = (kst_now - timedelta(days=1)).date()
+    # 06시 기준: 06시 이전이면 '어제', 06시 이후면 '오늘'이 타겟
+    if now_kst.hour < 6:
+        target_date = (now_kst - timedelta(days=1)).date()
     else:
-        target_date = kst_now.date()
+        target_date = now_kst.date()
         
     target_date_str = target_date.strftime('%Y-%m-%d')
     
@@ -487,7 +478,7 @@ if selected_category == "Daily Report":
         st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
         
         if api_key:
-            if st.button("🚀 금일 리포트 생성 (전일 12:00 ~ 금일 06:00 기준)", type="primary"):
+            if st.button("🚀 금일 리포트 생성 (전일 12:00 ~ 금일 06:00 수집)", type="primary"):
                 _, _ = generate_daily_report_process(target_date, daily_kws, api_key)
                 st.rerun()
         else:
@@ -504,7 +495,7 @@ if selected_category == "Daily Report":
             # [조건 3] References 하단 기록
             with st.expander(f"🔗 Reference Articles ({len(entry.get('articles', []))})"):
                 for i, item in enumerate(entry.get('articles', [])):
-                    st.markdown(f"{i+1}. [{item['Title']}]({item['Link']}) <span style='color:#999; font-size:0.8em'> | {item['Source']}</span>", unsafe_allow_html=True)
+                    st.markdown(f"{i+1}. [{item['Title']}]({item['Link']}) <span style='color:#999; font-size:0.8em'> | {item['Source']} - {item['Date']}</span>", unsafe_allow_html=True)
 
 # ----------------------------------------------------------------
 # [Logic B] 일반 카테고리 (수동 실행)
