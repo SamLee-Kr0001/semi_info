@@ -275,7 +275,7 @@ def generate_daily_report_process(target_date, keywords, api_key):
     # 2. 전처리
     df = pd.DataFrame(all_news)
     df = df.drop_duplicates(subset=['Title']).sort_values(by='Date', ascending=False)
-    final_articles = df.head(20).to_dict('records')
+    final_articles = df.head(20).to_dict('records') # 20개로 제한 (AI 입력용)
     
     status_box.write(f"🧠 총 {len(final_articles)}건의 기사를 AI가 분석 중입니다...")
     
