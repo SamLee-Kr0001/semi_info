@@ -79,7 +79,6 @@ st.markdown("""
         }
         .report-sub { font-size: 0.9em; color: #64748B; margin-bottom: 20px; }
         
-        /* 과거 리포트 헤더 */
         .history-header {
             font-size: 1.2em;
             font-weight: 700;
@@ -181,10 +180,9 @@ def load_daily_history():
 
 def save_daily_history(new_report_data):
     history = load_daily_history()
-    # 중복 날짜 제거 (최신 업데이트)
+    # 날짜 중복 시 덮어쓰기 (최신 정보로 갱신)
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data) 
-    
     try:
         with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
             json.dump(history, f, ensure_ascii=False, indent=4)
@@ -198,10 +196,11 @@ def safe_translate(text):
     except: return text
 
 def parallel_translate_articles(articles):
+    # [최적화] Daily 리포트 생성 시에는 이 함수를 쓰지 않습니다 (속도 저하 원인)
+    # 일반 조회 시에만 사용
     tasks = [a for a in articles if 'KR' not in a.get('Country', 'KR')]
     if not tasks: return articles
     
-    # [최적화] Worker 수를 5로 줄여서 과부하 방지
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         title_futures = {executor.submit(safe_translate, a['Title']): a for a in tasks}
         snip_futures = {executor.submit(safe_translate, a['Snippet']): a for a in tasks}
@@ -218,7 +217,8 @@ def make_smart_query(keyword, country_code):
     negatives = "-TikTok -틱톡 -douyin -dance -shorts -reels -viral -music -game -soccer"
     contexts = {
         'KR': "(반도체 OR 소자 OR 공정 OR 소재 OR 파운드리 OR 팹 OR 양산)",
-        'CN': "(반도체 OR 칩 OR 웨이퍼 OR 소재 OR 장비)", 
+        'CN': "(半导体 OR 芯片 OR 晶圆 OR 光刻胶 OR 蚀刻 OR 封装)",
+        'HK': "(半导体 OR 芯片 OR 晶圆 OR 光刻胶 OR 蚀刻 OR 封装)",
         'US': "(semiconductor OR chip OR fab OR foundry OR wafer OR lithography)",
         'JP': "(semiconductor OR chip OR fab OR wafer OR resist)",
         'TW': "(semiconductor OR chip OR wafer OR foundry)"
@@ -238,7 +238,7 @@ def filter_with_gemini(articles, api_key):
     try:
         model = get_gemini_model(api_key)
         content_text = ""
-        for i, item in enumerate(articles[:30]): # 필터링도 30개만
+        for i, item in enumerate(articles[:30]): 
             safe_snip = re.sub(r'[^\w\s]', '', item.get('Snippet', ''))[:100]
             content_text += f"ID_{i+1} | Title: {item['Title']} | Snip: {safe_snip}\n"
         prompt = f"""
@@ -280,16 +280,15 @@ def crawl_google_rss(keyword, country_code, language):
     except: pass
     return results
 
-# [핵심] 리포트 생성 및 저장 로직 (최적화)
+# [핵심] 리포트 생성 (번역 API 사용 X -> 속도 10배 향상)
 def process_daily_report(target_date, keywords, api_key):
-    # 1. 크롤링
     start_dt = datetime.combine(target_date, datetime.min.time())
     end_dt = datetime.combine(target_date, datetime.max.time())
     
     all_news = []
-    # 키워드를 최대 5개로 제한하여 속도 향상 (Daily 모드)
-    search_kws = keywords[:8] 
+    search_kws = keywords[:8] # 키워드 8개 제한
     
+    # 1. 고속 크롤링
     for kw in search_kws:
         for cc, lang in [('KR','ko'), ('US','en'), ('TW','zh-TW'), ('CN', 'zh-CN')]:
             all_news.extend(crawl_google_rss(kw, cc, lang))
@@ -302,36 +301,39 @@ def process_daily_report(target_date, keywords, api_key):
         df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
         df = df.drop_duplicates(subset=['Title']).sort_values('Date', ascending=False)
         
-        # [최적화] 리포트 생성용 기사를 30개로 제한 (속도 문제 해결)
-        final_articles = df.head(30).to_dict('records')
+        # 상위 25개만 AI에게 전달 (Token 제한 및 속도 최적화)
+        final_articles = df.head(25).to_dict('records')
         
         if final_articles: 
-            # 1. 번역
-            final_articles = parallel_translate_articles(final_articles)
+            # [중요] deep-translator 사용 금지. 원문 그대로 AI에게 던집니다.
+            # AI가 다국어를 읽고 한국어로 요약하게 합니다.
             
-            # 2. 리포트 생성 (AI 필터링 생략 - 전체 내용을 요약하도록 유도)
             try:
                 model = get_gemini_model(api_key)
                 context = ""
                 for i, item in enumerate(final_articles):
-                    context += f"- {item['Title']}: {item.get('Snippet', '')}\n"
+                    context += f"- [{item['Country']}] {item['Title']}: {item.get('Snippet', '')}\n"
                 
                 prompt = f"""
-                역할: 반도체 산업 수석 애널리스트
-                작업: '{target_date.strftime('%Y-%m-%d')}' 수집된 정보를 바탕으로 일일 브리핑 작성.
-                
-                [작성 지침]
-                1. 언어: 한국어
-                2. 형식: Markdown
-                3. 필수: 3줄 요약, 공급망 이슈, 시장 동향
+                당신은 글로벌 반도체 산업 수석 애널리스트입니다. 
+                아래 제공된 다국어(한국어, 영어, 중국어 등) 뉴스들을 읽고, 
+                '{target_date.strftime('%Y-%m-%d')}' 기준 [일일 반도체 산업 브리핑]을 한국어로 작성하세요.
                 
                 [뉴스 데이터]
                 {context}
+                
+                [작성 지침]
+                1. **언어**: 반드시 **한국어**로 작성할 것.
+                2. **형식**: 가독성 좋은 Markdown.
+                3. **필수 포함**:
+                   - 🚨 **Key Headlines**: 가장 중요한 뉴스 3가지 요약
+                   - 🌍 **Global Issues**: 공급망, 미중 갈등, 주요국 정책 (원문 국가 참고)
+                   - 📈 **Tech & Market**: 기업 동향 및 기술 이슈
+                   - 💡 **Analyst Insight**: 전체적인 흐름에 대한 한 줄 평
                 """
                 response = model.generate_content(prompt)
                 report_text = response.text
                 
-                # [저장]
                 save_data = {
                     'date': target_date.strftime('%Y-%m-%d'),
                     'report': report_text,
@@ -342,7 +344,7 @@ def process_daily_report(target_date, keywords, api_key):
             except Exception as e:
                 report_text = f"⚠️ 리포트 생성 실패: {str(e)}"
     else:
-        report_text = "수집된 뉴스가 없습니다."
+        report_text = "해당 날짜에 수집된 뉴스가 없습니다."
     
     return final_articles, report_text
 
@@ -363,9 +365,9 @@ def perform_crawling(category, start_date, end_date, api_key):
             df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
             df = df.drop_duplicates(subset=['Title']).sort_values('Date', ascending=False)
             
-            # 일반 모드 제한
             final_list = df.head(50).to_dict('records')
             
+            # 일반 모드에서는 번역 사용 (사용자가 읽어야 하므로)
             if final_list: final_list = parallel_translate_articles(final_list)
             if api_key and final_list: final_list = filter_with_gemini(final_list, api_key)
             st.session_state.news_data[category] = final_list
@@ -412,11 +414,7 @@ with st.sidebar:
 c_head, c_info = st.columns([3, 1])
 with c_head: st.title(selected_category)
 
-# ----------------------------------------------------------------
-# [Logic A] Daily 모드
-# ----------------------------------------------------------------
 if selected_category == "Daily":
-    # 1. 타겟 날짜
     now = datetime.now()
     target_date = (now - timedelta(days=1)).date() if now.hour < 6 else now.date()
     target_date_str = target_date.strftime('%Y-%m-%d')
@@ -424,7 +422,6 @@ if selected_category == "Daily":
     with c_info:
         st.markdown(f"<div style='text-align:right; font-size:12px; color:#888;'>Target Date<br><b>{target_date} (06:00 AM)</b></div>", unsafe_allow_html=True)
 
-    # 2. 키워드 설정
     with st.container(border=True):
         st.markdown("##### ⚙️ Daily Settings")
         c_k1, c_k2 = st.columns([3, 1])
@@ -445,19 +442,16 @@ if selected_category == "Daily":
                     save_keywords(st.session_state.keywords)
                     st.rerun()
 
-    # 3. 리포트 확인 및 생성
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
-    # 오늘 리포트가 없고 API 키가 있으면 자동 생성 시도
     if not today_report and api_key:
-        with st.spinner(f"☕ {target_date}자 리포트 생성 중... (최대 30초 소요)"):
+        with st.spinner(f"☕ {target_date}자 리포트 AI 분석 중... (번역 없이 원문 분석)"):
             _, _ = process_daily_report(target_date, daily_kws, api_key)
             st.rerun() 
 
-    # 4. 출력
     if not history:
-        st.info("생성된 리포트가 없습니다. API Key를 확인해주세요.")
+        st.info("생성된 리포트가 없습니다. API Key를 확인하거나 잠시 후 다시 시도하세요.")
     else:
         for idx, entry in enumerate(history):
             st.markdown(f"<div class='history-header'>📅 {entry['date']} Report</div>", unsafe_allow_html=True)
@@ -467,9 +461,6 @@ if selected_category == "Daily":
                 for i, item in enumerate(entry.get('articles', [])):
                     st.markdown(f"{i+1}. [{item['Title']}]({item['Link']}) <span style='color:#999; font-size:0.8em'> | {item['Source']}</span>", unsafe_allow_html=True)
 
-# ----------------------------------------------------------------
-# [Logic B] 일반 카테고리
-# ----------------------------------------------------------------
 else:
     with c_info: 
         if st.session_state.last_update:
