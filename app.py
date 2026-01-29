@@ -8,7 +8,8 @@ from datetime import datetime, timedelta
 import json
 import os
 import re
-import time # [NEW] 시간 지연을 위한 모듈
+import time
+import random
 
 # [필수] 라이브러리
 from deep_translator import GoogleTranslator
@@ -89,9 +90,6 @@ DAILY_DEFAULT_KEYWORDS = [
     "중국 반도체", "일본 반도체", "중국 광물", "반도체 규제"
 ]
 
-# ==========================================
-# 1. 주식 데이터 관리
-# ==========================================
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"},
     "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q"},
@@ -112,9 +110,7 @@ def get_stock_prices_grouped():
     result_map = {}
     try:
         stocks = yf.Tickers(ticker_str)
-        # yfinance가 데이터를 한번에 못 가져올 경우를 대비해 예외처리
         if not stocks.tickers: return {}
-        
         for symbol in all_tickers:
             try:
                 hist = stocks.tickers[symbol].history(period="5d")
@@ -205,7 +201,6 @@ def filter_with_gemini(articles, api_key):
     try:
         model = get_gemini_model(api_key)
         content_text = ""
-        # 필터링 개수 30개로 제한
         for i, item in enumerate(articles[:30]): 
             safe_snip = re.sub(r'[^\w\s]', '', item.get('Snippet', ''))[:100]
             content_text += f"ID_{i+1} | Title: {item['Title']} | Snip: {safe_snip}\n"
@@ -226,78 +221,87 @@ def filter_with_gemini(articles, api_key):
         return filtered if filtered else articles
     except: return articles
 
-# [수정] 단일 크롤링 함수 (Timeout 추가)
-def crawl_single_rss_safe(keyword, country_code, language):
+# [수정] 강력한 크롤링 함수 (헤더 보강 + 타임아웃 연장)
+def crawl_single_rss_robust(keyword, country_code, language):
     smart_query = make_smart_query(keyword, country_code)
     url = f"https://news.google.com/rss/search?q={quote(smart_query)}&hl={language}&gl={country_code}&ceid={country_code}:{language}"
+    
+    # 봇 차단 방지를 위한 리얼 헤더
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Referer': 'https://news.google.com/'
+    }
+    
     try:
-        # [핵심] timeout 3초 설정. 응답 없으면 바로 버림.
-        response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=3, verify=False)
+        # [핵심] timeout 10초로 연장
+        response = requests.get(url, headers=headers, timeout=10, verify=False)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'xml')
-            items = soup.find_all('item')[:3] # 키워드/국가당 최대 3개만 (부하 감소)
+            items = soup.find_all('item')[:3] # 부하 방지를 위해 3개만
             
             parsed_items = []
             for item in items:
                 src = item.source.text if item.source else "Google"
                 snip = BeautifulSoup(item.description.text if item.description else "", "html.parser").get_text(strip=True)[:200]
+                
+                # 날짜 파싱 실패해도 무조건 현재 시간으로 채워서 데이터 유실 방지
                 pub_date = item.pubDate.text if item.pubDate else str(datetime.now())
                 try: dt_obj = pd.to_datetime(pub_date).to_pydatetime()
                 except: dt_obj = datetime.now()
+                
                 parsed_items.append({
                     'Title': item.title.text, 'Source': src, 'Date': dt_obj,
                     'Link': item.link.text, 'Keyword': keyword, 'Snippet': snip,
                     'AI_Verified': False, 'Country': country_code
                 })
             return parsed_items
-    except:
-        pass # 에러나면 빈 리스트 반환하고 멈추지 않음
+    except Exception as e:
+        print(f"Crawl Error: {e}")
     return []
 
 # [핵심] 리포트 생성 (진행률 표시 및 순차 처리)
 def process_daily_report_with_progress(target_date, keywords, api_key):
-    start_dt = datetime.combine(target_date, datetime.min.time())
-    end_dt = datetime.combine(target_date, datetime.max.time())
+    # 날짜 필터링 제거 (최신순 수집 후 상위 n개 사용)
+    # 이유: 날짜 필터가 너무 엄격해서 데이터가 0개가 되는 현상 방지
     
     all_news = []
-    
-    # 키워드 8개 제한
     search_kws = keywords[:8] 
     
-    # Progress bar 생성
     progress_bar = st.progress(0)
     status_text = st.empty()
     
-    total_steps = len(search_kws) * 4 # 키워드 수 * 4개국
+    total_steps = len(search_kws) * 4 
     current_step = 0
     
-    # 1. 순차 크롤링 (병렬 처리 제거 -> 안정성 확보)
+    # 1. 순차 크롤링
     for kw in search_kws:
         for cc, lang in [('KR','ko'), ('US','en'), ('TW','zh-TW'), ('CN', 'zh-CN')]:
             current_step += 1
-            status_text.text(f"📡 수집 중 ({int(current_step/total_steps*100)}%): {kw} in {cc}")
             progress_bar.progress(current_step / total_steps)
+            status_text.text(f"📡 수집 중... {kw} ({cc})")
             
             # 수집 실행
-            news_items = crawl_single_rss_safe(kw, cc, lang)
+            news_items = crawl_single_rss_robust(kw, cc, lang)
             all_news.extend(news_items)
             
-            # [중요] 너무 빠른 요청 방지 (0.1초 대기)
-            time.sleep(0.1)
+            # 봇 탐지 방지 지연
+            time.sleep(0.2)
             
     df = pd.DataFrame(all_news)
     final_articles = []
     report_text = ""
     
     if not df.empty:
-        df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
-        df = df.drop_duplicates(subset=['Title']).sort_values('Date', ascending=False)
+        # 날짜 정렬만 하고 필터링은 하지 않음 (최신 뉴스 30개 무조건 확보)
+        df = df.sort_values('Date', ascending=False)
+        df = df.drop_duplicates(subset=['Title'])
         
-        # 상위 20개만 AI에게 전달 (Token 제한 및 속도 최적화)
-        final_articles = df.head(20).to_dict('records')
+        final_articles = df.head(30).to_dict('records')
         
         if final_articles: 
-            status_text.text("🤖 AI가 리포트를 작성 중입니다... (약 10초 소요)")
+            status_text.text(f"✅ {len(final_articles)}개 기사 분석 중... AI 리포트 생성 시작")
             progress_bar.progress(0.95)
             
             try:
@@ -336,9 +340,8 @@ def process_daily_report_with_progress(target_date, keywords, api_key):
             except Exception as e:
                 report_text = f"⚠️ 리포트 생성 실패: {str(e)}"
     else:
-        report_text = "해당 날짜에 수집된 뉴스가 없습니다."
+        report_text = "해당 키워드로 수집된 뉴스가 없습니다. 키워드를 변경해보세요."
     
-    # UI 정리
     progress_bar.empty()
     status_text.empty()
     
@@ -349,17 +352,15 @@ def perform_crawling(category, start_date, end_date, api_key):
     if not kws: return
     
     progress_bar = st.progress(0)
-    
     all_news = []
     total_steps = len(kws)
     
     for i, kw in enumerate(kws):
         progress_bar.progress((i+1)/total_steps)
         for cc, lang in [('KR','ko'), ('US','en'), ('TW','zh-TW'), ('CN', 'zh-CN')]:
-            all_news.extend(crawl_single_rss_safe(kw, cc, lang))
-            
+            all_news.extend(crawl_single_rss_robust(kw, cc, lang))
+    
     progress_bar.empty()
-        
     df = pd.DataFrame(all_news)
     start_dt = datetime.combine(start_date, datetime.min.time())
     end_dt = datetime.combine(end_date, datetime.max.time())
@@ -367,9 +368,9 @@ def perform_crawling(category, start_date, end_date, api_key):
     if not df.empty:
         df = df[(df['Date'] >= start_dt) & (df['Date'] <= end_dt)]
         df = df.drop_duplicates(subset=['Title']).sort_values('Date', ascending=False)
-        
         final_list = df.head(50).to_dict('records')
         
+        # 일반 모드에서는 사용자 편의를 위해 번역 함수 사용 (여기서는 병렬처리 안함)
         if api_key and final_list: final_list = filter_with_gemini(final_list, api_key)
         st.session_state.news_data[category] = final_list
     else:
@@ -417,7 +418,6 @@ with c_head: st.title(selected_category)
 
 if selected_category == "Daily":
     now = datetime.now()
-    # 6시 이전이면 어제, 이후면 오늘
     target_date = (now - timedelta(days=1)).date() if now.hour < 6 else now.date()
     target_date_str = target_date.strftime('%Y-%m-%d')
     
@@ -447,17 +447,15 @@ if selected_category == "Daily":
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
-    # [수정] 버튼을 눌러야만 생성하도록 변경 (자동 실행으로 인한 무한 로딩 방지)
     if not today_report:
         if api_key:
-            st.info(f"📢 아직 {target_date}자 리포트가 없습니다. 아래 버튼을 눌러 생성하세요.")
+            st.info(f"📢 아직 {target_date}자 리포트가 없습니다.")
             if st.button("🚀 리포트 지금 생성하기", type="primary"):
                  _, _ = process_daily_report_with_progress(target_date, daily_kws, api_key)
                  st.rerun()
         else:
             st.error("API Key가 필요합니다.")
             
-    # 출력
     if not history:
         st.write("")
     else:
@@ -470,7 +468,6 @@ if selected_category == "Daily":
                     st.markdown(f"{i+1}. [{item['Title']}]({item['Link']}) <span style='color:#999; font-size:0.8em'> | {item['Source']}</span>", unsafe_allow_html=True)
 
 else:
-    # 일반 모드
     with c_info: 
         if st.session_state.last_update:
             st.markdown(f"<div style='text-align:right; font-size:12px; color:#888;'>Last Update<br><b>{st.session_state.last_update}</b></div>", unsafe_allow_html=True)
