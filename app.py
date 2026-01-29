@@ -13,7 +13,7 @@ import random
 import yfinance as yf
 
 # ==========================================
-# 0. 페이지 설정 및 Modern CSS (주식 폰트 강력 수정)
+# 0. 페이지 설정 및 스타일
 # ==========================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -33,9 +33,9 @@ st.markdown("""
         .news-snippet { font-size: 13.5px !important; color: #475569 !important; line-height: 1.5; margin-bottom: 10px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
 
-        /* [수정] 사이드바 주식 폰트 강제 고정 (더 구체적인 선택자 사용) */
+        /* 사이드바 주식 폰트 강제 고정 */
         section[data-testid="stSidebar"] div[data-testid="stMetricValue"] {
-            font-size: 18px !important; /* 크기 강제 조절 */
+            font-size: 18px !important; 
             font-weight: 600 !important;
         }
         section[data-testid="stSidebar"] div[data-testid="stMetricDelta"] {
@@ -47,6 +47,9 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+
+# [사용자 요청] 비상용 하드코딩 키 (보안 주의)
+FALLBACK_API_KEY = "AIzaSyCBSqIQBIYQbWtfQAxZ7D5mwCKFx-7VDJo"
 
 CATEGORIES = [
     "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", 
@@ -99,6 +102,7 @@ def get_stock_prices_grouped():
 KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json' 
 
+# [수정] SyntaxError 해결: try 문법 교정
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
     if os.path.exists(KEYWORD_FILE):
@@ -113,12 +117,16 @@ def load_keywords():
     return data
 
 def save_keywords(data):
-    try: with open(KEYWORD_FILE, 'w', encoding='utf-8') as f: json.dump(data, f, ensure_ascii=False, indent=4)
+    try:
+        with open(KEYWORD_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
     except: pass
 
 def load_daily_history():
     if os.path.exists(HISTORY_FILE):
-        try: with open(HISTORY_FILE, 'r', encoding='utf-8') as f: return json.load(f) 
+        try:
+            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f) 
         except: return []
     return []
 
@@ -126,7 +134,9 @@ def save_daily_history(new_report_data):
     history = load_daily_history()
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data) 
-    try: with open(HISTORY_FILE, 'w', encoding='utf-8') as f: json.dump(history, f, ensure_ascii=False, indent=4)
+    try:
+        with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
+            json.dump(history, f, ensure_ascii=False, indent=4)
     except: pass
     return history
 
@@ -138,14 +148,10 @@ def clean_text(text):
     return text
 
 # ==========================================
-# [핵심] REST API 방식 AI 호출 (라이브러리 미사용)
+# 2. AI 호출 (REST API - 404 에러 원천 차단)
 # ==========================================
 def generate_content_rest_api(api_key, prompt):
-    """
-    Python 라이브러리(google-generativeai)를 쓰지 않고,
-    HTTP 요청을 직접 보내서 404 에러와 버전 문제를 원천 차단함.
-    """
-    # 1순위: 1.5-flash, 2순위: 1.0-pro (엔드포인트 직접 지정)
+    # 1.5-flash 우선, 실패시 pro 시도
     models = ["gemini-1.5-flash", "gemini-pro"]
     
     for model in models:
@@ -162,20 +168,16 @@ def generate_content_rest_api(api_key, prompt):
         }
         
         try:
-            response = requests.post(url, headers=headers, json=data, timeout=30)
+            response = requests.post(url, headers=headers, json=data, timeout=40)
             if response.status_code == 200:
                 result = response.json()
-                # 응답 파싱
                 if 'candidates' in result and result['candidates']:
                     return result['candidates'][0]['content']['parts'][0]['text']
-            else:
-                print(f"Model {model} failed: {response.text}")
-                continue # 다음 모델 시도
-        except Exception as e:
-            print(f"Connection error with {model}: {e}")
+            # 에러 발생 시 다음 모델 시도
+        except Exception:
             continue
             
-    return None # 모든 모델 실패
+    return None
 
 # ==========================================
 # 3. 크롤링 및 리포트 로직
@@ -259,11 +261,11 @@ def generate_daily_report_process(target_date, keywords, api_key):
     # 2. 전처리
     df = pd.DataFrame(all_news)
     df = df.drop_duplicates(subset=['Title']).sort_values(by='Date', ascending=False)
-    final_articles = df.head(25).to_dict('records') # 25개로 제한
+    final_articles = df.head(25).to_dict('records')
     
     status_box.write(f"🧠 총 {len(final_articles)}건의 기사를 AI가 분석 중입니다...")
     
-    # 3. 리포트 작성 (REST API 호출)
+    # 3. 리포트 작성 (REST API)
     try:
         context = ""
         for i, item in enumerate(final_articles):
@@ -285,7 +287,6 @@ def generate_daily_report_process(target_date, keywords, api_key):
         {context}
         """
         
-        # [변경] 라이브러리 대신 REST API 함수 사용
         report_text = generate_content_rest_api(api_key, prompt)
         
         if report_text:
@@ -298,12 +299,11 @@ def generate_daily_report_process(target_date, keywords, api_key):
             status_box.update(label="🎉 리포트 생성 완료!", state="complete", expanded=False)
             return save_data
         else:
-            raise Exception("AI 응답 없음 (모든 모델 실패 또는 API Key 문제)")
+            raise Exception("AI 응답 없음 (모든 모델 연결 실패)")
             
     except Exception as e:
         status_box.update(label="⚠️ AI 분석 실패", state="error")
         st.error(f"Error: {str(e)}")
-        # 실패하더라도 수집 목록은 저장 및 반환
         save_data = {
             'date': target_date.strftime('%Y-%m-%d'),
             'report': f"⚠️ **분석 실패**: {str(e)}",
@@ -366,17 +366,25 @@ with st.sidebar:
     selected_category = st.radio("카테고리", CATEGORIES, index=len(CATEGORIES)-1, label_visibility="collapsed")
     st.divider()
     with st.expander("🔐 API Key"):
-        api_key = st.text_input("Key", type="password")
-        if not api_key and "GEMINI_API_KEY" in st.secrets:
-            api_key = st.secrets["GEMINI_API_KEY"]
-            st.caption("Loaded")
+        api_key_input = st.text_input("Key", type="password")
+        
+        # [키 우선순위 로직]
+        if api_key_input:
+            final_api_key = api_key_input
+            st.caption("입력된 키 사용")
+        elif "GEMINI_API_KEY" in st.secrets:
+            final_api_key = st.secrets["GEMINI_API_KEY"]
+            st.caption("Secrets 키 사용")
+        else:
+            final_api_key = FALLBACK_API_KEY
+            st.caption("시스템 키 사용")
             
-    # [연결 테스트 - REST API 방식]
+    # [연결 테스트]
     if st.button("🤖 AI 연결 확인", type="secondary", use_container_width=True):
-        if not api_key:
+        if not final_api_key:
             st.error("API Key 없음")
         else:
-            res = generate_content_rest_api(api_key, "Hi")
+            res = generate_content_rest_api(final_api_key, "Hi")
             if res: st.success("연결 성공! (REST API)")
             else: st.error("연결 실패 (키 확인 필요)")
 
@@ -432,13 +440,13 @@ if selected_category == "Daily Report":
     if today_report:
         st.success(f"✅ {target_date} 리포트가 이미 발행되었습니다.")
         if st.button("🔄 리포트 다시 생성하기"):
-             result = generate_daily_report_process(target_date, daily_kws, api_key)
+             result = generate_daily_report_process(target_date, daily_kws, final_api_key)
              if result: st.rerun()
     else:
         st.info(f"📢 {target_date} 리포트가 없습니다.")
-        if api_key:
+        if final_api_key:
             if st.button("🚀 리포트 생성 시작 (전일 12:00 ~ 금일 06:00)", type="primary"):
-                result = generate_daily_report_process(target_date, daily_kws, api_key)
+                result = generate_daily_report_process(target_date, daily_kws, final_api_key)
                 if result: st.rerun()
         else:
             st.error("API Key가 필요합니다.")
@@ -472,7 +480,7 @@ else:
                         st.rerun()
             with b2:
                 if st.button("실행", type="primary", use_container_width=True):
-                    perform_crawling_general(selected_category, api_key)
+                    perform_crawling_general(selected_category, final_api_key)
                     st.session_state.last_update = datetime.now().strftime("%H:%M")
                     st.rerun()
         curr_kws = st.session_state.keywords.get(selected_category, [])
