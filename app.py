@@ -29,8 +29,8 @@ st.markdown("""
         html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
         .report-box { background-color: #FFFFFF; padding: 40px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; }
         .history-header { font-size: 1.2em; font-weight: 700; color: #475569; margin-top: 50px; margin-bottom: 20px; border-left: 5px solid #CBD5E1; padding-left: 10px; }
-        .status-log { font-family: monospace; font-size: 0.9em; color: #334155; background: #F1F5F9; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #3B82F6; }
-        .error-log { font-family: monospace; font-size: 0.9em; color: #991B1B; background: #FEF2F2; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #EF4444; }
+        .status-log { font-family: monospace; font-size: 0.85em; color: #334155; background: #F1F5F9; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #3B82F6; }
+        .error-log { font-family: monospace; font-size: 0.85em; color: #991B1B; background: #FEF2F2; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #EF4444; }
         
         /* 뉴스 카드 스타일 */
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
@@ -129,16 +129,21 @@ def save_daily_history(new_report_data):
     return history
 
 def clean_text(text):
+    """HTML 태그 제거 및 AI가 읽기 좋게 정제"""
     if not text: return ""
-    clean = re.sub('<.*?>', '', text)
-    clean = re.sub('\s+', ' ', clean).strip()
-    return clean
+    # HTML 태그 제거
+    text = re.sub(r'<[^>]+>', '', text)
+    # 특수문자 제거 (일부 유지)
+    text = re.sub(r'[^\w\s\.,%]', ' ', text)
+    # 다중 공백 제거
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
 
-# [수정] 안전 설정 강화 (Gemini가 거부하지 않게 설정)
+# [핵심] 안전 필터 강제 해제 (Gemini가 답변 거부하지 않도록 설정)
 def get_gemini_model(api_key):
     genai.configure(api_key=api_key)
     
-    # 안전 필터 해제 (뉴스 요약 시 '전쟁', '규제' 단어로 인한 차단 방지)
+    # 모든 안전 필터를 끄는 설정 (뉴스 요약 목적이므로 필수)
     safety_settings = {
         HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -192,23 +197,23 @@ def parse_and_filter_news(items, keyword, start_dt, end_dt):
             pub_date_kst = pub_date_utc + timedelta(hours=9)
             pub_date_kst_naive = pub_date_kst.replace(tzinfo=None)
             
-            # 본문 추출 및 정리 (데이터 품질 확보)
+            # 본문 추출 및 정리
             raw_desc = item.description.text if item.description else ""
             clean_snip = BeautifulSoup(raw_desc, "html.parser").get_text(strip=True)
+            clean_snip = clean_text(clean_snip)
             
-            # 본문이 너무 짧으면 제목으로 대체 (AI 인식률 향상)
-            if len(clean_snip) < 10:
-                clean_snip = item.title.text
+            # 제목이 너무 짧거나 내용이 없으면 건너뜀
+            if len(clean_snip) < 10: clean_snip = item.title.text
 
             if start_dt <= pub_date_kst_naive <= end_dt:
                 src = item.source.text if item.source else "Google"
                 parsed_items.append({
-                    'Title': item.title.text,
+                    'Title': clean_text(item.title.text),
                     'Source': src,
                     'Date': pub_date_kst_naive,
                     'Link': item.link.text,
                     'Keyword': keyword,
-                    'Snippet': clean_snip[:500], # 길이 제한
+                    'Snippet': clean_snip[:400], # 길이 제한 (토큰 절약)
                     'Country': 'KR'
                 })
         except Exception: continue
@@ -226,46 +231,43 @@ def generate_daily_report_process(target_date, keywords, api_key):
     
     all_news = []
     
-    # 2. 수집 단계 (Progress bar)
-    progress_bar = status_box.empty()
+    # 2. 수집 단계
     log_area = status_box.empty()
-    
     logs = []
     
     for idx, kw in enumerate(keywords):
-        progress = (idx + 1) / len(keywords)
-        # 프로그레스 바는 status box 안에는 못 넣으므로 텍스트로 대체
-        
         items = fetch_rss_feed(kw, days_back=2)
         filtered = parse_and_filter_news(items, kw, start_dt, end_dt)
         
+        # Fallback (조건 완화)
         if len(filtered) == 0:
-            # Fallback: 시간 조건 완화 (24시간)
             fallback_items = parse_and_filter_news(items, kw, end_dt - timedelta(hours=24), end_dt + timedelta(hours=24))
             if fallback_items:
-                logs.append(f"⚠️ [{kw}] 0건 -> 범위확장 수집: {len(fallback_items)}건")
+                logs.append(f"⚠️ [{kw}] 0건 -> 범위확장: {len(fallback_items)}건")
                 all_news.extend(fallback_items)
             else:
-                logs.append(f"❌ [{kw}] 관련 기사 없음")
+                logs.append(f"❌ [{kw}] 기사 없음")
         else:
-            logs.append(f"✅ [{kw}] {len(filtered)}건 수집 성공")
+            logs.append(f"✅ [{kw}] {len(filtered)}건 수집")
             all_news.extend(filtered)
             
-        # 최신 3개 로그만 보여주기
-        log_text = "<br>".join([f"<div class='status-log'>{l}</div>" for l in logs[-3:]])
-        log_area.markdown(log_text, unsafe_allow_html=True)
+        # 로그 업데이트
+        log_html = "<br>".join([f"<div class='status-log'>{l}</div>" for l in logs[-4:]])
+        log_area.markdown(log_html, unsafe_allow_html=True)
         time.sleep(0.1)
 
     if not all_news:
         status_box.update(label="❌ 수집된 기사가 없습니다.", state="error")
         return [], None
 
-    # 3. 데이터 분석 단계
+    # 3. 데이터 전처리
     df = pd.DataFrame(all_news)
     df = df.drop_duplicates(subset=['Title']).sort_values(by='Date', ascending=False)
-    final_articles = df.head(30).to_dict('records') # 30개로 제한
     
-    status_box.write(f"🧠 AI 분석 시작 (기사 {len(final_articles)}건)...")
+    # [중요] AI에게 보낼 기사 개수를 20개로 제한 (안정성 확보)
+    final_articles = df.head(20).to_dict('records')
+    
+    status_box.write(f"🧠 총 {len(final_articles)}건의 핵심 기사를 AI가 분석 중입니다...")
     
     # 4. 리포트 작성 단계
     try:
@@ -274,55 +276,55 @@ def generate_daily_report_process(target_date, keywords, api_key):
         context = ""
         for i, item in enumerate(final_articles):
             d_str = item['Date'].strftime('%H:%M')
-            # 제목과 요약을 명확히 구분
-            context += f"기사{i+1}: [{d_str}] {item['Title']}\n내용: {item['Snippet']}\n\n"
+            context += f"News {i+1}: {item['Title']}\nSummary: {item['Snippet']}\n\n"
             
         prompt = f"""
-        당신은 한국 반도체 산업 전문 애널리스트입니다.
-        아래는 오늘 수집된 주요 반도체 뉴스들입니다. 이를 바탕으로 '일일 브리핑 리포트'를 작성해주세요.
+        당신은 한국 반도체 산업 전문 애널리스트입니다. 
+        아래 뉴스 데이터를 바탕으로 [일일 반도체 산업 브리핑]을 작성하세요.
         
         [작성 원칙]
-        1. 한국어로 작성할 것.
-        2. 중복된 내용은 통합하여 요약할 것.
-        3. 단순 나열이 아닌 '인사이트' 위주로 작성할 것.
+        1. 한국어로 작성.
+        2. 기사들의 내용을 종합하여 인사이트 위주로 요약.
         
-        [리포트 포맷]
-        ## 📊 Executive Summary
-        (오늘의 핵심 흐름을 3문장으로 요약)
-        
-        ## 🚨 Headline Issues
-        (가장 중요한 이슈 3가지 선정 및 상세 분석)
-        
-        ## 📉 Market & Tech
-        (기업 동향, 기술 개발, 공급망 이슈 정리)
-        
-        ## 💡 Analyst Insight
-        (오늘 뉴스가 시장에 미치는 영향 한 줄 평)
+        [리포트 구조]
+        ## 📊 Executive Summary (3줄 요약)
+        ## 🚨 Top Headlines (핵심 이슈 3가지 상세 분석)
+        ## 📉 Market & Supply Chain (시장 및 공급망 동향)
+        ## 💡 Analyst Insight (종합 의견)
 
-        [수집된 뉴스 데이터]
+        [뉴스 데이터]
         {context}
         """
         
+        # 스트리밍 없이 한 번에 생성 (안정성)
         response = model.generate_content(prompt)
         
-        if response.text:
-            report_text = response.text
-            status_box.update(label="🎉 리포트 생성 완료!", state="complete", expanded=False)
+        # [에러 처리] AI가 답변을 거부했는지 확인
+        if response.prompt_feedback:
+            block_reason = response.prompt_feedback.block_reason
+            if block_reason:
+                raise Exception(f"AI가 답변을 거부했습니다. (사유: {block_reason})")
+
+        if not response.text:
+            raise Exception("AI 응답 내용이 비어있습니다.")
             
-            save_data = {
-                'date': target_date.strftime('%Y-%m-%d'),
-                'report': report_text,
-                'articles': final_articles
-            }
-            save_daily_history(save_data)
-            return final_articles, report_text
-        else:
-            raise Exception("AI 응답이 비어있습니다 (Safety Filter 가능성).")
-            
+        report_text = response.text
+        
+        # 성공 시 저장
+        save_data = {
+            'date': target_date.strftime('%Y-%m-%d'),
+            'report': report_text,
+            'articles': final_articles
+        }
+        save_daily_history(save_data)
+        
+        status_box.update(label="🎉 리포트 생성 완료!", state="complete", expanded=False)
+        return final_articles, report_text
+        
     except Exception as e:
         status_box.update(label="⚠️ 리포트 생성 실패", state="error")
-        st.error(f"오류 상세: {str(e)}")
-        # 실패해도 수집된 기사는 보여줌
+        # 에러 로그를 빨간색 박스로 보여줌
+        st.markdown(f"<div class='error-log'><b>Error Details:</b><br>{str(e)}</div>", unsafe_allow_html=True)
         return final_articles, None
 
 def perform_crawling_general(category, api_key):
