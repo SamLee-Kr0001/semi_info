@@ -11,12 +11,12 @@ import re
 import time
 import random
 
-# [필수 라이브러리]
+# [필수] 라이브러리
 import yfinance as yf
 import google.generativeai as genai
 
 # ==========================================
-# 0. 페이지 설정 및 스타일
+# 0. 페이지 설정 및 Modern CSS
 # ==========================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -25,16 +25,64 @@ st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
-        html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
-        .report-box { background-color: #FFFFFF; padding: 40px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; }
-        .history-header { font-size: 1.2em; font-weight: 700; color: #475569; margin-top: 50px; margin-bottom: 20px; border-left: 5px solid #CBD5E1; padding-left: 10px; }
-        .status-log { font-size: 0.85em; color: #64748B; background: #F1F5F9; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-family: monospace; }
         
-        /* 뉴스 카드 스타일 */
+        html, body, [class*="css"] {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #F8FAFC;
+            color: #1E293B;
+        }
+        .stApp { background-color: #F8FAFC; }
+
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
         .news-title:hover { color: #2563EB !important; text-decoration: underline; }
         .news-snippet { font-size: 13.5px !important; color: #475569 !important; line-height: 1.5; margin-bottom: 10px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
+
+        .control-box { background-color: #FFFFFF; padding: 15px 20px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 20px; }
+        
+        button[kind="secondary"] { height: 28px !important; font-size: 12px !important; padding: 0 10px !important; border-radius: 14px !important; }
+
+        div[data-testid="stMetricValue"] { font-size: 13px !important; }
+        div[data-testid="stMetricDelta"] { font-size: 11px !important; }
+        div[data-testid="stMetricLabel"] { font-size: 11px !important; font-weight: 600; color: #64748B; }
+        .stock-header { font-size: 12px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
+
+        .report-box {
+            background-color: #FFFFFF;
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            line-height: 1.8;
+            color: #334155;
+        }
+        .report-header {
+            border-bottom: 2px solid #3B82F6;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            font-weight: 800;
+            color: #1E3A8A;
+        }
+        .history-header {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #475569;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            border-left: 5px solid #CBD5E1;
+            padding-left: 10px;
+        }
+        .status-log {
+            font-family: monospace;
+            font-size: 0.85em;
+            background: #f1f5f9;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            border-left: 3px solid #3b82f6;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -80,8 +128,16 @@ def get_stock_prices_grouped():
                     prev = hist['Close'].iloc[-2]
                     change = current - prev
                     pct_change = (change / prev) * 100
-                    currency = "₩" if ".KS" in symbol else ("¥" if ".T" in symbol else ("HK$" if ".HK" in symbol else ("€" if ".DE" in symbol or ".PA" in symbol else "$")))
-                    result_map[symbol] = {"Price": f"{currency}{current:,.0f}" if currency in ["₩", "¥"] else f"{currency}{current:,.2f}", "Delta": f"{change:,.2f} ({pct_change:+.2f}%)"}
+                    
+                    if ".KS" in symbol: currency = "₩"
+                    elif ".T" in symbol: currency = "¥"
+                    elif ".HK" in symbol: currency = "HK$"
+                    elif ".DE" in symbol or ".PA" in symbol: currency = "€"
+                    else: currency = "$"
+                    
+                    price_str = f"{currency}{current:,.0f}" if currency in ["₩", "¥"] else f"{currency}{current:,.2f}"
+                    delta_str = f"{change:,.2f} ({pct_change:+.2f}%)"
+                    result_map[symbol] = {"Price": price_str, "Delta": delta_str}
             except: pass
     except: pass
     return result_map
@@ -89,7 +145,6 @@ def get_stock_prices_grouped():
 KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json' 
 
-# [수정] SyntaxError 해결: try-with 구문을 올바르게 들여쓰기함
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
     if os.path.exists(KEYWORD_FILE):
@@ -119,6 +174,7 @@ def load_daily_history():
 
 def save_daily_history(new_report_data):
     history = load_daily_history()
+    # 날짜 중복 시 덮어쓰기
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data) 
     try: 
@@ -132,13 +188,20 @@ def get_gemini_model(api_key):
     try: return genai.GenerativeModel('gemini-1.5-flash')
     except: return genai.GenerativeModel('gemini-pro')
 
+def clean_text(text):
+    """HTML 태그 제거 및 텍스트 정리"""
+    if not text: return ""
+    clean = re.sub('<.*?>', '', text) # 태그 제거
+    clean = re.sub('\s+', ' ', clean).strip() # 공백 정리
+    return clean
+
 def filter_with_gemini(articles, api_key):
     if not articles or not api_key: return articles
     try:
         model = get_gemini_model(api_key)
         content_text = ""
         for i, item in enumerate(articles[:20]): 
-            safe_snip = re.sub(r'[^\w\s]', '', item.get('Snippet', ''))[:100]
+            safe_snip = clean_text(item.get('Snippet', ''))[:100]
             content_text += f"ID_{i+1} | Title: {item['Title']} | Snip: {safe_snip}\n"
         prompt = f"Role: Analyst. Task: Filter noise. Output: IDs ONLY (e.g., 1, 3). Data:\n{content_text}"
         response = model.generate_content(prompt)
@@ -175,16 +238,19 @@ def parse_and_filter_news(items, keyword, start_dt, end_dt):
             pub_date_kst = pub_date_utc + timedelta(hours=9)
             pub_date_kst_naive = pub_date_kst.replace(tzinfo=None)
             
+            # 본문 정리 (HTML 제거)
+            raw_desc = item.description.text if item.description else ""
+            clean_snip = BeautifulSoup(raw_desc, "html.parser").get_text(strip=True)[:500] # 길이 넉넉하게
+            
             if start_dt <= pub_date_kst_naive <= end_dt:
                 src = item.source.text if item.source else "Google"
-                snip = BeautifulSoup(item.description.text if item.description else "", "html.parser").get_text(strip=True)[:300]
                 parsed_items.append({
                     'Title': item.title.text,
                     'Source': src,
                     'Date': pub_date_kst_naive,
                     'Link': item.link.text,
                     'Keyword': keyword,
-                    'Snippet': snip,
+                    'Snippet': clean_snip,
                     'Country': 'KR'
                 })
         except Exception: continue
@@ -196,11 +262,12 @@ def generate_daily_report_process(target_date, keywords, api_key, status_contain
     
     log_messages = []
     log_messages.append(f"📅 기준 시간: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')} (KST)")
-    status_container.markdown("\n".join([f"`{msg}`" for msg in log_messages]))
+    status_container.markdown("\n".join([f"<div class='status-log'>{msg}</div>" for msg in log_messages]), unsafe_allow_html=True)
     
     all_news = []
     progress_bar = st.progress(0)
     
+    # 1. 수집 단계
     for idx, kw in enumerate(keywords):
         items = fetch_rss_feed(kw, days_back=2)
         filtered = parse_and_filter_news(items, kw, start_dt, end_dt)
@@ -217,7 +284,7 @@ def generate_daily_report_process(target_date, keywords, api_key, status_contain
             log_messages.append(f"✅ '{kw}': {len(filtered)}건 수집")
             all_news.extend(filtered)
             
-        status_container.markdown("\n".join([f"`{msg}`" for msg in log_messages]))
+        status_container.markdown("\n".join([f"<div class='status-log'>{msg}</div>" for msg in log_messages]), unsafe_allow_html=True)
         progress_bar.progress((idx + 1) / len(keywords))
         time.sleep(0.2)
 
@@ -225,19 +292,26 @@ def generate_daily_report_process(target_date, keywords, api_key, status_contain
         status_container.error("수집된 뉴스가 전혀 없어 리포트를 생성할 수 없습니다.")
         return [], None
 
+    # 2. 데이터 전처리 (AI 입력 최적화)
     df = pd.DataFrame(all_news)
     df = df.drop_duplicates(subset=['Title']).sort_values(by='Date', ascending=False)
-    final_articles = df.head(50).to_dict('records')
     
-    log_messages.append(f"🤖 총 {len(final_articles)}건 기반 AI 분석 시작...")
-    status_container.markdown("\n".join([f"`{msg}`" for msg in log_messages]))
+    # [중요] AI에게 보낼 기사 개수를 20개로 제한하여 안정성 확보 (Too many tokens 에러 방지)
+    final_articles = df.head(20).to_dict('records')
+    
+    log_messages.append(f"🤖 총 {len(final_articles)}건(최신순) 기반 AI 분석 시작... (잠시만 기다려주세요)")
+    status_container.markdown("\n".join([f"<div class='status-log'>{msg}</div>" for msg in log_messages]), unsafe_allow_html=True)
     
     try:
         model = get_gemini_model(api_key)
+        
+        # 문맥 생성 (깔끔하게 정리)
         context = ""
         for i, item in enumerate(final_articles):
             d_str = item['Date'].strftime('%H:%M')
-            context += f"- [{d_str}] {item['Title']} ({item['Source']}): {item['Snippet']}\n"
+            clean_s = clean_text(item['Snippet'])
+            # 제목과 요약을 합쳐서 전달
+            context += f"Article {i+1}: [{d_str}] {item['Title']}\nContent: {clean_s}\n\n"
             
         prompt = f"""
         당신은 한국 반도체 산업 전문 애널리스트입니다.
@@ -245,15 +319,28 @@ def generate_daily_report_process(target_date, keywords, api_key, status_contain
         정보를 바탕으로 **{target_date.strftime('%Y년 %m월 %d일')} Daily Report**를 작성하세요.
         
         [작성 양식]
-        ## 📊 Executive Summary (3줄 요약)
-        ## 🚨 Top Headlines (주요 이슈 3가지 심층 분석)
-        ## 📉 시장 및 공급망 동향 (기업 및 소부장)
-        ## 💡 Analyst Insight (한 줄 평)
+        ## 📊 Executive Summary
+        (전체 흐름을 3문장으로 요약)
+        
+        ## 🚨 Top Headlines
+        (가장 중요한 이슈 3가지 심층 분석)
+        
+        ## 📉 시장 및 공급망 동향
+        (기업, 소재/부품/장비 동향 정리)
+        
+        ## 💡 Analyst Insight
+        (투자자 및 업계 관계자를 위한 한 줄 평)
 
         [뉴스 데이터]
         {context}
         """
+        
+        # [안정성] 타임아웃 방지를 위해 생성 설정 (stream=False)
         response = model.generate_content(prompt)
+        
+        if not response.text:
+            raise Exception("AI가 빈 응답을 보냈습니다.")
+            
         report_text = response.text
         
         save_data = {
@@ -264,8 +351,10 @@ def generate_daily_report_process(target_date, keywords, api_key, status_contain
         save_daily_history(save_data)
         
         return final_articles, report_text
+        
     except Exception as e:
-        st.error(f"AI 리포트 생성 실패: {str(e)}")
+        status_container.error(f"⚠️ AI 리포트 생성 실패: {str(e)}")
+        # 에러가 나도 수집된 기사 목록은 반환하여 보여줌
         return final_articles, None
 
 def perform_crawling_general(category, api_key):
@@ -392,7 +481,11 @@ if selected_category == "Daily Report":
     if history:
         for idx, entry in enumerate(history):
             st.markdown(f"<div class='history-header'>📅 {entry['date']} Daily Report</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
+            if entry.get('report'):
+                st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
+            else:
+                st.warning("리포트 내용이 없습니다.")
+                
             with st.expander(f"🔗 Reference Articles ({len(entry.get('articles', []))})"):
                 for i, item in enumerate(entry.get('articles', [])):
                     d_str = pd.to_datetime(item['Date']).strftime('%m/%d %H:%M')
