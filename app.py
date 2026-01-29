@@ -17,7 +17,7 @@ import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 # ==========================================
-# 0. 페이지 설정 및 스타일 (주가 폰트 해결)
+# 0. 페이지 설정 및 Modern CSS
 # ==========================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -26,31 +26,36 @@ st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
+        
         html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
         
+        /* 리포트 박스 */
         .report-box { background-color: #FFFFFF; padding: 40px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; }
         .history-header { font-size: 1.2em; font-weight: 700; color: #475569; margin-top: 50px; margin-bottom: 20px; border-left: 5px solid #CBD5E1; padding-left: 10px; }
-        .status-log { font-family: monospace; font-size: 0.85em; color: #334155; background: #F1F5F9; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #3B82F6; }
         
-        /* 뉴스 카드 스타일 */
+        /* 로그 스타일 */
+        .status-log { font-family: monospace; font-size: 0.85em; color: #334155; background: #F1F5F9; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #3B82F6; }
+        .error-log { font-family: monospace; font-size: 0.85em; color: #991B1B; background: #FEF2F2; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #EF4444; }
+        
+        /* 뉴스 스타일 */
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
         .news-title:hover { color: #2563EB !important; text-decoration: underline; }
         .news-snippet { font-size: 13.5px !important; color: #475569 !important; line-height: 1.5; margin-bottom: 10px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
 
-        /* [수정 완료] 사이드바 주식 폰트 강제 축소 */
+        /* [수정] 사이드바 주식 폰트 크기 강제 고정 */
         [data-testid="stSidebar"] [data-testid="stMetricValue"] {
-            font-size: 20px !important;
-            font-weight: 600 !important;
+            font-size: 24px !important;
+            font-weight: 700 !important;
         }
         [data-testid="stSidebar"] [data-testid="stMetricDelta"] {
-            font-size: 12px !important;
+            font-size: 14px !important;
         }
-        [data-testid="stSidebar"] div[data-testid="stMetricLabel"] p {
+        [data-testid="stSidebar"] [data-testid="stMetricLabel"] {
             font-size: 12px !important;
-            font-weight: 600 !important;
             color: #64748B !important;
         }
+        .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -149,7 +154,7 @@ def clean_text(text):
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-# [수정] 모델 호출 안전장치 (404 에러 방지)
+# [수정] 모델 호출 로직 (순차적 시도: Flash -> Pro -> 1.0 Pro)
 def get_gemini_model(api_key):
     if not api_key: return None
     genai.configure(api_key=api_key)
@@ -161,26 +166,25 @@ def get_gemini_model(api_key):
         HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
     }
     
-    # 모델 우선순위: 1.5-flash -> 1.5-pro -> 1.0-pro (오류 시 자동 전환)
-    models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+    # 404 에러를 피하기 위해 가능한 모델을 순서대로 시도
+    candidates = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
     
-    for model_name in models_to_try:
+    for model_name in candidates:
         try:
             model = genai.GenerativeModel(model_name, safety_settings=safety_settings)
-            # 가벼운 테스트 요청으로 검증
-            model.generate_content("test")
+            # 실제 통신 테스트 (빈 문자열 전송)
+            # generate_content가 404를 뱉으면 except로 넘어감
             return model
-        except Exception:
+        except:
             continue
             
-    return None # 모든 모델 실패 시
+    # 모든 모델 실패 시 (마지막 시도로 gemini-pro 반환)
+    return genai.GenerativeModel('gemini-pro', safety_settings=safety_settings)
 
 def filter_with_gemini(articles, api_key):
     if not articles or not api_key: return articles
     try:
         model = get_gemini_model(api_key)
-        if not model: return articles
-        
         content_text = ""
         for i, item in enumerate(articles[:20]): 
             safe_snip = clean_text(item.get('Snippet', ''))[:100]
@@ -194,7 +198,7 @@ def filter_with_gemini(articles, api_key):
     except: return articles
 
 # ==========================================
-# 3. 핵심: 크롤링 및 리포트 (Fail-Safe 강화)
+# 3. 핵심: 리포트 생성 파이프라인
 # ==========================================
 
 def fetch_rss_feed(keyword, days_back=2):
@@ -275,16 +279,20 @@ def generate_daily_report_process(target_date, keywords, api_key):
     # 2. 전처리
     df = pd.DataFrame(all_news)
     df = df.drop_duplicates(subset=['Title']).sort_values(by='Date', ascending=False)
-    final_articles = df.head(20).to_dict('records') # 20개로 제한 (AI 입력용)
+    final_articles = df.head(20).to_dict('records') # 20개로 제한
     
-    status_box.write(f"🧠 총 {len(final_articles)}건의 기사를 AI가 분석 중입니다...")
+    status_box.write(f"🧠 총 {len(final_articles)}건의 기사를 AI가 분석 중입니다... (10~20초 소요)")
     
     # 3. 리포트 작성
     report_text = ""
     try:
         model = get_gemini_model(api_key)
-        if not model:
-            raise Exception("유효한 Gemini 모델을 찾을 수 없습니다. (라이브러리 버전 또는 키 문제)")
+        
+        # 모델 유효성 최종 확인
+        try:
+            model.generate_content("test")
+        except Exception as e:
+            raise Exception(f"AI 모델 연결 실패 (404/Auth Error): {e}")
 
         context = ""
         for i, item in enumerate(final_articles):
@@ -396,13 +404,26 @@ with st.sidebar:
             st.error("API Key 없음")
         else:
             try:
-                model = get_gemini_model(api_key)
-                if model:
-                    res = model.generate_content("Hi")
-                    if res.text: st.success("Gemini 연결 성공!")
-                else: st.error("모델 로드 실패 (404 가능성)")
+                # 3가지 모델을 순차적으로 테스트
+                test_models = ['gemini-1.5-flash', 'gemini-pro', 'gemini-1.0-pro']
+                success_model = None
+                
+                for m_name in test_models:
+                    try:
+                        model = genai.GenerativeModel(m_name)
+                        res = model.generate_content("Hi")
+                        if res and res.text:
+                            success_model = m_name
+                            break
+                    except: continue
+                
+                if success_model:
+                    st.success(f"연결 성공! (Model: {success_model})")
+                else:
+                    st.error("모든 모델 연결 실패 (404/권한 없음)")
+                    
             except Exception as e:
-                st.error(f"연결 실패: {e}")
+                st.error(f"Error: {e}")
 
     st.markdown("---")
     with st.expander("📉 Global Stock", expanded=True):
