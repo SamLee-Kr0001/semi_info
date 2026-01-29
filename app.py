@@ -10,14 +10,10 @@ import os
 import re
 import time
 import random
-
-# [필수 라이브러리]
 import yfinance as yf
-import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 # ==========================================
-# 0. 페이지 설정 및 Modern CSS
+# 0. 페이지 설정 및 Modern CSS (주식 폰트 강력 수정)
 # ==========================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -26,36 +22,29 @@ st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
-        
         html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
         
-        /* 리포트 박스 */
         .report-box { background-color: #FFFFFF; padding: 40px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; }
         .history-header { font-size: 1.2em; font-weight: 700; color: #475569; margin-top: 50px; margin-bottom: 20px; border-left: 5px solid #CBD5E1; padding-left: 10px; }
-        
-        /* 로그 스타일 */
         .status-log { font-family: monospace; font-size: 0.85em; color: #334155; background: #F1F5F9; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #3B82F6; }
-        .error-log { font-family: monospace; font-size: 0.85em; color: #991B1B; background: #FEF2F2; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #EF4444; }
         
-        /* 뉴스 스타일 */
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
         .news-title:hover { color: #2563EB !important; text-decoration: underline; }
         .news-snippet { font-size: 13.5px !important; color: #475569 !important; line-height: 1.5; margin-bottom: 10px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
 
-        /* [수정] 사이드바 주식 폰트 크기 강제 고정 */
-        [data-testid="stSidebar"] [data-testid="stMetricValue"] {
-            font-size: 24px !important;
-            font-weight: 700 !important;
+        /* [수정] 사이드바 주식 폰트 강제 고정 (더 구체적인 선택자 사용) */
+        section[data-testid="stSidebar"] div[data-testid="stMetricValue"] {
+            font-size: 18px !important; /* 크기 강제 조절 */
+            font-weight: 600 !important;
         }
-        [data-testid="stSidebar"] [data-testid="stMetricDelta"] {
-            font-size: 14px !important;
+        section[data-testid="stSidebar"] div[data-testid="stMetricDelta"] {
+            font-size: 12px !important;
         }
-        [data-testid="stSidebar"] [data-testid="stMetricLabel"] {
+        section[data-testid="stSidebar"] div[data-testid="stMetricLabel"] {
             font-size: 12px !important;
             color: #64748B !important;
         }
-        .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -124,16 +113,12 @@ def load_keywords():
     return data
 
 def save_keywords(data):
-    try: 
-        with open(KEYWORD_FILE, 'w', encoding='utf-8') as f: 
-            json.dump(data, f, ensure_ascii=False, indent=4)
+    try: with open(KEYWORD_FILE, 'w', encoding='utf-8') as f: json.dump(data, f, ensure_ascii=False, indent=4)
     except: pass
 
 def load_daily_history():
     if os.path.exists(HISTORY_FILE):
-        try: 
-            with open(HISTORY_FILE, 'r', encoding='utf-8') as f: 
-                return json.load(f) 
+        try: with open(HISTORY_FILE, 'r', encoding='utf-8') as f: return json.load(f) 
         except: return []
     return []
 
@@ -141,9 +126,7 @@ def save_daily_history(new_report_data):
     history = load_daily_history()
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data) 
-    try: 
-        with open(HISTORY_FILE, 'w', encoding='utf-8') as f: 
-            json.dump(history, f, ensure_ascii=False, indent=4)
+    try: with open(HISTORY_FILE, 'w', encoding='utf-8') as f: json.dump(history, f, ensure_ascii=False, indent=4)
     except: pass
     return history
 
@@ -154,51 +137,48 @@ def clean_text(text):
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-# [수정] 모델 호출 로직 (순차적 시도: Flash -> Pro -> 1.0 Pro)
-def get_gemini_model(api_key):
-    if not api_key: return None
-    genai.configure(api_key=api_key)
+# ==========================================
+# [핵심] REST API 방식 AI 호출 (라이브러리 미사용)
+# ==========================================
+def generate_content_rest_api(api_key, prompt):
+    """
+    Python 라이브러리(google-generativeai)를 쓰지 않고,
+    HTTP 요청을 직접 보내서 404 에러와 버전 문제를 원천 차단함.
+    """
+    # 1순위: 1.5-flash, 2순위: 1.0-pro (엔드포인트 직접 지정)
+    models = ["gemini-1.5-flash", "gemini-pro"]
     
-    safety_settings = {
-        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-    }
-    
-    # 404 에러를 피하기 위해 가능한 모델을 순서대로 시도
-    candidates = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
-    
-    for model_name in candidates:
+    for model in models:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        headers = {'Content-Type': 'application/json'}
+        data = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "safetySettings": [
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+            ]
+        }
+        
         try:
-            model = genai.GenerativeModel(model_name, safety_settings=safety_settings)
-            # 실제 통신 테스트 (빈 문자열 전송)
-            # generate_content가 404를 뱉으면 except로 넘어감
-            return model
-        except:
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+            if response.status_code == 200:
+                result = response.json()
+                # 응답 파싱
+                if 'candidates' in result and result['candidates']:
+                    return result['candidates'][0]['content']['parts'][0]['text']
+            else:
+                print(f"Model {model} failed: {response.text}")
+                continue # 다음 모델 시도
+        except Exception as e:
+            print(f"Connection error with {model}: {e}")
             continue
             
-    # 모든 모델 실패 시 (마지막 시도로 gemini-pro 반환)
-    return genai.GenerativeModel('gemini-pro', safety_settings=safety_settings)
-
-def filter_with_gemini(articles, api_key):
-    if not articles or not api_key: return articles
-    try:
-        model = get_gemini_model(api_key)
-        content_text = ""
-        for i, item in enumerate(articles[:20]): 
-            safe_snip = clean_text(item.get('Snippet', ''))[:100]
-            content_text += f"ID_{i+1} | Title: {item['Title']} | Snip: {safe_snip}\n"
-        prompt = f"Role: Analyst. Task: Filter noise. Output: IDs ONLY (e.g., 1, 3). Data:\n{content_text}"
-        response = model.generate_content(prompt)
-        nums = re.findall(r'\d+', response.text)
-        valid_indices = [int(n)-1 for n in nums]
-        filtered = [articles[idx] for idx in valid_indices if 0 <= idx < len(articles)]
-        return filtered if filtered else articles
-    except: return articles
+    return None # 모든 모델 실패
 
 # ==========================================
-# 3. 핵심: 리포트 생성 파이프라인
+# 3. 크롤링 및 리포트 로직
 # ==========================================
 
 def fetch_rss_feed(keyword, days_back=2):
@@ -279,21 +259,12 @@ def generate_daily_report_process(target_date, keywords, api_key):
     # 2. 전처리
     df = pd.DataFrame(all_news)
     df = df.drop_duplicates(subset=['Title']).sort_values(by='Date', ascending=False)
-    final_articles = df.head(20).to_dict('records') # 20개로 제한
+    final_articles = df.head(25).to_dict('records') # 25개로 제한
     
-    status_box.write(f"🧠 총 {len(final_articles)}건의 기사를 AI가 분석 중입니다... (10~20초 소요)")
+    status_box.write(f"🧠 총 {len(final_articles)}건의 기사를 AI가 분석 중입니다...")
     
-    # 3. 리포트 작성
-    report_text = ""
+    # 3. 리포트 작성 (REST API 호출)
     try:
-        model = get_gemini_model(api_key)
-        
-        # 모델 유효성 최종 확인
-        try:
-            model.generate_content("test")
-        except Exception as e:
-            raise Exception(f"AI 모델 연결 실패 (404/Auth Error): {e}")
-
         context = ""
         for i, item in enumerate(final_articles):
             d_str = item['Date'].strftime('%H:%M')
@@ -314,28 +285,31 @@ def generate_daily_report_process(target_date, keywords, api_key):
         {context}
         """
         
-        response = model.generate_content(prompt)
+        # [변경] 라이브러리 대신 REST API 함수 사용
+        report_text = generate_content_rest_api(api_key, prompt)
         
-        if response.text:
-            report_text = response.text
+        if report_text:
+            save_data = {
+                'date': target_date.strftime('%Y-%m-%d'),
+                'report': report_text,
+                'articles': final_articles
+            }
+            save_daily_history(save_data)
             status_box.update(label="🎉 리포트 생성 완료!", state="complete", expanded=False)
+            return save_data
         else:
-            raise Exception("AI 응답 없음 (Safety Filter)")
+            raise Exception("AI 응답 없음 (모든 모델 실패 또는 API Key 문제)")
             
     except Exception as e:
-        status_box.update(label="⚠️ AI 분석 실패 (기사 목록만 표시됩니다)", state="error")
-        st.error(f"AI Error: {str(e)}")
-        report_text = f"⚠️ **AI 리포트 생성 실패**\n\n오류: {str(e)}\n\n(참조 기사 목록을 확인하세요)"
-
-    # 저장
-    save_data = {
-        'date': target_date.strftime('%Y-%m-%d'),
-        'report': report_text,
-        'articles': final_articles
-    }
-    save_daily_history(save_data)
-    
-    return save_data
+        status_box.update(label="⚠️ AI 분석 실패", state="error")
+        st.error(f"Error: {str(e)}")
+        # 실패하더라도 수집 목록은 저장 및 반환
+        save_data = {
+            'date': target_date.strftime('%Y-%m-%d'),
+            'report': f"⚠️ **분석 실패**: {str(e)}",
+            'articles': final_articles
+        }
+        return save_data
 
 def perform_crawling_general(category, api_key):
     kws = st.session_state.keywords.get(category, [])
@@ -371,7 +345,6 @@ def perform_crawling_general(category, api_key):
         df = pd.DataFrame(all_res)
         df = df.drop_duplicates('Title')
         final_list = df.head(40).to_dict('records')
-        if api_key: final_list = filter_with_gemini(final_list, api_key)
         st.session_state.news_data[category] = final_list
     else:
         st.session_state.news_data[category] = []
@@ -398,32 +371,14 @@ with st.sidebar:
             api_key = st.secrets["GEMINI_API_KEY"]
             st.caption("Loaded")
             
-    # [연결 테스트]
+    # [연결 테스트 - REST API 방식]
     if st.button("🤖 AI 연결 확인", type="secondary", use_container_width=True):
         if not api_key:
             st.error("API Key 없음")
         else:
-            try:
-                # 3가지 모델을 순차적으로 테스트
-                test_models = ['gemini-1.5-flash', 'gemini-pro', 'gemini-1.0-pro']
-                success_model = None
-                
-                for m_name in test_models:
-                    try:
-                        model = genai.GenerativeModel(m_name)
-                        res = model.generate_content("Hi")
-                        if res and res.text:
-                            success_model = m_name
-                            break
-                    except: continue
-                
-                if success_model:
-                    st.success(f"연결 성공! (Model: {success_model})")
-                else:
-                    st.error("모든 모델 연결 실패 (404/권한 없음)")
-                    
-            except Exception as e:
-                st.error(f"Error: {e}")
+            res = generate_content_rest_api(api_key, "Hi")
+            if res: st.success("연결 성공! (REST API)")
+            else: st.error("연결 실패 (키 확인 필요)")
 
     st.markdown("---")
     with st.expander("📉 Global Stock", expanded=True):
