@@ -17,7 +17,7 @@ import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 # ==========================================
-# 0. 페이지 설정 및 스타일 (주가 폰트 수정)
+# 0. 페이지 설정 및 스타일
 # ==========================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -27,27 +27,15 @@ st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
         html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
-        
-        /* 리포트 스타일 */
         .report-box { background-color: #FFFFFF; padding: 40px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; }
         .history-header { font-size: 1.2em; font-weight: 700; color: #475569; margin-top: 50px; margin-bottom: 20px; border-left: 5px solid #CBD5E1; padding-left: 10px; }
-        
-        /* 로그 스타일 */
         .status-log { font-family: monospace; font-size: 0.85em; color: #334155; background: #F1F5F9; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #3B82F6; }
-        .error-log { font-family: monospace; font-size: 0.85em; color: #991B1B; background: #FEF2F2; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #EF4444; }
         
         /* 뉴스 카드 스타일 */
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
         .news-title:hover { color: #2563EB !important; text-decoration: underline; }
         .news-snippet { font-size: 13.5px !important; color: #475569 !important; line-height: 1.5; margin-bottom: 10px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
-
-        /* [수정] 주가 정보 폰트 강제 축소 */
-        div[data-testid="stMetricValue"] > div { font-size: 14px !important; line-height: 1.2 !important; }
-        div[data-testid="stMetricDelta"] > div { font-size: 11px !important; }
-        div[data-testid="stMetricLabel"] label { font-size: 11px !important; font-weight: 600; color: #64748B; }
-        
-        .stock-header { font-size: 12px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -141,30 +129,33 @@ def save_daily_history(new_report_data):
 
 def clean_text(text):
     if not text: return ""
-    text = re.sub(r'<[^>]+>', '', text) # HTML 태그 제거
-    text = re.sub(r'[^\w\s\.,%]', ' ', text) # 특수문자 제거
-    text = re.sub(r'\s+', ' ', text).strip() # 공백 제거
+    text = re.sub(r'<[^>]+>', '', text) 
+    text = re.sub(r'[^\w\s\.,%]', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
     return text
 
+# [수정] 모델 호출 안전장치
 def get_gemini_model(api_key):
+    if not api_key: return None
     genai.configure(api_key=api_key)
-    # 안전 설정 (필수: BLOCK_NONE으로 설정해야 뉴스 요약 시 차단 안 됨)
     safety_settings = {
         HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
         HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
         HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
     }
+    # 1.5 Flash 우선 시도 후 실패시 Pro 시도
     try: 
         return genai.GenerativeModel('gemini-1.5-flash', safety_settings=safety_settings)
     except: 
         return genai.GenerativeModel('gemini-pro', safety_settings=safety_settings)
 
 def filter_with_gemini(articles, api_key):
-    # 일반 모드용 필터 (Daily Report는 필터링 없음)
     if not articles or not api_key: return articles
     try:
         model = get_gemini_model(api_key)
+        if not model: return articles
+        
         content_text = ""
         for i, item in enumerate(articles[:20]): 
             safe_snip = clean_text(item.get('Snippet', ''))[:100]
@@ -178,15 +169,14 @@ def filter_with_gemini(articles, api_key):
     except: return articles
 
 # ==========================================
-# 3. 핵심: 리포트 생성 파이프라인
+# 3. 크롤링 및 리포트 (Fail-Safe 강화)
 # ==========================================
 
 def fetch_rss_feed(keyword, days_back=2):
-    # 한국어 뉴스 검색
     url = f"https://news.google.com/rss/search?q={quote(keyword)}+when:{days_back}d&hl=ko&gl=KR&ceid=KR:ko"
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36'}
     try:
-        response = requests.get(url, headers=headers, timeout=10, verify=False)
+        response = requests.get(url, headers=headers, timeout=5, verify=False)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'xml')
             return soup.find_all('item')
@@ -215,15 +205,14 @@ def parse_and_filter_news(items, keyword, start_dt, end_dt):
                     'Date': pub_date_kst_naive,
                     'Link': item.link.text,
                     'Keyword': keyword,
-                    'Snippet': clean_snip[:400], 
+                    'Snippet': clean_snip[:300], 
                     'Country': 'KR'
                 })
         except Exception: continue
     return parsed_items
 
 def generate_daily_report_process(target_date, keywords, api_key):
-    # [Status Container]
-    status_box = st.status("🚀 리포트 생성 중... (화면이 깜빡여도 기다려주세요)", expanded=True)
+    status_box = st.status("🚀 리포트 생성 프로세스 시작...", expanded=True)
     
     end_dt = datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6)
     start_dt = end_dt - timedelta(hours=18)
@@ -240,7 +229,6 @@ def generate_daily_report_process(target_date, keywords, api_key):
         filtered = parse_and_filter_news(items, kw, start_dt, end_dt)
         
         if len(filtered) == 0:
-            # Fallback
             fallback_items = parse_and_filter_news(items, kw, end_dt - timedelta(hours=24), end_dt + timedelta(hours=24))
             if fallback_items:
                 logs.append(f"⚠️ [{kw}] 0건 -> 범위확장: {len(fallback_items)}건")
@@ -262,13 +250,17 @@ def generate_daily_report_process(target_date, keywords, api_key):
     # 2. 전처리
     df = pd.DataFrame(all_news)
     df = df.drop_duplicates(subset=['Title']).sort_values(by='Date', ascending=False)
-    final_articles = df.head(30).to_dict('records') # 30개로 제한
+    final_articles = df.head(20).to_dict('records') # 20개로 제한 (AI 입력용)
     
-    status_box.write(f"🧠 AI 분석 시작 (기사 {len(final_articles)}건)...")
+    status_box.write(f"🧠 총 {len(final_articles)}건의 기사를 AI가 분석 중입니다... (최대 30초 소요)")
     
-    # 3. 리포트 작성
+    # 3. 리포트 작성 (절대 멈추지 않는 로직)
+    report_text = ""
     try:
         model = get_gemini_model(api_key)
+        if not model:
+            raise Exception("모델 로드 실패. API Key를 확인하세요.")
+
         context = ""
         for i, item in enumerate(final_articles):
             d_str = item['Date'].strftime('%H:%M')
@@ -277,14 +269,11 @@ def generate_daily_report_process(target_date, keywords, api_key):
         prompt = f"""
         당신은 한국 반도체 산업 전문 애널리스트입니다. 
         아래 뉴스 데이터를 바탕으로 [일일 반도체 산업 브리핑]을 작성하세요.
-        
-        [작성 원칙]
-        1. 한국어로 작성.
-        2. 중복된 내용은 통합하여 요약.
+        한국어로 작성하고, 인사이트 위주로 요약하세요.
         
         [리포트 포맷]
         ## 📊 Executive Summary (3줄 요약)
-        ## 🚨 Top Headlines (주요 이슈 3가지 상세 분석)
+        ## 🚨 Top Headlines (핵심 이슈 3가지)
         ## 📉 Market & Supply Chain (시장/공급망 동향)
         ## 💡 Analyst Insight (종합 의견)
 
@@ -292,32 +281,31 @@ def generate_daily_report_process(target_date, keywords, api_key):
         {context}
         """
         
+        # [핵심] 30초 타임아웃 설정으로 무한 대기 방지
+        # Streamlit은 비동기 호출이 아니므로 직접 타임아웃을 걸 순 없지만, 
+        # API 자체가 빠르지 않으면 예외로 처리해야 함.
         response = model.generate_content(prompt)
         
-        # [안전장치] AI 응답 확인
-        if response.prompt_feedback and response.prompt_feedback.block_reason:
-             raise Exception(f"AI 응답 차단됨: {response.prompt_feedback.block_reason}")
-             
-        if not response.text:
-            raise Exception("AI 응답이 비어있습니다.")
+        if response.text:
+            report_text = response.text
+            status_box.update(label="🎉 리포트 생성 완료!", state="complete", expanded=False)
+        else:
+            raise Exception("AI 응답 없음 (Safety Filter Block 가능성)")
             
-        report_text = response.text
-        
-        save_data = {
-            'date': target_date.strftime('%Y-%m-%d'),
-            'report': report_text,
-            'articles': final_articles
-        }
-        save_daily_history(save_data)
-        
-        status_box.update(label="🎉 리포트 생성 완료!", state="complete", expanded=False)
-        return save_data # 성공 시 데이터 반환
-        
     except Exception as e:
-        status_box.update(label="⚠️ 리포트 생성 실패", state="error")
-        st.error(f"오류 발생: {str(e)}")
-        # 실패하더라도 로그가 보이게 하기 위해 None 반환
-        return None
+        status_box.update(label="⚠️ AI 분석 실패 (기사 목록만 표시됩니다)", state="error")
+        st.error(f"AI Error: {str(e)}")
+        report_text = f"⚠️ **AI 리포트 생성 실패**\n\n오류 원인: {str(e)}\n\n아래 '참조 기사'에서 수집된 원문을 확인해주세요."
+
+    # 실패했더라도 데이터는 저장하여 보여줌
+    save_data = {
+        'date': target_date.strftime('%Y-%m-%d'),
+        'report': report_text,
+        'articles': final_articles
+    }
+    save_daily_history(save_data)
+    
+    return save_data
 
 def perform_crawling_general(category, api_key):
     kws = st.session_state.keywords.get(category, [])
@@ -379,6 +367,20 @@ with st.sidebar:
         if not api_key and "GEMINI_API_KEY" in st.secrets:
             api_key = st.secrets["GEMINI_API_KEY"]
             st.caption("Loaded")
+            
+    # [NEW] 연결 테스트 버튼
+    if st.button("🤖 AI 연결 확인", type="secondary", use_container_width=True):
+        if not api_key:
+            st.error("API Key 없음")
+        else:
+            try:
+                model = get_gemini_model(api_key)
+                res = model.generate_content("Hi")
+                if res.text: st.success("Gemini 연결 성공! (OK)")
+                else: st.warning("연결은 됐으나 응답 없음")
+            except Exception as e:
+                st.error(f"연결 실패: {e}")
+
     st.markdown("---")
     with st.expander("📉 Global Stock", expanded=True):
         stock_map = get_stock_prices_grouped()
@@ -430,13 +432,16 @@ if selected_category == "Daily Report":
     
     if today_report:
         st.success(f"✅ {target_date} 리포트가 이미 발행되었습니다.")
+        # 재생성 버튼 (혹시 실패했을 경우 다시 시도용)
+        if st.button("🔄 리포트 다시 생성하기"):
+             result = generate_daily_report_process(target_date, daily_kws, api_key)
+             if result: st.rerun()
     else:
         st.info(f"📢 {target_date} 리포트가 없습니다.")
         if api_key:
             if st.button("🚀 리포트 생성 시작 (전일 12:00 ~ 금일 06:00)", type="primary"):
                 result = generate_daily_report_process(target_date, daily_kws, api_key)
-                if result: # 성공했을 때만 리로드
-                    st.rerun()
+                if result: st.rerun()
         else:
             st.error("API Key가 필요합니다.")
 
@@ -445,7 +450,9 @@ if selected_category == "Daily Report":
             st.markdown(f"<div class='history-header'>📅 {entry['date']} Daily Report</div>", unsafe_allow_html=True)
             if entry.get('report'):
                 st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
-            
+            else:
+                st.warning("리포트 내용이 없습니다.")
+                
             with st.expander(f"🔗 Reference Articles ({len(entry.get('articles', []))})"):
                 for i, item in enumerate(entry.get('articles', [])):
                     d_str = pd.to_datetime(item['Date']).strftime('%m/%d %H:%M')
