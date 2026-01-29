@@ -11,12 +11,12 @@ import re
 import time
 import random
 
-# [필수] 라이브러리
+# [필수 라이브러리]
 import yfinance as yf
 import google.generativeai as genai
 
 # ==========================================
-# 0. 페이지 설정 및 Modern CSS
+# 0. 페이지 설정 및 스타일
 # ==========================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -25,55 +25,10 @@ st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
-        
-        html, body, [class*="css"] {
-            font-family: 'Pretendard', sans-serif;
-            background-color: #F8FAFC;
-            color: #1E293B;
-        }
-        .stApp { background-color: #F8FAFC; }
-
-        .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
-        .news-title:hover { color: #2563EB !important; text-decoration: underline; }
-        .news-snippet { font-size: 13.5px !important; color: #475569 !important; line-height: 1.5; margin-bottom: 10px; }
-        .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
-
-        .control-box { background-color: #FFFFFF; padding: 15px 20px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 20px; }
-        
-        button[kind="secondary"] { height: 28px !important; font-size: 12px !important; padding: 0 10px !important; border-radius: 14px !important; }
-
-        div[data-testid="stMetricValue"] { font-size: 13px !important; }
-        div[data-testid="stMetricDelta"] { font-size: 11px !important; }
-        div[data-testid="stMetricLabel"] { font-size: 11px !important; font-weight: 600; color: #64748B; }
-        .stock-header { font-size: 12px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
-
-        .report-box {
-            background-color: #FFFFFF;
-            padding: 40px;
-            border-radius: 12px;
-            border: 1px solid #E2E8F0;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 30px;
-            line-height: 1.8;
-            color: #334155;
-        }
-        .report-header {
-            border-bottom: 2px solid #3B82F6;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-            font-size: 1.8em;
-            font-weight: 800;
-            color: #1E3A8A;
-        }
-        .history-header {
-            font-size: 1.2em;
-            font-weight: 700;
-            color: #475569;
-            margin-top: 50px;
-            margin-bottom: 20px;
-            border-left: 5px solid #CBD5E1;
-            padding-left: 10px;
-        }
+        html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
+        .report-box { background-color: #FFFFFF; padding: 40px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; }
+        .history-header { font-size: 1.2em; font-weight: 700; color: #475569; margin-top: 50px; margin-bottom: 20px; border-left: 5px solid #CBD5E1; padding-left: 10px; }
+        .status-log { font-size: 0.85em; color: #64748B; background: #F1F5F9; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-family: monospace; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -84,7 +39,7 @@ CATEGORIES = [
 
 DAILY_DEFAULT_KEYWORDS = [
     "반도체 소재", "소재 공급망", "희토류 제한", "EUV", 
-    "중국 반도체", "일본 반도체", "중국 광물", "반도체 규제"
+    "중국 반도체", "일본 반도체", "중국 광물", "반도체 규제", "삼성전자 파운드리", "SK하이닉스 HBM"
 ]
 
 STOCK_CATEGORIES = {
@@ -100,7 +55,7 @@ STOCK_CATEGORIES = {
 }
 
 # ==========================================
-# 1. 주식 데이터 관리
+# 1. 데이터 관리 (주식, 키워드, 히스토리)
 # ==========================================
 @st.cache_data(ttl=600)
 def get_stock_prices_grouped():
@@ -119,23 +74,12 @@ def get_stock_prices_grouped():
                     prev = hist['Close'].iloc[-2]
                     change = current - prev
                     pct_change = (change / prev) * 100
-                    
-                    if ".KS" in symbol: currency = "₩"
-                    elif ".T" in symbol: currency = "¥"
-                    elif ".HK" in symbol: currency = "HK$"
-                    elif ".DE" in symbol or ".PA" in symbol: currency = "€"
-                    else: currency = "$"
-                    
-                    price_str = f"{currency}{current:,.0f}" if currency in ["₩", "¥"] else f"{currency}{current:,.2f}"
-                    delta_str = f"{change:,.2f} ({pct_change:+.2f}%)"
-                    result_map[symbol] = {"Price": price_str, "Delta": delta_str}
+                    currency = "₩" if ".KS" in symbol else ("¥" if ".T" in symbol else ("HK$" if ".HK" in symbol else ("€" if ".DE" in symbol or ".PA" in symbol else "$")))
+                    result_map[symbol] = {"Price": f"{currency}{current:,.0f}" if currency in ["₩", "¥"] else f"{currency}{current:,.2f}", "Delta": f"{change:,.2f} ({pct_change:+.2f}%)"}
             except: pass
     except: pass
     return result_map
 
-# ==========================================
-# 2. 파일 I/O 및 데이터 관리
-# ==========================================
 KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json' 
 
@@ -153,36 +97,27 @@ def load_keywords():
     return data
 
 def save_keywords(data):
-    try:
-        with open(KEYWORD_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
+    try: with open(KEYWORD_FILE, 'w', encoding='utf-8') as f: json.dump(data, f, ensure_ascii=False, indent=4)
     except: pass
 
 def load_daily_history():
     if os.path.exists(HISTORY_FILE):
-        try:
-            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f) 
+        try: with open(HISTORY_FILE, 'r', encoding='utf-8') as f: return json.load(f) 
         except: return []
     return []
 
 def save_daily_history(new_report_data):
     history = load_daily_history()
-    # 날짜 중복 시 덮어쓰기
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data) 
-    try:
-        with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
-            json.dump(history, f, ensure_ascii=False, indent=4)
+    try: with open(HISTORY_FILE, 'w', encoding='utf-8') as f: json.dump(history, f, ensure_ascii=False, indent=4)
     except: pass
     return history
 
 def get_gemini_model(api_key):
     genai.configure(api_key=api_key)
-    try:
-        return genai.GenerativeModel('gemini-1.5-flash')
-    except:
-        return genai.GenerativeModel('gemini-pro')
+    try: return genai.GenerativeModel('gemini-1.5-flash')
+    except: return genai.GenerativeModel('gemini-pro')
 
 def filter_with_gemini(articles, api_key):
     if not articles or not api_key: return articles
@@ -196,156 +131,170 @@ def filter_with_gemini(articles, api_key):
         response = model.generate_content(prompt)
         nums = re.findall(r'\d+', response.text)
         valid_indices = [int(n)-1 for n in nums]
-        filtered = []
-        for idx in valid_indices:
-            if 0 <= idx < len(articles):
-                articles[idx]['AI_Verified'] = True
-                filtered.append(articles[idx])
+        filtered = [articles[idx] for idx in valid_indices if 0 <= idx < len(articles)]
         return filtered if filtered else articles
     except: return articles
 
 # ==========================================
-# 3. Daily Report 전용 크롤러 (로직 수정됨)
+# 3. 핵심: 안정적 데이터 수집 및 리포트 로직
 # ==========================================
-def crawl_korean_daily(keyword, start_dt_kst, end_dt_kst):
-    # [조건 1] 한국 웹사이트 중심 (검색어 뒤에 when:1d 추가하여 최신성 확보)
-    url = f"https://news.google.com/rss/search?q={quote(keyword)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
-    
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
+
+def fetch_rss_feed(keyword, days_back=2):
+    """구글 뉴스 RSS를 가져오는 기본 함수 (한국어 설정)"""
+    # gl=KR (지역:한국), hl=ko (언어:한국어), ceid=KR:ko
+    # when:{days_back}d 옵션으로 최근 데이터 확보
+    url = f"https://news.google.com/rss/search?q={quote(keyword)}+when:{days_back}d&hl=ko&gl=KR&ceid=KR:ko"
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36'}
     
     try:
-        response = requests.get(url, headers=headers, timeout=5, verify=False)
+        response = requests.get(url, headers=headers, timeout=10, verify=False)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'xml')
-            items = soup.find_all('item')
-            
-            parsed = []
-            for item in items:
-                try: 
-                    # RSS 날짜는 GMT 기준임. KST로 변환해야 함.
-                    pub_date_str = item.pubDate.text
-                    # 포맷 예: Fri, 02 Feb 2024 08:00:00 GMT
-                    pub_date_utc = pd.to_datetime(pub_date_str).replace(tzinfo=timezone.utc)
-                    pub_date_kst = pub_date_utc + timedelta(hours=9)
-                    
-                    # timezone-aware끼리 비교하기 위해 naive로 통일 (비교 편의성)
-                    pub_date_kst_naive = pub_date_kst.replace(tzinfo=None)
-                    
-                except: 
-                    # 날짜 파싱 실패시 현재 시간으로 가정 (데이터 유실 방지)
-                    pub_date_kst_naive = datetime.now() + timedelta(hours=9)
-
-                # [조건 2] 수집 기간: 전일 12:00 ~ 금일 06:00
-                if start_dt_kst <= pub_date_kst_naive <= end_dt_kst:
-                    src = item.source.text if item.source else "Google"
-                    snip = BeautifulSoup(item.description.text if item.description else "", "html.parser").get_text(strip=True)[:300]
-                    
-                    parsed.append({
-                        'Title': item.title.text,
-                        'Source': src,
-                        'Date': pub_date_kst_naive,
-                        'Link': item.link.text,
-                        'Keyword': keyword,
-                        'Snippet': snip,
-                        'Country': 'KR'
-                    })
-            return parsed
+            return soup.find_all('item')
     except Exception as e:
-        print(f"Crawl Error: {e}")
         pass
     return []
 
-# [핵심] 리포트 생성 프로세스
-def generate_daily_report_process(target_date_kst, keywords, api_key):
-    # 진행 상황 UI
-    status_box = st.status("🚀 리포트 생성 작업을 시작합니다...", expanded=True)
+def parse_and_filter_news(items, keyword, start_dt, end_dt):
+    """RSS 아이템을 파싱하고 날짜 필터링을 수행하는 함수"""
+    parsed_items = []
     
-    # [조건 2] 시간 설정 (KST 기준)
-    # target_date_kst는 '오늘 날짜'임.
-    # 종료: 오늘 06:00
-    end_dt = datetime.combine(target_date_kst, datetime.min.time()) + timedelta(hours=6)
-    # 시작: 어제 12:00 (18시간 전)
+    for item in items:
+        try:
+            # RSS 날짜 파싱 (GMT -> KST 변환)
+            pub_date_str = item.pubDate.text
+            # UTC로 인식
+            pub_date_utc = pd.to_datetime(pub_date_str).replace(tzinfo=timezone.utc)
+            # 한국 시간으로 변환 (+9시간)
+            pub_date_kst = pub_date_utc + timedelta(hours=9)
+            # 비교를 위해 timezone 정보 제거 (naive datetime)
+            pub_date_kst_naive = pub_date_kst.replace(tzinfo=None)
+            
+            # [시간 필터링 Logic]
+            # 정확한 시간 범위 내에 있는지 확인
+            if start_dt <= pub_date_kst_naive <= end_dt:
+                src = item.source.text if item.source else "Google"
+                snip = BeautifulSoup(item.description.text if item.description else "", "html.parser").get_text(strip=True)[:300]
+                
+                parsed_items.append({
+                    'Title': item.title.text,
+                    'Source': src,
+                    'Date': pub_date_kst_naive, # KST Naive
+                    'Link': item.link.text,
+                    'Keyword': keyword,
+                    'Snippet': snip,
+                    'Country': 'KR'
+                })
+        except Exception:
+            continue
+            
+    return parsed_items
+
+def generate_daily_report_process(target_date, keywords, api_key, status_container):
+    """
+    1. 엄격한 시간 필터링으로 수집
+    2. 수집량 부족 시 완화된 기준으로 재수집 (Safety Net)
+    3. Gemini로 리포트 작성
+    """
+    
+    # 1. 시간 범위 설정 (KST 기준)
+    # Target Date의 06:00
+    end_dt = datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6)
+    # 전일 12:00
     start_dt = end_dt - timedelta(hours=18)
     
-    status_box.write(f"📅 수집 구간: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')} (KST)")
+    log_messages = []
+    log_messages.append(f"📅 기준 시간: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')} (KST)")
+    status_container.markdown("\n".join([f"`{msg}`" for msg in log_messages]))
     
     all_news = []
-    total_kws = len(keywords)
     
-    # 1. 크롤링
+    # 2. 크롤링 시작
+    progress_bar = st.progress(0)
+    
     for idx, kw in enumerate(keywords):
-        status_box.write(f"running... [{idx+1}/{total_kws}] 키워드 검색: {kw}")
-        items = crawl_korean_daily(kw, start_dt, end_dt)
-        all_news.extend(items)
-        time.sleep(0.3) # 차단 방지 딜레이
+        # 1차 시도: 엄격한 시간 필터링
+        items = fetch_rss_feed(kw, days_back=2)
+        filtered = parse_and_filter_news(items, kw, start_dt, end_dt)
+        
+        # [Safety Net] 1차 시도 실패 시, 최근 24시간 데이터로 범위 확장 (리포트 발행이 우선이므로)
+        if len(filtered) == 0:
+            # 시간 조건을 무시하고 최근 1일 내 기사면 가져옴
+            fallback_items = parse_and_filter_news(items, kw, end_dt - timedelta(hours=24), end_dt + timedelta(hours=24))
+            if fallback_items:
+                log_messages.append(f"⚠️ '{kw}': 지정 시간 내 데이터 없음 -> 24시간 내 데이터 {len(fallback_items)}건으로 대체")
+                all_news.extend(fallback_items)
+            else:
+                log_messages.append(f"❌ '{kw}': 관련 뉴스 없음")
+        else:
+            log_messages.append(f"✅ '{kw}': {len(filtered)}건 수집 완료")
+            all_news.extend(filtered)
             
+        status_container.markdown("\n".join([f"`{msg}`" for msg in log_messages]))
+        progress_bar.progress((idx + 1) / len(keywords))
+        time.sleep(0.2)
+
     if not all_news:
-        status_box.update(label="❌ 수집된 기사가 없습니다.", state="error")
+        status_container.error("수집된 뉴스가 전혀 없어 리포트를 생성할 수 없습니다. 키워드를 변경하거나 나중에 시도해주세요.")
         return [], None
 
-    # 2. 데이터 정리
+    # 3. 데이터 전처리
     df = pd.DataFrame(all_news)
     df = df.drop_duplicates(subset=['Title'])
     df = df.sort_values(by='Date', ascending=False)
     
-    # AI에게 보낼 기사 선정 (최대 40개)
-    final_articles = df.head(40).to_dict('records')
-    status_box.write(f"✅ 총 {len(final_articles)}건의 유효 기사 수집 완료. AI 분석 시작...")
+    # AI 입력용 (상위 50개)
+    final_articles = df.head(50).to_dict('records')
     
-    # 3. 리포트 생성
+    # 4. 리포트 생성
+    log_messages.append(f"🤖 총 {len(final_articles)}건의 기사를 바탕으로 AI 분석 시작...")
+    status_container.markdown("\n".join([f"`{msg}`" for msg in log_messages]))
+    
     try:
         model = get_gemini_model(api_key)
         
         context = ""
         for i, item in enumerate(final_articles):
-            date_str = item['Date'].strftime('%H:%M')
-            context += f"- [{date_str}] {item['Title']} ({item['Source']}): {item.get('Snippet', '')}\n"
+            d_str = item['Date'].strftime('%H:%M')
+            context += f"- [{d_str}] {item['Title']} ({item['Source']}): {item['Snippet']}\n"
             
         prompt = f"""
-        당신은 대한민국 최고의 반도체 산업 애널리스트입니다.
-        제공된 뉴스 데이터는 **{start_dt.strftime('%Y-%m-%d %H:%M')}부터 {end_dt.strftime('%Y-%m-%d %H:%M')}까지** 수집된 한국 기사입니다.
+        당신은 한국 반도체 산업 전문 애널리스트입니다.
+        아래 데이터는 **{start_dt.strftime('%m월 %d일 %H:%M')}부터 {end_dt.strftime('%m월 %d일 %H:%M')}까지** 수집된 최신 뉴스입니다.
         
-        이 정보를 바탕으로 **[일일 반도체 산업 브리핑]**을 작성하세요.
+        이 정보를 바탕으로 **{target_date.strftime('%Y년 %m월 %d일')} Daily Report**를 작성하세요.
         
+        [작성 조건]
+        1. **언어**: 한국어
+        2. **형식**: Markdown
+        3. **내용**:
+           - **📊 Executive Summary**: 전체 시장 분위기 3줄 요약.
+           - **🚨 Top Headlines**: 가장 중요한 이슈 3가지 선정 및 심층 분석.
+           - **🏢 기업 동향**: 삼성전자, SK하이닉스 등 주요 기업의 동향.
+           - **🛠️ 소부장(소재/부품/장비)**: 공급망 및 기술 관련 단신 모음.
+           - **📝 Analyst Note**: 금일 이슈에 대한 전문가적 해석 한 줄.
+
         [뉴스 데이터]
         {context}
-        
-        [작성 양식 (Markdown)]
-        ## 📊 Executive Summary
-        (전체 흐름을 3문장으로 요약)
-        
-        ## 🚨 주요 이슈 (Key Headlines)
-        (가장 중요한 기사 3개를 선정하여 심층 분석)
-        
-        ## 📉 시장 및 공급망 동향
-        (소재, 부품, 장비 및 기업 동향 정리)
-        
-        ## 💡 Analyst Insight
-        (투자자 및 업계 관계자를 위한 한 줄 평)
         """
         
         response = model.generate_content(prompt)
         report_text = response.text
         
-        # 4. 저장 (날짜 기준)
+        # 저장
         save_data = {
-            'date': target_date_kst.strftime('%Y-%m-%d'),
+            'date': target_date.strftime('%Y-%m-%d'),
             'report': report_text,
             'articles': final_articles
         }
         save_daily_history(save_data)
         
-        status_box.update(label="🎉 리포트 생성이 완료되었습니다!", state="complete", expanded=False)
         return final_articles, report_text
         
     except Exception as e:
-        status_box.update(label="⚠️ 리포트 생성 중 오류 발생", state="error")
-        st.error(f"Error Details: {str(e)}")
+        st.error(f"AI 리포트 생성 실패: {str(e)}")
         return final_articles, None
 
-# 일반 크롤링 (기존 유지)
 def perform_crawling_general(category, api_key):
     kws = st.session_state.keywords.get(category, [])
     if not kws: return
@@ -387,18 +336,20 @@ def perform_crawling_general(category, api_key):
     else:
         st.session_state.news_data[category] = []
 
+# ==========================================
+# 4. 앱 초기화
+# ==========================================
 if 'keywords' not in st.session_state: st.session_state.keywords = load_keywords()
 if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] for cat in CATEGORIES}
 if 'last_update' not in st.session_state: st.session_state.last_update = None
 if 'daily_history' not in st.session_state: st.session_state.daily_history = load_daily_history()
 
 # ==========================================
-# 3. Sidebar
+# 5. UI Layout
 # ==========================================
 with st.sidebar:
     st.header("Semi-Insight")
     st.divider()
-    # [조건 5] Daily Report가 포함된 카테고리 선택
     selected_category = st.radio("카테고리", CATEGORIES, index=len(CATEGORIES)-1, label_visibility="collapsed")
     st.divider()
     with st.expander("🔐 API Key"):
@@ -419,37 +370,28 @@ with st.sidebar:
                         with sc1: st.caption(f"**{name}**")
                         with sc2: st.metric("", data['Price'], data['Delta'], label_visibility="collapsed")
                         st.markdown("<hr style='margin: 2px 0; border-top: 1px dashed #f1f5f9;'>", unsafe_allow_html=True)
-        else:
-            st.caption("Loading...")
 
-# ==========================================
-# 4. Main UI & Logic
-# ==========================================
 c_head, c_info = st.columns([3, 1])
 with c_head: st.title(selected_category)
 
-# ----------------------------------------------------------------
-# [Logic A] Daily Report 모드
-# ----------------------------------------------------------------
+# ==========================================
+# [Mode A] Daily Report (조건 충족형)
+# ==========================================
 if selected_category == "Daily Report":
-    # 1. 타겟 날짜 계산 (KST 기준)
-    # Streamlit Cloud는 UTC이므로 +9시간 보정
+    # 타겟 날짜 계산 (KST 기준)
     now_kst = datetime.utcnow() + timedelta(hours=9)
-    
-    # 06시 기준: 06시 이전이면 '어제', 06시 이후면 '오늘'이 타겟
     if now_kst.hour < 6:
         target_date = (now_kst - timedelta(days=1)).date()
     else:
         target_date = now_kst.date()
-        
     target_date_str = target_date.strftime('%Y-%m-%d')
     
     with c_info:
-        st.markdown(f"<div style='text-align:right; font-size:12px; color:#888;'>Report Date (KST)<br><b>{target_date}</b></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:right; font-size:12px; color:#888;'>Report Date<br><b>{target_date}</b></div>", unsafe_allow_html=True)
 
-    # 2. 키워드 설정
+    # 설정 패널
     with st.container(border=True):
-        st.markdown("##### ⚙️ Report Settings (Korea Focus)")
+        st.markdown("##### ⚙️ Settings")
         c_k1, c_k2 = st.columns([3, 1])
         with c_k1: new_kw = st.text_input("키워드 추가", label_visibility="collapsed")
         with c_k2:
@@ -458,6 +400,7 @@ if selected_category == "Daily Report":
                     st.session_state.keywords["Daily Report"].append(new_kw)
                     save_keywords(st.session_state.keywords)
                     st.rerun()
+        
         daily_kws = st.session_state.keywords["Daily Report"]
         if daily_kws:
             st.write("")
@@ -468,38 +411,36 @@ if selected_category == "Daily Report":
                     save_keywords(st.session_state.keywords)
                     st.rerun()
 
-    # 3. 리포트 로직
+    # 리포트 존재 여부 확인
     history = load_daily_history()
-    # [조건 4] 1일 1회 작성 원칙 (이미 있으면 생성 안함)
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
-    # 리포트가 없으면 -> 생성 버튼 표시
-    if not today_report:
-        st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
-        
+    # 1일 1회 작성 원칙
+    if today_report:
+        st.success(f"✅ {target_date} 리포트가 이미 발행되었습니다.")
+    else:
+        st.info(f"📢 {target_date} 리포트가 아직 없습니다. 아래 버튼을 눌러 생성하세요.")
         if api_key:
-            if st.button("🚀 금일 리포트 생성 (전일 12:00 ~ 금일 06:00 수집)", type="primary"):
-                _, _ = generate_daily_report_process(target_date, daily_kws, api_key)
+            if st.button("🚀 리포트 생성 시작 (수집 + 분석)", type="primary"):
+                status_container = st.status("작업 시작...", expanded=True)
+                _, _ = generate_daily_report_process(target_date, daily_kws, api_key, status_container)
                 st.rerun()
         else:
             st.error("API Key가 필요합니다.")
-            
-    # 4. 리포트 출력 (누적 표시)
-    if not history:
-        st.write("")
-    else:
-        for idx, entry in enumerate(history):
+
+    # 리포트 표시 (누적)
+    if history:
+        for entry in history:
             st.markdown(f"<div class='history-header'>📅 {entry['date']} Daily Report</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
-            
-            # [조건 3] References 하단 기록
             with st.expander(f"🔗 Reference Articles ({len(entry.get('articles', []))})"):
                 for i, item in enumerate(entry.get('articles', [])):
-                    st.markdown(f"{i+1}. [{item['Title']}]({item['Link']}) <span style='color:#999; font-size:0.8em'> | {item['Source']} - {item['Date']}</span>", unsafe_allow_html=True)
+                    d_str = pd.to_datetime(item['Date']).strftime('%m/%d %H:%M')
+                    st.markdown(f"{i+1}. **[{item['Title']}]({item['Link']})** <span style='color:#999; font-size:0.8em'> | {item['Source']} ({d_str})</span>", unsafe_allow_html=True)
 
-# ----------------------------------------------------------------
-# [Logic B] 일반 카테고리 (수동 실행)
-# ----------------------------------------------------------------
+# ==========================================
+# [Mode B] General Categories
+# ==========================================
 else:
     with c_info: 
         if st.session_state.last_update:
