@@ -39,6 +39,11 @@ st.markdown("""
         section[data-testid="stSidebar"] div[data-testid="stMetricDelta"] { font-size: 12px !important; }
         section[data-testid="stSidebar"] div[data-testid="stMetricLabel"] { font-size: 12px !important; color: #64748B !important; }
         .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
+        
+        /* 레퍼런스 링크 스타일 */
+        .ref-link { font-size: 0.9em; color: #666; text-decoration: none; display: block; margin-bottom: 4px; }
+        .ref-link:hover { color: #3B82F6; text-decoration: underline; }
+        .ref-number { font-weight: bold; color: #3B82F6; margin-right: 5px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -46,7 +51,7 @@ st.markdown("""
 FALLBACK_API_KEY = "AIzaSyCBSqIQBIYQbWtfQAxZ7D5mwCKFx-7VDJo"
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
-# [요청하신 종목 원복]
+# [요청하신 종목 전체 원복]
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {
         "Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU",
@@ -137,7 +142,65 @@ def save_daily_history(new_report_data):
     except: pass
 
 # ==========================================
-# 2. [성공한 로직] AI 모델 자동 탐색 및 생성
+# 2. 뉴스 수집 (시간 필터링 적용)
+# ==========================================
+def fetch_news(keywords, days=1, limit=20, strict_time=False):
+    all_items = []
+    
+    # 시간 필터링 기준 설정 (KST)
+    now_kst = datetime.utcnow() + timedelta(hours=9)
+    
+    # 기준: 오늘 06:00
+    end_target = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
+    # 현재 시간이 06:00 이전이면 기준을 '어제 06:00'로 잡아야 함 (혹은 리포트 타겟 날짜에 맞춤)
+    if now_kst.hour < 6:
+        end_target -= timedelta(days=1)
+        
+    start_target = end_target - timedelta(hours=18) # 전일 12:00
+    
+    for kw in keywords:
+        url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
+        try:
+            res = requests.get(url, timeout=5, verify=False)
+            soup = BeautifulSoup(res.content, 'xml')
+            items = soup.find_all('item')
+            
+            for item in items:
+                is_valid = True
+                
+                # [엄격 모드 시간 체크]
+                if strict_time:
+                    try:
+                        pub_date_str = item.pubDate.text
+                        # RSS 날짜 포맷 파싱
+                        pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
+                        pub_date_kst = pub_date + timedelta(hours=9)
+                        
+                        # 범위 확인 (전일 12:00 ~ 금일 06:00)
+                        if not (start_target <= pub_date_kst <= end_target):
+                            is_valid = False
+                    except:
+                        # 날짜 파싱 실패 시, Fallback을 위해 일단 포함
+                        is_valid = True
+                
+                if is_valid:
+                    all_items.append({
+                        'Title': item.title.text,
+                        'Link': item.link.text,
+                        'Date': item.pubDate.text,
+                        'Source': item.source.text if item.source else "Google News"
+                    })
+        except: pass
+        time.sleep(0.1)
+        
+    df = pd.DataFrame(all_items)
+    if not df.empty:
+        df = df.drop_duplicates(subset=['Title'])
+        return df.head(limit).to_dict('records')
+    return []
+
+# ==========================================
+# 3. AI 모델 자동 탐색 및 생성
 # ==========================================
 def get_available_models(api_key):
     """현재 API Key로 사용 가능한 모델 리스트 조회"""
@@ -150,30 +213,40 @@ def get_available_models(api_key):
     except: pass
     return []
 
-def generate_report_with_auto_model(api_key, news_data):
-    """모델 리스트를 순회하며 429/404 회피"""
+def generate_report_with_citations(api_key, news_data):
+    """논문형 주석(Citation) 생성을 위한 프롬프트 적용"""
     models = get_available_models(api_key)
     
-    # 조회 실패 시 기본 모델셋 (성공 확률 높은 순)
     if not models:
         models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
     
+    # 뉴스 데이터를 번호와 함께 전달
+    news_context = ""
+    for i, item in enumerate(news_data):
+        news_context += f"{i+1}. {item['Title']}\n"
+
     prompt = f"""
-    당신은 대한민국 최고의 반도체 산업 애널리스트입니다.
-    아래 수집된 뉴스들을 종합하여 **[일일 반도체 산업 브리핑]**을 작성하세요.
+    당신은 반도체 산업 수석 애널리스트입니다.
+    아래 제공된 뉴스 목록을 바탕으로 [일일 반도체 산업 브리핑]을 작성하세요.
+    
+    **[중요한 작성 규칙]**
+    1. 내용을 서술할 때, 근거가 되는 뉴스의 번호를 **[1]**, **[2]**와 같이 문장 끝에 반드시 주석으로 다세요.
+    2. 예시: "삼성전자가 새로운 칩을 발표했다 [1]. 이는 시장에 큰 영향을 줄 것이다 [3]."
+    3. 리포트 하단에 별도의 'Reference' 섹션을 만들지 마세요. (제가 시스템적으로 붙일 겁니다.)
+    4. 한국어로 작성하세요.
     
     [뉴스 데이터]
-    {chr(10).join(news_data)}
+    {news_context}
     
     [작성 양식 (Markdown)]
     ## 📊 Executive Summary
-    (오늘의 핵심 흐름을 3문장으로 요약)
+    (핵심 요약)
     
     ## 🚨 Key Headlines
-    (가장 중요한 이슈 3가지 선정 및 심층 분석)
+    (주요 이슈 및 심층 분석, 주석 필수)
     
-    ## 📉 Market & Supply Chain Insight
-    (기업 동향, 소부장 이슈, 향후 시장 전망)
+    ## 📉 Market Insight
+    (시장 전망, 주석 필수)
     """
     
     headers = {'Content-Type': 'application/json'}
@@ -188,11 +261,11 @@ def generate_report_with_auto_model(api_key, news_data):
     }
 
     for model in models:
-        if "vision" in model: continue # 텍스트 전용
+        if "vision" in model: continue
         
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         try:
-            response = requests.post(url, headers=headers, json=data, timeout=30)
+            response = requests.post(url, headers=headers, json=data, timeout=40)
             
             if response.status_code == 200:
                 res_json = response.json()
@@ -204,34 +277,6 @@ def generate_report_with_auto_model(api_key, news_data):
         except: continue
             
     return False, "AI 분석에 실패했습니다. (서버 과부하 또는 사용량 초과)"
-
-# ==========================================
-# 3. 뉴스 크롤링
-# ==========================================
-def fetch_news(keywords, days=1, limit=15):
-    all_items = []
-    
-    for kw in keywords:
-        url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
-        try:
-            res = requests.get(url, timeout=5, verify=False)
-            soup = BeautifulSoup(res.content, 'xml')
-            items = soup.find_all('item')
-            for item in items:
-                all_items.append({
-                    'Title': item.title.text,
-                    'Link': item.link.text,
-                    'Date': item.pubDate.text,
-                    'Source': item.source.text if item.source else "Google News"
-                })
-        except: pass
-        time.sleep(0.1)
-        
-    df = pd.DataFrame(all_items)
-    if not df.empty:
-        df = df.drop_duplicates(subset=['Title'])
-        return df.head(limit).to_dict('records')
-    return []
 
 # ==========================================
 # 4. 메인 앱 UI
@@ -271,12 +316,11 @@ c_head, c_info = st.columns([3, 1])
 with c_head: st.title(selected_category)
 
 # ----------------------------------
-# [Mode 1] Daily Report (06시 기준)
+# [Mode 1] Daily Report
 # ----------------------------------
 if selected_category == "Daily Report":
-    # 시간 계산 (KST 기준)
+    # 06시 기준 날짜 계산
     now_kst = datetime.utcnow() + timedelta(hours=9)
-    # 06시 이전이면 어제 날짜, 06시 이후면 오늘 날짜
     if now_kst.hour < 6:
         target_date = (now_kst - timedelta(days=1)).date()
     else:
@@ -284,7 +328,7 @@ if selected_category == "Daily Report":
     target_date_str = target_date.strftime('%Y-%m-%d')
     
     with c_info:
-        st.markdown(f"<div style='text-align:right; color:#888;'>Target Date<br><b>{target_date}</b></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:right; color:#888;'>Report Date<br><b>{target_date}</b></div>", unsafe_allow_html=True)
 
     # 1. 키워드 설정
     with st.container(border=True):
@@ -306,27 +350,31 @@ if selected_category == "Daily Report":
                     save_keywords(st.session_state.keywords)
                     st.rerun()
     
-    # 2. 리포트 관리
+    # 2. 리포트 생성 로직
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
-    # 리포트가 없으면 생성 버튼 표시
+    # 생성 버튼 (리포트가 없거나 재생성 원할 때)
     if not today_report:
         st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
             status_box = st.status("🚀 리포트 생성 프로세스...", expanded=True)
             
-            # 수집
-            status_box.write(f"📡 '{', '.join(daily_kws)}' 뉴스 수집 중...")
-            news_items = fetch_news(daily_kws, days=1) # 1일치 (06시 기준이므로 대략 맞음)
+            # 수집 (Strict Mode)
+            status_box.write(f"📡 뉴스 수집 중 (전일 12:00 ~ 금일 06:00)...")
+            news_items = fetch_news(daily_kws, days=2, strict_time=True)
+            
+            if not news_items:
+                status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
+                time.sleep(1)
+                news_items = fetch_news(daily_kws, days=1, strict_time=False) # Fallback
             
             if not news_items:
                 status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
             else:
                 # 분석
-                status_box.write(f"🧠 AI 분석 및 요약 중... (기사 {len(news_items)}건)")
-                news_texts = [f"- {item['Title']}" for item in news_items]
-                success, result = generate_report_with_auto_model(api_key, news_texts)
+                status_box.write(f"🧠 AI 분석 중... (기사 {len(news_items)}건)")
+                success, result = generate_report_with_citations(api_key, news_items)
                 
                 if success:
                     save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
@@ -337,35 +385,40 @@ if selected_category == "Daily Report":
                     status_box.update(label="⚠️ AI 분석 실패", state="error")
                     st.error(result)
     
-    # 이미 생성된 경우 재생성 옵션
     else:
         st.success(f"✅ {target_date} 리포트가 완료되었습니다.")
         if st.button("🔄 리포트 다시 만들기 (덮어쓰기)"):
             status_box = st.status("🚀 리포트 재생성 중...", expanded=True)
-            news_items = fetch_news(daily_kws)
+            news_items = fetch_news(daily_kws, days=1, strict_time=False) # 재생성은 넉넉하게
             if news_items:
-                news_texts = [f"- {item['Title']}" for item in news_items]
-                success, result = generate_report_with_auto_model(api_key, news_texts)
+                success, result = generate_report_with_citations(api_key, news_items)
                 if success:
                     save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
                     save_daily_history(save_data)
                     status_box.update(label="🎉 재생성 완료!", state="complete")
                     st.rerun()
 
-    # 3. 히스토리 출력 (누적)
+    # 3. 히스토리 출력 (누적 & 주석 링크)
     if history:
         for entry in history:
             st.divider()
             st.markdown(f"<div class='history-header'>📅 {entry['date']} Daily Report</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
             
-            # [요청사항] Reference Links
-            with st.expander(f"🔗 Reference Articles ({len(entry.get('articles', []))}건)"):
-                for i, item in enumerate(entry.get('articles', [])):
-                    st.markdown(f"**{i+1}. [{item['Title']}]({item['Link']})** <span style='color:#888; font-size:0.8em'> | {item['Source']}</span>", unsafe_allow_html=True)
+            # [요청사항] 논문형 주석 링크 (References)
+            st.markdown("#### 📚 References (기사 원문)")
+            ref_cols = st.columns(2) # 2단으로 깔끔하게 표시
+            for i, item in enumerate(entry.get('articles', [])):
+                col = ref_cols[i % 2]
+                with col:
+                    st.markdown(f"""
+                    <a href="{item['Link']}" target="_blank" class="ref-link">
+                        <span class="ref-number">[{i+1}]</span> {item['Title']}
+                    </a>
+                    """, unsafe_allow_html=True)
 
 # ----------------------------------
-# [Mode 2] General Category (수동)
+# [Mode 2] General Category
 # ----------------------------------
 else:
     with st.container(border=True):
