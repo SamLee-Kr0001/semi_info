@@ -4,89 +4,126 @@ import urllib3
 from bs4 import BeautifulSoup
 from urllib.parse import quote
 import json
-import datetime
+import time
 
 # SSL 경고 무시
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-st.set_page_config(page_title="Final Fix", layout="wide")
+st.set_page_config(page_title="Auto-Discovery Mode", layout="wide")
 
 # ==========================================
-# 1. 심플 크롤러
+# 1. 내 키로 사용 가능한 모델 명단 조회 (가장 중요)
 # ==========================================
-def get_news():
-    url = f"https://news.google.com/rss/search?q={quote('삼성전자 반도체')}+when:1d&hl=ko&gl=KR&ceid=KR:ko"
+def get_available_models(api_key):
+    # v1beta 엔드포인트에서 모델 리스트를 조회합니다.
+    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
     try:
-        res = requests.get(url, timeout=5, verify=False)
-        soup = BeautifulSoup(res.content, 'xml')
-        items = soup.find_all('item')[:5]
-        return [item.title.text for item in items]
+        res = requests.get(url, timeout=10)
+        if res.status_code == 200:
+            data = res.json()
+            # 'generateContent' 기능을 지원하는 모델만 추출
+            valid_models = [
+                m['name'].replace("models/", "") 
+                for m in data.get('models', []) 
+                if 'generateContent' in m.get('supportedGenerationMethods', [])
+            ]
+            return valid_models
+        else:
+            return []
     except:
         return []
 
 # ==========================================
-# 2. AI 호출 (v1 정식 주소 사용)
+# 2. 뉴스 수집
 # ==========================================
-def call_ai_v1(api_key, news_list):
-    # [핵심] v1beta가 아니라 v1을 사용해야 1.5 모델 404가 안 뜸
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
-    
-    prompt = f"""
-    반도체 전문가로서 아래 뉴스를 3줄로 요약해.
-    {json.dumps(news_list, ensure_ascii=False)}
-    """
-    
-    data = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "safetySettings": [ # 안전장치 해제
-            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
-        ]
-    }
-    
+def get_news():
+    url = f"https://news.google.com/rss/search?q={quote('삼성전자 파운드리')}+when:1d&hl=ko&gl=KR&ceid=KR:ko"
     try:
-        res = requests.post(url, json=data, timeout=30)
-        if res.status_code == 200:
-            return res.json()['candidates'][0]['content']['parts'][0]['text']
-        else:
-            return f"에러 발생: {res.status_code}\n{res.text}"
-    except Exception as e:
-        return f"통신 에러: {e}"
+        res = requests.get(url, timeout=5, verify=False)
+        soup = BeautifulSoup(res.content, 'xml')
+        items = soup.find_all('item')[:5]
+        return [f"- {item.title.text}" for item in items]
+    except:
+        return []
 
 # ==========================================
-# 3. UI 실행
+# 3. AI 실행 (조회된 모델 리스트 순회)
 # ==========================================
-st.title("💠 Last Attempt: v1 Stable Endpoint")
+def run_ai(api_key, news_data):
+    # 1. 모델 리스트 확보
+    models = get_available_models(api_key)
+    
+    if not models:
+        st.error("❌ API Key로 조회 가능한 모델이 하나도 없습니다. (키 권한 문제)")
+        return
+
+    st.info(f"📋 사용 가능 모델 목록 확인됨: {', '.join(models)}")
+    
+    prompt = f"""
+    [뉴스 데이터]
+    {chr(10).join(news_data)}
+    
+    위 뉴스를 바탕으로 반도체 시장 동향을 3줄로 요약해.
+    """
+    
+    # 2. 모델 순서대로 시도
+    for model in models:
+        # gemini-pro-vision 등 텍스트 전용이 아닌건 스킵할 수도 있으나, 일단 시도
+        if "vision" in model: continue 
+        
+        status_msg = st.empty()
+        status_msg.write(f"🔄 시도 중: {model}...")
+        
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        
+        data = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "safetySettings": [
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+            ]
+        }
+        
+        try:
+            response = requests.post(url, json=data, timeout=30)
+            
+            if response.status_code == 200:
+                try:
+                    result = response.json()['candidates'][0]['content']['parts'][0]['text']
+                    status_msg.empty()
+                    st.success(f"✅ 성공! (모델: {model})")
+                    st.markdown("### 📝 리포트 결과")
+                    st.write(result)
+                    return # 성공하면 종료
+                except:
+                    # 200인데 내용이 없는 경우 (안전 필터 등)
+                    pass
+            elif response.status_code == 429:
+                status_msg.write(f"⛔ {model}: 사용량 초과 (Pass)")
+            else:
+                status_msg.write(f"❌ {model}: {response.status_code} 에러")
+                
+        except Exception as e:
+            print(e)
+            
+    st.error("💀 모든 모델 시도 실패. (잠시 후 다시 시도해보세요)")
+
+# ==========================================
+# 4. UI
+# ==========================================
+st.title("💠 AI Model Auto-Discovery")
 
 with st.sidebar:
     api_key = st.text_input("API Key", value="AIzaSyCBSqIQBIYQbWtfQAxZ7D5mwCKFx-7VDJo", type="password")
-    
-if st.button("🚀 리포트 생성 (Gemini 1.5 Flash / v1)", type="primary"):
-    status = st.empty()
-    
-    # 1. 수집
-    status.info("📡 뉴스 수집 중...")
+
+if st.button("🚀 실행 (모델 자동 탐색)", type="primary"):
+    # 뉴스 수집
     news = get_news()
     if not news:
-        status.error("뉴스 수집 실패")
-        st.stop()
-        
-    # 2. 생성
-    status.info("🧠 AI 분석 중 (Gemini 1.5 Flash - v1 Endpoint)...")
-    result = call_ai_v1(api_key, news)
-    
-    # 3. 결과
-    if "에러" in result:
-        status.error("실패")
-        st.error(result)
-        # 429 에러(Quota)면 잠시 쉬어야 함을 안내
-        if "429" in result:
-            st.warning("⚠️ 'Quota Exceeded'는 무료 사용량을 다 썼다는 뜻입니다. 5분 뒤에 다시 시도하면 됩니다.")
+        st.error("뉴스 수집 실패")
     else:
-        status.success("완료!")
-        st.markdown("### 📝 Daily Report")
-        st.write(result)
-        st.divider()
-        st.caption("참고 뉴스: " + ", ".join(news))
+        st.success(f"뉴스 {len(news)}건 수집 완료")
+        # AI 실행
+        run_ai(api_key, news)
