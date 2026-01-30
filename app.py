@@ -1,176 +1,92 @@
 import streamlit as st
-import pandas as pd
 import requests
 import urllib3
-from urllib.parse import quote
 from bs4 import BeautifulSoup
-from datetime import datetime
+from urllib.parse import quote
 import json
-import time
+import datetime
 
 # SSL 경고 무시
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# 페이지 설정
-st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Final Fix)", page_icon="🛡️")
-
-if 'debug_logs' not in st.session_state: st.session_state.debug_logs = []
-if 'report_result' not in st.session_state: st.session_state.report_result = None
+st.set_page_config(page_title="Final Fix", layout="wide")
 
 # ==========================================
-# 1. 로깅 함수
+# 1. 심플 크롤러
 # ==========================================
-def log(message, level="info"):
-    timestamp = datetime.now().strftime("%H:%M:%S")
-    st.session_state.debug_logs.append((level, f"[{timestamp}] {message}"))
+def get_news():
+    url = f"https://news.google.com/rss/search?q={quote('삼성전자 반도체')}+when:1d&hl=ko&gl=KR&ceid=KR:ko"
+    try:
+        res = requests.get(url, timeout=5, verify=False)
+        soup = BeautifulSoup(res.content, 'xml')
+        items = soup.find_all('item')[:5]
+        return [item.title.text for item in items]
+    except:
+        return []
 
 # ==========================================
-# 2. 핵심: 모델 자동 우회 호출 함수 (이름 수정됨)
+# 2. AI 호출 (v1 정식 주소 사용)
 # ==========================================
-def try_generate_content(api_key, prompt):
-    # [수정] 구글이 현재 제공하는 정확한 모델명 리스트
-    models_chain = [
-        "gemini-2.0-flash",                  # 1순위 (사용자 키 호환 확인됨)
-        "gemini-2.0-flash-lite-preview-02-05", # 2순위 (최신 경량, 할당량 여유 예상)
-        "gemini-1.5-flash",                  # 3순위 (표준)
-        "gemini-1.5-pro"                     # 4순위
-    ]
+def call_ai_v1(api_key, news_list):
+    # [핵심] v1beta가 아니라 v1을 사용해야 1.5 모델 404가 안 뜸
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
     
-    headers = {'Content-Type': 'application/json'}
+    prompt = f"""
+    반도체 전문가로서 아래 뉴스를 3줄로 요약해.
+    {json.dumps(news_list, ensure_ascii=False)}
+    """
+    
     data = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "safetySettings": [
+        "safetySettings": [ # 안전장치 해제
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
             {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
             {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
             {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
         ]
     }
-
-    for model in models_chain:
-        log(f"🔄 모델 시도 중: {model}...", "info")
-        # [중요] v1beta 엔드포인트 사용
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-        
-        try:
-            response = requests.post(url, headers=headers, json=data, timeout=30)
-            
-            # 성공 (200 OK)
-            if response.status_code == 200:
-                res_json = response.json()
-                if 'candidates' in res_json and res_json['candidates']:
-                    content = res_json['candidates'][0]['content']['parts'][0]['text']
-                    log(f"✅ 성공! ({model} 모델이 응답함)", "success")
-                    return content
-                else:
-                    log(f"⚠️ {model}: 응답은 왔으나 내용이 빔 (Safety Block 등)", "warning")
-            
-            # 실패 분석
-            elif response.status_code == 429:
-                log(f"⛔ {model}: 용량 초과 (Quota Exceeded). 다음 모델로 전환합니다.", "warning")
-                time.sleep(1) # 1초 대기 후 시도
-                continue 
-            
-            elif response.status_code == 404:
-                log(f"🚫 {model}: 모델을 찾을 수 없음 (404). 다음 모델로 전환합니다.", "warning")
-                continue
-                
-            else:
-                log(f"❌ {model} 오류 (HTTP {response.status_code}): {response.text[:100]}...", "error")
-                continue
-
-        except Exception as e:
-            log(f"💥 통신 오류 ({model}): {str(e)}", "error")
-            continue
-            
-    return None # 모든 모델 실패
-
-# ==========================================
-# 3. 전체 프로세스 실행
-# ==========================================
-def run_full_process(api_key):
-    st.session_state.debug_logs = [] 
-    st.session_state.report_result = None
     
-    # 1. 뉴스 수집
-    log("📡 [1단계] 뉴스 데이터 수집 시작...", "info")
-    target_kw = "삼성전자 파운드리 반도체"
-    url = f"https://news.google.com/rss/search?q={quote(target_kw)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
-    
-    news_titles = []
     try:
-        res = requests.get(url, timeout=5, verify=False)
-        soup = BeautifulSoup(res.content, 'xml')
-        items = soup.find_all('item')[:5] # 5개만
-        
-        if not items:
-            log("❌ 수집된 뉴스가 없습니다.", "error")
-            return
-            
-        for item in items:
-            news_titles.append(f"- {item.title.text}")
-        
-        log(f"✅ 뉴스 {len(items)}건 수집 완료.", "success")
-        
+        res = requests.post(url, json=data, timeout=30)
+        if res.status_code == 200:
+            return res.json()['candidates'][0]['content']['parts'][0]['text']
+        else:
+            return f"에러 발생: {res.status_code}\n{res.text}"
     except Exception as e:
-        log(f"❌ 크롤링 실패: {e}", "error")
-        return
-
-    # 2. AI 리포트 생성
-    log("🧠 [2단계] AI 분석 시작...", "info")
-    
-    prompt = f"""
-    당신은 반도체 시장 전문가입니다. 
-    아래 뉴스 제목들을 보고 [일일 시장 브리핑]을 한국어로 작성하세요.
-    
-    [뉴스 데이터]
-    {chr(10).join(news_titles)}
-    
-    [작성 양식]
-    1. 📝 핵심 3줄 요약
-    2. 🚨 주요 이슈 분석
-    3. 💡 향후 전망 (한 줄)
-    """
-    
-    result_text = try_generate_content(api_key, prompt)
-    
-    if result_text:
-        st.session_state.report_result = result_text
-        log("🎉 [완료] 리포트 생성이 성공적으로 끝났습니다!", "success")
-    else:
-        log("💀 [실패] 모든 AI 모델이 응답하지 않았습니다. (할당량 완전 소진 가능성)", "error")
+        return f"통신 에러: {e}"
 
 # ==========================================
-# UI 구성
+# 3. UI 실행
 # ==========================================
+st.title("💠 Last Attempt: v1 Stable Endpoint")
+
 with st.sidebar:
-    st.header("🛠️ Final Debugger")
-    # API 키 기본값 설정
-    user_key = st.text_input("API Key", value="AIzaSyCBSqIQBIYQbWtfQAxZ7D5mwCKFx-7VDJo", type="password")
+    api_key = st.text_input("API Key", value="AIzaSyCBSqIQBIYQbWtfQAxZ7D5mwCKFx-7VDJo", type="password")
     
-    if st.button("🚨 진단 및 리포트 강제 실행", type="primary"):
-        run_full_process(user_key)
-
-st.title("💠 Semi-Insight Hub (Recovery Mode)")
-
-st.info("왼쪽 사이드바의 **[🚨 진단 및 리포트 강제 실행]** 버튼을 누르세요.")
-
-# 로그 출력
-if st.session_state.debug_logs:
-    st.divider()
-    st.subheader("📋 처리 로그")
-    for level, msg in st.session_state.debug_logs:
-        if level == "error": st.error(msg)
-        elif level == "success": st.success(msg)
-        elif level == "warning": st.warning(msg)
-        else: st.info(msg)
-
-# 결과 출력
-if st.session_state.report_result:
-    st.divider()
-    st.subheader("📑 AI Daily Report")
-    st.markdown(f"""
-    <div style="background-color: white; padding: 30px; border-radius: 10px; border: 1px solid #ddd; line-height: 1.6;">
-        {st.session_state.report_result}
-    </div>
-    """, unsafe_allow_html=True)
+if st.button("🚀 리포트 생성 (Gemini 1.5 Flash / v1)", type="primary"):
+    status = st.empty()
+    
+    # 1. 수집
+    status.info("📡 뉴스 수집 중...")
+    news = get_news()
+    if not news:
+        status.error("뉴스 수집 실패")
+        st.stop()
+        
+    # 2. 생성
+    status.info("🧠 AI 분석 중 (Gemini 1.5 Flash - v1 Endpoint)...")
+    result = call_ai_v1(api_key, news)
+    
+    # 3. 결과
+    if "에러" in result:
+        status.error("실패")
+        st.error(result)
+        # 429 에러(Quota)면 잠시 쉬어야 함을 안내
+        if "429" in result:
+            st.warning("⚠️ 'Quota Exceeded'는 무료 사용량을 다 썼다는 뜻입니다. 5분 뒤에 다시 시도하면 됩니다.")
+    else:
+        status.success("완료!")
+        st.markdown("### 📝 Daily Report")
+        st.write(result)
+        st.divider()
+        st.caption("참고 뉴스: " + ", ".join(news))
