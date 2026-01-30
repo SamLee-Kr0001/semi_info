@@ -51,7 +51,6 @@ st.markdown("""
 FALLBACK_API_KEY = "AIzaSyCBSqIQBIYQbWtfQAxZ7D5mwCKFx-7VDJo"
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
-# [요청하신 종목 전체 원복]
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {
         "Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU",
@@ -152,7 +151,7 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False):
     
     # 기준: 오늘 06:00
     end_target = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
-    # 현재 시간이 06:00 이전이면 기준을 '어제 06:00'로 잡아야 함 (혹은 리포트 타겟 날짜에 맞춤)
+    # 현재 시간이 06:00 이전이면 기준을 '어제 06:00'로 잡아야 함
     if now_kst.hour < 6:
         end_target -= timedelta(days=1)
         
@@ -172,15 +171,12 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False):
                 if strict_time:
                     try:
                         pub_date_str = item.pubDate.text
-                        # RSS 날짜 포맷 파싱
                         pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                         pub_date_kst = pub_date + timedelta(hours=9)
                         
-                        # 범위 확인 (전일 12:00 ~ 금일 06:00)
                         if not (start_target <= pub_date_kst <= end_target):
                             is_valid = False
                     except:
-                        # 날짜 파싱 실패 시, Fallback을 위해 일단 포함
                         is_valid = True
                 
                 if is_valid:
@@ -200,10 +196,9 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False):
     return []
 
 # ==========================================
-# 3. AI 모델 자동 탐색 및 생성
+# 3. AI 리포트 생성 및 후처리 (링크 변환)
 # ==========================================
 def get_available_models(api_key):
-    """현재 API Key로 사용 가능한 모델 리스트 조회"""
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
     try:
         res = requests.get(url, timeout=10)
@@ -213,14 +208,33 @@ def get_available_models(api_key):
     except: pass
     return []
 
+# [핵심] 리포트의 [1], [2]를 하이퍼링크로 변환하는 함수
+def inject_links_to_report(report_text, news_data):
+    """
+    AI가 생성한 텍스트의 [1], [2]... 를 찾아서
+    [[1]](URL), [[2]](URL)... 형태로 변환하여 Markdown 링크로 만듦
+    """
+    def replace_match(match):
+        try:
+            idx_str = match.group(1)
+            idx = int(idx_str) - 1
+            if 0 <= idx < len(news_data):
+                link = news_data[idx]['Link']
+                # Streamlit Markdown에서 링크는 [텍스트](URL)
+                return f"[[{idx_str}]]({link})"
+        except: pass
+        return match.group(0)
+
+    # 정규식: 대괄호 안의 숫자 찾기 (예: [1], [12])
+    # 단, 이미 링크가 걸린 [[1]] 형태는 피하기 위해 단순 [숫자]만 타겟팅
+    return re.sub(r'\[(\d+)\]', replace_match, report_text)
+
 def generate_report_with_citations(api_key, news_data):
-    """논문형 주석(Citation) 생성을 위한 프롬프트 적용"""
     models = get_available_models(api_key)
-    
     if not models:
         models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
     
-    # 뉴스 데이터를 번호와 함께 전달
+    # 뉴스 컨텍스트 생성
     news_context = ""
     for i, item in enumerate(news_data):
         news_context += f"{i+1}. {item['Title']}\n"
@@ -229,10 +243,10 @@ def generate_report_with_citations(api_key, news_data):
     당신은 반도체 산업 수석 애널리스트입니다.
     아래 제공된 뉴스 목록을 바탕으로 [일일 반도체 산업 브리핑]을 작성하세요.
     
-    **[중요한 작성 규칙]**
-    1. 내용을 서술할 때, 근거가 되는 뉴스의 번호를 **[1]**, **[2]**와 같이 문장 끝에 반드시 주석으로 다세요.
-    2. 예시: "삼성전자가 새로운 칩을 발표했다 [1]. 이는 시장에 큰 영향을 줄 것이다 [3]."
-    3. 리포트 하단에 별도의 'Reference' 섹션을 만들지 마세요. (제가 시스템적으로 붙일 겁니다.)
+    **[중요: 인용 규칙]**
+    1. 내용을 서술할 때, 근거가 되는 뉴스의 번호를 **[1]**, **[2]**와 같이 문장 끝에 반드시 다세요.
+    2. 예시: "삼성전자가 HBM4 개발을 가속화한다 [1]. 이에 따라 장비 수주가 예상된다 [3]."
+    3. **절대로** 리포트 내에 링크(URL)를 직접 쓰지 마세요. 번호만 쓰면 시스템이 연결합니다.
     4. 한국어로 작성하세요.
     
     [뉴스 데이터]
@@ -240,13 +254,13 @@ def generate_report_with_citations(api_key, news_data):
     
     [작성 양식 (Markdown)]
     ## 📊 Executive Summary
-    (핵심 요약)
+    (핵심 흐름 요약)
     
     ## 🚨 Key Headlines
-    (주요 이슈 및 심층 분석, 주석 필수)
+    (주요 이슈 심층 분석, 인용 번호 필수)
     
-    ## 📉 Market Insight
-    (시장 전망, 주석 필수)
+    ## 📉 Market & Supply Chain Insight
+    (시장 전망, 인용 번호 필수)
     """
     
     headers = {'Content-Type': 'application/json'}
@@ -270,13 +284,17 @@ def generate_report_with_citations(api_key, news_data):
             if response.status_code == 200:
                 res_json = response.json()
                 if 'candidates' in res_json and res_json['candidates']:
-                    return True, res_json['candidates'][0]['content']['parts'][0]['text']
+                    raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
+                    
+                    # [후처리] 텍스트 내의 [1]을 하이퍼링크로 변환
+                    linked_text = inject_links_to_report(raw_text, news_data)
+                    return True, linked_text
             elif response.status_code == 429:
                 time.sleep(1) 
                 continue
         except: continue
             
-    return False, "AI 분석에 실패했습니다. (서버 과부하 또는 사용량 초과)"
+    return False, "AI 분석 실패 (모든 모델 응답 없음)"
 
 # ==========================================
 # 4. 메인 앱 UI
@@ -350,11 +368,10 @@ if selected_category == "Daily Report":
                     save_keywords(st.session_state.keywords)
                     st.rerun()
     
-    # 2. 리포트 생성 로직
+    # 2. 리포트 로직
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
-    # 생성 버튼 (리포트가 없거나 재생성 원할 때)
     if not today_report:
         st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
@@ -364,16 +381,17 @@ if selected_category == "Daily Report":
             status_box.write(f"📡 뉴스 수집 중 (전일 12:00 ~ 금일 06:00)...")
             news_items = fetch_news(daily_kws, days=2, strict_time=True)
             
+            # Fallback (너무 엄격해서 0건이면 24시간으로 확장)
             if not news_items:
                 status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
                 time.sleep(1)
-                news_items = fetch_news(daily_kws, days=1, strict_time=False) # Fallback
+                news_items = fetch_news(daily_kws, days=1, strict_time=False)
             
             if not news_items:
                 status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
             else:
                 # 분석
-                status_box.write(f"🧠 AI 분석 중... (기사 {len(news_items)}건)")
+                status_box.write(f"🧠 AI 분석 및 요약 중... (기사 {len(news_items)}건)")
                 success, result = generate_report_with_citations(api_key, news_items)
                 
                 if success:
@@ -384,7 +402,6 @@ if selected_category == "Daily Report":
                 else:
                     status_box.update(label="⚠️ AI 분석 실패", state="error")
                     st.error(result)
-    
     else:
         st.success(f"✅ {target_date} 리포트가 완료되었습니다.")
         if st.button("🔄 리포트 다시 만들기 (덮어쓰기)"):
@@ -398,24 +415,26 @@ if selected_category == "Daily Report":
                     status_box.update(label="🎉 재생성 완료!", state="complete")
                     st.rerun()
 
-    # 3. 히스토리 출력 (누적 & 주석 링크)
+    # 3. 히스토리 출력 (누적)
     if history:
         for entry in history:
             st.divider()
             st.markdown(f"<div class='history-header'>📅 {entry['date']} Daily Report</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
             
-            # [요청사항] 논문형 주석 링크 (References)
-            st.markdown("#### 📚 References (기사 원문)")
-            ref_cols = st.columns(2) # 2단으로 깔끔하게 표시
-            for i, item in enumerate(entry.get('articles', [])):
-                col = ref_cols[i % 2]
-                with col:
-                    st.markdown(f"""
-                    <a href="{item['Link']}" target="_blank" class="ref-link">
-                        <span class="ref-number">[{i+1}]</span> {item['Title']}
-                    </a>
-                    """, unsafe_allow_html=True)
+            # Reference Links
+            with st.expander(f"📚 References (기사 원문) - {len(entry.get('articles', []))}건"):
+                st.markdown("#### 기사 원문 링크")
+                ref_cols = st.columns(2)
+                for i, item in enumerate(entry.get('articles', [])):
+                    col = ref_cols[i % 2]
+                    with col:
+                        # 클릭 가능한 링크 스타일
+                        st.markdown(f"""
+                        <a href="{item['Link']}" target="_blank" class="ref-link">
+                            <span class="ref-number">[{i+1}]</span> {item['Title']}
+                        </a>
+                        """, unsafe_allow_html=True)
 
 # ----------------------------------
 # [Mode 2] General Category
