@@ -13,7 +13,7 @@ import random
 import yfinance as yf
 
 # ==========================================
-# 0. 페이지 설정
+# 0. 페이지 설정 및 스타일
 # ==========================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -24,6 +24,7 @@ st.markdown("""
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
         html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
         .report-box { background-color: #FFFFFF; padding: 40px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; }
+        .history-header { font-size: 1.2em; font-weight: 700; color: #475569; margin-top: 50px; margin-bottom: 20px; border-left: 5px solid #CBD5E1; padding-left: 10px; }
         .status-log { font-family: monospace; font-size: 0.85em; color: #334155; background: #F1F5F9; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #3B82F6; }
         .error-raw { font-family: monospace; font-size: 0.85em; color: #DC2626; background: #FEF2F2; padding: 10px; border: 1px solid #FECACA; border-radius: 6px; margin-top: 10px; white-space: pre-wrap; word-break: break-all; }
         
@@ -48,10 +49,15 @@ DAILY_DEFAULT_KEYWORDS = [
 ]
 
 STOCK_CATEGORIES = {
-    "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU"},
-    "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO"},
-    "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX"},
-    "🧪 Materials": {"Soulbrain": "357780.KS", "Dongjin": "005290.KS", "Merck": "MRK.DE"}
+    "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"},
+    "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q"},
+    "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Hanmi": "042700.KS", "Jusung": "036930.KS"},
+    "🧪 Materials": {
+        "Shin-Etsu": "4063.T", "Sumitomo": "4005.T", "TOK": "4186.T", "Nissan Chem": "4021.T", 
+        "Merck": "MRK.DE", "Air Liquide": "AI.PA", "Linde": "LIN", 
+        "Soulbrain": "357780.KS", "Dongjin": "005290.KS", "ENF": "102710.KS", "Ycchem": "232140.KS"
+    },
+    "🔋 Others": {"Samsung SDI": "006400.KS"}
 }
 
 # ==========================================
@@ -74,8 +80,8 @@ def get_stock_prices_grouped():
                     prev = hist['Close'].iloc[-2]
                     change = current - prev
                     pct_change = (change / prev) * 100
-                    currency = "₩" if ".KS" in symbol else ("€" if ".DE" in symbol else "$")
-                    result_map[symbol] = {"Price": f"{currency}{current:,.0f}" if currency == "₩" else f"{currency}{current:,.2f}", "Delta": f"{change:,.2f} ({pct_change:+.2f}%)"}
+                    currency = "₩" if ".KS" in symbol else ("¥" if ".T" in symbol else ("HK$" if ".HK" in symbol else ("€" if ".DE" in symbol or ".PA" in symbol else "$")))
+                    result_map[symbol] = {"Price": f"{currency}{current:,.0f}" if currency in ["₩", "¥"] else f"{currency}{current:,.2f}", "Delta": f"{change:,.2f} ({pct_change:+.2f}%)"}
             except: pass
     except: pass
     return result_map
@@ -126,38 +132,22 @@ def clean_text(text):
     return text
 
 # ==========================================
-# 2. AI 호출 (REST API - v1 정식 버전 사용)
+# 2. AI 호출 (REST API - v1 정식 & 2.0 모델 사용)
 # ==========================================
-def check_available_models(api_key):
-    """현재 키로 사용 가능한 모델 리스트를 조회"""
-    url = f"https://generativelanguage.googleapis.com/v1/models?key={api_key}"
-    try:
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            models = [m['name'].replace('models/', '') for m in data.get('models', []) if 'generateContent' in m.get('supportedGenerationMethods', [])]
-            return models
-        else:
-            return [f"Error checking models: {response.status_code} {response.text}"]
-    except Exception as e:
-        return [f"Connection failed: {e}"]
-
 def generate_content_rest_api_debug(api_key, prompt):
-    # [핵심 변경] v1beta -> v1 (정식 버전) 사용
-    # 모델명도 구체적으로 지정하여 404 방지
+    # [수정 완료] 사용자 API Key가 지원하는 모델 리스트로 업데이트
     models_to_try = [
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-flash", 
-        "gemini-1.5-pro-latest",
-        "gemini-1.5-pro",
-        "gemini-1.0-pro"
+        "gemini-2.0-flash",      # 1순위: 빠르고 안정적
+        "gemini-2.5-flash",      # 2순위: 최신
+        "gemini-2.0-flash-lite", # 3순위: 경량
+        "gemini-2.5-pro",        # 4순위: 고성능
     ]
     
     last_error = ""
     
     for model in models_to_try:
-        # [핵심] API 버전 v1 사용
-        url = f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}"
+        # [핵심] API 버전 v1beta 사용 (최신 모델은 보통 beta에 먼저 배포됨)
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         headers = {'Content-Type': 'application/json'}
         data = {
             "contents": [{"parts": [{"text": prompt}]}],
@@ -175,10 +165,11 @@ def generate_content_rest_api_debug(api_key, prompt):
             if response.status_code == 200:
                 result = response.json()
                 if 'candidates' in result and result['candidates']:
+                    # 성공 시 바로 반환
                     return True, result['candidates'][0]['content']['parts'][0]['text']
             elif response.status_code == 404:
-                # 모델이 없으면 다음 모델 시도
-                last_error += f"\n[Model {model}]: 404 Not Found (Try Next)"
+                # 404는 해당 모델이 없다는 뜻이므로 다음 모델 시도
+                last_error += f"\n[Model {model}]: 404 Not Found (Skipping)"
                 continue
             else:
                 last_error += f"\n[Model {model}]: HTTP {response.status_code} - {response.text[:200]}"
@@ -186,12 +177,8 @@ def generate_content_rest_api_debug(api_key, prompt):
         except Exception as e:
             last_error += f"\n[Model {model}]: {str(e)}"
             continue
-    
-    # 모든 시도 실패 시, 사용 가능한 모델 리스트를 조회해서 보여줌 (진단용)
-    available_models = check_available_models(api_key)
-    debug_info = f"\n\n--- Diagnostic Info ---\nYour API Key can access: {', '.join(available_models)}"
-    
-    return False, last_error + debug_info
+            
+    return False, last_error
 
 # ==========================================
 # 3. 크롤링 및 리포트 로직
@@ -255,12 +242,12 @@ def generate_daily_report_process(target_date, keywords, api_key):
         if len(filtered) == 0:
             fallback_items = parse_and_filter_news(items, kw, end_dt - timedelta(hours=24), end_dt + timedelta(hours=24))
             if fallback_items:
-                logs.append(f"⚠️ {kw}: 0건 -> 범위확장: {len(fallback_items)}건")
+                logs.append(f"⚠️ [{kw}] 0건 -> 범위확장: {len(fallback_items)}건")
                 all_news.extend(fallback_items)
             else:
-                logs.append(f"❌ {kw}: 기사 없음")
+                logs.append(f"❌ [{kw}] 기사 없음")
         else:
-            logs.append(f"✅ {kw}: {len(filtered)}건 수집")
+            logs.append(f"✅ [{kw}] {len(filtered)}건 수집")
             all_news.extend(filtered)
             
         log_html = "<br>".join([f"<div class='status-log'>{l}</div>" for l in logs[-4:]])
@@ -276,7 +263,7 @@ def generate_daily_report_process(target_date, keywords, api_key):
     df = df.drop_duplicates(subset=['Title']).sort_values(by='Date', ascending=False)
     final_articles = df.head(15).to_dict('records') # 15개로 제한
     
-    status_box.write(f"🧠 총 {len(final_articles)}건의 기사 분석 중... (API 연결)")
+    status_box.write(f"🧠 총 {len(final_articles)}건의 기사를 AI가 분석 중입니다... (Gemini 2.0)")
     
     # 3. 리포트 작성
     context = ""
@@ -285,13 +272,17 @@ def generate_daily_report_process(target_date, keywords, api_key):
         context += f"News {i+1}: {item['Title']}\nSummary: {item['Snippet']}\n\n"
         
     prompt = f"""
-    당신은 반도체 애널리스트입니다. 아래 뉴스를 바탕으로 [일일 브리핑]을 한국어로 작성하세요.
+    당신은 한국 반도체 산업 전문 애널리스트입니다. 
+    아래 뉴스 데이터를 바탕으로 [일일 반도체 산업 브리핑]을 작성하세요.
+    한국어로 작성하고, 인사이트 위주로 요약하세요.
     
-    ## 1. 핵심 요약 (3줄)
-    ## 2. 주요 이슈 분석
-    ## 3. 시장 동향
+    [리포트 포맷]
+    ## 📊 Executive Summary (3줄 요약)
+    ## 🚨 Top Headlines (핵심 이슈 3가지)
+    ## 📉 Market & Supply Chain (시장/공급망 동향)
+    ## 💡 Analyst Insight (종합 의견)
 
-    [데이터]
+    [뉴스 데이터]
     {context}
     """
     
@@ -308,11 +299,11 @@ def generate_daily_report_process(target_date, keywords, api_key):
         return True, save_data
     else:
         status_box.update(label="⚠️ AI 리포트 생성 실패 (아래 로그 확인)", state="error")
-        st.markdown(f"**[상세 에러 로그]**\n<div class='error-raw'>{result_text}</div>", unsafe_allow_html=True)
+        st.markdown(f"**[구글 서버 에러 메시지]**\n<div class='error-raw'>{result_text}</div>", unsafe_allow_html=True)
         
         save_data = {
             'date': target_date.strftime('%Y-%m-%d'),
-            'report': f"⚠️ **AI 분석 실패**\n\n시스템이 다음 이유로 리포트를 생성하지 못했습니다:\n\n```\n{result_text}\n```",
+            'report': f"⚠️ **AI 분석 실패**\n\n아래 에러 메시지를 확인하세요.\n\n```\n{result_text}\n```",
             'articles': final_articles
         }
         save_daily_history(save_data)
@@ -357,7 +348,7 @@ def perform_crawling_general(category, api_key):
         st.session_state.news_data[category] = []
 
 # ==========================================
-# 4. UI Layout
+# 4. 앱 초기화 및 UI
 # ==========================================
 if 'keywords' not in st.session_state: st.session_state.keywords = load_keywords()
 if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] for cat in CATEGORIES}
@@ -378,7 +369,7 @@ with st.sidebar:
             
     if st.button("🤖 AI 연결 확인", type="secondary", use_container_width=True):
         ok, msg = generate_content_rest_api_debug(api_key, "Hi")
-        if ok: st.success(f"연결 성공! ({msg})")
+        if ok: st.success(f"연결 성공! ({msg[:50]}...)")
         else: 
             st.error("연결 실패")
             st.markdown(f"<div class='error-raw'>{msg}</div>", unsafe_allow_html=True)
