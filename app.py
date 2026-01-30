@@ -25,7 +25,33 @@ st.markdown("""
         html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
         
         /* 리포트 스타일 */
-        .report-box { background-color: #FFFFFF; padding: 40px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; }
+        .report-box { 
+            background-color: #FFFFFF; 
+            padding: 50px; 
+            border-radius: 12px; 
+            border: 1px solid #E2E8F0; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
+            margin-bottom: 30px; 
+            line-height: 1.8; 
+            color: #334155; 
+            font-size: 16px;
+        }
+        .report-box h2 {
+            color: #1E3A8A;
+            border-bottom: 2px solid #3B82F6;
+            padding-bottom: 10px;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .report-box h3 {
+            color: #475569;
+            font-size: 20px;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+        
         .history-header { font-size: 1.2em; font-weight: 700; color: #475569; margin-top: 50px; margin-bottom: 20px; border-left: 5px solid #3B82F6; padding-left: 10px; }
         
         /* 뉴스 카드 스타일 */
@@ -41,9 +67,9 @@ st.markdown("""
         .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
         
         /* 레퍼런스 링크 스타일 */
-        .ref-link { font-size: 0.9em; color: #666; text-decoration: none; display: block; margin-bottom: 4px; }
-        .ref-link:hover { color: #3B82F6; text-decoration: underline; }
-        .ref-number { font-weight: bold; color: #3B82F6; margin-right: 5px; }
+        .ref-link { font-size: 0.9em; color: #555; text-decoration: none; display: block; margin-bottom: 6px; padding: 5px; border-radius: 4px; transition: background 0.2s; }
+        .ref-link:hover { background-color: #F1F5F9; color: #2563EB; }
+        .ref-number { font-weight: bold; color: #3B82F6; margin-right: 8px; background: #DBEAFE; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -75,7 +101,7 @@ STOCK_CATEGORIES = {
 }
 
 # ==========================================
-# 1. 데이터 관리 (키워드, 히스토리, 주식)
+# 1. 데이터 관리
 # ==========================================
 KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
@@ -132,7 +158,6 @@ def load_daily_history():
 
 def save_daily_history(new_report_data):
     history = load_daily_history()
-    # 날짜 중복 시 덮어쓰기 (항상 최신 날짜가 맨 위로 오도록)
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data)
     try:
@@ -146,16 +171,12 @@ def save_daily_history(new_report_data):
 def fetch_news(keywords, days=1, limit=20, strict_time=False):
     all_items = []
     
-    # 시간 필터링 기준 설정 (KST)
+    # 시간 필터링 기준 (KST)
     now_kst = datetime.utcnow() + timedelta(hours=9)
-    
-    # 기준: 오늘 06:00
     end_target = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
-    # 현재 시간이 06:00 이전이면 기준을 '어제 06:00'로 잡아야 함
     if now_kst.hour < 6:
         end_target -= timedelta(days=1)
-        
-    start_target = end_target - timedelta(hours=18) # 전일 12:00
+    start_target = end_target - timedelta(hours=18)
     
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
@@ -166,18 +187,14 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False):
             
             for item in items:
                 is_valid = True
-                
-                # [엄격 모드 시간 체크]
                 if strict_time:
                     try:
                         pub_date_str = item.pubDate.text
                         pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                         pub_date_kst = pub_date + timedelta(hours=9)
-                        
                         if not (start_target <= pub_date_kst <= end_target):
                             is_valid = False
-                    except:
-                        is_valid = True
+                    except: is_valid = True
                 
                 if is_valid:
                     all_items.append({
@@ -196,7 +213,7 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False):
     return []
 
 # ==========================================
-# 3. AI 리포트 생성 및 후처리 (링크 변환)
+# 3. AI 리포트 생성 (고급 프롬프트 + 링크 주입)
 # ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
@@ -208,25 +225,17 @@ def get_available_models(api_key):
     except: pass
     return []
 
-# [핵심] 리포트의 [1], [2]를 하이퍼링크로 변환하는 함수
 def inject_links_to_report(report_text, news_data):
-    """
-    AI가 생성한 텍스트의 [1], [2]... 를 찾아서
-    [[1]](URL), [[2]](URL)... 형태로 변환하여 Markdown 링크로 만듦
-    """
+    """[1] -> [[1]](URL) 변환"""
     def replace_match(match):
         try:
             idx_str = match.group(1)
             idx = int(idx_str) - 1
             if 0 <= idx < len(news_data):
                 link = news_data[idx]['Link']
-                # Streamlit Markdown에서 링크는 [텍스트](URL)
                 return f"[[{idx_str}]]({link})"
         except: pass
         return match.group(0)
-
-    # 정규식: 대괄호 안의 숫자 찾기 (예: [1], [12])
-    # 단, 이미 링크가 걸린 [[1]] 형태는 피하기 위해 단순 [숫자]만 타겟팅
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_with_citations(api_key, news_data):
@@ -234,33 +243,40 @@ def generate_report_with_citations(api_key, news_data):
     if not models:
         models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
     
-    # 뉴스 컨텍스트 생성
+    # Context에 Source 정보 포함 (AI가 출처를 인지하게 함)
     news_context = ""
     for i, item in enumerate(news_data):
-        news_context += f"{i+1}. {item['Title']}\n"
+        news_context += f"[{i+1}] {item['Title']} (Source: {item['Source']})\n"
 
+    # [프롬프트 대폭 강화] - 심층 분석 유도
     prompt = f"""
-    당신은 반도체 산업 수석 애널리스트입니다.
-    아래 제공된 뉴스 목록을 바탕으로 [일일 반도체 산업 브리핑]을 작성하세요.
-    
-    **[중요: 인용 규칙]**
-    1. 내용을 서술할 때, 근거가 되는 뉴스의 번호를 **[1]**, **[2]**와 같이 문장 끝에 반드시 다세요.
-    2. 예시: "삼성전자가 HBM4 개발을 가속화한다 [1]. 이에 따라 장비 수주가 예상된다 [3]."
-    3. **절대로** 리포트 내에 링크(URL)를 직접 쓰지 마세요. 번호만 쓰면 시스템이 연결합니다.
-    4. 한국어로 작성하세요.
-    
+    당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
+    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
+
+    **[작성 원칙 - 매우 중요]**
+    1. **단순 요약 금지**: 뉴스 제목을 단순히 나열하거나 번역하지 마세요. 뉴스의 **배경, 원인, 향후 시장에 미칠 파급력**을 분석하여 서술하세요.
+    2. **인사이트 도출**: 여러 기사 간의 연관성을 찾아내어 트렌드를 설명하세요. (예: A사의 투자 확대가 B사의 장비 수주에 미치는 영향 등)
+    3. **근거 명시**: 모든 주장이나 사실 언급 시 반드시 제공된 뉴스 번호 **[1], [2]**를 문장 끝에 인용하세요.
+    4. **전문적 어조**: 투자자나 업계 경영진이 읽는 보고서 톤으로 작성하세요.
+
     [뉴스 데이터]
     {news_context}
     
-    [작성 양식 (Markdown)]
-    ## 📊 Executive Summary
-    (핵심 흐름 요약)
-    
-    ## 🚨 Key Headlines
-    (주요 이슈 심층 분석, 인용 번호 필수)
-    
-    ## 📉 Market & Supply Chain Insight
-    (시장 전망, 인용 번호 필수)
+    [보고서 구조 (Markdown)]
+    ## 📊 Executive Summary (시장 총평)
+    - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화를 3~4문장으로 압축하여 서술.
+
+    ## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
+    - 가장 중요한 이슈 2~3가지를 선정하여 별도 소제목으로 나누어 분석.
+    - 현상(What) -> 원인(Why) -> 전망(Outlook) 순으로 논리적으로 전개.
+    - 반드시 인용 번호[n]를 포함할 것.
+
+    ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
+    - 소부장(소재/부품/장비), 파운드리, 메모리 등 섹터별 주요 단신을 종합하여 서술.
+    - 특정 기업의 동향이 전체 공급망에 미치는 영향 분석.
+
+    ## 💡 Analyst's View (투자 아이디어)
+    - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
     """
     
     headers = {'Content-Type': 'application/json'}
@@ -279,14 +295,12 @@ def generate_report_with_citations(api_key, news_data):
         
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         try:
-            response = requests.post(url, headers=headers, json=data, timeout=40)
+            response = requests.post(url, headers=headers, json=data, timeout=60) # 타임아웃 60초로 늘림 (심층 분석 시간 확보)
             
             if response.status_code == 200:
                 res_json = response.json()
                 if 'candidates' in res_json and res_json['candidates']:
                     raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
-                    
-                    # [후처리] 텍스트 내의 [1]을 하이퍼링크로 변환
                     linked_text = inject_links_to_report(raw_text, news_data)
                     return True, linked_text
             elif response.status_code == 429:
@@ -301,7 +315,6 @@ def generate_report_with_citations(api_key, news_data):
 # ==========================================
 if 'keywords' not in st.session_state: st.session_state.keywords = load_keywords()
 
-# [사이드바]
 with st.sidebar:
     st.header("Semi-Insight")
     st.divider()
@@ -315,7 +328,6 @@ with st.sidebar:
         else: api_key = FALLBACK_API_KEY
     
     st.markdown("---")
-    # [주식 정보 표시]
     with st.expander("📉 Global Stock", expanded=True):
         stock_data = get_stock_prices_grouped()
         if stock_data:
@@ -329,7 +341,6 @@ with st.sidebar:
                         c2.metric("", info['Price'], info['Delta'], label_visibility="collapsed")
                         st.markdown("<hr style='margin: 2px 0; border-top: 1px dashed #f1f5f9;'>", unsafe_allow_html=True)
 
-# [메인 화면]
 c_head, c_info = st.columns([3, 1])
 with c_head: st.title(selected_category)
 
@@ -337,7 +348,6 @@ with c_head: st.title(selected_category)
 # [Mode 1] Daily Report
 # ----------------------------------
 if selected_category == "Daily Report":
-    # 06시 기준 날짜 계산
     now_kst = datetime.utcnow() + timedelta(hours=9)
     if now_kst.hour < 6:
         target_date = (now_kst - timedelta(days=1)).date()
@@ -348,7 +358,6 @@ if selected_category == "Daily Report":
     with c_info:
         st.markdown(f"<div style='text-align:right; color:#888;'>Report Date<br><b>{target_date}</b></div>", unsafe_allow_html=True)
 
-    # 1. 키워드 설정
     with st.container(border=True):
         c1, c2 = st.columns([3, 1])
         new_kw = c1.text_input("수집 키워드 추가", placeholder="예: HBM, 패키징", label_visibility="collapsed")
@@ -368,7 +377,6 @@ if selected_category == "Daily Report":
                     save_keywords(st.session_state.keywords)
                     st.rerun()
     
-    # 2. 리포트 로직
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
@@ -377,11 +385,9 @@ if selected_category == "Daily Report":
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
             status_box = st.status("🚀 리포트 생성 프로세스...", expanded=True)
             
-            # 수집 (Strict Mode)
             status_box.write(f"📡 뉴스 수집 중 (전일 12:00 ~ 금일 06:00)...")
             news_items = fetch_news(daily_kws, days=2, strict_time=True)
             
-            # Fallback (너무 엄격해서 0건이면 24시간으로 확장)
             if not news_items:
                 status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
                 time.sleep(1)
@@ -390,8 +396,7 @@ if selected_category == "Daily Report":
             if not news_items:
                 status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
             else:
-                # 분석
-                status_box.write(f"🧠 AI 분석 및 요약 중... (기사 {len(news_items)}건)")
+                status_box.write(f"🧠 AI 심층 분석 중... (기사 {len(news_items)}건) - 시간이 조금 걸릴 수 있습니다.")
                 success, result = generate_report_with_citations(api_key, news_items)
                 
                 if success:
@@ -406,7 +411,7 @@ if selected_category == "Daily Report":
         st.success(f"✅ {target_date} 리포트가 완료되었습니다.")
         if st.button("🔄 리포트 다시 만들기 (덮어쓰기)"):
             status_box = st.status("🚀 리포트 재생성 중...", expanded=True)
-            news_items = fetch_news(daily_kws, days=1, strict_time=False) # 재생성은 넉넉하게
+            news_items = fetch_news(daily_kws, days=1, strict_time=False)
             if news_items:
                 success, result = generate_report_with_citations(api_key, news_items)
                 if success:
@@ -415,21 +420,18 @@ if selected_category == "Daily Report":
                     status_box.update(label="🎉 재생성 완료!", state="complete")
                     st.rerun()
 
-    # 3. 히스토리 출력 (누적)
     if history:
         for entry in history:
             st.divider()
             st.markdown(f"<div class='history-header'>📅 {entry['date']} Daily Report</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
             
-            # Reference Links
             with st.expander(f"📚 References (기사 원문) - {len(entry.get('articles', []))}건"):
                 st.markdown("#### 기사 원문 링크")
                 ref_cols = st.columns(2)
                 for i, item in enumerate(entry.get('articles', [])):
                     col = ref_cols[i % 2]
                     with col:
-                        # 클릭 가능한 링크 스타일
                         st.markdown(f"""
                         <a href="{item['Link']}" target="_blank" class="ref-link">
                             <span class="ref-number">[{i+1}]</span> {item['Title']}
