@@ -25,17 +25,15 @@ def log(message, level="info"):
     st.session_state.debug_logs.append((level, f"[{timestamp}] {message}"))
 
 # ==========================================
-# 2. 핵심: 모델 자동 우회 호출 함수
+# 2. 핵심: 모델 자동 우회 호출 함수 (이름 수정됨)
 # ==========================================
 def try_generate_content(api_key, prompt):
-    # 시도할 모델 순서 (무료 할당량이 넉넉한 순서로 배치)
-    # 1.5-flash-8b는 가장 가볍고 할당량이 많음 -> 성공 확률 최고
+    # [수정] 구글이 현재 제공하는 정확한 모델명 리스트
     models_chain = [
-        "gemini-1.5-flash-8b", 
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
-        "gemini-1.0-pro",
-        "gemini-2.0-flash-exp" # 이건 할당량이 적으므로 마지막에
+        "gemini-2.0-flash",                  # 1순위 (사용자 키 호환 확인됨)
+        "gemini-2.0-flash-lite-preview-02-05", # 2순위 (최신 경량, 할당량 여유 예상)
+        "gemini-1.5-flash",                  # 3순위 (표준)
+        "gemini-1.5-pro"                     # 4순위
     ]
     
     headers = {'Content-Type': 'application/json'}
@@ -51,6 +49,7 @@ def try_generate_content(api_key, prompt):
 
     for model in models_chain:
         log(f"🔄 모델 시도 중: {model}...", "info")
+        # [중요] v1beta 엔드포인트 사용
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         
         try:
@@ -69,7 +68,8 @@ def try_generate_content(api_key, prompt):
             # 실패 분석
             elif response.status_code == 429:
                 log(f"⛔ {model}: 용량 초과 (Quota Exceeded). 다음 모델로 전환합니다.", "warning")
-                continue # 다음 모델 시도
+                time.sleep(1) # 1초 대기 후 시도
+                continue 
             
             elif response.status_code == 404:
                 log(f"🚫 {model}: 모델을 찾을 수 없음 (404). 다음 모델로 전환합니다.", "warning")
@@ -101,10 +101,10 @@ def run_full_process(api_key):
     try:
         res = requests.get(url, timeout=5, verify=False)
         soup = BeautifulSoup(res.content, 'xml')
-        items = soup.find_all('item')[:5] # 5개만 (토큰 절약)
+        items = soup.find_all('item')[:5] # 5개만
         
         if not items:
-            log("❌ 수집된 뉴스가 없습니다. 검색어/기간 확인 필요.", "error")
+            log("❌ 수집된 뉴스가 없습니다.", "error")
             return
             
         for item in items:
@@ -117,7 +117,7 @@ def run_full_process(api_key):
         return
 
     # 2. AI 리포트 생성
-    log("🧠 [2단계] AI 분석 시작 (자동 모델 우회 적용)...", "info")
+    log("🧠 [2단계] AI 분석 시작...", "info")
     
     prompt = f"""
     당신은 반도체 시장 전문가입니다. 
@@ -145,6 +145,7 @@ def run_full_process(api_key):
 # ==========================================
 with st.sidebar:
     st.header("🛠️ Final Debugger")
+    # API 키 기본값 설정
     user_key = st.text_input("API Key", value="AIzaSyCBSqIQBIYQbWtfQAxZ7D5mwCKFx-7VDJo", type="password")
     
     if st.button("🚨 진단 및 리포트 강제 실행", type="primary"):
@@ -152,7 +153,7 @@ with st.sidebar:
 
 st.title("💠 Semi-Insight Hub (Recovery Mode)")
 
-st.info("왼쪽 사이드바의 **[🚨 진단 및 리포트 강제 실행]** 버튼을 누르세요.\n시스템이 자동으로 사용 가능한 AI 모델을 찾아 리포트를 생성합니다.")
+st.info("왼쪽 사이드바의 **[🚨 진단 및 리포트 강제 실행]** 버튼을 누르세요.")
 
 # 로그 출력
 if st.session_state.debug_logs:
