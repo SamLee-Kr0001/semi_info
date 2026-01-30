@@ -15,9 +15,22 @@ import yfinance as yf
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==========================================
-# 0. 페이지 설정 및 스타일
+# 0. 페이지 설정 및 초기화 (오류 방지 핵심)
 # ==========================================
 st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
+
+# [핵심 수정] AttributeError 방지를 위한 세션 상태 최상단 초기화
+CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
+
+if 'news_data' not in st.session_state:
+    st.session_state.news_data = {cat: [] for cat in CATEGORIES}
+
+if 'keywords' not in st.session_state:
+    # 키워드 로드 로직은 뒤에 함수로 정의되지만, 초기값은 여기서 잡습니다.
+    st.session_state.keywords = {cat: [] for cat in CATEGORIES}
+
+if 'daily_history' not in st.session_state:
+    st.session_state.daily_history = []
 
 st.markdown("""
     <style>
@@ -25,34 +38,8 @@ st.markdown("""
         html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
         
         /* 리포트 스타일 */
-        .report-box { 
-            background-color: #FFFFFF; 
-            padding: 50px; 
-            border-radius: 12px; 
-            border: 1px solid #E2E8F0; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
-            margin-bottom: 30px; 
-            line-height: 1.8; 
-            color: #334155; 
-            font-size: 16px;
-        }
-        .report-box h2 {
-            color: #1E3A8A;
-            border-bottom: 2px solid #3B82F6;
-            padding-bottom: 10px;
-            margin-top: 30px;
-            margin-bottom: 20px;
-            font-size: 24px;
-            font-weight: 700;
-        }
-        .report-box h3 {
-            color: #475569;
-            font-size: 20px;
-            font-weight: 600;
-            margin-top: 20px;
-        }
-        
-        .history-header { font-size: 1.2em; font-weight: 700; color: #475569; margin-top: 50px; margin-bottom: 20px; border-left: 5px solid #3B82F6; padding-left: 10px; }
+        .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
+        .report-box h2 { color: #1E3A8A; border-bottom: 2px solid #3B82F6; padding-bottom: 10px; margin-top: 30px; margin-bottom: 20px; font-size: 24px; font-weight: 700; }
         
         /* 뉴스 카드 스타일 */
         .news-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 10px; }
@@ -75,7 +62,6 @@ st.markdown("""
 
 # 기본값 설정
 FALLBACK_API_KEY = "AIzaSyCBSqIQBIYQbWtfQAxZ7D5mwCKFx-7VDJo"
-CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {
@@ -101,7 +87,7 @@ STOCK_CATEGORIES = {
 }
 
 # ==========================================
-# 1. 데이터 관리
+# 1. 데이터 관리 함수
 # ==========================================
 KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
@@ -166,7 +152,7 @@ def save_daily_history(new_report_data):
     except: pass
 
 # ==========================================
-# 2. 뉴스 수집 (시간 필터링 적용)
+# 2. 뉴스 수집 함수
 # ==========================================
 def fetch_news(keywords, days=1, limit=20, strict_time=False):
     all_items = []
@@ -213,7 +199,7 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False):
     return []
 
 # ==========================================
-# 3. AI 리포트 생성 (고급 프롬프트 + 링크 주입)
+# 3. AI 리포트 생성 (프롬프트 수정됨)
 # ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
@@ -243,37 +229,35 @@ def generate_report_with_citations(api_key, news_data):
     if not models:
         models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
     
-    # Context에 Source 정보 포함 (AI가 출처를 인지하게 함)
+    # Context에 Source 정보 포함
     news_context = ""
     for i, item in enumerate(news_data):
         news_context += f"[{i+1}] {item['Title']} (Source: {item['Source']})\n"
 
-    # [프롬프트 대폭 강화] - 심층 분석 유도
+    # [수정] 프롬프트: 서술형(Narrative) 지시 강화
     prompt = f"""
     당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
     제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
 
     **[작성 원칙 - 매우 중요]**
-    1. **단순 요약 금지**: 뉴스 제목을 단순히 나열하거나 번역하지 마세요. 뉴스의 **배경, 원인, 향후 시장에 미칠 파급력**을 분석하여 서술하세요.
-    2. **인사이트 도출**: 여러 기사 간의 연관성을 찾아내어 트렌드를 설명하세요. (예: A사의 투자 확대가 B사의 장비 수주에 미치는 영향 등)
+    1. **단순 요약 금지**: 뉴스 제목을 단순히 나열하거나 번역하지 마세요.
+    2. **서술형 작성**: 이슈별로 현상/원인/전망을 개조식(Bullet points)으로 나누지 말고, **하나의 자연스러운 논리적 흐름을 가진 줄글(Narrative Paragraph)**로 서술하세요. 전문적인 문체를 사용하세요.
     3. **근거 명시**: 모든 주장이나 사실 언급 시 반드시 제공된 뉴스 번호 **[1], [2]**를 문장 끝에 인용하세요.
-    4. **전문적 어조**: 투자자나 업계 경영진이 읽는 보고서 톤으로 작성하세요.
 
     [뉴스 데이터]
     {news_context}
     
     [보고서 구조 (Markdown)]
     ## 📊 Executive Summary (시장 총평)
-    - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화를 3~4문장으로 압축하여 서술.
+    - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화를 3~4문장으로 요약. (기존 유지)
 
     ## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
-    - 가장 중요한 이슈 2~3가지를 선정하여 별도 소제목으로 나누어 분석.
-    - 현상(What) -> 원인(Why) -> 전망(Outlook) 순으로 논리적으로 전개.
+    - 가장 중요한 이슈 2~3가지를 선정하여 소제목을 달고 분석하세요.
+    - **중요**: 현상, 원인, 전망을 구분하여 나열하지 말고, **깊이 있는 서술형 문단**으로 작성하세요. 사건의 배경부터 파급 효과까지 매끄럽게 연결되도록 하세요.
     - 반드시 인용 번호[n]를 포함할 것.
 
     ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
-    - 소부장(소재/부품/장비), 파운드리, 메모리 등 섹터별 주요 단신을 종합하여 서술.
-    - 특정 기업의 동향이 전체 공급망에 미치는 영향 분석.
+    - 소부장, 파운드리, 메모리 등 섹터별 주요 단신을 종합하여 서술.
 
     ## 💡 Analyst's View (투자 아이디어)
     - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
@@ -295,7 +279,7 @@ def generate_report_with_citations(api_key, news_data):
         
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         try:
-            response = requests.post(url, headers=headers, json=data, timeout=60) # 타임아웃 60초로 늘림 (심층 분석 시간 확보)
+            response = requests.post(url, headers=headers, json=data, timeout=60)
             
             if response.status_code == 200:
                 res_json = response.json()
@@ -313,7 +297,9 @@ def generate_report_with_citations(api_key, news_data):
 # ==========================================
 # 4. 메인 앱 UI
 # ==========================================
+# [수정] 키워드 초기화 로직도 최상단으로 이동했지만, 안전을 위해 여기서 한 번 더 체크
 if 'keywords' not in st.session_state: st.session_state.keywords = load_keywords()
+# 이미 상단에서 news_data를 초기화했으므로 AttributorError는 해결됨
 
 with st.sidebar:
     st.header("Semi-Insight")
@@ -348,6 +334,9 @@ with c_head: st.title(selected_category)
 # [Mode 1] Daily Report
 # ----------------------------------
 if selected_category == "Daily Report":
+    # [수정] 문구 추가
+    st.info("ℹ️ 매일 오전 6시 기준 반도체 소재관련 정보 Report 입니다.")
+
     now_kst = datetime.utcnow() + timedelta(hours=9)
     if now_kst.hour < 6:
         target_date = (now_kst - timedelta(days=1)).date()
@@ -367,6 +356,7 @@ if selected_category == "Daily Report":
                 save_keywords(st.session_state.keywords)
                 st.rerun()
         
+        # [수정] 키워드 심플 디스플레이 & 경고 문구
         daily_kws = st.session_state.keywords["Daily Report"]
         if daily_kws:
             st.write("")
@@ -376,6 +366,8 @@ if selected_category == "Daily Report":
                     st.session_state.keywords["Daily Report"].remove(kw)
                     save_keywords(st.session_state.keywords)
                     st.rerun()
+        
+        st.caption("⚠️ 관심 키워드를 추가하면 해당 주제로 보고서에 반영됩니다. 단 키워드가 늘어나면 시스템 오류발생 가능성이 높습니다. 왼쪽 각 sector 별 Keyword 검색을 활용해주세요")
     
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
@@ -396,7 +388,7 @@ if selected_category == "Daily Report":
             if not news_items:
                 status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
             else:
-                status_box.write(f"🧠 AI 심층 분석 중... (기사 {len(news_items)}건) - 시간이 조금 걸릴 수 있습니다.")
+                status_box.write(f"🧠 AI 심층 분석 중... (기사 {len(news_items)}건)")
                 success, result = generate_report_with_citations(api_key, news_items)
                 
                 if success:
@@ -467,6 +459,7 @@ else:
                     save_keywords(st.session_state.keywords)
                     st.rerun()
 
+    # [수정] AttributeError가 발생했던 부분 (이제 안전함)
     data = st.session_state.news_data.get(selected_category, [])
     if data:
         st.write(f"총 {len(data)}건 수집됨")
