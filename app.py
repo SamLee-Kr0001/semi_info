@@ -13,7 +13,7 @@ import random
 import yfinance as yf
 
 # ==========================================
-# 0. 페이지 설정 및 스타일
+# 0. 페이지 설정
 # ==========================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -23,28 +23,18 @@ st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
         html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
-        
         .report-box { background-color: #FFFFFF; padding: 40px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; }
-        .history-header { font-size: 1.2em; font-weight: 700; color: #475569; margin-top: 50px; margin-bottom: 20px; border-left: 5px solid #CBD5E1; padding-left: 10px; }
-        
-        /* 로그 스타일 */
         .status-log { font-family: monospace; font-size: 0.85em; color: #334155; background: #F1F5F9; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #3B82F6; }
-        .error-raw { font-family: monospace; font-size: 0.9em; color: #DC2626; background: #FEF2F2; padding: 15px; border: 1px solid #FECACA; border-radius: 6px; margin-top: 15px; white-space: pre-wrap; font-weight: bold; }
+        .error-raw { font-family: monospace; font-size: 0.85em; color: #DC2626; background: #FEF2F2; padding: 10px; border: 1px solid #FECACA; border-radius: 6px; margin-top: 10px; white-space: pre-wrap; word-break: break-all; }
         
-        /* 뉴스 스타일 */
-        .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
-        .news-title:hover { color: #2563EB !important; text-decoration: underline; }
-        .news-snippet { font-size: 13.5px !important; color: #475569 !important; line-height: 1.5; margin-bottom: 10px; }
-        .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
-
-        /* 사이드바 주식 폰트 강제 고정 */
         section[data-testid="stSidebar"] div[data-testid="stMetricValue"] { font-size: 18px !important; font-weight: 600 !important; }
         section[data-testid="stSidebar"] div[data-testid="stMetricDelta"] { font-size: 12px !important; }
         section[data-testid="stSidebar"] div[data-testid="stMetricLabel"] { font-size: 12px !important; color: #64748B !important; }
+        .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; }
     </style>
 """, unsafe_allow_html=True)
 
-# 사용자 제공 API Key (Fallback)
+# 사용자 제공 API Key
 FALLBACK_API_KEY = "AIzaSyCBSqIQBIYQbWtfQAxZ7D5mwCKFx-7VDJo"
 
 CATEGORIES = [
@@ -84,8 +74,8 @@ def get_stock_prices_grouped():
                     prev = hist['Close'].iloc[-2]
                     change = current - prev
                     pct_change = (change / prev) * 100
-                    currency = "₩" if ".KS" in symbol else ("¥" if ".T" in symbol else ("HK$" if ".HK" in symbol else ("€" if ".DE" in symbol or ".PA" in symbol else "$")))
-                    result_map[symbol] = {"Price": f"{currency}{current:,.0f}" if currency in ["₩", "¥"] else f"{currency}{current:,.2f}", "Delta": f"{change:,.2f} ({pct_change:+.2f}%)"}
+                    currency = "₩" if ".KS" in symbol else ("€" if ".DE" in symbol else "$")
+                    result_map[symbol] = {"Price": f"{currency}{current:,.0f}" if currency == "₩" else f"{currency}{current:,.2f}", "Delta": f"{change:,.2f} ({pct_change:+.2f}%)"}
             except: pass
     except: pass
     return result_map
@@ -132,19 +122,42 @@ def save_daily_history(new_report_data):
 def clean_text(text):
     if not text: return ""
     text = re.sub(r'<[^>]+>', '', text)
-    text = re.sub(r'[^\w\s\.,%]', ' ', text)
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
 # ==========================================
-# 2. AI 호출 (REST API - 상세 디버깅)
+# 2. AI 호출 (REST API - v1 정식 버전 사용)
 # ==========================================
+def check_available_models(api_key):
+    """현재 키로 사용 가능한 모델 리스트를 조회"""
+    url = f"https://generativelanguage.googleapis.com/v1/models?key={api_key}"
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            models = [m['name'].replace('models/', '') for m in data.get('models', []) if 'generateContent' in m.get('supportedGenerationMethods', [])]
+            return models
+        else:
+            return [f"Error checking models: {response.status_code} {response.text}"]
+    except Exception as e:
+        return [f"Connection failed: {e}"]
+
 def generate_content_rest_api_debug(api_key, prompt):
-    models = ["gemini-1.5-flash", "gemini-pro"] # 사용 가능한 모델 목록
+    # [핵심 변경] v1beta -> v1 (정식 버전) 사용
+    # 모델명도 구체적으로 지정하여 404 방지
+    models_to_try = [
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-flash", 
+        "gemini-1.5-pro-latest",
+        "gemini-1.5-pro",
+        "gemini-1.0-pro"
+    ]
+    
     last_error = ""
     
-    for model in models:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    for model in models_to_try:
+        # [핵심] API 버전 v1 사용
+        url = f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}"
         headers = {'Content-Type': 'application/json'}
         data = {
             "contents": [{"parts": [{"text": prompt}]}],
@@ -163,20 +176,25 @@ def generate_content_rest_api_debug(api_key, prompt):
                 result = response.json()
                 if 'candidates' in result and result['candidates']:
                     return True, result['candidates'][0]['content']['parts'][0]['text']
-                else:
-                    # 응답은 왔으나 내용이 없는 경우 (주로 안전 필터)
-                    last_error = f"Model {model} Blocked. Response: {json.dumps(result)}"
+            elif response.status_code == 404:
+                # 모델이 없으면 다음 모델 시도
+                last_error += f"\n[Model {model}]: 404 Not Found (Try Next)"
+                continue
             else:
-                last_error += f"\n[Model: {model}] HTTP {response.status_code}: {response.text[:300]}"
+                last_error += f"\n[Model {model}]: HTTP {response.status_code} - {response.text[:200]}"
                 
         except Exception as e:
-            last_error += f"\n[Model: {model}] Exception: {str(e)}"
+            last_error += f"\n[Model {model}]: {str(e)}"
             continue
-            
-    return False, last_error
+    
+    # 모든 시도 실패 시, 사용 가능한 모델 리스트를 조회해서 보여줌 (진단용)
+    available_models = check_available_models(api_key)
+    debug_info = f"\n\n--- Diagnostic Info ---\nYour API Key can access: {', '.join(available_models)}"
+    
+    return False, last_error + debug_info
 
 # ==========================================
-# 3. 크롤링 및 프로세스
+# 3. 크롤링 및 리포트 로직
 # ==========================================
 def fetch_rss_feed(keyword, days_back=2):
     url = f"https://news.google.com/rss/search?q={quote(keyword)}+when:{days_back}d&hl=ko&gl=KR&ceid=KR:ko"
@@ -237,12 +255,12 @@ def generate_daily_report_process(target_date, keywords, api_key):
         if len(filtered) == 0:
             fallback_items = parse_and_filter_news(items, kw, end_dt - timedelta(hours=24), end_dt + timedelta(hours=24))
             if fallback_items:
-                logs.append(f"⚠️ [{kw}] 0건 -> 범위확장: {len(fallback_items)}건")
+                logs.append(f"⚠️ {kw}: 0건 -> 범위확장: {len(fallback_items)}건")
                 all_news.extend(fallback_items)
             else:
-                logs.append(f"❌ [{kw}] 기사 없음")
+                logs.append(f"❌ {kw}: 기사 없음")
         else:
-            logs.append(f"✅ [{kw}] {len(filtered)}건 수집")
+            logs.append(f"✅ {kw}: {len(filtered)}건 수집")
             all_news.extend(filtered)
             
         log_html = "<br>".join([f"<div class='status-log'>{l}</div>" for l in logs[-4:]])
@@ -256,9 +274,9 @@ def generate_daily_report_process(target_date, keywords, api_key):
     # 2. 전처리
     df = pd.DataFrame(all_news)
     df = df.drop_duplicates(subset=['Title']).sort_values(by='Date', ascending=False)
-    final_articles = df.head(15).to_dict('records') # 15개로 제한 (안정성)
+    final_articles = df.head(15).to_dict('records') # 15개로 제한
     
-    status_box.write(f"🧠 총 {len(final_articles)}건의 기사를 AI가 분석 중입니다...")
+    status_box.write(f"🧠 총 {len(final_articles)}건의 기사 분석 중... (API 연결)")
     
     # 3. 리포트 작성
     context = ""
@@ -289,18 +307,16 @@ def generate_daily_report_process(target_date, keywords, api_key):
         save_daily_history(save_data)
         return True, save_data
     else:
-        # [핵심] 실패 시 에러를 화면에 띄우고 Rerun 하지 않음
-        status_box.update(label="⚠️ AI 리포트 생성 실패 (상세 로그 확인)", state="error")
-        st.markdown(f"**[구글 서버 에러 메시지]**\n<div class='error-raw'>{result_text}</div>", unsafe_allow_html=True)
+        status_box.update(label="⚠️ AI 리포트 생성 실패 (아래 로그 확인)", state="error")
+        st.markdown(f"**[상세 에러 로그]**\n<div class='error-raw'>{result_text}</div>", unsafe_allow_html=True)
         
-        # 기사 목록이라도 저장
         save_data = {
             'date': target_date.strftime('%Y-%m-%d'),
-            'report': f"⚠️ **AI 분석 실패**\n\n아래 에러 메시지를 확인하세요.\n\n```\n{result_text}\n```",
+            'report': f"⚠️ **AI 분석 실패**\n\n시스템이 다음 이유로 리포트를 생성하지 못했습니다:\n\n```\n{result_text}\n```",
             'articles': final_articles
         }
         save_daily_history(save_data)
-        return False, save_data # 실패 시그널 반환
+        return False, save_data
 
 def perform_crawling_general(category, api_key):
     kws = st.session_state.keywords.get(category, [])
@@ -341,7 +357,7 @@ def perform_crawling_general(category, api_key):
         st.session_state.news_data[category] = []
 
 # ==========================================
-# 4. 앱 초기화 및 UI
+# 4. UI Layout
 # ==========================================
 if 'keywords' not in st.session_state: st.session_state.keywords = load_keywords()
 if 'news_data' not in st.session_state: st.session_state.news_data = {cat: [] for cat in CATEGORIES}
@@ -358,13 +374,14 @@ with st.sidebar:
         if not api_key and "GEMINI_API_KEY" in st.secrets:
             api_key = st.secrets["GEMINI_API_KEY"]
             st.caption("Loaded")
-        if not api_key: api_key = FALLBACK_API_KEY # Fallback 적용
+        if not api_key: api_key = FALLBACK_API_KEY
             
-    # [연결 테스트]
     if st.button("🤖 AI 연결 확인", type="secondary", use_container_width=True):
         ok, msg = generate_content_rest_api_debug(api_key, "Hi")
-        if ok: st.success("연결 성공! (REST API)")
-        else: st.error(f"연결 실패\n{msg}")
+        if ok: st.success(f"연결 성공! ({msg})")
+        else: 
+            st.error("연결 실패")
+            st.markdown(f"<div class='error-raw'>{msg}</div>", unsafe_allow_html=True)
 
     st.markdown("---")
     with st.expander("📉 Global Stock", expanded=True):
@@ -419,13 +436,13 @@ if selected_category == "Daily Report":
         st.success(f"✅ {target_date} 리포트가 이미 발행되었습니다.")
         if st.button("🔄 리포트 다시 생성하기"):
              is_success, _ = generate_daily_report_process(target_date, daily_kws, api_key)
-             if is_success: st.rerun() # 성공 시에만 리로드
+             if is_success: st.rerun()
     else:
         st.info(f"📢 {target_date} 리포트가 없습니다.")
         if api_key:
             if st.button("🚀 리포트 생성 시작 (전일 12:00 ~ 금일 06:00)", type="primary"):
                 is_success, _ = generate_daily_report_process(target_date, daily_kws, api_key)
-                if is_success: st.rerun() # 성공 시에만 리로드
+                if is_success: st.rerun()
         else:
             st.error("API Key가 필요합니다.")
 
