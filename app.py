@@ -10,19 +10,23 @@ import os
 import re
 import time
 import yfinance as yf
+import traceback
 
 # SSL 경고 무시
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==========================================
-# 0. 페이지 설정 및 초기화
+# 0. 페이지 설정
 # ==========================================
-st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
+st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Debug)", page_icon="🔧")
 
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
 if 'news_data' not in st.session_state:
     st.session_state.news_data = {cat: [] for cat in CATEGORIES}
+
+if 'daily_history' not in st.session_state:
+    st.session_state.daily_history = []
 
 st.markdown("""
     <style>
@@ -32,11 +36,10 @@ st.markdown("""
         .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
         .report-box h2 { color: #1E3A8A; border-bottom: 2px solid #3B82F6; padding-bottom: 10px; margin-top: 30px; margin-bottom: 20px; font-size: 24px; font-weight: 700; }
         
-        .news-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 10px; }
-        .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
-        .news-title:hover { color: #2563EB !important; text-decoration: underline; }
-        .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
-
+        /* 디버그 로그 스타일 */
+        .debug-log { font-family: monospace; font-size: 12px; background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 4px solid #333; }
+        .error-log { font-family: monospace; font-size: 13px; background: #FFEEEE; color: #CC0000; padding: 15px; border-radius: 5px; border: 1px solid #FF0000; margin-top: 10px; white-space: pre-wrap; }
+        
         section[data-testid="stSidebar"] div[data-testid="stMetricValue"] { font-size: 18px !important; font-weight: 600 !important; }
         section[data-testid="stSidebar"] div[data-testid="stMetricDelta"] { font-size: 12px !important; }
         section[data-testid="stSidebar"] div[data-testid="stMetricLabel"] { font-size: 12px !important; color: #64748B !important; }
@@ -128,13 +131,12 @@ def get_stock_prices_grouped():
 # ==========================================
 # 2. 뉴스 수집 (진단 모드)
 # ==========================================
-def fetch_news_strict_window(keywords, target_date, status_container=None):
+def fetch_news_strict_window(keywords, target_date, debug_container):
     all_items = []
     end_dt = datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6)
     start_dt = end_dt - timedelta(hours=18)
     
-    if status_container:
-        status_container.write(f"🕒 타겟 시간: {start_dt.strftime('%m/%d 12:00')} ~ {end_dt.strftime('%m/%d 06:00')}")
+    debug_container.markdown(f"<div class='debug-log'>🕒 Time Filter: {start_dt} ~ {end_dt} (KST)</div>", unsafe_allow_html=True)
     
     total_found = 0
     for kw in keywords:
@@ -161,21 +163,20 @@ def fetch_news_strict_window(keywords, target_date, status_container=None):
                         })
                 except: continue
         except Exception as e:
-            if status_container: status_container.error(f"⚠️ '{kw}' 검색 실패: {e}")
+            debug_container.error(f"Crawling Error ({kw}): {e}")
             continue
         time.sleep(0.1)
     
-    if status_container:
-        status_container.write(f"🔎 검색된 총 기사: {total_found}건 -> 시간 필터링 후: {len(all_items)}건")
+    debug_container.markdown(f"<div class='debug-log'>🔎 Fetched {total_found} items -> Filtered {len(all_items)} valid items.</div>", unsafe_allow_html=True)
 
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.sort_values(by='Timestamp', ascending=False)
         df = df.drop_duplicates(subset=['Title'])
-        return df.head(25).to_dict('records')
+        return df.head(15).to_dict('records') # 15개 제한
     return []
 
-def fetch_news_general(keywords, limit=20):
+def fetch_news_general(keywords, limit=15):
     all_items = []
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:1d&hl=ko&gl=KR&ceid=KR:ko"
@@ -198,18 +199,8 @@ def fetch_news_general(keywords, limit=20):
     return []
 
 # ==========================================
-# 3. AI 분석 (에러 디버깅 강화)
+# 3. AI 분석 (슈퍼 디버깅 모드)
 # ==========================================
-def get_available_models(api_key):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
-    try:
-        res = requests.get(url, timeout=10)
-        if res.status_code == 200:
-            data = res.json()
-            return [m['name'].replace("models/", "") for m in data.get('models', []) if 'generateContent' in m.get('supportedGenerationMethods', [])]
-    except: pass
-    return []
-
 def inject_links_to_report(report_text, news_data):
     def replace_match(match):
         try:
@@ -221,14 +212,14 @@ def inject_links_to_report(report_text, news_data):
         return match.group(0)
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
-def generate_report(api_key, news_data):
+def generate_report_debug(api_key, news_data, debug_container):
     """
-    [수정] 에러 발생 시 단순 False가 아니라 상세 에러 로그를 반환함
+    상세 에러 로그를 화면에 직접 출력하는 디버그용 함수
     """
-    models = get_available_models(api_key)
-    if not models:
-        models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    # 1. 모델 설정
+    models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
     
+    # 2. 프롬프트 준비
     news_context = ""
     for i, item in enumerate(news_data):
         news_context += f"[{i+1}] {item['Title']} (Source: {item['Source']})\n"
@@ -263,33 +254,36 @@ def generate_report(api_key, news_data):
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
 
-    error_logs = [] # 에러 수집용
-
+    # 3. 모델 순회 시도
     for model in models:
-        if "vision" in model: continue
+        debug_container.markdown(f"<div class='debug-log'>🔄 Trying Model: {model}...</div>", unsafe_allow_html=True)
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             response = requests.post(url, headers=headers, json=data, timeout=60)
             
             if response.status_code == 200:
                 res_json = response.json()
                 if 'candidates' in res_json and res_json['candidates']:
                     raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
-                    linked_text = inject_links_to_report(raw_text, news_data)
-                    return True, linked_text
+                    debug_container.success(f"✅ Success with {model}")
+                    return True, inject_links_to_report(raw_text, news_data)
                 else:
-                    error_logs.append(f"[{model}] 200 OK but blocked: {res_json}")
+                    debug_container.warning(f"⚠️ {model} Blocked (Safety?): {res_json}")
             else:
-                error_logs.append(f"[{model}] HTTP {response.status_code}: {response.text[:200]}")
+                # 에러 발생 시 상세 로그 출력
+                error_msg = f"❌ {model} Failed: {response.status_code}\n{response.text}"
+                debug_container.markdown(f"<div class='error-log'>{error_msg}</div>", unsafe_allow_html=True)
+                
                 if response.status_code == 429:
-                    time.sleep(1)
+                    debug_container.info("⏳ Quota Exceeded. Waiting 2s...")
+                    time.sleep(2)
                     continue
         except Exception as e:
-            error_logs.append(f"[{model}] Exception: {str(e)}")
+            debug_container.error(f"💥 Exception with {model}: {str(e)}")
             continue
             
-    # 모든 모델 실패 시 상세 로그 반환
-    return False, "\n".join(error_logs)
+    return False, "All models failed. Check the logs above."
 
 # ==========================================
 # 4. 메인 UI
@@ -366,52 +360,52 @@ if selected_category == "Daily Report":
     if not today_report:
         st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
-            status_box = st.status("🚀 리포트 생성 프로세스 (진단 모드)...", expanded=True)
+            # 디버그용 컨테이너 생성 (실시간 로그 출력)
+            debug_box = st.container(border=True)
+            debug_box.write("🛠️ **Processing Log**")
             
             # 1. 수집
-            status_box.write("📡 뉴스 수집 중...")
-            news_items = fetch_news_strict_window(daily_kws, target_date, status_box)
+            news_items = fetch_news_strict_window(daily_kws, target_date, debug_box)
             
             # 2. Fallback
             if not news_items:
-                status_box.error("❌ 지정된 시간 범위(전일 12시~당일 06시) 내 뉴스가 없습니다.")
-                time.sleep(1)
-                status_box.write("🔄 [Fallback] 최근 24시간 뉴스로 범위를 확장하여 재시도합니다...")
+                debug_box.warning("⚠️ 지정 시간 내 기사 없음 -> 범위 확장(24h) 시도...")
                 news_items = fetch_news_general(daily_kws, limit=15)
+                debug_box.write(f"🔄 Fallback 수집 결과: {len(news_items)}건")
             
             # 3. AI 분석
             if not news_items:
-                status_box.update(label="❌ 최종 수집 실패: 관련 뉴스가 전혀 없습니다.", state="error")
+                debug_box.error("❌ 최종 기사 수집 실패. (검색어 확인 필요)")
             else:
-                status_box.write(f"🧠 AI 심층 분석 중... (기사 {len(news_items)}건)")
-                success, result = generate_report(api_key, news_items)
+                debug_box.write(f"🧠 AI 분석 시작... (입력 기사: {len(news_items)}건)")
+                success, result = generate_report_debug(api_key, news_items, debug_box)
                 
                 if success:
                     save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
                     save_daily_history(save_data)
-                    status_box.update(label="🎉 리포트 생성 완료!", state="complete")
+                    debug_box.success("🎉 생성 완료! 페이지를 새로고침 합니다.")
+                    time.sleep(2)
                     st.rerun()
                 else:
-                    status_box.update(label="⚠️ AI 분석 실패", state="error")
-                    st.error(f"원인 (Error Logs):\n{result}") # 에러 로그 직접 출력
-                    st.code(result, language="json")
+                    debug_box.error("🚨 최종 실패. 위의 에러 로그를 확인하세요.")
+                    # 실패 시 st.rerun() 하지 않음 -> 에러 로그 유지
     else:
         st.success(f"✅ {target_date} 리포트가 완료되었습니다.")
         if st.button("🔄 리포트 다시 만들기 (덮어쓰기)"):
-            status_box = st.status("🚀 리포트 재생성 중...", expanded=True)
-            news_items = fetch_news_strict_window(daily_kws, target_date, status_box)
-            if not news_items:
-                 news_items = fetch_news_general(daily_kws, limit=15)
+            debug_box = st.container(border=True)
+            debug_box.write("🛠️ **Re-Generation Log**")
+            
+            news_items = fetch_news_strict_window(daily_kws, target_date, debug_box)
+            if not news_items: news_items = fetch_news_general(daily_kws, limit=15)
             
             if news_items:
-                success, result = generate_report(api_key, news_items)
+                success, result = generate_report_debug(api_key, news_items, debug_box)
                 if success:
                     save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
                     save_daily_history(save_data)
-                    status_box.update(label="🎉 재생성 완료!", state="complete")
                     st.rerun()
             else:
-                status_box.error("수집된 뉴스가 없습니다.")
+                st.error("기사 없음")
 
     if history:
         for entry in history:
@@ -420,7 +414,6 @@ if selected_category == "Daily Report":
             st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
             
             with st.expander(f"📚 References (기사 원문) - {len(entry.get('articles', []))}건"):
-                st.markdown("#### 기사 원문 링크")
                 ref_cols = st.columns(2)
                 for i, item in enumerate(entry.get('articles', [])):
                     col = ref_cols[i % 2]
