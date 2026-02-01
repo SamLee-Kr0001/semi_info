@@ -63,25 +63,19 @@ KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
 
 # ==========================================
-# 1. 데이터 관리 (문법 오류 수정됨)
+# 1. 데이터 관리
 # ==========================================
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
-    
-    # 1순위: 저장된 파일 읽기
     if os.path.exists(KEYWORD_FILE):
         try:
             with open(KEYWORD_FILE, 'r', encoding='utf-8') as f:
                 loaded = json.load(f)
             for k, v in loaded.items():
-                if k in data: 
-                    data[k] = v
+                if k in data: data[k] = v
         except: pass
-    
-    # 2순위: 기본값
     if not data.get("Daily Report"): 
         data["Daily Report"] = ["반도체", "삼성전자", "SK하이닉스"] 
-        
     return data
 
 def save_keywords(data):
@@ -131,19 +125,19 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집
+# 2. 뉴스 수집 (Daily용 / General용 분리)
 # ==========================================
+
+# (1) Daily Report용 엄격한 수집 (전일 12:00 ~ 당일 06:00)
 def fetch_news_strict_window(keywords, target_date, limit=20):
     all_items = []
     
-    # KST 기준 시간 설정
-    end_dt = datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6) # 당일 06:00
-    start_dt = end_dt - timedelta(hours=18) # 전일 12:00
-    
-    search_days = 2 
+    end_dt = datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6)
+    start_dt = end_dt - timedelta(hours=18)
     
     for kw in keywords:
-        url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{search_days}d&hl=ko&gl=KR&ceid=KR:ko"
+        # 구글 검색은 days 단위이므로 2일치 가져와서 내부 필터링
+        url = f"https://news.google.com/rss/search?q={quote(kw)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
         try:
             res = requests.get(url, timeout=5, verify=False)
             soup = BeautifulSoup(res.content, 'xml')
@@ -152,6 +146,7 @@ def fetch_news_strict_window(keywords, target_date, limit=20):
             for item in items:
                 try:
                     pub_date_str = item.pubDate.text
+                    # RSS 날짜 형식: Tue, 04 Feb 2025 15:30:00 GMT
                     pub_date_gmt = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                     pub_date_kst = pub_date_gmt + timedelta(hours=9)
                     
@@ -170,6 +165,31 @@ def fetch_news_strict_window(keywords, target_date, limit=20):
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.sort_values(by='Timestamp', ascending=False)
+        df = df.drop_duplicates(subset=['Title'])
+        return df.head(limit).to_dict('records')
+    return []
+
+# (2) General Category용 단순 수집 (최근 2일)
+def fetch_news_general(keywords, limit=20):
+    all_items = []
+    for kw in keywords:
+        url = f"https://news.google.com/rss/search?q={quote(kw)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
+        try:
+            res = requests.get(url, timeout=5, verify=False)
+            soup = BeautifulSoup(res.content, 'xml')
+            items = soup.find_all('item')
+            for item in items:
+                all_items.append({
+                    'Title': item.title.text,
+                    'Link': item.link.text,
+                    'Date': item.pubDate.text,
+                    'Source': item.source.text if item.source else "Google News"
+                })
+        except: pass
+        time.sleep(0.1)
+        
+    df = pd.DataFrame(all_items)
+    if not df.empty:
         df = df.drop_duplicates(subset=['Title'])
         return df.head(limit).to_dict('records')
     return []
@@ -285,10 +305,15 @@ with st.sidebar:
 c_head, c_info = st.columns([3, 1])
 with c_head: st.title(selected_category)
 
+# ----------------------------------
+# [Mode 1] Daily Report
+# ----------------------------------
 if selected_category == "Daily Report":
     st.info("ℹ️ 매일 오전 6시 기준 반도체 소재관련 정보 Report 입니다.")
 
     now_kst = datetime.utcnow() + timedelta(hours=9)
+    # 현재 시간이 06:00 이전이면 -> 어제 날짜 리포트가 최신
+    # 현재 시간이 06:00 이후면 -> 오늘 날짜 리포트가 최신
     if now_kst.hour < 6:
         target_date = (now_kst - timedelta(days=1)).date()
     else:
@@ -301,6 +326,8 @@ if selected_category == "Daily Report":
     with st.container(border=True):
         c1, c2 = st.columns([3, 1])
         new_kw = c1.text_input("수집 키워드 추가", placeholder="예: HBM, 패키징", label_visibility="collapsed")
+        
+        # [수정된 부분] 문법 오류 해결: if 문에 콜론 추가
         if c2.button("추가", use_container_width=True):
             if new_kw and new_kw not in st.session_state.keywords["Daily Report"]:
                 st.session_state.keywords["Daily Report"].append(new_kw)
@@ -381,8 +408,48 @@ if selected_category == "Daily Report":
                         </a>
                         """, unsafe_allow_html=True)
 
+# ----------------------------------
+# [Mode 2] General Category
+# ----------------------------------
 else:
     with st.container(border=True):
         c1, c2, c3 = st.columns([2, 1, 1])
         new_kw = c1.text_input("키워드", label_visibility="collapsed")
-        if c2
+        
+        # [수정된 부분] 문법 오류 해결: 콜론 추가
+        if c2.button("추가", use_container_width=True):
+            if new_kw:
+                st.session_state.keywords[selected_category].append(new_kw)
+                save_keywords(st.session_state.keywords)
+                st.rerun()
+        
+        if c3.button("실행", type="primary", use_container_width=True):
+            kws = st.session_state.keywords[selected_category]
+            if kws:
+                # 일반 카테고리용 단순 수집 함수 호출
+                news = fetch_news_general(kws)
+                st.session_state.news_data[selected_category] = news
+                st.rerun()
+
+        curr_kws = st.session_state.keywords[selected_category]
+        if curr_kws:
+            st.write("")
+            cols = st.columns(8)
+            for i, kw in enumerate(curr_kws):
+                if cols[i%8].button(f"{kw} ×", key=f"gdel_{kw}"):
+                    st.session_state.keywords[selected_category].remove(kw)
+                    save_keywords(st.session_state.keywords)
+                    st.rerun()
+
+    data = st.session_state.news_data.get(selected_category, [])
+    if data:
+        st.write(f"총 {len(data)}건 수집됨")
+        for item in data:
+            st.markdown(f"""
+            <div class="news-card">
+                <div class="news-meta">{item['Source']} | {item['Date']}</div>
+                <a href="{item['Link']}" target="_blank" class="news-title">{item['Title']}</a>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.info("상단의 '실행' 버튼을 눌러 뉴스를 수집하세요.")
