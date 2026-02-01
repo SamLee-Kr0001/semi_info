@@ -63,25 +63,24 @@ KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
 
 # ==========================================
-# 1. 데이터 관리 (키워드 로드 최우선)
+# 1. 데이터 관리 (문법 오류 수정됨)
 # ==========================================
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
     
-    # 1순위: 저장된 파일이 있으면 무조건 읽는다
+    # 1순위: 저장된 파일 읽기
     if os.path.exists(KEYWORD_FILE):
         try:
             with open(KEYWORD_FILE, 'r', encoding='utf-8') as f:
                 loaded = json.load(f)
-            # 카테고리별 병합
             for k, v in loaded.items():
                 if k in data: 
                     data[k] = v
         except: pass
     
-    # 2순위: 파일이 없거나 비어있을 때만 기본값 사용
+    # 2순위: 기본값
     if not data.get("Daily Report"): 
-        data["Daily Report"] = ["반도체", "삼성전자", "SK하이닉스"] # 기본값
+        data["Daily Report"] = ["반도체", "삼성전자", "SK하이닉스"] 
         
     return data
 
@@ -93,7 +92,9 @@ def save_keywords(data):
 
 def load_daily_history():
     if os.path.exists(HISTORY_FILE):
-        try: with open(HISTORY_FILE, 'r', encoding='utf-8') as f: return json.load(f)
+        try:
+            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
         except: return []
     return []
 
@@ -101,7 +102,9 @@ def save_daily_history(new_report_data):
     history = load_daily_history()
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data)
-    try: with open(HISTORY_FILE, 'w', encoding='utf-8') as f: json.dump(history, f, ensure_ascii=False, indent=4)
+    try:
+        with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
+            json.dump(history, f, ensure_ascii=False, indent=4)
     except: pass
 
 @st.cache_data(ttl=600)
@@ -128,23 +131,15 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (시간 필터링 핵심 수정)
+# 2. 뉴스 수집
 # ==========================================
 def fetch_news_strict_window(keywords, target_date, limit=20):
-    """
-    [핵심 수정]
-    target_date(리포트 발행일)를 기준으로
-    Start: 전일(D-1) 12:00:00
-    End:   당일(D)   06:00:00
-    이 구간 사이의 뉴스만 정확히 수집합니다.
-    """
     all_items = []
     
     # KST 기준 시간 설정
     end_dt = datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6) # 당일 06:00
-    start_dt = end_dt - timedelta(hours=18) # 전일 12:00 (18시간 전)
+    start_dt = end_dt - timedelta(hours=18) # 전일 12:00
     
-    # 구글 검색용 days (48시간 정도로 넉넉히 잡고 내부에서 거름)
     search_days = 2 
     
     for kw in keywords:
@@ -156,35 +151,31 @@ def fetch_news_strict_window(keywords, target_date, limit=20):
             
             for item in items:
                 try:
-                    # 날짜 파싱 (예: Tue, 04 Feb 2025 15:30:00 GMT)
                     pub_date_str = item.pubDate.text
                     pub_date_gmt = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                     pub_date_kst = pub_date_gmt + timedelta(hours=9)
                     
-                    # [시간 필터링]
                     if start_dt <= pub_date_kst <= end_dt:
                         all_items.append({
                             'Title': item.title.text,
                             'Link': item.link.text,
-                            'Date': pub_date_str, # 원본 문자열 저장
+                            'Date': pub_date_str,
                             'Source': item.source.text if item.source else "Google News",
-                            'Timestamp': pub_date_kst # 정렬용
+                            'Timestamp': pub_date_kst
                         })
-                except:
-                    continue # 날짜 파싱 에러나면 건너뜀
+                except: continue
         except: pass
         time.sleep(0.1)
         
     df = pd.DataFrame(all_items)
     if not df.empty:
-        # 최신순 정렬 후 중복 제거
         df = df.sort_values(by='Timestamp', ascending=False)
         df = df.drop_duplicates(subset=['Title'])
         return df.head(limit).to_dict('records')
     return []
 
 # ==========================================
-# 3. AI 분석 (자동 모델 탐색)
+# 3. AI 분석
 # ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
@@ -262,7 +253,6 @@ def generate_report(api_key, news_data):
 # ==========================================
 # 4. 메인 UI
 # ==========================================
-# [수정] 앱 시작 시 키워드 확실하게 로드
 if 'keywords' not in st.session_state: 
     st.session_state.keywords = load_keywords()
 
@@ -298,10 +288,7 @@ with c_head: st.title(selected_category)
 if selected_category == "Daily Report":
     st.info("ℹ️ 매일 오전 6시 기준 반도체 소재관련 정보 Report 입니다.")
 
-    # [날짜 계산]
     now_kst = datetime.utcnow() + timedelta(hours=9)
-    # 현재 시간이 06:00 이전이면 -> 어제 날짜 리포트가 최신
-    # 현재 시간이 06:00 이후면 -> 오늘 날짜 리포트가 최신
     if now_kst.hour < 6:
         target_date = (now_kst - timedelta(days=1)).date()
     else:
@@ -311,14 +298,13 @@ if selected_category == "Daily Report":
     with c_info:
         st.markdown(f"<div style='text-align:right; color:#888;'>Report Date<br><b>{target_date}</b></div>", unsafe_allow_html=True)
 
-    # [키워드 관리]
     with st.container(border=True):
         c1, c2 = st.columns([3, 1])
         new_kw = c1.text_input("수집 키워드 추가", placeholder="예: HBM, 패키징", label_visibility="collapsed")
         if c2.button("추가", use_container_width=True):
             if new_kw and new_kw not in st.session_state.keywords["Daily Report"]:
                 st.session_state.keywords["Daily Report"].append(new_kw)
-                save_keywords(st.session_state.keywords) # 즉시 파일 저장
+                save_keywords(st.session_state.keywords)
                 st.rerun()
         
         daily_kws = st.session_state.keywords["Daily Report"]
@@ -328,26 +314,23 @@ if selected_category == "Daily Report":
             for i, kw in enumerate(daily_kws):
                 if cols[i % 8].button(f"{kw} ×", key=f"del_{kw}"):
                     st.session_state.keywords["Daily Report"].remove(kw)
-                    save_keywords(st.session_state.keywords) # 즉시 파일 저장
+                    save_keywords(st.session_state.keywords)
                     st.rerun()
         st.caption("⚠️ 관심 키워드를 추가하면 해당 주제로 보고서에 반영됩니다. 단 키워드가 늘어나면 시스템 오류발생 가능성이 높습니다. 왼쪽 각 sector 별 Keyword 검색을 활용해주세요")
     
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
-    # [리포트 생성 로직]
     if not today_report:
         st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
             status_box = st.status("🚀 리포트 생성 프로세스...", expanded=True)
             
-            # [수집 범위 명시]
             start_str = (datetime.combine(target_date, datetime.min.time()) - timedelta(hours=18)).strftime('%m/%d 12:00')
             end_str = (datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6)).strftime('%m/%d 06:00')
             
             status_box.write(f"📡 뉴스 수집 중 ({start_str} ~ {end_str})...")
             
-            # [수정] strict_window 함수 사용
             news_items = fetch_news_strict_window(daily_kws, target_date)
             
             if not news_items:
@@ -399,62 +382,7 @@ if selected_category == "Daily Report":
                         """, unsafe_allow_html=True)
 
 else:
-    # 일반 카테고리 (단순 검색)
     with st.container(border=True):
         c1, c2, c3 = st.columns([2, 1, 1])
         new_kw = c1.text_input("키워드", label_visibility="collapsed")
-        if c2.button("추가", use_container_width=True):
-            if new_kw:
-                st.session_state.keywords[selected_category].append(new_kw)
-                save_keywords(st.session_state.keywords)
-                st.rerun()
-        if c3.button("실행", type="primary", use_container_width=True):
-            kws = st.session_state.keywords[selected_category]
-            if kws:
-                # 일반 검색은 시간 제한 없이 최근 1일치
-                news = []
-                for kw in kws:
-                    # 여기서는 기존 단순 로직 사용 (fetch_news_strict_window 대신 requests 직접 호출 등)
-                    # 편의상 위 함수를 재사용하되 days를 활용
-                    # (일반 탭은 엄격한 시간 제한 불필요시 별도 함수 분리 가능하나, 일단 일관성 유지)
-                     pass 
-                
-                # 일반 탭용 간단 수집기 (코드 복잡도 줄이기 위해 인라인)
-                all_items = []
-                for kw in kws:
-                    url = f"https://news.google.com/rss/search?q={quote(kw)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
-                    try:
-                        res = requests.get(url, timeout=5, verify=False)
-                        soup = BeautifulSoup(res.content, 'xml')
-                        for item in soup.find_all('item'):
-                            all_items.append({'Title': item.title.text, 'Link': item.link.text, 'Date': item.pubDate.text, 'Source': item.source.text if item.source else "Google"})
-                    except: pass
-                
-                df = pd.DataFrame(all_items)
-                if not df.empty:
-                    df = df.drop_duplicates(subset=['Title'])
-                    st.session_state.news_data[selected_category] = df.head(20).to_dict('records')
-                st.rerun()
-
-        curr_kws = st.session_state.keywords[selected_category]
-        if curr_kws:
-            st.write("")
-            cols = st.columns(8)
-            for i, kw in enumerate(curr_kws):
-                if cols[i%8].button(f"{kw} ×", key=f"gdel_{kw}"):
-                    st.session_state.keywords[selected_category].remove(kw)
-                    save_keywords(st.session_state.keywords)
-                    st.rerun()
-
-    data = st.session_state.news_data.get(selected_category, [])
-    if data:
-        st.write(f"총 {len(data)}건 수집됨")
-        for item in data:
-            st.markdown(f"""
-            <div class="news-card">
-                <div class="news-meta">{item['Source']} | {item['Date']}</div>
-                <a href="{item['Link']}" target="_blank" class="news-title">{item['Title']}</a>
-            </div>
-            """, unsafe_allow_html=True)
-    else:
-        st.info("상단의 '실행' 버튼을 눌러 뉴스를 수집하세요.")
+        if c2
