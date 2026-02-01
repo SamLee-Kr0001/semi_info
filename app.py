@@ -10,20 +10,23 @@ import os
 import re
 import time
 import yfinance as yf
+import traceback # 상세 에러 확인용
 
 # SSL 경고 무시
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==========================================
-# 0. 페이지 설정 및 스타일
+# 0. 페이지 설정 및 초기화
 # ==========================================
 st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
 
-# 세션 및 데이터 초기화
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
 if 'news_data' not in st.session_state:
     st.session_state.news_data = {cat: [] for cat in CATEGORIES}
+
+if 'daily_history' not in st.session_state:
+    st.session_state.daily_history = []
 
 st.markdown("""
     <style>
@@ -41,21 +44,24 @@ st.markdown("""
         section[data-testid="stSidebar"] div[data-testid="stMetricValue"] { font-size: 18px !important; font-weight: 600 !important; }
         section[data-testid="stSidebar"] div[data-testid="stMetricDelta"] { font-size: 12px !important; }
         section[data-testid="stSidebar"] div[data-testid="stMetricLabel"] { font-size: 12px !important; color: #64748B !important; }
-        .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
         
         .ref-link { font-size: 0.9em; color: #555; text-decoration: none; display: block; margin-bottom: 6px; padding: 5px; border-radius: 4px; transition: background 0.2s; }
         .ref-link:hover { background-color: #F1F5F9; color: #2563EB; }
         .ref-number { font-weight: bold; color: #3B82F6; margin-right: 8px; background: #DBEAFE; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
+        
+        /* 본문 내 위첨자 링크 스타일 */
+        sup a { text-decoration: none; color: #3B82F6; font-weight: bold; margin-left: 2px; font-size: 0.8em; }
+        sup a:hover { text-decoration: underline; color: #1D4ED8; }
     </style>
 """, unsafe_allow_html=True)
 
 FALLBACK_API_KEY = "AIzaSyCBSqIQBIYQbWtfQAxZ7D5mwCKFx-7VDJo"
 
 STOCK_CATEGORIES = {
-    "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"},
+    "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC"},
     "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q"},
-    "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Hanmi": "042700.KS", "Jusung": "036930.KS"},
-    "🧪 Materials": {"Shin-Etsu": "4063.T", "Sumitomo": "4005.T", "TOK": "4186.T", "Nissan Chem": "4021.T", "Merck": "MRK.DE", "Air Liquide": "AI.PA", "Linde": "LIN", "Soulbrain": "357780.KS", "Dongjin": "005290.KS", "ENF": "102710.KS", "Ycchem": "232140.KS"},
+    "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Hanmi": "042700.KS"},
+    "🧪 Materials": {"Shin-Etsu": "4063.T", "Sumitomo": "4005.T", "TOK": "4186.T", "Merck": "MRK.DE", "Soulbrain": "357780.KS", "Dongjin": "005290.KS", "ENF": "102710.KS", "Ycchem": "232140.KS"},
     "🔋 Others": {"Samsung SDI": "006400.KS"}
 }
 
@@ -63,7 +69,7 @@ KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
 
 # ==========================================
-# 1. 데이터 관리 (키워드/히스토리)
+# 1. 데이터 관리
 # ==========================================
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
@@ -74,8 +80,6 @@ def load_keywords():
             for k, v in loaded.items():
                 if k in data: data[k] = v
         except: pass
-    
-    # 기본값 (파일이 비었을 때만)
     if not data.get("Daily Report"): 
         data["Daily Report"] = ["반도체", "삼성전자", "SK하이닉스"] 
     return data
@@ -96,7 +100,7 @@ def load_daily_history():
 
 def save_daily_history(new_report_data):
     history = load_daily_history()
-    # 중복 날짜 제거 (덮어쓰기)
+    # 날짜 중복 시 덮어쓰기
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data)
     try:
@@ -120,7 +124,7 @@ def get_stock_prices_grouped():
                     prev = hist['Close'].iloc[-2]
                     change = current - prev
                     pct = (change / prev) * 100
-                    cur_sym = "₩" if ".KS" in symbol else ("¥" if ".T" in symbol else ("HK$" if ".HK" in symbol else ("€" if ".DE" in symbol or ".PA" in symbol else "$")))
+                    cur_sym = "₩" if ".KS" in symbol else ("¥" if ".T" in symbol else ("€" if ".DE" in symbol else "$"))
                     fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
                     result_map[symbol] = {"Price": fmt_price, "Delta": f"{change:,.2f} ({pct:+.2f}%)"}
             except: pass
@@ -128,13 +132,12 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (시간 엄수)
+# 2. 뉴스 수집 (진단 모드 탑재)
 # ==========================================
-def fetch_news_strict_window(keywords, target_date, limit=20):
+def fetch_news_strict_window(keywords, target_date, status_container=None):
     """
-    [시간 설정]
-    Start: 전일(D-1) 12:00:00
-    End:   당일(D)   06:00:00
+    [시간 설정] Start: 전일(D-1) 12:00:00 ~ End: 당일(D) 06:00:00
+    [진단 기능] status_container에 로그를 찍어서 사용자가 원인을 알 수 있게 함
     """
     all_items = []
     
@@ -142,18 +145,25 @@ def fetch_news_strict_window(keywords, target_date, limit=20):
     end_dt = datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6)
     start_dt = end_dt - timedelta(hours=18)
     
+    # 로그
+    if status_container:
+        status_container.write(f"🕒 타겟 시간 범위: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')}")
+    
+    total_fetched = 0
+    filtered_count = 0
+    
     for kw in keywords:
-        # 구글 검색은 days 단위이므로 넉넉히 2일치 가져와서 내부 필터링
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
         try:
             res = requests.get(url, timeout=5, verify=False)
             soup = BeautifulSoup(res.content, 'xml')
             items = soup.find_all('item')
+            total_fetched += len(items)
             
             for item in items:
                 try:
                     pub_date_str = item.pubDate.text
-                    # 날짜 파싱
+                    # RSS 날짜 파싱 (실패 시 에러 로그)
                     pub_date_gmt = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                     pub_date_kst = pub_date_gmt + timedelta(hours=9)
                     
@@ -165,22 +175,32 @@ def fetch_news_strict_window(keywords, target_date, limit=20):
                             'Source': item.source.text if item.source else "Google News",
                             'Timestamp': pub_date_kst
                         })
-                except: continue
-        except: pass
+                        filtered_count += 1
+                except Exception as e:
+                    # 날짜 파싱 에러 발생 시 로그 (개발자 도구용)
+                    # print(f"Date Parse Error: {e} | {pub_date_str}")
+                    continue
+        except Exception as e:
+            if status_container: status_container.warning(f"⚠️ '{kw}' 검색 중 통신 에러: {e}")
+            continue
         time.sleep(0.1)
-        
+    
+    # 결과 처리
+    if status_container:
+        status_container.write(f"🔎 검색된 전체 기사: {total_fetched}건 -> 시간 필터링 후: {filtered_count}건")
+
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.sort_values(by='Timestamp', ascending=False)
         df = df.drop_duplicates(subset=['Title'])
-        return df.head(limit).to_dict('records')
+        return df.head(25).to_dict('records') # 25개로 제한
     return []
 
 def fetch_news_general(keywords, limit=20):
-    """일반 카테고리용 단순 수집"""
+    """일반 카테고리용 (Fallback용으로도 사용)"""
     all_items = []
     for kw in keywords:
-        url = f"https://news.google.com/rss/search?q={quote(kw)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
+        url = f"https://news.google.com/rss/search?q={quote(kw)}+when:1d&hl=ko&gl=KR&ceid=KR:ko"
         try:
             res = requests.get(url, timeout=5, verify=False)
             soup = BeautifulSoup(res.content, 'xml')
@@ -189,11 +209,9 @@ def fetch_news_general(keywords, limit=20):
                 all_items.append({
                     'Title': item.title.text,
                     'Link': item.link.text,
-                    'Date': item.pubDate.text,
                     'Source': item.source.text if item.source else "Google News"
                 })
         except: pass
-        time.sleep(0.1)
     
     df = pd.DataFrame(all_items)
     if not df.empty:
@@ -271,20 +289,20 @@ def generate_report(api_key, news_data):
             response = requests.post(url, headers=headers, json=data, timeout=60)
             if response.status_code == 200:
                 raw_text = response.json()['candidates'][0]['content']['parts'][0]['text']
-                # 생성 후 링크 주입
                 linked_text = inject_links_to_report(raw_text, news_data)
                 return True, linked_text
             elif response.status_code == 429:
                 time.sleep(1)
                 continue
-        except: continue
+        except Exception as e:
+            return False, f"AI 통신 오류: {str(e)}"
             
-    return False, "AI 분석 실패 (모든 모델 응답 없음)"
+    return False, "AI 분석 실패 (모든 모델 응답 없음/용량 초과)"
 
 # ==========================================
 # 4. 메인 UI
 # ==========================================
-# [중요] 키워드 초기 로드
+# 키워드 로드
 if 'keywords' not in st.session_state: 
     st.session_state.keywords = load_keywords()
 
@@ -320,7 +338,6 @@ with c_head: st.title(selected_category)
 if selected_category == "Daily Report":
     st.info("ℹ️ 매일 오전 6시 기준 반도체 소재관련 정보 Report 입니다.")
 
-    # 날짜 계산 (06시 기준)
     now_kst = datetime.utcnow() + timedelta(hours=9)
     if now_kst.hour < 6:
         target_date = (now_kst - timedelta(days=1)).date()
@@ -335,14 +352,12 @@ if selected_category == "Daily Report":
         c1, c2 = st.columns([3, 1])
         new_kw = c1.text_input("수집 키워드 추가", placeholder="예: HBM, 패키징", label_visibility="collapsed")
         
-        # 키워드 추가 (저장 포함)
         if c2.button("추가", use_container_width=True):
             if new_kw and new_kw not in st.session_state.keywords["Daily Report"]:
                 st.session_state.keywords["Daily Report"].append(new_kw)
                 save_keywords(st.session_state.keywords)
                 st.rerun()
         
-        # 키워드 삭제 (저장 포함)
         daily_kws = st.session_state.keywords["Daily Report"]
         if daily_kws:
             st.write("")
@@ -352,27 +367,30 @@ if selected_category == "Daily Report":
                     st.session_state.keywords["Daily Report"].remove(kw)
                     save_keywords(st.session_state.keywords)
                     st.rerun()
-        st.caption("⚠️ 관심 키워드를 추가하면 해당 주제로 보고서에 반영됩니다. 단 키워드가 늘어나면 시스템 오류발생 가능성이 높습니다. 왼쪽 각 sector 별 Keyword 검색을 활용해주세요")
+        st.caption("⚠️ 관심 키워드를 추가하면 해당 주제로 보고서에 반영됩니다.")
     
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
-    # [리포트 생성 영역]
     if not today_report:
         st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
-            status_box = st.status("🚀 리포트 생성 프로세스...", expanded=True)
+            status_box = st.status("🚀 리포트 생성 프로세스 (진단 모드)...", expanded=True)
             
-            # 수집 (전일 12:00 ~ 당일 06:00)
-            start_str = (datetime.combine(target_date, datetime.min.time()) - timedelta(hours=18)).strftime('%m/%d 12:00')
-            end_str = (datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6)).strftime('%m/%d 06:00')
+            # 1. 수집 (Strict)
+            status_box.write("📡 뉴스 수집 중 (시간 필터링 적용)...")
+            news_items = fetch_news_strict_window(daily_kws, target_date, status_box)
             
-            status_box.write(f"📡 뉴스 수집 중 ({start_str} ~ {end_str})...")
-            
-            news_items = fetch_news_strict_window(daily_kws, target_date)
-            
+            # 2. Fallback (수집 실패 시)
             if not news_items:
-                status_box.update(label="❌ 지정된 시간 범위 내 뉴스가 없습니다.", state="error")
+                status_box.error("❌ 지정된 시간 범위(전일 12시~당일 06시) 내 뉴스가 없습니다.")
+                time.sleep(1)
+                status_box.write("🔄 [Fallback] 최근 24시간 뉴스로 범위를 확장하여 재시도합니다...")
+                news_items = fetch_news_general(daily_kws, limit=15)
+            
+            # 3. AI 분석
+            if not news_items:
+                status_box.update(label="❌ 최종 수집 실패: 관련 뉴스가 전혀 없습니다.", state="error")
             else:
                 status_box.write(f"🧠 AI 심층 분석 중... (기사 {len(news_items)}건)")
                 success, result = generate_report(api_key, news_items)
@@ -380,17 +398,18 @@ if selected_category == "Daily Report":
                 if success:
                     save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
                     save_daily_history(save_data)
-                    status_box.update(label="🎉 리포트 생성 완료!", state="complete")
-                    st.rerun() # 바로 새로고침하여 히스토리에 표시
+                    status_box.update(label="🎉 리포트 생성 완료! (아래 히스토리 확인)", state="complete")
+                    st.rerun()
                 else:
                     status_box.update(label="⚠️ AI 분석 실패", state="error")
-                    st.error(result)
+                    st.error(f"원인: {result}")
     else:
-        # 이미 생성된 경우
         st.success(f"✅ {target_date} 리포트가 완료되었습니다.")
         if st.button("🔄 리포트 다시 만들기 (덮어쓰기)"):
             status_box = st.status("🚀 리포트 재생성 중...", expanded=True)
-            news_items = fetch_news_strict_window(daily_kws, target_date)
+            news_items = fetch_news_strict_window(daily_kws, target_date, status_box)
+            if not news_items:
+                 news_items = fetch_news_general(daily_kws, limit=15)
             
             if news_items:
                 success, result = generate_report(api_key, news_items)
@@ -398,11 +417,10 @@ if selected_category == "Daily Report":
                     save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
                     save_daily_history(save_data)
                     status_box.update(label="🎉 재생성 완료!", state="complete")
-                    st.rerun() # 바로 새로고침
+                    st.rerun()
             else:
                 status_box.error("수집된 뉴스가 없습니다.")
 
-    # [히스토리 출력]
     if history:
         for entry in history:
             st.divider()
