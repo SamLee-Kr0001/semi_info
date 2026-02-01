@@ -10,7 +10,6 @@ import os
 import re
 import time
 import yfinance as yf
-import traceback # 상세 에러 확인용
 
 # SSL 경고 무시
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -24,9 +23,6 @@ CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist",
 
 if 'news_data' not in st.session_state:
     st.session_state.news_data = {cat: [] for cat in CATEGORIES}
-
-if 'daily_history' not in st.session_state:
-    st.session_state.daily_history = []
 
 st.markdown("""
     <style>
@@ -49,7 +45,6 @@ st.markdown("""
         .ref-link:hover { background-color: #F1F5F9; color: #2563EB; }
         .ref-number { font-weight: bold; color: #3B82F6; margin-right: 8px; background: #DBEAFE; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
         
-        /* 본문 내 위첨자 링크 스타일 */
         sup a { text-decoration: none; color: #3B82F6; font-weight: bold; margin-left: 2px; font-size: 0.8em; }
         sup a:hover { text-decoration: underline; color: #1D4ED8; }
     </style>
@@ -100,7 +95,6 @@ def load_daily_history():
 
 def save_daily_history(new_report_data):
     history = load_daily_history()
-    # 날짜 중복 시 덮어쓰기
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data)
     try:
@@ -132,38 +126,28 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (진단 모드 탑재)
+# 2. 뉴스 수집 (진단 모드)
 # ==========================================
 def fetch_news_strict_window(keywords, target_date, status_container=None):
-    """
-    [시간 설정] Start: 전일(D-1) 12:00:00 ~ End: 당일(D) 06:00:00
-    [진단 기능] status_container에 로그를 찍어서 사용자가 원인을 알 수 있게 함
-    """
     all_items = []
-    
-    # 기준 시간 계산
     end_dt = datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6)
     start_dt = end_dt - timedelta(hours=18)
     
-    # 로그
     if status_container:
-        status_container.write(f"🕒 타겟 시간 범위: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')}")
+        status_container.write(f"🕒 타겟 시간: {start_dt.strftime('%m/%d 12:00')} ~ {end_dt.strftime('%m/%d 06:00')}")
     
-    total_fetched = 0
-    filtered_count = 0
-    
+    total_found = 0
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
         try:
             res = requests.get(url, timeout=5, verify=False)
             soup = BeautifulSoup(res.content, 'xml')
             items = soup.find_all('item')
-            total_fetched += len(items)
+            total_found += len(items)
             
             for item in items:
                 try:
                     pub_date_str = item.pubDate.text
-                    # RSS 날짜 파싱 (실패 시 에러 로그)
                     pub_date_gmt = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                     pub_date_kst = pub_date_gmt + timedelta(hours=9)
                     
@@ -175,29 +159,23 @@ def fetch_news_strict_window(keywords, target_date, status_container=None):
                             'Source': item.source.text if item.source else "Google News",
                             'Timestamp': pub_date_kst
                         })
-                        filtered_count += 1
-                except Exception as e:
-                    # 날짜 파싱 에러 발생 시 로그 (개발자 도구용)
-                    # print(f"Date Parse Error: {e} | {pub_date_str}")
-                    continue
+                except: continue
         except Exception as e:
-            if status_container: status_container.warning(f"⚠️ '{kw}' 검색 중 통신 에러: {e}")
+            if status_container: status_container.error(f"⚠️ '{kw}' 검색 실패: {e}")
             continue
         time.sleep(0.1)
     
-    # 결과 처리
     if status_container:
-        status_container.write(f"🔎 검색된 전체 기사: {total_fetched}건 -> 시간 필터링 후: {filtered_count}건")
+        status_container.write(f"🔎 검색된 총 기사: {total_found}건 -> 시간 필터링 후: {len(all_items)}건")
 
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.sort_values(by='Timestamp', ascending=False)
         df = df.drop_duplicates(subset=['Title'])
-        return df.head(25).to_dict('records') # 25개로 제한
+        return df.head(25).to_dict('records')
     return []
 
 def fetch_news_general(keywords, limit=20):
-    """일반 카테고리용 (Fallback용으로도 사용)"""
     all_items = []
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:1d&hl=ko&gl=KR&ceid=KR:ko"
@@ -220,7 +198,7 @@ def fetch_news_general(keywords, limit=20):
     return []
 
 # ==========================================
-# 3. AI 분석 및 링크 처리
+# 3. AI 분석 (에러 디버깅 강화)
 # ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
@@ -233,7 +211,6 @@ def get_available_models(api_key):
     return []
 
 def inject_links_to_report(report_text, news_data):
-    """[1] -> 위첨자 링크 변환"""
     def replace_match(match):
         try:
             idx = int(match.group(1)) - 1
@@ -245,8 +222,12 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report(api_key, news_data):
+    """
+    [수정] 에러 발생 시 단순 False가 아니라 상세 에러 로그를 반환함
+    """
     models = get_available_models(api_key)
-    if not models: models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    if not models:
+        models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
     
     news_context = ""
     for i, item in enumerate(news_data):
@@ -282,27 +263,37 @@ def generate_report(api_key, news_data):
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
 
+    error_logs = [] # 에러 수집용
+
     for model in models:
         if "vision" in model: continue
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             response = requests.post(url, headers=headers, json=data, timeout=60)
-            if response.status_code == 200:
-                raw_text = response.json()['candidates'][0]['content']['parts'][0]['text']
-                linked_text = inject_links_to_report(raw_text, news_data)
-                return True, linked_text
-            elif response.status_code == 429:
-                time.sleep(1)
-                continue
-        except Exception as e:
-            return False, f"AI 통신 오류: {str(e)}"
             
-    return False, "AI 분석 실패 (모든 모델 응답 없음/용량 초과)"
+            if response.status_code == 200:
+                res_json = response.json()
+                if 'candidates' in res_json and res_json['candidates']:
+                    raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
+                    linked_text = inject_links_to_report(raw_text, news_data)
+                    return True, linked_text
+                else:
+                    error_logs.append(f"[{model}] 200 OK but blocked: {res_json}")
+            else:
+                error_logs.append(f"[{model}] HTTP {response.status_code}: {response.text[:200]}")
+                if response.status_code == 429:
+                    time.sleep(1)
+                    continue
+        except Exception as e:
+            error_logs.append(f"[{model}] Exception: {str(e)}")
+            continue
+            
+    # 모든 모델 실패 시 상세 로그 반환
+    return False, "\n".join(error_logs)
 
 # ==========================================
 # 4. 메인 UI
 # ==========================================
-# 키워드 로드
 if 'keywords' not in st.session_state: 
     st.session_state.keywords = load_keywords()
 
@@ -377,11 +368,11 @@ if selected_category == "Daily Report":
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
             status_box = st.status("🚀 리포트 생성 프로세스 (진단 모드)...", expanded=True)
             
-            # 1. 수집 (Strict)
-            status_box.write("📡 뉴스 수집 중 (시간 필터링 적용)...")
+            # 1. 수집
+            status_box.write("📡 뉴스 수집 중...")
             news_items = fetch_news_strict_window(daily_kws, target_date, status_box)
             
-            # 2. Fallback (수집 실패 시)
+            # 2. Fallback
             if not news_items:
                 status_box.error("❌ 지정된 시간 범위(전일 12시~당일 06시) 내 뉴스가 없습니다.")
                 time.sleep(1)
@@ -398,11 +389,12 @@ if selected_category == "Daily Report":
                 if success:
                     save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
                     save_daily_history(save_data)
-                    status_box.update(label="🎉 리포트 생성 완료! (아래 히스토리 확인)", state="complete")
+                    status_box.update(label="🎉 리포트 생성 완료!", state="complete")
                     st.rerun()
                 else:
                     status_box.update(label="⚠️ AI 분석 실패", state="error")
-                    st.error(f"원인: {result}")
+                    st.error(f"원인 (Error Logs):\n{result}") # 에러 로그 직접 출력
+                    st.code(result, language="json")
     else:
         st.success(f"✅ {target_date} 리포트가 완료되었습니다.")
         if st.button("🔄 리포트 다시 만들기 (덮어쓰기)"):
@@ -440,7 +432,6 @@ if selected_category == "Daily Report":
                         """, unsafe_allow_html=True)
 
 else:
-    # General Category
     with st.container(border=True):
         c1, c2, c3 = st.columns([2, 1, 1])
         new_kw = c1.text_input("키워드", label_visibility="collapsed")
