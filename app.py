@@ -16,9 +16,9 @@ import traceback
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==========================================
-# 0. 페이지 설정 및 초기화
+# 0. 페이지 설정
 # ==========================================
-st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Stable)", page_icon="💠")
+st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Auto-Fix)", page_icon="💠")
 
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
@@ -27,6 +27,10 @@ if 'news_data' not in st.session_state:
 
 if 'daily_history' not in st.session_state:
     st.session_state.daily_history = []
+
+# [중요] 사용 가능한 모델 리스트를 저장할 세션
+if 'available_models' not in st.session_state:
+    st.session_state.available_models = []
 
 st.markdown("""
     <style>
@@ -66,7 +70,7 @@ KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
 
 # ==========================================
-# 1. 데이터 관리
+# 1. 데이터 관리 함수
 # ==========================================
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
@@ -128,7 +132,33 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집
+# 2. 모델 자동 검색 (핵심 해결책)
+# ==========================================
+def discover_models(api_key):
+    """
+    구글 서버에 직접 물어봐서 사용 가능한 모델 목록을 가져옴.
+    이 함수가 성공하면 API Key는 확실히 작동하는 것임.
+    """
+    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+    try:
+        res = requests.get(url, timeout=10)
+        if res.status_code == 200:
+            data = res.json()
+            # 'generateContent' 기능을 지원하는 모델만 필터링
+            models = [
+                m['name'] for m in data.get('models', []) 
+                if 'generateContent' in m.get('supportedGenerationMethods', [])
+            ]
+            # gemini-1.5-flash나 pro를 우선순위로 정렬
+            models.sort(key=lambda x: 'flash' not in x) # Flash 우선
+            return True, models
+        else:
+            return False, f"HTTP {res.status_code}: {res.text}"
+    except Exception as e:
+        return False, str(e)
+
+# ==========================================
+# 3. 뉴스 수집
 # ==========================================
 def fetch_news_strict_window(keywords, start_dt, end_dt, debug_container):
     all_items = []
@@ -195,7 +225,7 @@ def fetch_news_general(keywords, limit=20):
     return []
 
 # ==========================================
-# 3. AI 분석 (모델명 안정화)
+# 4. AI 분석 (Auto-Discovery 적용)
 # ==========================================
 def inject_links_to_report(report_text, news_data):
     def replace_match(match):
@@ -209,9 +239,19 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_smart(api_key, news_data, debug_container):
-    # [수정] 가장 표준적인 모델명만 사용 (404 방지)
-    models = ["gemini-1.5-flash", "gemini-1.5-pro"]
+    # 1. 서버에 직접 물어봐서 모델 리스트 확보
+    if not st.session_state.available_models:
+        debug_container.info("🔄 Checking available models from Google API...")
+        is_ok, models_or_err = discover_models(api_key)
+        if is_ok:
+            st.session_state.available_models = models_or_err
+            debug_container.success(f"✅ Found models: {', '.join([m.split('/')[-1] for m in models_or_err[:3]])}...")
+        else:
+            return False, f"Failed to list models. Key might be invalid. Error: {models_or_err}"
     
+    models = st.session_state.available_models
+    
+    # 2. 호출 로직
     def call_gemini(current_news):
         news_context = ""
         for i, item in enumerate(current_news):
@@ -248,38 +288,45 @@ def generate_report_smart(api_key, news_data, debug_container):
         data = {"contents": [{"parts": [{"text": prompt}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
 
         for model in models:
-            debug_container.markdown(f"<div class='debug-log'>🔄 Trying Model: {model} (Items: {len(current_news)})...</div>", unsafe_allow_html=True)
-            # v1beta 엔드포인트 사용 (표준)
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            # [중요] 모델명 정규화 (models/models/gemini... 방지)
+            clean_model = model.replace("models/", "")
+            
+            # 불안정한 2.0 및 exp 버전은 건너뜀 (안전빵)
+            if "gemini-2.0" in clean_model or "exp" in clean_model:
+                continue
+
+            debug_container.markdown(f"<div class='debug-log'>🔄 Trying Model: {clean_model} (Items: {len(current_news)})...</div>", unsafe_allow_html=True)
+            
+            # v1beta 엔드포인트에 models/ 접두사 없이 요청 (또는 있는 경우도 처리)
+            # 가장 확실한 URL 구조: models/{clean_model}
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent?key={api_key}"
             
             try:
-                # Timeout을 90초로 연장 (긴 응답 대비)
                 response = requests.post(url, headers=headers, json=data, timeout=90)
                 
                 if response.status_code == 200:
                     res_json = response.json()
                     if 'candidates' in res_json and res_json['candidates']:
                         raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
-                        debug_container.success(f"✅ Success with {model}")
+                        debug_container.success(f"✅ Success with {clean_model}")
                         return True, inject_links_to_report(raw_text, current_news)
                     else:
-                        debug_container.warning(f"⚠️ {model} Blocked/Empty Response")
+                        debug_container.warning(f"⚠️ {clean_model} Blocked/Empty")
                 else:
-                    error_msg = f"❌ {model} Failed: {response.status_code}"
+                    error_msg = f"❌ {clean_model} Failed: {response.status_code}"
                     debug_container.markdown(f"<div class='error-log'>{error_msg}</div>", unsafe_allow_html=True)
                     
                     if response.status_code == 403:
                         return False, "API Key Blocked (403)."
-                    
                     if response.status_code == 429:
                         return False, "429" 
 
             except Exception as e:
                 debug_container.error(f"💥 Exception: {str(e)}")
                 continue
-        return False, "All models failed"
+        return False, "All tested models failed"
 
-    # [1차] 20개 시도
+    # [1차 시도]
     success, result = call_gemini(news_data)
     
     if success:
@@ -292,7 +339,7 @@ def generate_report_smart(api_key, news_data, debug_container):
         return False, result
 
 # ==========================================
-# 4. 메인 UI
+# 5. 메인 UI
 # ==========================================
 if 'keywords' not in st.session_state: 
     st.session_state.keywords = load_keywords()
@@ -308,6 +355,15 @@ with st.sidebar:
         if "GEMINI_API_KEY" in st.secrets:
             api_key = st.secrets["GEMINI_API_KEY"]
             st.success("✅ Key Loaded from Secrets")
+            
+            # [진단] 키가 로드되면 사용 가능한 모델을 즉시 확인
+            if st.button("Check Models"):
+                is_ok, models = discover_models(api_key)
+                if is_ok:
+                    st.success(f"Models: {len(models)} found.")
+                    st.session_state.available_models = models
+                else:
+                    st.error(f"Key Invalid: {models}")
         else:
             st.warning("⚠️ No Secrets Found")
             api_key = st.text_input("Manually Enter Key", type="password")
