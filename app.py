@@ -4,69 +4,116 @@ import requests
 import urllib3
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from datetime import datetime, time as dt_time, timedelta
+from datetime import datetime, timedelta
 import json
 import os
 import re
 import time
 import yfinance as yf
-import traceback
 
 # SSL 경고 무시
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==========================================
-# 0. 페이지 설정 및 초기화
+# 0. 페이지 설정 및 초기화 (오류 방지 핵심)
 # ==========================================
-st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Total War)", page_icon="🛡️")
+st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
 
+# [핵심 수정] AttributeError 방지를 위한 세션 상태 최상단 초기화
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
 if 'news_data' not in st.session_state:
     st.session_state.news_data = {cat: [] for cat in CATEGORIES}
 
+if 'keywords' not in st.session_state:
+    # 키워드 로드 로직은 뒤에 함수로 정의되지만, 초기값은 여기서 잡습니다.
+    st.session_state.keywords = {cat: [] for cat in CATEGORIES}
+
 if 'daily_history' not in st.session_state:
     st.session_state.daily_history = []
-
-# 사용 가능한 모델 캐싱
-if 'valid_models' not in st.session_state:
-    st.session_state.valid_models = []
 
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
         html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
         
+        /* 리포트 스타일 */
         .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
         .report-box h2 { color: #1E3A8A; border-bottom: 2px solid #3B82F6; padding-bottom: 10px; margin-top: 30px; margin-bottom: 20px; font-size: 24px; font-weight: 700; }
         
-        .debug-log { font-family: monospace; font-size: 12px; background: #f0f0f0; padding: 8px; border-radius: 4px; margin-bottom: 4px; border-left: 4px solid #666; }
-        .success-log { font-family: monospace; font-size: 12px; background: #E6FFFA; color: #047857; padding: 8px; border-radius: 4px; border-left: 4px solid #10B981; }
-        .warn-log { font-family: monospace; font-size: 12px; background: #FFFAF0; color: #C05621; padding: 8px; border-radius: 4px; border-left: 4px solid #F59E0B; }
-        .error-log { font-family: monospace; font-size: 12px; background: #FEF2F2; color: #B91C1C; padding: 8px; border-radius: 4px; border-left: 4px solid #EF4444; }
-        
+        /* 뉴스 카드 스타일 */
         .news-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 10px; }
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
+        .news-title:hover { color: #2563EB !important; text-decoration: underline; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
+
+        /* 사이드바 주식 폰트 강제 고정 */
+        section[data-testid="stSidebar"] div[data-testid="stMetricValue"] { font-size: 18px !important; font-weight: 600 !important; }
+        section[data-testid="stSidebar"] div[data-testid="stMetricDelta"] { font-size: 12px !important; }
+        section[data-testid="stSidebar"] div[data-testid="stMetricLabel"] { font-size: 12px !important; color: #64748B !important; }
+        .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
         
-        sup a { text-decoration: none; color: #3B82F6; font-weight: bold; margin-left: 2px; font-size: 0.8em; }
+        /* 레퍼런스 링크 스타일 */
+        .ref-link { font-size: 0.9em; color: #555; text-decoration: none; display: block; margin-bottom: 6px; padding: 5px; border-radius: 4px; transition: background 0.2s; }
+        .ref-link:hover { background-color: #F1F5F9; color: #2563EB; }
+        .ref-number { font-weight: bold; color: #3B82F6; margin-right: 8px; background: #DBEAFE; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
     </style>
 """, unsafe_allow_html=True)
 
-STOCK_CATEGORIES = {
-    "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC"},
-    "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q"},
-    "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Hanmi": "042700.KS"},
-    "🧪 Materials": {"Shin-Etsu": "4063.T", "Sumitomo": "4005.T", "TOK": "4186.T", "Merck": "MRK.DE", "Soulbrain": "357780.KS", "Dongjin": "005290.KS", "ENF": "102710.KS", "Ycchem": "232140.KS"},
-    "🔋 Others": {"Samsung SDI": "006400.KS"}
-}
+# 기본값 설정
 
-KEYWORD_FILE = 'keywords.json'
-HISTORY_FILE = 'daily_history.json'
+STOCK_CATEGORIES = {
+    "🏭 Chipmakers": {
+        "Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU",
+        "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"
+    },
+    "🧠 Fabless": {
+        "Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q" 
+    },
+    "⚙️ Equipment": {
+        "ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", 
+        "TEL": "8035.T", "KLA": "KLAC", "Hanmi": "042700.KS", "Jusung": "036930.KS"
+    },
+    "🧪 Materials": {
+        "Shin-Etsu": "4063.T", "Sumitomo": "4005.T", "TOK": "4186.T", 
+        "Nissan Chem": "4021.T", "Merck": "MRK.DE", "Air Liquide": "AI.PA", 
+        "Linde": "LIN", "Soulbrain": "357780.KS", "Dongjin": "005290.KS", 
+        "ENF": "102710.KS", "Ycchem": "232140.KS"
+    },
+    "🔋 Others": {
+        "Samsung SDI": "006400.KS"
+    }
+}
 
 # ==========================================
 # 1. 데이터 관리 함수
 # ==========================================
+KEYWORD_FILE = 'keywords.json'
+HISTORY_FILE = 'daily_history.json'
+
+@st.cache_data(ttl=600)
+def get_stock_prices_grouped():
+    all_tickers = []
+    for cat in STOCK_CATEGORIES.values(): all_tickers.extend(cat.values())
+    ticker_str = " ".join(all_tickers)
+    result_map = {}
+    try:
+        stocks = yf.Tickers(ticker_str)
+        for symbol in all_tickers:
+            try:
+                hist = stocks.tickers[symbol].history(period="5d")
+                if len(hist) >= 2:
+                    current = hist['Close'].iloc[-1]
+                    prev = hist['Close'].iloc[-2]
+                    change = current - prev
+                    pct = (change / prev) * 100
+                    cur_sym = "₩" if ".KS" in symbol else ("¥" if ".T" in symbol else ("HK$" if ".HK" in symbol else ("€" if ".DE" in symbol or ".PA" in symbol else "$")))
+                    fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
+                    result_map[symbol] = {"Price": fmt_price, "Delta": f"{change:,.2f} ({pct:+.2f}%)"}
+            except: pass
+    except: pass
+    return result_map
+
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
     if os.path.exists(KEYWORD_FILE):
@@ -103,90 +150,47 @@ def save_daily_history(new_report_data):
             json.dump(history, f, ensure_ascii=False, indent=4)
     except: pass
 
-@st.cache_data(ttl=600)
-def get_stock_prices_grouped():
-    all_tickers = []
-    for cat in STOCK_CATEGORIES.values(): all_tickers.extend(cat.values())
-    ticker_str = " ".join(all_tickers)
-    result_map = {}
-    try:
-        stocks = yf.Tickers(ticker_str)
-        for symbol in all_tickers:
-            try:
-                hist = stocks.tickers[symbol].history(period="5d")
-                if len(hist) >= 2:
-                    current = hist['Close'].iloc[-1]
-                    prev = hist['Close'].iloc[-2]
-                    change = current - prev
-                    pct = (change / prev) * 100
-                    cur_sym = "₩" if ".KS" in symbol else ("¥" if ".T" in symbol else ("€" if ".DE" in symbol else "$"))
-                    fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
-                    result_map[symbol] = {"Price": fmt_price, "Delta": f"{change:,.2f} ({pct:+.2f}%)"}
-            except: pass
-    except: pass
-    return result_map
-
 # ==========================================
-# 2. 뉴스 수집
+# 2. 뉴스 수집 함수
 # ==========================================
-def fetch_news_strict_window(keywords, start_dt, end_dt, debug_container):
+def fetch_news(keywords, days=1, limit=20, strict_time=False):
     all_items = []
-    debug_container.markdown(f"<div class='debug-log'>📡 Searching News: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')}</div>", unsafe_allow_html=True)
     
-    total_found = 0
+    # 시간 필터링 기준 (KST)
+    now_kst = datetime.utcnow() + timedelta(hours=9)
+    end_target = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
+    if now_kst.hour < 6:
+        end_target -= timedelta(days=1)
+    start_target = end_target - timedelta(hours=18)
+    
     for kw in keywords:
-        url = f"https://news.google.com/rss/search?q={quote(kw)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
+        url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
         try:
             res = requests.get(url, timeout=5, verify=False)
             soup = BeautifulSoup(res.content, 'xml')
             items = soup.find_all('item')
-            total_found += len(items)
             
             for item in items:
-                try:
-                    pub_date_str = item.pubDate.text
-                    pub_date_gmt = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
-                    pub_date_kst = pub_date_gmt + timedelta(hours=9)
-                    
-                    if start_dt <= pub_date_kst <= end_dt:
-                        all_items.append({
-                            'Title': item.title.text,
-                            'Link': item.link.text,
-                            'Date': pub_date_str,
-                            'Source': item.source.text if item.source else "Google News",
-                            'Timestamp': pub_date_kst
-                        })
-                except: continue
-        except: continue
-        time.sleep(0.1)
-    
-    df = pd.DataFrame(all_items)
-    if not df.empty:
-        df = df.sort_values(by='Timestamp', ascending=False)
-        df = df.drop_duplicates(subset=['Title'])
-        count = len(df)
-        debug_container.markdown(f"<div class='success-log'>✅ Found {count} relevant articles</div>", unsafe_allow_html=True)
-        return df.head(25).to_dict('records') # 최대 25개 확보
-    
-    debug_container.markdown(f"<div class='error-log'>❌ No news found in strict window</div>", unsafe_allow_html=True)
-    return []
-
-def fetch_news_general(keywords, limit=20):
-    all_items = []
-    for kw in keywords:
-        url = f"https://news.google.com/rss/search?q={quote(kw)}+when:1d&hl=ko&gl=KR&ceid=KR:ko"
-        try:
-            res = requests.get(url, timeout=5, verify=False)
-            soup = BeautifulSoup(res.content, 'xml')
-            items = soup.find_all('item')
-            for item in items:
-                all_items.append({
-                    'Title': item.title.text,
-                    'Link': item.link.text,
-                    'Source': item.source.text if item.source else "Google News"
-                })
+                is_valid = True
+                if strict_time:
+                    try:
+                        pub_date_str = item.pubDate.text
+                        pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
+                        pub_date_kst = pub_date + timedelta(hours=9)
+                        if not (start_target <= pub_date_kst <= end_target):
+                            is_valid = False
+                    except: is_valid = True
+                
+                if is_valid:
+                    all_items.append({
+                        'Title': item.title.text,
+                        'Link': item.link.text,
+                        'Date': item.pubDate.text,
+                        'Source': item.source.text if item.source else "Google News"
+                    })
         except: pass
-    
+        time.sleep(0.1)
+        
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.drop_duplicates(subset=['Title'])
@@ -194,163 +198,107 @@ def fetch_news_general(keywords, limit=20):
     return []
 
 # ==========================================
-# 3. AI 모델 플랜 수립 (Plan A, B, C...)
+# 3. AI 리포트 생성 (프롬프트 수정됨)
 # ==========================================
-def get_model_plan(api_key):
-    """
-    Plan A: 구글 서버에 직접 물어봐서 유효한 모델 리스트 가져오기 (Dynamic Discovery)
-    Plan B: 실패 시 하드코딩된 안정적인 모델 리스트 사용 (Static Fallback)
-    """
-    plan = []
-    
-    # 1. Dynamic Discovery
+def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
     try:
-        res = requests.get(url, timeout=5)
+        res = requests.get(url, timeout=10)
         if res.status_code == 200:
             data = res.json()
-            # GenerateContent 가능한 모델만 추출
-            online_models = [m['name'].replace("models/", "") for m in data.get('models', []) 
-                             if 'generateContent' in m.get('supportedGenerationMethods', [])]
-            
-            # 우선순위 정렬 (Flash -> Pro -> Others)
-            sorted_models = sorted(online_models, key=lambda x: (
-                0 if "1.5-flash" in x and "8b" not in x else
-                1 if "1.5-flash" in x else
-                2 if "1.5-pro" in x else
-                3
-            ))
-            plan.extend(sorted_models)
+            return [m['name'].replace("models/", "") for m in data.get('models', []) if 'generateContent' in m.get('supportedGenerationMethods', [])]
     except: pass
-    
-    # 2. Static Fallback (중복 제거하며 추가)
-    fallback_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"]
-    for m in fallback_models:
-        if m not in plan:
-            plan.append(m)
-            
-    return plan
+    return []
 
 def inject_links_to_report(report_text, news_data):
+    """[1] -> [[1]](URL) 변환"""
     def replace_match(match):
         try:
-            idx = int(match.group(1)) - 1
+            idx_str = match.group(1)
+            idx = int(idx_str) - 1
             if 0 <= idx < len(news_data):
                 link = news_data[idx]['Link']
-                return f"<sup><a href='{link}' target='_blank' style='text-decoration:none; color:#3B82F6;'>[{match.group(1)}]</a></sup>"
+                return f"[[{idx_str}]]({link})"
         except: pass
         return match.group(0)
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
-def generate_report_total_war(api_key, news_data, debug_container):
-    """
-    [총력전 모드]
-    1. 사용 가능한 모델 리스트 확보 (Plan A -> B)
-    2. 각 모델에 대해 데이터 양을 20 -> 10 -> 5로 줄여가며 시도 (Plan C)
+def generate_report_with_citations(api_key, news_data):
+    models = get_available_models(api_key)
+    if not models:
+        models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    
+    # Context에 Source 정보 포함
+    news_context = ""
+    for i, item in enumerate(news_data):
+        news_context += f"[{i+1}] {item['Title']} (Source: {item['Source']})\n"
+
+    # [수정] 프롬프트: 서술형(Narrative) 지시 강화
+    prompt = f"""
+    당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
+    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
+
+    **[작성 원칙 - 매우 중요]**
+    1. **단순 요약 금지**: 뉴스 제목을 단순히 나열하거나 번역하지 마세요.
+    2. **서술형 작성**: 이슈별로 현상/원인/전망을 개조식(Bullet points)으로 나누지 말고, **하나의 자연스러운 논리적 흐름을 가진 줄글(Narrative Paragraph)**로 서술하세요. 전문적인 문체를 사용하세요.
+    3. **근거 명시**: 모든 주장이나 사실 언급 시 반드시 제공된 뉴스 번호 **[1], [2]**를 문장 끝에 인용하세요.
+
+    [뉴스 데이터]
+    {news_context}
+    
+    [보고서 구조 (Markdown)]
+    ## 📊 Executive Summary (시장 총평)
+    - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화를 3~4문장으로 요약. (기존 유지)
+
+    ## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
+    - 가장 중요한 이슈 2~3가지를 선정하여 소제목을 달고 분석하세요.
+    - **중요**: 현상, 원인, 전망을 구분하여 나열하지 말고, **깊이 있는 서술형 문단**으로 작성하세요. 사건의 배경부터 파급 효과까지 매끄럽게 연결되도록 하세요.
+    - 반드시 인용 번호[n]를 포함할 것.
+
+    ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
+    - 소부장, 파운드리, 메모리 등 섹터별 주요 단신을 종합하여 서술.
+
+    ## 💡 Analyst's View (투자 아이디어)
+    - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
     """
     
-    # 1. 모델 리스트 확보
-    debug_container.markdown("<div class='debug-log'>📋 Planning strategy (Discovering models)...</div>", unsafe_allow_html=True)
-    model_list = get_model_plan(api_key)
-    
-    if not model_list:
-        debug_container.error("❌ API Key Error: No models found. Key might be invalid.")
-        return False, "Key Error"
-
-    debug_container.markdown(f"<div class='debug-log'>🎯 Attack Plan: {', '.join(model_list[:4])}...</div>", unsafe_allow_html=True)
-
-    # 2. 프롬프트 준비
-    def make_prompt(current_news):
-        news_context = ""
-        for i, item in enumerate(current_news):
-            news_context += f"[{i+1}] {item['Title']} (Source: {item['Source']})\n"
-        
-        return f"""
-        당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
-        제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
-
-        **[작성 원칙]**
-        1. **서술형 작성**: 이슈별로 현상/원인/전망을 나누지 말고, 자연스러운 논리적 흐름(Narrative)으로 서술하세요.
-        2. **근거 명시**: 내용의 출처가 되는 뉴스 번호 **[1], [2]**를 문장 끝에 반드시 인용하세요.
-        3. **전문적 어조**: 투자자 리포트 톤앤매너를 유지하세요.
-
-        [뉴스 데이터]
-        {news_context}
-        
-        [보고서 구조 (Markdown)]
-        ## 📊 Executive Summary (시장 총평)
-        - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화 요약.
-
-        ## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
-        - 중요 이슈 2~3가지를 선정하여 소제목을 달고 분석.
-        - 배경, 원인, 파급 효과를 연결하여 깊이 있게 서술.
-
-        ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
-        - 소부장, 파운드리, 메모리 등 섹터별 주요 단신 종합.
-
-        ## 💡 Analyst's View (투자 아이디어)
-        - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트.
-        """
-
     headers = {'Content-Type': 'application/json'}
+    data = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "safetySettings": [
+            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+        ]
+    }
 
-    # 3. 총력전 시작 (모델 루프 -> 데이터 양 루프)
-    for model in model_list:
+    for model in models:
+        if "vision" in model: continue
         
-        # 2.0 버전이나 exp 버전은 429 에러가 심하므로 후순위가 아니면 건너뜀
-        if "gemini-2.0" in model and model_list.index(model) < len(model_list) - 2:
-            continue
-
-        # 데이터 양 줄이기 전략 (20개 -> 10개 -> 5개)
-        for count in [20, 10, 5]:
-            if count > len(news_data): continue
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        try:
+            response = requests.post(url, headers=headers, json=data, timeout=60)
             
-            current_batch = news_data[:count]
-            debug_container.markdown(f"<div class='debug-log'>⚔️ Trying <b>{model}</b> with <b>{count}</b> items...</div>", unsafe_allow_html=True)
-            
-            prompt_text = make_prompt(current_batch)
-            data = {"contents": [{"parts": [{"text": prompt_text}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-            
-            try:
-                # 타임아웃 넉넉히
-                response = requests.post(url, headers=headers, json=data, timeout=90)
-                
-                if response.status_code == 200:
-                    res_json = response.json()
-                    if 'candidates' in res_json and res_json['candidates']:
-                        raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
-                        debug_container.markdown(f"<div class='success-log'>🎉 SUCCESS! Generated by {model} ({count} items)</div>", unsafe_allow_html=True)
-                        return True, inject_links_to_report(raw_text, current_batch)
-                    else:
-                        debug_container.markdown(f"<div class='warn-log'>⚠️ {model}: 200 OK but blocked/empty.</div>", unsafe_allow_html=True)
-                else:
-                    # 403 (키 차단) -> 즉시 종료
-                    if response.status_code == 403:
-                        debug_container.markdown(f"<div class='error-log'>⛔ 403 Forbidden: Key is blocked. Check Google AI Studio.</div>", unsafe_allow_html=True)
-                        return False, "Key Blocked"
-                    
-                    # 404 (모델 없음) -> 데이터 줄여도 소용없음 -> 다음 모델로 break
-                    if response.status_code == 404:
-                        debug_container.markdown(f"<div class='warn-log'>⚠️ 404 Not Found: {model} skips.</div>", unsafe_allow_html=True)
-                        break 
-                    
-                    # 429 (용량 초과) or 500 (서버 오류) -> 데이터 줄여서 continue
-                    debug_container.markdown(f"<div class='warn-log'>⚠️ {response.status_code} Error. Reducing data...</div>", unsafe_allow_html=True)
-                    time.sleep(2) # 잠시 대기
-                    continue # 다음 count로 시도
-
-            except Exception as e:
-                debug_container.markdown(f"<div class='error-log'>💥 Exception: {str(e)}</div>", unsafe_allow_html=True)
+            if response.status_code == 200:
+                res_json = response.json()
+                if 'candidates' in res_json and res_json['candidates']:
+                    raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
+                    linked_text = inject_links_to_report(raw_text, news_data)
+                    return True, linked_text
+            elif response.status_code == 429:
+                time.sleep(1) 
                 continue
-                
-    return False, "Mission Failed: All models & strategies exhausted."
+        except: continue
+            
+    return False, "AI 분석 실패 (모든 모델 응답 없음)"
 
 # ==========================================
-# 4. 메인 UI
+# 4. 메인 앱 UI
 # ==========================================
-if 'keywords' not in st.session_state: 
-    st.session_state.keywords = load_keywords()
+# [수정] 키워드 초기화 로직도 최상단으로 이동했지만, 안전을 위해 여기서 한 번 더 체크
+if 'keywords' not in st.session_state: st.session_state.keywords = load_keywords()
+# 이미 상단에서 news_data를 초기화했으므로 AttributorError는 해결됨
 
 with st.sidebar:
     st.header("Semi-Insight")
@@ -358,15 +306,12 @@ with st.sidebar:
     selected_category = st.radio("카테고리", CATEGORIES, index=0, label_visibility="collapsed")
     st.divider()
     
-    api_key = ""
-    with st.expander("🔐 API Key Status", expanded=True):
-        if "GEMINI_API_KEY" in st.secrets:
-            api_key = st.secrets["GEMINI_API_KEY"]
-            st.success("✅ Key Loaded from Secrets")
-        else:
-            st.warning("⚠️ No Secrets Found")
-            api_key = st.text_input("Manually Enter Key", type="password")
-
+    with st.expander("🔐 API Key"):
+        user_key = st.text_input("Key", type="password")
+        if user_key: api_key = user_key
+        elif "GEMINI_API_KEY" in st.secrets: api_key = st.secrets["GEMINI_API_KEY"]
+        else: api_key = FALLBACK_API_KEY
+    
     st.markdown("---")
     with st.expander("📉 Global Stock", expanded=True):
         stock_data = get_stock_prices_grouped()
@@ -384,7 +329,11 @@ with st.sidebar:
 c_head, c_info = st.columns([3, 1])
 with c_head: st.title(selected_category)
 
+# ----------------------------------
+# [Mode 1] Daily Report
+# ----------------------------------
 if selected_category == "Daily Report":
+    # [수정] 문구 추가
     st.info("ℹ️ 매일 오전 6시 기준 반도체 소재관련 정보 Report 입니다.")
 
     now_kst = datetime.utcnow() + timedelta(hours=9)
@@ -400,13 +349,13 @@ if selected_category == "Daily Report":
     with st.container(border=True):
         c1, c2 = st.columns([3, 1])
         new_kw = c1.text_input("수집 키워드 추가", placeholder="예: HBM, 패키징", label_visibility="collapsed")
-        
         if c2.button("추가", use_container_width=True):
             if new_kw and new_kw not in st.session_state.keywords["Daily Report"]:
                 st.session_state.keywords["Daily Report"].append(new_kw)
                 save_keywords(st.session_state.keywords)
                 st.rerun()
         
+        # [수정] 키워드 심플 디스플레이 & 경고 문구
         daily_kws = st.session_state.keywords["Daily Report"]
         if daily_kws:
             st.write("")
@@ -416,46 +365,51 @@ if selected_category == "Daily Report":
                     st.session_state.keywords["Daily Report"].remove(kw)
                     save_keywords(st.session_state.keywords)
                     st.rerun()
-        st.caption("⚠️ 관심 키워드를 추가하면 해당 주제로 보고서에 반영됩니다.")
+        
+        st.caption("⚠️ 관심 키워드를 추가하면 해당 주제로 보고서에 반영됩니다. 단 키워드가 늘어나면 시스템 오류발생 가능성이 높습니다. 왼쪽 각 sector 별 Keyword 검색을 활용해주세요")
     
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
-    if today_report:
-        st.success(f"✅ {target_date} 리포트가 생성되어 있습니다.")
-    else:
-        st.info(f"📢 {target_date} 리포트가 아직 없습니다.")
-
-    if st.button("🚀 리포트 생성 (덮어쓰기)", type="primary", disabled=not bool(api_key)):
-        debug_box = st.container(border=True)
-        debug_box.write("🛠️ **Processing Log (Total War Mode)**")
-        
-        end_dt = now_kst
-        start_dt = datetime.combine(target_date - timedelta(days=1), dt_time(12, 0))
-        
-        # 1. 수집
-        news_items = fetch_news_strict_window(daily_kws, start_dt, end_dt, debug_box)
-        
-        # 2. Fallback 수집
-        if not news_items:
-            debug_box.markdown(f"<div class='warn-log'>⚠️ Strict mode empty -> Trying General mode...</div>", unsafe_allow_html=True)
-            news_items = fetch_news_general(daily_kws, limit=25)
-            debug_box.markdown(f"<div class='debug-log'>🔄 Fallback found {len(news_items)} items</div>", unsafe_allow_html=True)
-        
-        if not news_items:
-            debug_box.markdown(f"<div class='error-log'>❌ Final Failure: No news found anywhere.</div>", unsafe_allow_html=True)
-        else:
-            # 3. AI 분석 (총력전)
-            success, result = generate_report_total_war(api_key, news_items, debug_box)
+    if not today_report:
+        st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
+        if st.button("🚀 금일 리포트 생성 시작", type="primary"):
+            status_box = st.status("🚀 리포트 생성 프로세스...", expanded=True)
             
-            if success:
-                save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
-                save_daily_history(save_data)
-                debug_box.success("🎉 Mission Accomplished! Refreshing...")
-                time.sleep(2)
-                st.rerun()
+            status_box.write(f"📡 뉴스 수집 중 (전일 12:00 ~ 금일 06:00)...")
+            news_items = fetch_news(daily_kws, days=2, strict_time=True)
+            
+            if not news_items:
+                status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
+                time.sleep(1)
+                news_items = fetch_news(daily_kws, days=1, strict_time=False)
+            
+            if not news_items:
+                status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
             else:
-                debug_box.error(f"🚨 Mission Failed: {result}")
+                status_box.write(f"🧠 AI 심층 분석 중... (기사 {len(news_items)}건)")
+                success, result = generate_report_with_citations(api_key, news_items)
+                
+                if success:
+                    save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
+                    save_daily_history(save_data)
+                    status_box.update(label="🎉 리포트 생성 완료!", state="complete")
+                    st.rerun()
+                else:
+                    status_box.update(label="⚠️ AI 분석 실패", state="error")
+                    st.error(result)
+    else:
+        st.success(f"✅ {target_date} 리포트가 완료되었습니다.")
+        if st.button("🔄 리포트 다시 만들기 (덮어쓰기)"):
+            status_box = st.status("🚀 리포트 재생성 중...", expanded=True)
+            news_items = fetch_news(daily_kws, days=1, strict_time=False)
+            if news_items:
+                success, result = generate_report_with_citations(api_key, news_items)
+                if success:
+                    save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
+                    save_daily_history(save_data)
+                    status_box.update(label="🎉 재생성 완료!", state="complete")
+                    st.rerun()
 
     if history:
         for entry in history:
@@ -464,6 +418,7 @@ if selected_category == "Daily Report":
             st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
             
             with st.expander(f"📚 References (기사 원문) - {len(entry.get('articles', []))}건"):
+                st.markdown("#### 기사 원문 링크")
                 ref_cols = st.columns(2)
                 for i, item in enumerate(entry.get('articles', [])):
                     col = ref_cols[i % 2]
@@ -474,21 +429,22 @@ if selected_category == "Daily Report":
                         </a>
                         """, unsafe_allow_html=True)
 
+# ----------------------------------
+# [Mode 2] General Category
+# ----------------------------------
 else:
     with st.container(border=True):
         c1, c2, c3 = st.columns([2, 1, 1])
         new_kw = c1.text_input("키워드", label_visibility="collapsed")
-        
         if c2.button("추가", use_container_width=True):
             if new_kw:
                 st.session_state.keywords[selected_category].append(new_kw)
                 save_keywords(st.session_state.keywords)
                 st.rerun()
-        
         if c3.button("실행", type="primary", use_container_width=True):
             kws = st.session_state.keywords[selected_category]
             if kws:
-                news = fetch_news_general(kws)
+                news = fetch_news(kws, limit=20)
                 st.session_state.news_data[selected_category] = news
                 st.rerun()
 
@@ -502,6 +458,7 @@ else:
                     save_keywords(st.session_state.keywords)
                     st.rerun()
 
+    # [수정] AttributeError가 발생했던 부분 (이제 안전함)
     data = st.session_state.news_data.get(selected_category, [])
     if data:
         st.write(f"총 {len(data)}건 수집됨")
