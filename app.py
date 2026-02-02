@@ -19,7 +19,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ==========================================
 st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
 
-# [요청 반영] 카테고리 변경
 CATEGORIES = ["Daily Report", "P&C 소재", "EDTW 소재", "PKG 소재"]
 
 if 'news_data' not in st.session_state:
@@ -44,7 +43,6 @@ st.markdown("""
         .news-title:hover { color: #2563EB !important; text-decoration: underline; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
 
-        /* 주가 정보 스타일 (개선됨) */
         .stock-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 5px 0; border-bottom: 1px dashed #e2e8f0; }
         .stock-name { font-weight: 600; color: #334155; }
         .stock-price { font-family: 'Consolas', monospace; font-weight: 600; font-size: 14px; }
@@ -59,7 +57,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# [주식 정보: 정확한 티커 및 분류]
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"},
     "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q"},
@@ -80,17 +77,17 @@ def get_stock_prices_grouped():
         for name, symbol in items.items():
             try:
                 ticker = yf.Ticker(symbol)
-                try: # 1순위: 실시간 데이터
+                try: 
                     current = ticker.fast_info['last_price']
                     prev = ticker.fast_info['previous_close']
                 except:
-                    try: # 2순위: 1분봉
+                    try:
                         hist = ticker.history(period="1d", interval="1m")
                         if not hist.empty:
                             current = hist['Close'].iloc[-1]
                             prev = ticker.info.get('previousClose', current)
                         else: raise ValueError
-                    except: # 3순위: 일봉
+                    except:
                         hist = ticker.history(period="5d")
                         if len(hist) >= 2:
                             current = hist['Close'].iloc[-1]
@@ -145,7 +142,9 @@ def load_daily_history():
 
 def save_daily_history(new_report_data):
     history = load_daily_history()
+    # 날짜 중복 시 덮어쓰기 (기존 것 제거)
     history = [h for h in history if h['date'] != new_report_data['date']]
+    # 최신이 위로 오게 추가
     history.insert(0, new_report_data)
     try:
         with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
@@ -153,20 +152,14 @@ def save_daily_history(new_report_data):
     except: pass
 
 # ==========================================
-# 2. 뉴스 수집 함수 (지난주 금요일 로직 복원)
+# 2. 뉴스 수집 함수
 # ==========================================
-def fetch_news(keywords, days=1, limit=20, strict_time=False):
-    """
-    [복원된 로직] strict_time=False일 때 날짜 필터링을 하지 않아 Fallback이 확실히 동작함.
-    """
+def fetch_news(keywords, days=1, limit=20, strict_time=False, start_dt=None, end_dt=None):
     all_items = []
-    
-    # 시간 필터링 기준 (KST)
-    now_kst = datetime.utcnow() + timedelta(hours=9)
-    end_target = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
-    if now_kst.hour < 6:
-        end_target -= timedelta(days=1)
-    start_target = end_target - timedelta(hours=18)
+    if strict_time and start_dt and end_dt: pass
+    else:
+        end_dt = datetime.utcnow() + timedelta(hours=9)
+        start_dt = end_dt - timedelta(days=days)
     
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
@@ -174,32 +167,27 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False):
             res = requests.get(url, timeout=5, verify=False)
             soup = BeautifulSoup(res.content, 'xml')
             items = soup.find_all('item')
-            
             for item in items:
-                is_valid = True
-                # [복원] strict_time일 때만 검사. 아닐 때는 통과시킴.
-                if strict_time:
-                    try:
-                        pub_date_str = item.pubDate.text
-                        pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
-                        pub_date_kst = pub_date + timedelta(hours=9)
-                        if not (start_target <= pub_date_kst <= end_target):
-                            is_valid = False
-                    except: is_valid = True # 파싱 에러나면 그냥 포함 (안전빵)
-                
-                if is_valid:
-                    all_items.append({
-                        'Title': item.title.text,
-                        'Link': item.link.text,
-                        'Date': item.pubDate.text,
-                        'Source': item.source.text if item.source else "Google News"
-                    })
+                try:
+                    pub_date_str = item.pubDate.text
+                    pub_date_gmt = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
+                    pub_date_kst = pub_date_gmt + timedelta(hours=9)
+                    if start_dt <= pub_date_kst <= end_dt:
+                        all_items.append({
+                            'Title': item.title.text,
+                            'Link': item.link.text,
+                            'Date': item.pubDate.text,
+                            'Source': item.source.text if item.source else "Google News",
+                            'ParsedDate': pub_date_kst
+                        })
+                except: continue
         except: pass
         time.sleep(0.1)
-        
+    
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.drop_duplicates(subset=['Title'])
+        df = df.sort_values(by='ParsedDate', ascending=False)
         return df.head(limit).to_dict('records')
     return []
 
@@ -217,7 +205,7 @@ def translate_text_batch(api_key, texts, target_lang="Korean"):
             if models: model = models[0]
     except: pass
 
-    prompt = f"Translate these to {target_lang}. Return JSON array [\"text1\",...].\n\n{json.dumps(texts)}"
+    prompt = f"Translate the following list of texts to {target_lang}. Return ONLY the translated strings in a JSON array format [\"text1\", \"text2\"...].\n\nTexts: {json.dumps(texts)}"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -408,7 +396,7 @@ c_head, c_info = st.columns([3, 1])
 with c_head: st.title(selected_category)
 
 # ----------------------------------
-# [Mode 1] Daily Report (완벽 복원)
+# [Mode 1] Daily Report (완벽 복원 + 기능 추가)
 # ----------------------------------
 if selected_category == "Daily Report":
     st.info("ℹ️ 매일 오전 6시 기준 반도체 소재관련 정보 Report 입니다.")
@@ -419,13 +407,14 @@ if selected_category == "Daily Report":
     
     with c_info: st.markdown(f"<div style='text-align:right; color:#888;'>Report Date<br><b>{target_date}</b></div>", unsafe_allow_html=True)
 
+    # [기능 1] 검색어 유지 관리
     with st.container(border=True):
         c1, c2 = st.columns([3, 1])
         new_kw = c1.text_input("수집 키워드 추가", placeholder="예: HBM, 패키징", label_visibility="collapsed")
         if c2.button("추가", use_container_width=True):
             if new_kw and new_kw not in st.session_state.keywords["Daily Report"]:
                 st.session_state.keywords["Daily Report"].append(new_kw)
-                save_keywords(st.session_state.keywords)
+                save_keywords(st.session_state.keywords) # [저장]
                 st.rerun()
         
         daily_kws = st.session_state.keywords["Daily Report"]
@@ -435,19 +424,22 @@ if selected_category == "Daily Report":
             for i, kw in enumerate(daily_kws):
                 if cols[i % 8].button(f"{kw} ×", key=f"del_{kw}"):
                     st.session_state.keywords["Daily Report"].remove(kw)
-                    save_keywords(st.session_state.keywords)
+                    save_keywords(st.session_state.keywords) # [저장]
                     st.rerun()
         st.caption("⚠️ 관심 키워드는 자동 저장됩니다.")
     
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
+    # 금일 리포트 상태 표시
     if not today_report:
         st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
             status_box = st.status("🚀 리포트 생성 프로세스...", expanded=True)
-            status_box.write(f"📡 뉴스 수집 중 (전일 12:00 ~ 금일 06:00)...")
-            news_items = fetch_news(daily_kws, days=2, strict_time=True)
+            end_dt = datetime.combine(target_date, dt_time(6, 0))
+            start_dt = end_dt - timedelta(hours=18)
+            status_box.write(f"📡 뉴스 수집 중 ({start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')})...")
+            news_items = fetch_news(daily_kws, days=2, strict_time=True, start_dt=start_dt, end_dt=end_dt)
             
             if not news_items:
                 status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
@@ -469,6 +461,7 @@ if selected_category == "Daily Report":
                     st.error(result)
     else:
         st.success(f"✅ {target_date} 리포트가 완료되었습니다.")
+        # [덮어쓰기 버튼]
         if st.button("🔄 리포트 다시 만들기 (덮어쓰기)"):
             status_box = st.status("🚀 리포트 재생성 중...", expanded=True)
             news_items = fetch_news(daily_kws, days=1, strict_time=False)
@@ -480,12 +473,15 @@ if selected_category == "Daily Report":
                     status_box.update(label="🎉 재생성 완료!", state="complete")
                     st.rerun()
 
+    # [기능 2] 리포트 날짜별 하단 저장 (Expander 방식)
     if history:
+        st.markdown("---")
+        st.subheader("🗂️ 지난 리포트 기록")
         for entry in history:
-            st.divider()
-            st.markdown(f"<div class='history-header'>📅 {entry['date']} Daily Report</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
-            with st.expander(f"📚 References (기사 원문) - {len(entry.get('articles', []))}건"):
+            with st.expander(f"📅 {entry['date']} Daily Report", expanded=(entry['date'] == target_date_str)):
+                st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
+                # 원문 링크 표시
+                st.markdown("#### 📚 기사 원문 링크")
                 ref_cols = st.columns(2)
                 for i, item in enumerate(entry.get('articles', [])):
                     col = ref_cols[i % 2]
