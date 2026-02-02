@@ -18,7 +18,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ==========================================
 # 0. 페이지 설정 및 초기화
 # ==========================================
-st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Final)", page_icon="💠")
+st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Stable)", page_icon="💠")
 
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
@@ -169,7 +169,7 @@ def fetch_news_strict_window(keywords, start_dt, end_dt, debug_container):
     if not df.empty:
         df = df.sort_values(by='Timestamp', ascending=False)
         df = df.drop_duplicates(subset=['Title'])
-        return df.head(20).to_dict('records') # 20개 시도
+        return df.head(20).to_dict('records')
     return []
 
 def fetch_news_general(keywords, limit=20):
@@ -195,7 +195,7 @@ def fetch_news_general(keywords, limit=20):
     return []
 
 # ==========================================
-# 3. AI 분석 (모델명 최적화 - 핵심 수정)
+# 3. AI 분석 (모델명 안정화)
 # ==========================================
 def inject_links_to_report(report_text, news_data):
     def replace_match(match):
@@ -209,11 +209,8 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_smart(api_key, news_data, debug_container):
-    # [핵심 수정] 404/429 에러를 피하기 위한 '가장 확실한' 모델 리스트
-    # 1.5-flash-latest: 404 방지용 정식 명칭
-    # 1.5-flash-8b: 무료 사용량(Quota)이 가장 넉넉하여 429 방지에 탁월
-    # 2.0-flash: 429가 너무 잘 떠서 맨 뒤로 뺌
-    models = ["gemini-1.5-flash-latest", "gemini-1.5-flash-8b-latest", "gemini-1.5-flash-002", "gemini-1.5-pro-latest"]
+    # [수정] 가장 표준적인 모델명만 사용 (404 방지)
+    models = ["gemini-1.5-flash", "gemini-1.5-pro"]
     
     def call_gemini(current_news):
         news_context = ""
@@ -252,10 +249,12 @@ def generate_report_smart(api_key, news_data, debug_container):
 
         for model in models:
             debug_container.markdown(f"<div class='debug-log'>🔄 Trying Model: {model} (Items: {len(current_news)})...</div>", unsafe_allow_html=True)
+            # v1beta 엔드포인트 사용 (표준)
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             
             try:
-                response = requests.post(url, headers=headers, json=data, timeout=60)
+                # Timeout을 90초로 연장 (긴 응답 대비)
+                response = requests.post(url, headers=headers, json=data, timeout=90)
                 
                 if response.status_code == 200:
                     res_json = response.json()
@@ -264,7 +263,7 @@ def generate_report_smart(api_key, news_data, debug_container):
                         debug_container.success(f"✅ Success with {model}")
                         return True, inject_links_to_report(raw_text, current_news)
                     else:
-                        debug_container.warning(f"⚠️ {model} Blocked/Empty")
+                        debug_container.warning(f"⚠️ {model} Blocked/Empty Response")
                 else:
                     error_msg = f"❌ {model} Failed: {response.status_code}"
                     debug_container.markdown(f"<div class='error-log'>{error_msg}</div>", unsafe_allow_html=True)
@@ -273,7 +272,7 @@ def generate_report_smart(api_key, news_data, debug_container):
                         return False, "API Key Blocked (403)."
                     
                     if response.status_code == 429:
-                        return False, "429" # 상위 로직에서 재시도 유도
+                        return False, "429" 
 
             except Exception as e:
                 debug_container.error(f"💥 Exception: {str(e)}")
@@ -286,7 +285,6 @@ def generate_report_smart(api_key, news_data, debug_container):
     if success:
         return True, result
     elif result == "429":
-        # [2차] 10개로 줄여서 재시도
         debug_container.warning("⚠️ 429 Quota Error. Retrying with 10 items...")
         time.sleep(3)
         return call_gemini(news_data[:10])
@@ -377,7 +375,6 @@ if selected_category == "Daily Report":
         debug_box = st.container(border=True)
         debug_box.write("🛠️ **Processing Log**")
         
-        # 시간: 전일 12:00 ~ 현재
         end_dt = now_kst
         start_dt = datetime.combine(target_date - timedelta(days=1), dt_time(12, 0))
         
