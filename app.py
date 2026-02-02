@@ -4,7 +4,7 @@ import requests
 import urllib3
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from datetime import datetime, time as dt_time, timedelta
+from datetime import datetime, timedelta, time as dt_time
 import json
 import os
 import re
@@ -15,11 +15,11 @@ import yfinance as yf
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==========================================
-# 0. 페이지 설정 및 초기화
+# 0. 페이지 설정
 # ==========================================
 st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
 
-# [핵심] 카테고리 변경 요청 반영
+# [요청 반영] 카테고리 변경
 CATEGORIES = ["Daily Report", "P&C 소재", "EDTW 소재", "PKG 소재"]
 
 if 'news_data' not in st.session_state:
@@ -43,8 +43,8 @@ st.markdown("""
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
         .news-title:hover { color: #2563EB !important; text-decoration: underline; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
-        .news-translated { font-size: 13px !important; color: #475569; margin-top: 4px; display: block; }
 
+        /* 주가 정보 스타일 (개선됨) */
         .stock-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 5px 0; border-bottom: 1px dashed #e2e8f0; }
         .stock-name { font-weight: 600; color: #334155; }
         .stock-price { font-family: 'Consolas', monospace; font-weight: 600; font-size: 14px; }
@@ -59,7 +59,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 주식 정보 유지
+# [주식 정보: 정확한 티커 및 분류]
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"},
     "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q"},
@@ -80,36 +80,38 @@ def get_stock_prices_grouped():
         for name, symbol in items.items():
             try:
                 ticker = yf.Ticker(symbol)
-                try:
+                try: # 1순위: 실시간 데이터
                     current = ticker.fast_info['last_price']
                     prev = ticker.fast_info['previous_close']
                 except:
-                    try:
+                    try: # 2순위: 1분봉
                         hist = ticker.history(period="1d", interval="1m")
                         if not hist.empty:
                             current = hist['Close'].iloc[-1]
                             prev = ticker.info.get('previousClose', current)
-                        else:
-                            raise ValueError
-                    except:
+                        else: raise ValueError
+                    except: # 3순위: 일봉
                         hist = ticker.history(period="5d")
                         if len(hist) >= 2:
                             current = hist['Close'].iloc[-1]
                             prev = hist['Close'].iloc[-2]
-                        else:
-                            continue
+                        else: continue
+
                 change = current - prev
                 pct = (change / prev) * 100
+                
                 if ".KS" in symbol or ".KQ" in symbol: cur_sym = "₩"
                 elif ".T" in symbol: cur_sym = "¥"
                 elif ".HK" in symbol: cur_sym = "HK$"
                 elif ".DE" in symbol: cur_sym = "€"
                 else: cur_sym = "$"
-                if cur_sym in ["₩", "¥"]: fmt_price = f"{cur_sym}{current:,.0f}"
-                else: fmt_price = f"{cur_sym}{current:,.2f}"
+                
+                fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
+                
                 if change > 0: color_class, arrow, sign = "up-color", "▲", "+"
                 elif change < 0: color_class, arrow, sign = "down-color", "▼", ""
                 else: color_class, arrow, sign = "flat-color", "-", ""
+                
                 html_str = f"""<div class="stock-row"><span class="stock-name">{name}</span><span class="stock-price {color_class}">{fmt_price} <span style="font-size:0.9em; margin-left:3px;">{arrow} {sign}{pct:.2f}%</span></span></div>"""
                 result_map[name] = html_str
             except Exception: pass
@@ -151,14 +153,20 @@ def save_daily_history(new_report_data):
     except: pass
 
 # ==========================================
-# 2. 뉴스 수집 함수 (Daily Report용 - 절대 보존)
+# 2. 뉴스 수집 함수 (지난주 금요일 로직 복원)
 # ==========================================
-def fetch_news(keywords, days=1, limit=20, strict_time=False, start_dt=None, end_dt=None):
+def fetch_news(keywords, days=1, limit=20, strict_time=False):
+    """
+    [복원된 로직] strict_time=False일 때 날짜 필터링을 하지 않아 Fallback이 확실히 동작함.
+    """
     all_items = []
-    if strict_time and start_dt and end_dt: pass
-    else:
-        end_dt = datetime.utcnow() + timedelta(hours=9)
-        start_dt = end_dt - timedelta(days=days)
+    
+    # 시간 필터링 기준 (KST)
+    now_kst = datetime.utcnow() + timedelta(hours=9)
+    end_target = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
+    if now_kst.hour < 6:
+        end_target -= timedelta(days=1)
+    start_target = end_target - timedelta(hours=18)
     
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
@@ -166,39 +174,41 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False, start_dt=None, end
             res = requests.get(url, timeout=5, verify=False)
             soup = BeautifulSoup(res.content, 'xml')
             items = soup.find_all('item')
+            
             for item in items:
-                try:
-                    pub_date_str = item.pubDate.text
-                    pub_date_gmt = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
-                    pub_date_kst = pub_date_gmt + timedelta(hours=9)
-                    if start_dt <= pub_date_kst <= end_dt:
-                        all_items.append({
-                            'Title': item.title.text,
-                            'Link': item.link.text,
-                            'Date': item.pubDate.text,
-                            'Source': item.source.text if item.source else "Google News",
-                            'ParsedDate': pub_date_kst
-                        })
-                except: continue
+                is_valid = True
+                # [복원] strict_time일 때만 검사. 아닐 때는 통과시킴.
+                if strict_time:
+                    try:
+                        pub_date_str = item.pubDate.text
+                        pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
+                        pub_date_kst = pub_date + timedelta(hours=9)
+                        if not (start_target <= pub_date_kst <= end_target):
+                            is_valid = False
+                    except: is_valid = True # 파싱 에러나면 그냥 포함 (안전빵)
+                
+                if is_valid:
+                    all_items.append({
+                        'Title': item.title.text,
+                        'Link': item.link.text,
+                        'Date': item.pubDate.text,
+                        'Source': item.source.text if item.source else "Google News"
+                    })
         except: pass
         time.sleep(0.1)
-    
+        
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.drop_duplicates(subset=['Title'])
-        df = df.sort_values(by='ParsedDate', ascending=False)
         return df.head(limit).to_dict('records')
     return []
 
 # ==========================================
-# 2-1. 글로벌 뉴스 수집 (5개국 + 번역 + 한글화)
+# 2-1. 글로벌 뉴스 수집 (5개국 + 번역)
 # ==========================================
 def translate_text_batch(api_key, texts, target_lang="Korean"):
-    """ Gemini를 사용해 리스트의 텍스트를 일괄 번역 """
     if not texts: return []
-    
-    # 모델 자동 탐색
-    model = "gemini-1.5-flash" # Default
+    model = "gemini-1.5-flash"
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
         res = requests.get(url, timeout=5)
@@ -207,9 +217,7 @@ def translate_text_batch(api_key, texts, target_lang="Korean"):
             if models: model = models[0]
     except: pass
 
-    # 일괄 번역 요청
-    prompt = f"Translate the following list of texts to {target_lang}. Return ONLY the translated strings in a JSON array format [\"text1\", \"text2\"...].\n\nTexts: {json.dumps(texts)}"
-    
+    prompt = f"Translate these to {target_lang}. Return JSON array [\"text1\",...].\n\n{json.dumps(texts)}"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -218,100 +226,69 @@ def translate_text_batch(api_key, texts, target_lang="Korean"):
         response = requests.post(url, headers=headers, json=data, timeout=30)
         if response.status_code == 200:
             raw_text = response.json()['candidates'][0]['content']['parts'][0]['text']
-            # JSON 추출
             match = re.search(r'\[.*\]', raw_text, re.DOTALL)
-            if match:
-                return json.loads(match.group(0))
+            if match: return json.loads(match.group(0))
     except: pass
-    return texts # 실패 시 원문 반환
+    return texts
 
 def get_translated_keywords(api_key, keyword):
-    """ 입력 키워드를 4개국어(영어, 일어, 중국어 간체, 중국어 번체)로 번역 """
-    # 캐시나 간단한 매핑이 없으므로 Gemini 호출
-    prompt = f"""
-    Translate the keyword "{keyword}" into:
-    1. English
-    2. Japanese
-    3. Traditional Chinese (Taiwan)
-    4. Simplified Chinese (China)
-    
-    Return result in JSON format: {{"EN": "...", "JP": "...", "TW": "...", "CN": "..."}}
-    """
+    prompt = f"Translate '{keyword}' into English, Japanese, Traditional Chinese(TW), Simplified Chinese(CN). Return JSON: {{'EN':'..','JP':'..','TW':'..','CN':'..'}}"
     model = "gemini-1.5-flash"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
-    
     try:
         res = requests.post(url, headers=headers, json=data, timeout=10)
         if res.status_code == 200:
             txt = res.json()['candidates'][0]['content']['parts'][0]['text']
             match = re.search(r'\{.*\}', txt, re.DOTALL)
-            if match:
-                return json.loads(match.group(0))
+            if match: return json.loads(match.group(0))
     except: pass
     return {"EN": keyword, "JP": keyword, "TW": keyword, "CN": keyword}
 
 def fetch_news_global(api_key, keywords, days=3):
-    """ 5개국(KR, US, JP, TW, CN) 뉴스 수집 및 타이틀 한글화 """
-    
-    # 국가별 설정 (검색어 언어, 지역코드, 언어코드)
     TARGETS = {
-        "KR": {"gl": "KR", "hl": "ko", "key": "KR"}, # 한국은 원문 그대로
+        "KR": {"gl": "KR", "hl": "ko", "key": "KR"},
         "US": {"gl": "US", "hl": "en", "key": "EN"},
         "JP": {"gl": "JP", "hl": "ja", "key": "JP"},
         "TW": {"gl": "TW", "hl": "zh-TW", "key": "TW"},
-        "CN": {"gl": "CN", "hl": "zh-CN", "key": "CN"} # 중국
+        "CN": {"gl": "CN", "hl": "zh-CN", "key": "CN"}
     }
-    
     all_raw_items = []
-    
-    # 1. 키워드별로 다국어 수집
     for kw in keywords:
-        # 키워드 번역 (API Key 필요)
         trans_map = get_translated_keywords(api_key, kw)
-        trans_map["KR"] = kw # 한국어는 원본
-        
+        trans_map["KR"] = kw
         for country, conf in TARGETS.items():
             search_term = trans_map.get(conf["key"], kw)
             url = f"https://news.google.com/rss/search?q={quote(search_term)}+when:{days}d&hl={conf['hl']}&gl={conf['gl']}&ceid={conf['gl']}:{conf['hl']}"
-            
             try:
                 res = requests.get(url, timeout=3, verify=False)
                 soup = BeautifulSoup(res.content, 'xml')
                 items = soup.find_all('item')
-                
                 for item in items:
                     all_raw_items.append({
                         'Title': item.title.text,
                         'Link': item.link.text,
                         'Date': item.pubDate.text,
                         'Source': f"[{country}] {item.source.text if item.source else 'Google News'}",
-                        'Lang': conf['key'] # 번역 필요 여부 판단용
+                        'Lang': conf['key']
                     })
             except: pass
             time.sleep(0.1)
 
     if not all_raw_items: return []
-
     df = pd.DataFrame(all_raw_items)
     df = df.drop_duplicates(subset=['Title'])
-    
-    # 최신순 정렬 후 상위 30개만 추출 (번역 비용/속도 고려)
     items_to_process = df.head(30).to_dict('records')
     
-    # 2. 타이틀 일괄 번역 (KR 제외)
     titles_to_translate = [x['Title'] for x in items_to_process if x['Lang'] != "KR"]
     indices_to_translate = [i for i, x in enumerate(items_to_process) if x['Lang'] != "KR"]
     
     if titles_to_translate:
         translated_titles = translate_text_batch(api_key, titles_to_translate)
-        # 번역 결과 매핑
         for idx, new_title in zip(indices_to_translate, translated_titles):
             if idx < len(items_to_process):
-                # 원문(번역문) 형태로 저장
                 items_to_process[idx]['Title'] = f"{new_title} <span style='font-size:0.8em; color:#999;'>({items_to_process[idx]['Title']})</span>"
-
     return items_to_process
 
 # ==========================================
@@ -320,7 +297,7 @@ def fetch_news_global(api_key, keywords, days=3):
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
     try:
-        res = requests.get(url, timeout=5)
+        res = requests.get(url, timeout=10)
         if res.status_code == 200:
             data = res.json()
             return [m['name'].replace("models/", "") for m in data.get('models', []) if 'generateContent' in m.get('supportedGenerationMethods', [])]
@@ -340,12 +317,10 @@ def inject_links_to_report(report_text, news_data):
 
 def generate_report_with_citations(api_key, news_data):
     models = get_available_models(api_key)
-    if not models:
-        models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    if not models: models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
     
     news_context = ""
     for i, item in enumerate(news_data):
-        # HTML 태그 제거 (번역된 타이틀에 태그가 있을 수 있음)
         clean_title = re.sub(r'<[^>]+>', '', item['Title'])
         news_context += f"[{i+1}] {clean_title} (Source: {item['Source']})\n"
 
@@ -426,28 +401,23 @@ with st.sidebar:
                 st.markdown(f"<div class='stock-header'>{cat}</div>", unsafe_allow_html=True)
                 for name, symbol in items.items():
                     html_info = stock_data.get(name)
-                    if html_info:
-                        st.markdown(html_info, unsafe_allow_html=True)
-    
+                    if html_info: st.markdown(html_info, unsafe_allow_html=True)
     st.caption("ℹ️ '시세 업데이트' 버튼을 누르면 최신가로 갱신됩니다.")
 
 c_head, c_info = st.columns([3, 1])
 with c_head: st.title(selected_category)
 
 # ----------------------------------
-# [Mode 1] Daily Report (100% 보존)
+# [Mode 1] Daily Report (완벽 복원)
 # ----------------------------------
 if selected_category == "Daily Report":
     st.info("ℹ️ 매일 오전 6시 기준 반도체 소재관련 정보 Report 입니다.")
     now_kst = datetime.utcnow() + timedelta(hours=9)
-    if now_kst.hour < 6:
-        target_date = (now_kst - timedelta(days=1)).date()
-    else:
-        target_date = now_kst.date()
+    if now_kst.hour < 6: target_date = (now_kst - timedelta(days=1)).date()
+    else: target_date = now_kst.date()
     target_date_str = target_date.strftime('%Y-%m-%d')
     
-    with c_info:
-        st.markdown(f"<div style='text-align:right; color:#888;'>Report Date<br><b>{target_date}</b></div>", unsafe_allow_html=True)
+    with c_info: st.markdown(f"<div style='text-align:right; color:#888;'>Report Date<br><b>{target_date}</b></div>", unsafe_allow_html=True)
 
     with st.container(border=True):
         c1, c2 = st.columns([3, 1])
@@ -467,8 +437,7 @@ if selected_category == "Daily Report":
                     st.session_state.keywords["Daily Report"].remove(kw)
                     save_keywords(st.session_state.keywords)
                     st.rerun()
-        
-        st.caption("⚠️ 관심 키워드를 추가하면 해당 주제로 보고서에 반영됩니다.")
+        st.caption("⚠️ 관심 키워드는 자동 저장됩니다.")
     
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
@@ -477,11 +446,8 @@ if selected_category == "Daily Report":
         st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
             status_box = st.status("🚀 리포트 생성 프로세스...", expanded=True)
-            end_dt = datetime.combine(target_date, dt_time(6, 0))
-            start_dt = end_dt - timedelta(hours=18)
-            
-            status_box.write(f"📡 뉴스 수집 중 ({start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')})...")
-            news_items = fetch_news(daily_kws, days=2, strict_time=True, start_dt=start_dt, end_dt=end_dt)
+            status_box.write(f"📡 뉴스 수집 중 (전일 12:00 ~ 금일 06:00)...")
+            news_items = fetch_news(daily_kws, days=2, strict_time=True)
             
             if not news_items:
                 status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
@@ -524,11 +490,7 @@ if selected_category == "Daily Report":
                 for i, item in enumerate(entry.get('articles', [])):
                     col = ref_cols[i % 2]
                     with col:
-                        st.markdown(f"""
-                        <a href="{item['Link']}" target="_blank" class="ref-link">
-                            <span class="ref-number">[{i+1}]</span> {item['Title']}
-                        </a>
-                        """, unsafe_allow_html=True)
+                        st.markdown(f"""<a href="{item['Link']}" target="_blank" class="ref-link"><span class="ref-number">[{i+1}]</span> {item['Title']}</a>""", unsafe_allow_html=True)
 
 # ----------------------------------
 # [Mode 2] General Category (P&C, EDTW, PKG)
@@ -543,14 +505,12 @@ else:
                 save_keywords(st.session_state.keywords)
                 st.rerun()
         
-        # 검색 기간 설정 (기본 3일)
         search_days = c3.slider("검색 기간(일)", min_value=1, max_value=30, value=3, help="최근 N일간 뉴스를 검색")
 
         if st.button("실행 (5개국 검색 + 번역)", type="primary", use_container_width=True, disabled=not bool(api_key)):
             kws = st.session_state.keywords[selected_category]
             if kws:
-                with st.spinner("🌍 5개국(KR/US/JP/TW/CN) 뉴스 수집 및 번역 중... (시간이 소요될 수 있습니다)"):
-                    # 글로벌 수집 함수 호출
+                with st.spinner("🌍 5개국(KR/US/JP/TW/CN) 뉴스 수집 및 번역 중..."):
                     news = fetch_news_global(api_key, kws, days=search_days)
                     st.session_state.news_data[selected_category] = news
                     st.rerun()
@@ -569,12 +529,6 @@ else:
     if data:
         st.write(f"총 {len(data)}건 수집됨 (최근 {search_days}일)")
         for item in data:
-            # HTML 타이틀 렌더링
-            st.markdown(f"""
-            <div class="news-card">
-                <div class="news-meta">{item['Source']} | {item['Date']}</div>
-                <a href="{item['Link']}" target="_blank" class="news-title" style="text-decoration:none;">{item['Title']}</a>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"""<div class="news-card"><div class="news-meta">{item['Source']} | {item['Date']}</div><a href="{item['Link']}" target="_blank" class="news-title" style="text-decoration:none;">{item['Title']}</a></div>""", unsafe_allow_html=True)
     else:
         st.info("상단의 '실행' 버튼을 눌러 뉴스를 수집하세요. (API Key 필요)")
