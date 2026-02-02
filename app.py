@@ -18,7 +18,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ==========================================
 # 0. 페이지 설정
 # ==========================================
-st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
+st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Final)", page_icon="💠")
 
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
@@ -49,8 +49,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# [중요] 키가 차단되었으므로 기본키 삭제 (사용자가 직접 입력해야 함)
-FALLBACK_API_KEY = "" 
+# [중요] 만료된 키 삭제. 이제 키가 없으면 빈 값입니다.
+FALLBACK_API_KEY = ""
 
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC"},
@@ -126,7 +126,7 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (진단 모드)
+# 2. 뉴스 수집
 # ==========================================
 def fetch_news_strict_window(keywords, target_date, debug_container):
     all_items = []
@@ -196,7 +196,7 @@ def fetch_news_general(keywords, limit=15):
     return []
 
 # ==========================================
-# 3. AI 분석 (모델명 수정 및 디버깅)
+# 3. AI 분석 (모델명 수정: 404 해결)
 # ==========================================
 def inject_links_to_report(report_text, news_data):
     def replace_match(match):
@@ -210,8 +210,8 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_debug(api_key, news_data, debug_container):
-    # [수정] 안정적인 모델명으로 변경 (latest 별칭 사용)
-    models = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest", "gemini-1.5-flash"]
+    # [수정] 404 에러를 유발하던 -latest 접미사 제거 및 모델명 표준화
+    models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
     
     news_context = ""
     for i, item in enumerate(news_data):
@@ -249,8 +249,6 @@ def generate_report_debug(api_key, news_data, debug_container):
 
     for model in models:
         debug_container.markdown(f"<div class='debug-log'>🔄 Trying Model: {model}...</div>", unsafe_allow_html=True)
-        
-        # [중요] v1beta 엔드포인트 사용
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         
         try:
@@ -265,13 +263,8 @@ def generate_report_debug(api_key, news_data, debug_container):
                 else:
                     debug_container.warning(f"⚠️ {model} Blocked: {res_json}")
             else:
-                # 에러 로그 출력
                 error_msg = f"❌ {model} Failed: {response.status_code} {response.text}"
                 debug_container.markdown(f"<div class='error-log'>{error_msg}</div>", unsafe_allow_html=True)
-                
-                # 403: 키 차단 -> 즉시 중단
-                if response.status_code == 403:
-                    return False, "API Key가 차단되었습니다. (403 Leaked). 새 키를 발급받으세요."
                 
                 if response.status_code == 429:
                     time.sleep(2)
@@ -295,7 +288,6 @@ with st.sidebar:
     st.divider()
     
     with st.expander("🔐 API Key", expanded=True):
-        st.info("⚠️ 기존 키가 차단되었습니다. 새 키를 입력하세요.")
         user_key = st.text_input("Key", type="password")
         if user_key: api_key = user_key
         elif "GEMINI_API_KEY" in st.secrets: api_key = st.secrets["GEMINI_API_KEY"]
@@ -356,8 +348,12 @@ if selected_category == "Daily Report":
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
     if not today_report:
+        # [중요] 키가 없으면 경고 표시
+        if not api_key:
+            st.warning("⚠️ API Key가 없습니다. 왼쪽 사이드바에 키를 입력해주세요.")
+            
         st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
-        if st.button("🚀 금일 리포트 생성 시작", type="primary"):
+        if st.button("🚀 금일 리포트 생성 시작", type="primary", disabled=not api_key):
             debug_box = st.container(border=True)
             debug_box.write("🛠️ **Processing Log**")
             
@@ -387,7 +383,7 @@ if selected_category == "Daily Report":
                     debug_box.error(f"🚨 최종 실패: {result}")
     else:
         st.success(f"✅ {target_date} 리포트가 완료되었습니다.")
-        if st.button("🔄 리포트 다시 만들기 (덮어쓰기)"):
+        if st.button("🔄 리포트 다시 만들기 (덮어쓰기)", disabled=not api_key):
             debug_box = st.container(border=True)
             debug_box.write("🛠️ **Re-Generation Log**")
             
