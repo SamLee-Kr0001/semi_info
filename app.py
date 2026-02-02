@@ -73,7 +73,7 @@ STOCK_CATEGORIES = {
         "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"
     },
     "🧠 Fabless": {
-        "Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q" 
+        "Nvidia": "NVDA", "Broadcom": "AVGO"
     },
     "🧪 Materials": {
         "Soulbrain": "357780.KQ", "동진쎄미켐": "005290.KQ", "하나머트리얼즈": "166090.KQ",
