@@ -16,13 +16,12 @@ import traceback
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==========================================
-# 0. 페이지 설정 및 초기화
+# 0. 페이지 설정
 # ==========================================
 st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Final)", page_icon="💠")
 
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
-# 세션 상태 초기화 (AttributeError 방지)
 if 'news_data' not in st.session_state:
     st.session_state.news_data = {cat: [] for cat in CATEGORIES}
 
@@ -34,7 +33,6 @@ st.markdown("""
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
         html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
         
-        /* 리포트 스타일 */
         .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
         .report-box h2 { color: #1E3A8A; border-bottom: 2px solid #3B82F6; padding-bottom: 10px; margin-top: 30px; margin-bottom: 20px; font-size: 24px; font-weight: 700; }
         
@@ -42,29 +40,22 @@ st.markdown("""
         .debug-log { font-family: monospace; font-size: 12px; background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 4px solid #333; }
         .error-log { font-family: monospace; font-size: 13px; background: #FFEEEE; color: #CC0000; padding: 15px; border-radius: 5px; border: 1px solid #FF0000; margin-top: 10px; white-space: pre-wrap; }
         
-        /* 뉴스 카드 스타일 */
-        .news-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 10px; }
-        .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
-        .news-title:hover { color: #2563EB !important; text-decoration: underline; }
-        .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
-
-        /* 사이드바 주식 폰트 강제 고정 */
-        section[data-testid="stSidebar"] div[data-testid="stMetricValue"] { font-size: 18px !important; font-weight: 600 !important; }
-        section[data-testid="stSidebar"] div[data-testid="stMetricDelta"] { font-size: 12px !important; }
-        section[data-testid="stSidebar"] div[data-testid="stMetricLabel"] { font-size: 12px !important; color: #64748B !important; }
-        
-        /* 하단 레퍼런스 링크 */
         .ref-link { font-size: 0.9em; color: #555; text-decoration: none; display: block; margin-bottom: 6px; padding: 5px; border-radius: 4px; transition: background 0.2s; }
         .ref-link:hover { background-color: #F1F5F9; color: #2563EB; }
         .ref-number { font-weight: bold; color: #3B82F6; margin-right: 8px; background: #DBEAFE; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
         
-        /* 본문 내 위첨자 링크 (작게) */
-        sup a { text-decoration: none; color: #3B82F6; font-weight: bold; margin-left: 1px; font-size: 0.8em; }
+        sup a { text-decoration: none; color: #3B82F6; font-weight: bold; margin-left: 2px; font-size: 0.8em; }
         sup a:hover { text-decoration: underline; color: #1D4ED8; }
+        
+        .news-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 10px; }
+        .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
+        .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
+        section[data-testid="stSidebar"] div[data-testid="stMetricValue"] { font-size: 18px !important; font-weight: 600 !important; }
+        .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
     </style>
 """, unsafe_allow_html=True)
 
-# 하드코딩 키 삭제 (보안 강화)
+# 하드코딩 키 삭제
 FALLBACK_API_KEY = ""
 
 STOCK_CATEGORIES = {
@@ -79,7 +70,7 @@ KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
 
 # ==========================================
-# 1. 데이터 관리 함수 (키워드/히스토리)
+# 1. 데이터 관리
 # ==========================================
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
@@ -110,7 +101,6 @@ def load_daily_history():
 
 def save_daily_history(new_report_data):
     history = load_daily_history()
-    # 날짜 중복 시 덮어쓰기
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data)
     try:
@@ -142,24 +132,17 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (시간 필터링 적용)
+# 2. 뉴스 수집 (20개로 상향)
 # ==========================================
 def fetch_news_strict_window(keywords, target_date, debug_container):
-    """
-    Daily Report용: [전일 12:00 ~ 당일 06:00] 뉴스만 필터링
-    """
     all_items = []
-    
-    # 기준 시간 계산 (KST)
     end_dt = datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6)
     start_dt = end_dt - timedelta(hours=18)
     
-    # 디버그 로그
-    debug_container.markdown(f"<div class='debug-log'>🕒 Time Filter: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')} (KST)</div>", unsafe_allow_html=True)
+    debug_container.markdown(f"<div class='debug-log'>🕒 Time Filter: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')}</div>", unsafe_allow_html=True)
     
     total_found = 0
     for kw in keywords:
-        # 넉넉히 2일치 가져와서 내부에서 시간으로 거름
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
         try:
             res = requests.get(url, timeout=5, verify=False)
@@ -170,11 +153,9 @@ def fetch_news_strict_window(keywords, target_date, debug_container):
             for item in items:
                 try:
                     pub_date_str = item.pubDate.text
-                    # RSS 날짜 파싱
                     pub_date_gmt = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                     pub_date_kst = pub_date_gmt + timedelta(hours=9)
                     
-                    # 시간 범위 확인
                     if start_dt <= pub_date_kst <= end_dt:
                         all_items.append({
                             'Title': item.title.text,
@@ -195,11 +176,11 @@ def fetch_news_strict_window(keywords, target_date, debug_container):
     if not df.empty:
         df = df.sort_values(by='Timestamp', ascending=False)
         df = df.drop_duplicates(subset=['Title'])
-        return df.head(20).to_dict('records') # 20개 제한
+        # [변경] 요청하신대로 20개까지 수집
+        return df.head(20).to_dict('records')
     return []
 
 def fetch_news_general(keywords, limit=20):
-    """일반/Fallback용: 최근 1일 뉴스"""
     all_items = []
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:1d&hl=ko&gl=KR&ceid=KR:ko"
@@ -214,7 +195,6 @@ def fetch_news_general(keywords, limit=20):
                     'Source': item.source.text if item.source else "Google News"
                 })
         except: pass
-        time.sleep(0.1)
     
     df = pd.DataFrame(all_items)
     if not df.empty:
@@ -223,12 +203,9 @@ def fetch_news_general(keywords, limit=20):
     return []
 
 # ==========================================
-# 3. AI 분석 및 후처리
+# 3. AI 분석 (자동 감량 로직 추가)
 # ==========================================
 def inject_links_to_report(report_text, news_data):
-    """
-    [1] -> <sup><a href="...">[1]</a></sup> 변환
-    """
     def replace_match(match):
         try:
             idx = int(match.group(1)) - 1
@@ -240,75 +217,91 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_debug(api_key, news_data, debug_container):
+    # [전략] Flash 모델이 가장 용량 제한이 적으므로 1순위
     models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
     
-    news_context = ""
-    for i, item in enumerate(news_data):
-        news_context += f"[{i+1}] {item['Title']} (Source: {item['Source']})\n"
+    # 내부 함수: 실제 호출 로직
+    def call_api(current_models, current_news):
+        news_context = ""
+        for i, item in enumerate(current_news):
+            news_context += f"[{i+1}] {item['Title']} (Source: {item['Source']})\n"
 
-    prompt = f"""
-    당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
-    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
+        prompt = f"""
+        당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
+        제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
 
-    **[작성 원칙]**
-    1. **서술형 작성**: 이슈별로 현상/원인/전망을 나누지 말고, 자연스러운 논리적 흐름(Narrative)으로 서술하세요.
-    2. **근거 명시**: 내용의 출처가 되는 뉴스 번호 **[1], [2]**를 문장 끝에 반드시 인용하세요.
-    3. **전문적 어조**: 투자자 리포트 톤앤매너를 유지하세요.
+        **[작성 원칙]**
+        1. **서술형 작성**: 이슈별로 현상/원인/전망을 나누지 말고, 자연스러운 논리적 흐름(Narrative)으로 서술하세요.
+        2. **근거 명시**: 내용의 출처가 되는 뉴스 번호 **[1], [2]**를 문장 끝에 반드시 인용하세요.
+        3. **전문적 어조**: 투자자 리포트 톤앤매너를 유지하세요.
 
-    [뉴스 데이터]
-    {news_context}
-    
-    [보고서 구조 (Markdown)]
-    ## 📊 Executive Summary (시장 총평)
-    - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화 요약.
-
-    ## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
-    - 중요 이슈 2~3가지를 선정하여 소제목을 달고 분석.
-    - 배경, 원인, 파급 효과를 연결하여 깊이 있게 서술.
-
-    ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
-    - 소부장, 파운드리, 메모리 등 섹터별 주요 단신 종합.
-
-    ## 💡 Analyst's View (투자 아이디어)
-    - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트.
-    """
-    
-    headers = {'Content-Type': 'application/json'}
-    data = {"contents": [{"parts": [{"text": prompt}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
-
-    for model in models:
-        debug_container.markdown(f"<div class='debug-log'>🔄 Trying Model: {model}...</div>", unsafe_allow_html=True)
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        [뉴스 데이터]
+        {news_context}
         
-        try:
-            response = requests.post(url, headers=headers, json=data, timeout=60)
+        [보고서 구조 (Markdown)]
+        ## 📊 Executive Summary (시장 총평)
+        - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화 요약.
+
+        ## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
+        - 중요 이슈 2~3가지를 선정하여 소제목을 달고 분석.
+        - 배경, 원인, 파급 효과를 연결하여 깊이 있게 서술.
+
+        ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
+        - 소부장, 파운드리, 메모리 등 섹터별 주요 단신 종합.
+
+        ## 💡 Analyst's View (투자 아이디어)
+        - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트.
+        """
+        
+        headers = {'Content-Type': 'application/json'}
+        data = {"contents": [{"parts": [{"text": prompt}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
+
+        for model in current_models:
+            debug_container.markdown(f"<div class='debug-log'>🔄 Trying Model: {model} (News Count: {len(current_news)})...</div>", unsafe_allow_html=True)
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             
-            if response.status_code == 200:
-                res_json = response.json()
-                if 'candidates' in res_json and res_json['candidates']:
-                    raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
-                    debug_container.success(f"✅ Success with {model}")
-                    return True, inject_links_to_report(raw_text, news_data)
+            try:
+                response = requests.post(url, headers=headers, json=data, timeout=60)
+                
+                if response.status_code == 200:
+                    res_json = response.json()
+                    if 'candidates' in res_json and res_json['candidates']:
+                        raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
+                        debug_container.success(f"✅ Success with {model}")
+                        return True, inject_links_to_report(raw_text, current_news)
+                    else:
+                        debug_container.warning(f"⚠️ {model} Blocked: {res_json}")
                 else:
-                    debug_container.warning(f"⚠️ {model} Blocked: {res_json}")
-            else:
-                error_msg = f"❌ {model} Failed: {response.status_code} {response.text}"
-                debug_container.markdown(f"<div class='error-log'>{error_msg}</div>", unsafe_allow_html=True)
+                    error_msg = f"❌ {model} Failed: {response.status_code} {response.text[:200]}..."
+                    debug_container.markdown(f"<div class='error-log'>{error_msg}</div>", unsafe_allow_html=True)
+                    
+                    if response.status_code == 403:
+                        return False, "API Key Blocked (403). New Key Required."
+                    if response.status_code == 400:
+                        return False, "API Key Invalid (400)."
+                    
+                    # 429 에러(용량 초과)면 루프를 멈추고 리턴하여 상위에서 처리하도록 유도
+                    if response.status_code == 429:
+                        return False, "429" 
+
+            except Exception as e:
+                debug_container.error(f"💥 Exception: {str(e)}")
+                continue
                 
-                # 403 Forbidden = 키 차단
-                if response.status_code == 403:
-                    return False, "API Key is blocked (403). Please generate a new key."
-                if response.status_code == 400: # API Key 오류
-                    return False, "API Key is invalid (400). Please check your key."
-                
-                if response.status_code == 429:
-                    time.sleep(2)
-                    continue
-        except Exception as e:
-            debug_container.error(f"💥 Exception with {model}: {str(e)}")
-            continue
-            
-    return False, "All models failed. See logs above."
+        return False, "All models failed"
+
+    # [1차 시도] 20개 전부 시도
+    success, result = call_api(models, news_data)
+    
+    if success:
+        return True, result
+    elif result == "429" or "Quota" in result:
+        # [2차 시도 - 자동 감량] 429 발생 시 10개로 줄여서 재시도
+        debug_container.warning("⚠️ 입력 데이터가 너무 많아(429 Error) 기사를 10개로 줄여서 다시 시도합니다...")
+        time.sleep(3)
+        return call_api(models, news_data[:10]) # 상위 10개만
+    else:
+        return False, result
 
 # ==========================================
 # 4. 메인 UI
@@ -322,7 +315,6 @@ with st.sidebar:
     selected_category = st.radio("카테고리", CATEGORIES, index=0, label_visibility="collapsed")
     st.divider()
     
-    # [수정] secrets.toml 우선 적용 로직
     with st.expander("🔐 API Key Settings", expanded=True):
         if "GEMINI_API_KEY" in st.secrets:
             api_key = st.secrets["GEMINI_API_KEY"]
@@ -368,7 +360,6 @@ if selected_category == "Daily Report":
         c1, c2 = st.columns([3, 1])
         new_kw = c1.text_input("수집 키워드 추가", placeholder="예: HBM, 패키징", label_visibility="collapsed")
         
-        # 키워드 추가 (저장)
         if c2.button("추가", use_container_width=True):
             if new_kw and new_kw not in st.session_state.keywords["Daily Report"]:
                 st.session_state.keywords["Daily Report"].append(new_kw)
@@ -380,7 +371,6 @@ if selected_category == "Daily Report":
             st.write("")
             cols = st.columns(len(daily_kws) if len(daily_kws) < 8 else 8)
             for i, kw in enumerate(daily_kws):
-                # 키워드 삭제 (저장)
                 if cols[i % 8].button(f"{kw} ×", key=f"del_{kw}"):
                     st.session_state.keywords["Daily Report"].remove(kw)
                     save_keywords(st.session_state.keywords)
@@ -393,20 +383,19 @@ if selected_category == "Daily Report":
     if not today_report:
         st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
         
-        # 키 검증
         btn_disabled = not bool(api_key)
         
         if st.button("🚀 금일 리포트 생성 시작", type="primary", disabled=btn_disabled):
             debug_box = st.container(border=True)
             debug_box.write("🛠️ **Processing Log**")
             
-            # 1. 수집
+            # 1. 수집 (20개 시도)
             news_items = fetch_news_strict_window(daily_kws, target_date, debug_box)
             
             # 2. Fallback
             if not news_items:
                 debug_box.warning("⚠️ 지정 시간 내 기사 없음 -> 범위 확장(24h) 시도...")
-                news_items = fetch_news_general(daily_kws, limit=15)
+                news_items = fetch_news_general(daily_kws, limit=20)
                 debug_box.write(f"🔄 Fallback 수집 결과: {len(news_items)}건")
             
             # 3. AI 분석
@@ -426,12 +415,12 @@ if selected_category == "Daily Report":
                     debug_box.error(f"🚨 최종 실패: {result}")
     else:
         st.success(f"✅ {target_date} 리포트가 완료되었습니다.")
-        if st.button("🔄 리포트 다시 만들기 (덮어쓰기)", disabled=not bool(api_key)):
+        if st.button("🔄 리포트 다시 만들기 (덮어쓰기)", disabled=not api_key):
             debug_box = st.container(border=True)
             debug_box.write("🛠️ **Re-Generation Log**")
             
             news_items = fetch_news_strict_window(daily_kws, target_date, debug_box)
-            if not news_items: news_items = fetch_news_general(daily_kws, limit=15)
+            if not news_items: news_items = fetch_news_general(daily_kws, limit=20)
             
             if news_items:
                 success, result = generate_report_debug(api_key, news_items, debug_box)
@@ -442,7 +431,6 @@ if selected_category == "Daily Report":
             else:
                 st.error("기사 없음")
 
-    # 히스토리 출력 (중복 방지를 위해 버튼 로직 밖에서 처리)
     if history:
         for entry in history:
             st.divider()
