@@ -16,9 +16,9 @@ import traceback
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==========================================
-# 0. 페이지 설정
+# 0. 페이지 설정 및 초기화
 # ==========================================
-st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Auto-Fix)", page_icon="💠")
+st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Total War)", page_icon="🛡️")
 
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
@@ -28,9 +28,9 @@ if 'news_data' not in st.session_state:
 if 'daily_history' not in st.session_state:
     st.session_state.daily_history = []
 
-# [중요] 사용 가능한 모델 리스트를 저장할 세션
-if 'available_models' not in st.session_state:
-    st.session_state.available_models = []
+# 사용 가능한 모델 캐싱
+if 'valid_models' not in st.session_state:
+    st.session_state.valid_models = []
 
 st.markdown("""
     <style>
@@ -40,21 +40,16 @@ st.markdown("""
         .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
         .report-box h2 { color: #1E3A8A; border-bottom: 2px solid #3B82F6; padding-bottom: 10px; margin-top: 30px; margin-bottom: 20px; font-size: 24px; font-weight: 700; }
         
-        .debug-log { font-family: monospace; font-size: 12px; background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 4px solid #333; }
-        .error-log { font-family: monospace; font-size: 13px; background: #FFEEEE; color: #CC0000; padding: 15px; border-radius: 5px; border: 1px solid #FF0000; margin-top: 10px; white-space: pre-wrap; }
-        
-        .ref-link { font-size: 0.9em; color: #555; text-decoration: none; display: block; margin-bottom: 6px; padding: 5px; border-radius: 4px; transition: background 0.2s; }
-        .ref-link:hover { background-color: #F1F5F9; color: #2563EB; }
-        .ref-number { font-weight: bold; color: #3B82F6; margin-right: 8px; background: #DBEAFE; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
-        
-        sup a { text-decoration: none; color: #3B82F6; font-weight: bold; margin-left: 2px; font-size: 0.8em; }
-        sup a:hover { text-decoration: underline; color: #1D4ED8; }
+        .debug-log { font-family: monospace; font-size: 12px; background: #f0f0f0; padding: 8px; border-radius: 4px; margin-bottom: 4px; border-left: 4px solid #666; }
+        .success-log { font-family: monospace; font-size: 12px; background: #E6FFFA; color: #047857; padding: 8px; border-radius: 4px; border-left: 4px solid #10B981; }
+        .warn-log { font-family: monospace; font-size: 12px; background: #FFFAF0; color: #C05621; padding: 8px; border-radius: 4px; border-left: 4px solid #F59E0B; }
+        .error-log { font-family: monospace; font-size: 12px; background: #FEF2F2; color: #B91C1C; padding: 8px; border-radius: 4px; border-left: 4px solid #EF4444; }
         
         .news-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 10px; }
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
-        section[data-testid="stSidebar"] div[data-testid="stMetricValue"] { font-size: 18px !important; font-weight: 600 !important; }
-        .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
+        
+        sup a { text-decoration: none; color: #3B82F6; font-weight: bold; margin-left: 2px; font-size: 0.8em; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -132,37 +127,11 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 모델 자동 검색 (핵심 해결책)
-# ==========================================
-def discover_models(api_key):
-    """
-    구글 서버에 직접 물어봐서 사용 가능한 모델 목록을 가져옴.
-    이 함수가 성공하면 API Key는 확실히 작동하는 것임.
-    """
-    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
-    try:
-        res = requests.get(url, timeout=10)
-        if res.status_code == 200:
-            data = res.json()
-            # 'generateContent' 기능을 지원하는 모델만 필터링
-            models = [
-                m['name'] for m in data.get('models', []) 
-                if 'generateContent' in m.get('supportedGenerationMethods', [])
-            ]
-            # gemini-1.5-flash나 pro를 우선순위로 정렬
-            models.sort(key=lambda x: 'flash' not in x) # Flash 우선
-            return True, models
-        else:
-            return False, f"HTTP {res.status_code}: {res.text}"
-    except Exception as e:
-        return False, str(e)
-
-# ==========================================
-# 3. 뉴스 수집
+# 2. 뉴스 수집
 # ==========================================
 def fetch_news_strict_window(keywords, start_dt, end_dt, debug_container):
     all_items = []
-    debug_container.markdown(f"<div class='debug-log'>🕒 Time Filter: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')}</div>", unsafe_allow_html=True)
+    debug_container.markdown(f"<div class='debug-log'>📡 Searching News: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')}</div>", unsafe_allow_html=True)
     
     total_found = 0
     for kw in keywords:
@@ -188,18 +157,18 @@ def fetch_news_strict_window(keywords, start_dt, end_dt, debug_container):
                             'Timestamp': pub_date_kst
                         })
                 except: continue
-        except Exception as e:
-            debug_container.error(f"Crawling Error ({kw}): {e}")
-            continue
+        except: continue
         time.sleep(0.1)
     
-    debug_container.markdown(f"<div class='debug-log'>🔎 Fetched {total_found} items -> Filtered {len(all_items)} valid items.</div>", unsafe_allow_html=True)
-
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.sort_values(by='Timestamp', ascending=False)
         df = df.drop_duplicates(subset=['Title'])
-        return df.head(20).to_dict('records')
+        count = len(df)
+        debug_container.markdown(f"<div class='success-log'>✅ Found {count} relevant articles</div>", unsafe_allow_html=True)
+        return df.head(25).to_dict('records') # 최대 25개 확보
+    
+    debug_container.markdown(f"<div class='error-log'>❌ No news found in strict window</div>", unsafe_allow_html=True)
     return []
 
 def fetch_news_general(keywords, limit=20):
@@ -225,8 +194,43 @@ def fetch_news_general(keywords, limit=20):
     return []
 
 # ==========================================
-# 4. AI 분석 (Auto-Discovery 적용)
+# 3. AI 모델 플랜 수립 (Plan A, B, C...)
 # ==========================================
+def get_model_plan(api_key):
+    """
+    Plan A: 구글 서버에 직접 물어봐서 유효한 모델 리스트 가져오기 (Dynamic Discovery)
+    Plan B: 실패 시 하드코딩된 안정적인 모델 리스트 사용 (Static Fallback)
+    """
+    plan = []
+    
+    # 1. Dynamic Discovery
+    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+    try:
+        res = requests.get(url, timeout=5)
+        if res.status_code == 200:
+            data = res.json()
+            # GenerateContent 가능한 모델만 추출
+            online_models = [m['name'].replace("models/", "") for m in data.get('models', []) 
+                             if 'generateContent' in m.get('supportedGenerationMethods', [])]
+            
+            # 우선순위 정렬 (Flash -> Pro -> Others)
+            sorted_models = sorted(online_models, key=lambda x: (
+                0 if "1.5-flash" in x and "8b" not in x else
+                1 if "1.5-flash" in x else
+                2 if "1.5-pro" in x else
+                3
+            ))
+            plan.extend(sorted_models)
+    except: pass
+    
+    # 2. Static Fallback (중복 제거하며 추가)
+    fallback_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"]
+    for m in fallback_models:
+        if m not in plan:
+            plan.append(m)
+            
+    return plan
+
 def inject_links_to_report(report_text, news_data):
     def replace_match(match):
         try:
@@ -238,26 +242,30 @@ def inject_links_to_report(report_text, news_data):
         return match.group(0)
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
-def generate_report_smart(api_key, news_data, debug_container):
-    # 1. 서버에 직접 물어봐서 모델 리스트 확보
-    if not st.session_state.available_models:
-        debug_container.info("🔄 Checking available models from Google API...")
-        is_ok, models_or_err = discover_models(api_key)
-        if is_ok:
-            st.session_state.available_models = models_or_err
-            debug_container.success(f"✅ Found models: {', '.join([m.split('/')[-1] for m in models_or_err[:3]])}...")
-        else:
-            return False, f"Failed to list models. Key might be invalid. Error: {models_or_err}"
+def generate_report_total_war(api_key, news_data, debug_container):
+    """
+    [총력전 모드]
+    1. 사용 가능한 모델 리스트 확보 (Plan A -> B)
+    2. 각 모델에 대해 데이터 양을 20 -> 10 -> 5로 줄여가며 시도 (Plan C)
+    """
     
-    models = st.session_state.available_models
+    # 1. 모델 리스트 확보
+    debug_container.markdown("<div class='debug-log'>📋 Planning strategy (Discovering models)...</div>", unsafe_allow_html=True)
+    model_list = get_model_plan(api_key)
     
-    # 2. 호출 로직
-    def call_gemini(current_news):
+    if not model_list:
+        debug_container.error("❌ API Key Error: No models found. Key might be invalid.")
+        return False, "Key Error"
+
+    debug_container.markdown(f"<div class='debug-log'>🎯 Attack Plan: {', '.join(model_list[:4])}...</div>", unsafe_allow_html=True)
+
+    # 2. 프롬프트 준비
+    def make_prompt(current_news):
         news_context = ""
         for i, item in enumerate(current_news):
             news_context += f"[{i+1}] {item['Title']} (Source: {item['Source']})\n"
-
-        prompt = f"""
+        
+        return f"""
         당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
         제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
 
@@ -283,63 +291,63 @@ def generate_report_smart(api_key, news_data, debug_container):
         ## 💡 Analyst's View (투자 아이디어)
         - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트.
         """
+
+    headers = {'Content-Type': 'application/json'}
+
+    # 3. 총력전 시작 (모델 루프 -> 데이터 양 루프)
+    for model in model_list:
         
-        headers = {'Content-Type': 'application/json'}
-        data = {"contents": [{"parts": [{"text": prompt}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
+        # 2.0 버전이나 exp 버전은 429 에러가 심하므로 후순위가 아니면 건너뜀
+        if "gemini-2.0" in model and model_list.index(model) < len(model_list) - 2:
+            continue
 
-        for model in models:
-            # [중요] 모델명 정규화 (models/models/gemini... 방지)
-            clean_model = model.replace("models/", "")
+        # 데이터 양 줄이기 전략 (20개 -> 10개 -> 5개)
+        for count in [20, 10, 5]:
+            if count > len(news_data): continue
             
-            # 불안정한 2.0 및 exp 버전은 건너뜀 (안전빵)
-            if "gemini-2.0" in clean_model or "exp" in clean_model:
-                continue
-
-            debug_container.markdown(f"<div class='debug-log'>🔄 Trying Model: {clean_model} (Items: {len(current_news)})...</div>", unsafe_allow_html=True)
+            current_batch = news_data[:count]
+            debug_container.markdown(f"<div class='debug-log'>⚔️ Trying <b>{model}</b> with <b>{count}</b> items...</div>", unsafe_allow_html=True)
             
-            # v1beta 엔드포인트에 models/ 접두사 없이 요청 (또는 있는 경우도 처리)
-            # 가장 확실한 URL 구조: models/{clean_model}
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent?key={api_key}"
+            prompt_text = make_prompt(current_batch)
+            data = {"contents": [{"parts": [{"text": prompt_text}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             
             try:
+                # 타임아웃 넉넉히
                 response = requests.post(url, headers=headers, json=data, timeout=90)
                 
                 if response.status_code == 200:
                     res_json = response.json()
                     if 'candidates' in res_json and res_json['candidates']:
                         raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
-                        debug_container.success(f"✅ Success with {clean_model}")
-                        return True, inject_links_to_report(raw_text, current_news)
+                        debug_container.markdown(f"<div class='success-log'>🎉 SUCCESS! Generated by {model} ({count} items)</div>", unsafe_allow_html=True)
+                        return True, inject_links_to_report(raw_text, current_batch)
                     else:
-                        debug_container.warning(f"⚠️ {clean_model} Blocked/Empty")
+                        debug_container.markdown(f"<div class='warn-log'>⚠️ {model}: 200 OK but blocked/empty.</div>", unsafe_allow_html=True)
                 else:
-                    error_msg = f"❌ {clean_model} Failed: {response.status_code}"
-                    debug_container.markdown(f"<div class='error-log'>{error_msg}</div>", unsafe_allow_html=True)
-                    
+                    # 403 (키 차단) -> 즉시 종료
                     if response.status_code == 403:
-                        return False, "API Key Blocked (403)."
-                    if response.status_code == 429:
-                        return False, "429" 
+                        debug_container.markdown(f"<div class='error-log'>⛔ 403 Forbidden: Key is blocked. Check Google AI Studio.</div>", unsafe_allow_html=True)
+                        return False, "Key Blocked"
+                    
+                    # 404 (모델 없음) -> 데이터 줄여도 소용없음 -> 다음 모델로 break
+                    if response.status_code == 404:
+                        debug_container.markdown(f"<div class='warn-log'>⚠️ 404 Not Found: {model} skips.</div>", unsafe_allow_html=True)
+                        break 
+                    
+                    # 429 (용량 초과) or 500 (서버 오류) -> 데이터 줄여서 continue
+                    debug_container.markdown(f"<div class='warn-log'>⚠️ {response.status_code} Error. Reducing data...</div>", unsafe_allow_html=True)
+                    time.sleep(2) # 잠시 대기
+                    continue # 다음 count로 시도
 
             except Exception as e:
-                debug_container.error(f"💥 Exception: {str(e)}")
+                debug_container.markdown(f"<div class='error-log'>💥 Exception: {str(e)}</div>", unsafe_allow_html=True)
                 continue
-        return False, "All tested models failed"
-
-    # [1차 시도]
-    success, result = call_gemini(news_data)
-    
-    if success:
-        return True, result
-    elif result == "429":
-        debug_container.warning("⚠️ 429 Quota Error. Retrying with 10 items...")
-        time.sleep(3)
-        return call_gemini(news_data[:10])
-    else:
-        return False, result
+                
+    return False, "Mission Failed: All models & strategies exhausted."
 
 # ==========================================
-# 5. 메인 UI
+# 4. 메인 UI
 # ==========================================
 if 'keywords' not in st.session_state: 
     st.session_state.keywords = load_keywords()
@@ -355,15 +363,6 @@ with st.sidebar:
         if "GEMINI_API_KEY" in st.secrets:
             api_key = st.secrets["GEMINI_API_KEY"]
             st.success("✅ Key Loaded from Secrets")
-            
-            # [진단] 키가 로드되면 사용 가능한 모델을 즉시 확인
-            if st.button("Check Models"):
-                is_ok, models = discover_models(api_key)
-                if is_ok:
-                    st.success(f"Models: {len(models)} found.")
-                    st.session_state.available_models = models
-                else:
-                    st.error(f"Key Invalid: {models}")
         else:
             st.warning("⚠️ No Secrets Found")
             api_key = st.text_input("Manually Enter Key", type="password")
@@ -429,32 +428,34 @@ if selected_category == "Daily Report":
 
     if st.button("🚀 리포트 생성 (덮어쓰기)", type="primary", disabled=not bool(api_key)):
         debug_box = st.container(border=True)
-        debug_box.write("🛠️ **Processing Log**")
+        debug_box.write("🛠️ **Processing Log (Total War Mode)**")
         
         end_dt = now_kst
         start_dt = datetime.combine(target_date - timedelta(days=1), dt_time(12, 0))
         
+        # 1. 수집
         news_items = fetch_news_strict_window(daily_kws, start_dt, end_dt, debug_box)
         
+        # 2. Fallback 수집
         if not news_items:
-            debug_box.warning("⚠️ 지정 시간 내 기사 없음 -> 범위 확장(24h) 시도...")
-            news_items = fetch_news_general(daily_kws, limit=20)
-            debug_box.write(f"🔄 Fallback 수집 결과: {len(news_items)}건")
+            debug_box.markdown(f"<div class='warn-log'>⚠️ Strict mode empty -> Trying General mode...</div>", unsafe_allow_html=True)
+            news_items = fetch_news_general(daily_kws, limit=25)
+            debug_box.markdown(f"<div class='debug-log'>🔄 Fallback found {len(news_items)} items</div>", unsafe_allow_html=True)
         
         if not news_items:
-            debug_box.error("❌ 최종 기사 수집 실패.")
+            debug_box.markdown(f"<div class='error-log'>❌ Final Failure: No news found anywhere.</div>", unsafe_allow_html=True)
         else:
-            debug_box.write(f"🧠 AI 분석 시작... (입력 기사: {len(news_items)}건)")
-            success, result = generate_report_smart(api_key, news_items, debug_box)
+            # 3. AI 분석 (총력전)
+            success, result = generate_report_total_war(api_key, news_items, debug_box)
             
             if success:
                 save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
                 save_daily_history(save_data)
-                debug_box.success("🎉 생성 완료! 페이지를 새로고침 합니다.")
+                debug_box.success("🎉 Mission Accomplished! Refreshing...")
                 time.sleep(2)
                 st.rerun()
             else:
-                debug_box.error(f"🚨 최종 실패: {result}")
+                debug_box.error(f"🚨 Mission Failed: {result}")
 
     if history:
         for entry in history:
