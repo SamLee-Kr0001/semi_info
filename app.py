@@ -4,7 +4,7 @@ import requests
 import urllib3
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
+from datetime import datetime, time as dt_time, timedelta
 import json
 import os
 import re
@@ -43,7 +43,7 @@ st.markdown("""
         .news-title:hover { color: #2563EB !important; text-decoration: underline; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
 
-        /* [수정] 주가 정보 스타일 (가독성 향상) */
+        /* 주가 정보 스타일 */
         .stock-row { 
             display: flex; 
             justify-content: space-between; 
@@ -65,24 +65,33 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# [수정] 주식 종목 정의 (데이터 정확도 위해 티커 점검)
+# [핵심 수정] 주식 종목 리스트 재정비
+# (Yahoo Finance 데이터 수신을 위해 코스닥 종목은 .KS 대신 .KQ로 자동 보정 적용됨)
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {
         "Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU",
         "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"
     },
     "🧠 Fabless": {
-        "Nvidia": "NVDA", "Broadcom": "AVGO"
+        "Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q" 
+    },
+    "🧪 Materials": {
+        "Soulbrain": "357780.KQ", "Dongjin": "005290.KQ", "Hana Mat": "166090.KQ",
+        "Wonik Mat": "104830.KQ", "TCK": "064760.KQ", "Foosung": "093370.KS",
+        "PI Adv": "178920.KS", "ENF": "102710.KQ", "TEMC": "425040.KQ",
+        "YC Chem": "112290.KQ", "Samsung SDI": "006400.KS",
+        "Shin-Etsu": "4063.T", "Sumco": "3436.T", "Merck": "MRK.DE",
+        "Entegris": "ENTG", "TOK": "4186.T", "Resonac": "4004.T",
+        "Air Prod": "APD", "Linde": "LIN", "Qnity": "Q",
+        "Nissan Chem": "4021.T", "Sumitomo": "4005.T"
     },
     "⚙️ Equipment": {
         "ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", 
-        "TEL": "8035.T", "KLA": "KLAC", "Hanmi": "042700.KS", "Jusung": "036930.KS"
-    },
-    "🧪 Materials": {
-        "Shin-Etsu": "4063.T", "Sumitomo": "4005.T", "TOK": "4186.T", 
-        "Nissan Chem": "4021.T", "Merck": "MRK.DE", "Air Liquide": "AI.PA", "Qnity (Q)": "Q",  
-        "Linde": "LIN", "Soulbrain": "357780.KS", "Dongjin": "005290.KS", 
-        "ENF": "102710.KS", "Ycchem": "232140.KS", "Samsung SDI": "006400.KS"
+        "TEL": "8035.T", "KLA": "KLAC", "Advantest": "6857.T",
+        "Hitachi HT": "8036.T", 
+        "Hanmi": "042700.KS", "Wonik IPS": "240810.KQ", "Jusung": "036930.KQ",
+        "EO Tech": "039030.KQ", "Techwing": "089030.KQ", "Eugene": "084370.KQ",
+        "PSK": "319660.KQ", "Zeus": "079370.KQ", "Top Eng": "065130.KQ"
     }
 }
 
@@ -92,49 +101,47 @@ STOCK_CATEGORIES = {
 KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
 
-# [핵심 수정] 주가 데이터 가져오기 로직 전면 개편 (정확도 최우선)
-@st.cache_data(ttl=300) # 5분 캐시
+@st.cache_data(ttl=300)
 def get_stock_prices_grouped():
     result_map = {}
     
-    # 1. 모든 종목을 순회하며 개별 처리 (Batch 처리 시 오류 발생 가능성 차단)
     for cat, items in STOCK_CATEGORIES.items():
         for name, symbol in items.items():
             try:
                 ticker = yf.Ticker(symbol)
                 
-                # [전략 1] Fast Info (실시간 데이터 최우선)
+                # [주가 수집 로직] Fast Info -> 1분봉 -> 5일치 (순차 시도)
                 try:
-                    # yfinance 최신 버전의 fast_info 사용
                     current = ticker.fast_info['last_price']
                     prev = ticker.fast_info['previous_close']
                 except:
-                    # [전략 2] 데이터가 없으면 1분봉 데이터 확인 (장중)
                     try:
                         hist = ticker.history(period="1d", interval="1m")
                         if not hist.empty:
                             current = hist['Close'].iloc[-1]
-                            prev = ticker.info.get('previousClose', current) # info에서 전일종가 시도
+                            prev = ticker.info.get('previousClose', current)
                         else:
-                            raise ValueError("No data")
+                            raise ValueError
                     except:
-                        # [전략 3] 최후의 수단: 5일치 데이터
                         hist = ticker.history(period="5d")
-                        current = hist['Close'].iloc[-1]
-                        prev = hist['Close'].iloc[-2]
+                        if len(hist) >= 2:
+                            current = hist['Close'].iloc[-1]
+                            prev = hist['Close'].iloc[-2]
+                        else:
+                            continue
 
                 # 등락률 계산
                 change = current - prev
                 pct = (change / prev) * 100
                 
-                # 통화 기호
-                if ".KS" in symbol: cur_sym = "₩"
+                # 통화 기호 (KQ 추가)
+                if ".KS" in symbol or ".KQ" in symbol: cur_sym = "₩"
                 elif ".T" in symbol: cur_sym = "¥"
                 elif ".HK" in symbol: cur_sym = "HK$"
-                elif ".DE" in symbol or ".PA" in symbol: cur_sym = "€"
+                elif ".DE" in symbol: cur_sym = "€"
                 else: cur_sym = "$"
                 
-                # 가격 포맷팅 (소수점 처리)
+                # 가격 포맷팅
                 if cur_sym in ["₩", "¥"]:
                     fmt_price = f"{cur_sym}{current:,.0f}"
                 else:
@@ -163,10 +170,9 @@ def get_stock_prices_grouped():
                     </span>
                 </div>
                 """
-                result_map[name] = html_str # 이름(Key)에 매핑
+                result_map[name] = html_str
                 
             except Exception:
-                # 에러나면 빈칸 혹은 이전 데이터 유지
                 pass
                 
     return result_map
@@ -181,7 +187,7 @@ def load_keywords():
                 if k in data: data[k] = v
         except: pass
     if not data.get("Daily Report"): 
-        data["Daily Report"] = ["반도체", "반도체 소재", "반도체 공급망", "희토류 규제", "중국 반도체", "미국 반도체", "일본 반도체"] 
+        data["Daily Report"] = ["반도체", "삼성전자", "SK하이닉스"] 
     return data
 
 def save_keywords(data):
@@ -245,6 +251,27 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False):
         except: pass
         time.sleep(0.1)
         
+    df = pd.DataFrame(all_items)
+    if not df.empty:
+        df = df.drop_duplicates(subset=['Title'])
+        return df.head(limit).to_dict('records')
+    return []
+
+def fetch_news_general(keywords, limit=20):
+    all_items = []
+    for kw in keywords:
+        url = f"https://news.google.com/rss/search?q={quote(kw)}+when:1d&hl=ko&gl=KR&ceid=KR:ko"
+        try:
+            res = requests.get(url, timeout=5, verify=False)
+            soup = BeautifulSoup(res.content, 'xml')
+            items = soup.find_all('item')
+            for item in items:
+                all_items.append({
+                    'Title': item.title.text,
+                    'Link': item.link.text,
+                    'Source': item.source.text if item.source else "Google News"
+                })
+        except: pass
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.drop_duplicates(subset=['Title'])
@@ -347,7 +374,6 @@ with st.sidebar:
     selected_category = st.radio("카테고리", CATEGORIES, index=0, label_visibility="collapsed")
     st.divider()
     
-    # API Key
     with st.expander("🔐 API Key"):
         user_key = st.text_input("Key", type="password")
         if user_key: api_key = user_key
@@ -356,7 +382,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # [핵심 수정] 주가 섹션 (업데이트 버튼 + HTML 렌더링)
+    # [주식 정보 + 수동 업데이트]
     with st.expander("📉 Global Stock", expanded=True):
         if st.button("🔄 시세 업데이트", use_container_width=True):
             get_stock_prices_grouped.clear() # 캐시 강제 삭제
@@ -367,7 +393,6 @@ with st.sidebar:
             for cat, items in STOCK_CATEGORIES.items():
                 st.markdown(f"<div class='stock-header'>{cat}</div>", unsafe_allow_html=True)
                 for name, symbol in items.items():
-                    # 이름으로 매핑된 HTML 정보 가져오기
                     html_info = stock_data.get(name)
                     if html_info:
                         st.markdown(html_info, unsafe_allow_html=True)
@@ -377,9 +402,6 @@ with st.sidebar:
 c_head, c_info = st.columns([3, 1])
 with c_head: st.title(selected_category)
 
-# ----------------------------------
-# [Mode 1] Daily Report
-# ----------------------------------
 if selected_category == "Daily Report":
     st.info("ℹ️ 매일 오전 6시 기준 반도체 소재관련 정보 Report 입니다.")
     now_kst = datetime.utcnow() + timedelta(hours=9)
@@ -460,7 +482,6 @@ if selected_category == "Daily Report":
             st.markdown(f"<div class='history-header'>📅 {entry['date']} Daily Report</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
             with st.expander(f"📚 References (기사 원문) - {len(entry.get('articles', []))}건"):
-                st.markdown("#### 기사 원문 링크")
                 ref_cols = st.columns(2)
                 for i, item in enumerate(entry.get('articles', [])):
                     col = ref_cols[i % 2]
@@ -471,9 +492,6 @@ if selected_category == "Daily Report":
                         </a>
                         """, unsafe_allow_html=True)
 
-# ----------------------------------
-# [Mode 2] General Category
-# ----------------------------------
 else:
     with st.container(border=True):
         c1, c2, c3 = st.columns([2, 1, 1])
@@ -498,7 +516,6 @@ else:
                     st.session_state.keywords[selected_category].remove(kw)
                     save_keywords(st.session_state.keywords)
                     st.rerun()
-
     data = st.session_state.news_data.get(selected_category, [])
     if data:
         st.write(f"총 {len(data)}건 수집됨")
