@@ -69,7 +69,7 @@ st.markdown("""
 # (Yahoo Finance 데이터 수신을 위해 코스닥 종목은 .KS 대신 .KQ로 자동 보정 적용됨)
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {
-        "Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU",
+        ""SK Hynix": "000660.KS", Samsung": "005930.KS", "Micron": "MU",
         "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"
     },
     "🧠 Fabless": {
