@@ -15,9 +15,9 @@ import yfinance as yf
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==========================================
-# 0. 페이지 설정 및 초기화
+# 0. 페이지 설정 및 CSS (폰트 사이즈 조정)
 # ==========================================
-st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Stock Fix)", page_icon="💠")
+st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Final)", page_icon="💠")
 
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
@@ -31,6 +31,38 @@ if 'daily_history' not in st.session_state:
 # [파일 경로 설정]
 KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
+
+st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
+        html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
+        
+        .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
+        .report-box h2 { color: #1E3A8A; border-bottom: 2px solid #3B82F6; padding-bottom: 10px; margin-top: 30px; margin-bottom: 20px; font-size: 24px; font-weight: 700; }
+        
+        /* 뉴스 카드 스타일 */
+        .news-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 10px; }
+        .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
+        .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
+
+        /* [수정] 주가 정보 스타일 (작은 폰트) */
+        .stock-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 14px; /* 종목명과 비슷하게 맞춤 */
+            padding: 4px 0; 
+            border-bottom: 1px dashed #e2e8f0; 
+        }
+        .stock-name { font-weight: 600; color: #334155; }
+        .stock-price { font-family: 'Consolas', monospace; font-weight: 500; }
+        .up-color { color: #DC2626; } /* 상승: 빨강 */
+        .down-color { color: #2563EB; } /* 하락: 파랑 */
+        .flat-color { color: #64748B; } /* 보합: 회색 */
+        
+        .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
+    </style>
+""", unsafe_allow_html=True)
 
 # ==========================================
 # 1. 데이터 관리 함수
@@ -72,7 +104,7 @@ def save_daily_history(new_report_data):
 if 'keywords' not in st.session_state:
     st.session_state.keywords = load_keywords()
 
-@st.cache_data(ttl=600) # 기본 10분 캐시 (버튼 누르면 초기화됨)
+@st.cache_data(ttl=600)
 def get_stock_prices_grouped():
     stock_categories = {
         "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC"},
@@ -89,16 +121,50 @@ def get_stock_prices_grouped():
         stocks = yf.Tickers(ticker_str)
         for symbol in all_tickers:
             try:
-                # [수정] 최신 데이터 확보를 위해 period='1d' 대신 '5d' 유지하되, prepost 옵션 고려
-                hist = stocks.tickers[symbol].history(period="5d")
+                # [수정] 1개월치 데이터를 가져와서 가장 최근 유효 거래일을 찾음 (데이터 정확도 향상)
+                hist = stocks.tickers[symbol].history(period="1mo")
                 if len(hist) >= 2:
                     current = hist['Close'].iloc[-1]
                     prev = hist['Close'].iloc[-2]
+                    
                     change = current - prev
                     pct = (change / prev) * 100
+                    
+                    # 통화 기호 및 색상 결정
                     cur_sym = "₩" if ".KS" in symbol else ("¥" if ".T" in symbol else ("€" if ".DE" in symbol else "$"))
                     fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
-                    result_map[symbol] = {"Price": fmt_price, "Delta": f"{change:,.2f} ({pct:+.2f}%)"}
+                    
+                    # 한국식 색상 (상승=빨강, 하락=파랑)
+                    if change > 0:
+                        color_class = "up-color"
+                        sign = "+"
+                        arrow = "▲"
+                    elif change < 0:
+                        color_class = "down-color"
+                        sign = ""
+                        arrow = "▼"
+                    else:
+                        color_class = "flat-color"
+                        sign = ""
+                        arrow = "-"
+
+                    # 폰트 사이즈 조절을 위해 HTML 문자열 생성
+                    html_str = f"""
+                    <div class="stock-row">
+                        <span class="stock-name">{symbol}</span> <span class="stock-price {color_class}">
+                            {fmt_price} <span style="font-size:0.9em">({arrow}{pct:.1f}%)</span>
+                        </span>
+                    </div>
+                    """
+                    # 데이터 저장 (HTML 포함)
+                    result_map[symbol] = {
+                        "html": html_str, 
+                        "raw_price": current, 
+                        "raw_pct": pct,
+                        "color": color_class,
+                        "fmt_price": fmt_price,
+                        "fmt_pct": f"{sign}{pct:.2f}%"
+                    }
             except: pass
     except: pass
     return result_map, stock_categories
@@ -256,19 +322,6 @@ def generate_report(api_key, news_data, debug_container):
 # ==========================================
 # 4. 메인 UI
 # ==========================================
-st.markdown("""
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
-        html, body, .stApp { font-family: 'Pretendard', sans-serif; background-color: #F8FAFC; color: #1E293B; }
-        .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
-        .report-box h2 { color: #1E3A8A; border-bottom: 2px solid #3B82F6; padding-bottom: 10px; margin-top: 30px; margin-bottom: 20px; font-size: 24px; font-weight: 700; }
-        .ref-link { font-size: 0.9em; color: #555; text-decoration: none; display: block; margin-bottom: 6px; padding: 5px; border-radius: 4px; transition: background 0.2s; }
-        .ref-link:hover { background-color: #F1F5F9; color: #2563EB; }
-        .ref-number { font-weight: bold; color: #3B82F6; margin-right: 8px; background: #DBEAFE; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
-        sup a { text-decoration: none; color: #3B82F6; font-weight: bold; margin-left: 2px; font-size: 0.8em; }
-    </style>
-""", unsafe_allow_html=True)
-
 with st.sidebar:
     st.header("Semi-Insight")
     st.divider()
@@ -284,24 +337,29 @@ with st.sidebar:
 
     st.markdown("---")
     
-    # [수정] 주식 정보 + 수동 업데이트 버튼 추가
+    # [수정] 주가 정보 표시 (HTML 방식 적용)
     with st.expander("📉 Global Stock", expanded=True):
         if st.button("🔄 시세 업데이트", use_container_width=True):
             get_stock_prices_grouped.clear() # 캐시 강제 삭제
-            st.rerun() # 앱 재실행으로 즉시 반영
+            st.rerun()
 
         stock_data, stock_cats = get_stock_prices_grouped()
         if stock_data:
             for cat, items in stock_cats.items():
-                st.markdown(f"<div style='font-size:13px; font-weight:700; color:#475569; margin-top:10px; border-bottom:1px solid #ddd;'>{cat}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='stock-header'>{cat}</div>", unsafe_allow_html=True)
                 for name, symbol in items.items():
                     info = stock_data.get(symbol)
                     if info:
-                        c1, c2 = st.columns([1, 1.3])
-                        c1.caption(f"**{name}**")
-                        c2.metric("", info['Price'], info['Delta'], label_visibility="collapsed")
+                        # Metric 대신 HTML로 렌더링 (폰트 사이즈 이슈 해결)
+                        # 여기서는 symbol이 실제 티커명으로 넘어옴. name(예: Samsung)을 표시하고 싶다면 아래처럼 수정
                         
-    st.caption("ℹ️ 무료 데이터(Yahoo Finance) 특성상 15~20분 지연될 수 있습니다.")
+                        price_html = info['html']
+                        # 종목명을 한글/영어 이름으로 교체하기 위한 간단한 치환
+                        final_html = price_html.replace(f">{symbol}<", f">{name}<")
+                        
+                        st.markdown(final_html, unsafe_allow_html=True)
+                        
+    st.caption("ℹ️ 시세는 약 20분 지연될 수 있습니다.")
 
 c_head, c_info = st.columns([3, 1])
 with c_head: st.title(selected_category)
