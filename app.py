@@ -22,7 +22,6 @@ st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Final)", page_ic
 
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
-# 세션 상태 초기화
 if 'news_data' not in st.session_state:
     st.session_state.news_data = {cat: [] for cat in CATEGORIES}
 
@@ -67,7 +66,7 @@ KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
 
 # ==========================================
-# 1. 데이터 관리 함수
+# 1. 데이터 관리
 # ==========================================
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
@@ -129,19 +128,14 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (시간 필터링 업그레이드)
+# 2. 뉴스 수집
 # ==========================================
 def fetch_news_strict_window(keywords, start_dt, end_dt, debug_container):
-    """
-    정해진 start_dt ~ end_dt 사이의 뉴스만 수집
-    """
     all_items = []
-    
-    debug_container.markdown(f"<div class='debug-log'>🕒 Time Filter: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')} (KST)</div>", unsafe_allow_html=True)
+    debug_container.markdown(f"<div class='debug-log'>🕒 Time Filter: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')}</div>", unsafe_allow_html=True)
     
     total_found = 0
     for kw in keywords:
-        # 2일치 넉넉히 가져와서 내부 필터링
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
         try:
             res = requests.get(url, timeout=5, verify=False)
@@ -175,8 +169,7 @@ def fetch_news_strict_window(keywords, start_dt, end_dt, debug_container):
     if not df.empty:
         df = df.sort_values(by='Timestamp', ascending=False)
         df = df.drop_duplicates(subset=['Title'])
-        # 20개까지 시도
-        return df.head(20).to_dict('records')
+        return df.head(20).to_dict('records') # 20개 시도
     return []
 
 def fetch_news_general(keywords, limit=20):
@@ -202,7 +195,7 @@ def fetch_news_general(keywords, limit=20):
     return []
 
 # ==========================================
-# 3. AI 분석
+# 3. AI 분석 (모델명 최적화 - 핵심 수정)
 # ==========================================
 def inject_links_to_report(report_text, news_data):
     def replace_match(match):
@@ -216,7 +209,11 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_smart(api_key, news_data, debug_container):
-    models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+    # [핵심 수정] 404/429 에러를 피하기 위한 '가장 확실한' 모델 리스트
+    # 1.5-flash-latest: 404 방지용 정식 명칭
+    # 1.5-flash-8b: 무료 사용량(Quota)이 가장 넉넉하여 429 방지에 탁월
+    # 2.0-flash: 429가 너무 잘 떠서 맨 뒤로 뺌
+    models = ["gemini-1.5-flash-latest", "gemini-1.5-flash-8b-latest", "gemini-1.5-flash-002", "gemini-1.5-pro-latest"]
     
     def call_gemini(current_news):
         news_context = ""
@@ -267,28 +264,30 @@ def generate_report_smart(api_key, news_data, debug_container):
                         debug_container.success(f"✅ Success with {model}")
                         return True, inject_links_to_report(raw_text, current_news)
                     else:
-                        debug_container.warning(f"⚠️ {model} Blocked: {res_json}")
+                        debug_container.warning(f"⚠️ {model} Blocked/Empty")
                 else:
                     error_msg = f"❌ {model} Failed: {response.status_code}"
                     debug_container.markdown(f"<div class='error-log'>{error_msg}</div>", unsafe_allow_html=True)
                     
                     if response.status_code == 403:
                         return False, "API Key Blocked (403)."
+                    
                     if response.status_code == 429:
-                        return False, "429" 
+                        return False, "429" # 상위 로직에서 재시도 유도
 
             except Exception as e:
                 debug_container.error(f"💥 Exception: {str(e)}")
                 continue
         return False, "All models failed"
 
-    # [1차 시도]
+    # [1차] 20개 시도
     success, result = call_gemini(news_data)
     
     if success:
         return True, result
     elif result == "429":
-        debug_container.warning("⚠️ 입력 데이터 과다(429). 기사를 10개로 줄여서 다시 시도합니다...")
+        # [2차] 10개로 줄여서 재시도
+        debug_container.warning("⚠️ 429 Quota Error. Retrying with 10 items...")
         time.sleep(3)
         return call_gemini(news_data[:10])
     else:
@@ -306,12 +305,11 @@ with st.sidebar:
     selected_category = st.radio("카테고리", CATEGORIES, index=0, label_visibility="collapsed")
     st.divider()
     
-    # Secrets 자동 로드
     api_key = ""
     with st.expander("🔐 API Key Status", expanded=True):
         if "GEMINI_API_KEY" in st.secrets:
             api_key = st.secrets["GEMINI_API_KEY"]
-            st.success("✅ Key Loaded from Cloud Secrets")
+            st.success("✅ Key Loaded from Secrets")
         else:
             st.warning("⚠️ No Secrets Found")
             api_key = st.text_input("Manually Enter Key", type="password")
@@ -336,10 +334,7 @@ with c_head: st.title(selected_category)
 if selected_category == "Daily Report":
     st.info("ℹ️ 매일 오전 6시 기준 반도체 소재관련 정보 Report 입니다.")
 
-    # 날짜 계산
     now_kst = datetime.utcnow() + timedelta(hours=9)
-    # 현재 시각이 오전 6시 이전이면 -> 전날 리포트가 최신으로 간주될 수 있으나,
-    # 사용자는 항상 "오늘" 날짜로 리포트 생성 원함
     if now_kst.hour < 6:
         target_date = (now_kst - timedelta(days=1)).date()
     else:
@@ -370,7 +365,6 @@ if selected_category == "Daily Report":
                     st.rerun()
         st.caption("⚠️ 관심 키워드를 추가하면 해당 주제로 보고서에 반영됩니다.")
     
-    # [수정됨] 리포트 존재 여부와 상관없이 버튼 상시 표시
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
@@ -379,29 +373,23 @@ if selected_category == "Daily Report":
     else:
         st.info(f"📢 {target_date} 리포트가 아직 없습니다.")
 
-    # 버튼: 항상 표시 (덮어쓰기 기능 포함)
     if st.button("🚀 리포트 생성 (덮어쓰기)", type="primary", disabled=not bool(api_key)):
         debug_box = st.container(border=True)
         debug_box.write("🛠️ **Processing Log**")
         
-        # [핵심] 수집 시간 범위 계산
-        # End: 현재 버튼 누른 시간 (now_kst)
-        # Start: 전일 12:00
-        end_dt = now_kst 
+        # 시간: 전일 12:00 ~ 현재
+        end_dt = now_kst
         start_dt = datetime.combine(target_date - timedelta(days=1), dt_time(12, 0))
         
-        # 1. 수집
         news_items = fetch_news_strict_window(daily_kws, start_dt, end_dt, debug_box)
         
-        # 2. Fallback
         if not news_items:
             debug_box.warning("⚠️ 지정 시간 내 기사 없음 -> 범위 확장(24h) 시도...")
             news_items = fetch_news_general(daily_kws, limit=20)
             debug_box.write(f"🔄 Fallback 수집 결과: {len(news_items)}건")
         
-        # 3. AI 분석
         if not news_items:
-            debug_box.error("❌ 최종 기사 수집 실패. (검색어 확인 필요)")
+            debug_box.error("❌ 최종 기사 수집 실패.")
         else:
             debug_box.write(f"🧠 AI 분석 시작... (입력 기사: {len(news_items)}건)")
             success, result = generate_report_smart(api_key, news_items, debug_box)
