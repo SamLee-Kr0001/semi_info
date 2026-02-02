@@ -4,7 +4,7 @@ import requests
 import urllib3
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
+from datetime import datetime, time as dt_time, timedelta
 import json
 import os
 import re
@@ -16,12 +16,13 @@ import traceback
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==========================================
-# 0. 페이지 설정
+# 0. 페이지 설정 및 초기화
 # ==========================================
 st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Final)", page_icon="💠")
 
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
+# 세션 상태 초기화
 if 'news_data' not in st.session_state:
     st.session_state.news_data = {cat: [] for cat in CATEGORIES}
 
@@ -36,7 +37,6 @@ st.markdown("""
         .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
         .report-box h2 { color: #1E3A8A; border-bottom: 2px solid #3B82F6; padding-bottom: 10px; margin-top: 30px; margin-bottom: 20px; font-size: 24px; font-weight: 700; }
         
-        /* 디버그 로그 스타일 */
         .debug-log { font-family: monospace; font-size: 12px; background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 4px solid #333; }
         .error-log { font-family: monospace; font-size: 13px; background: #FFEEEE; color: #CC0000; padding: 15px; border-radius: 5px; border: 1px solid #FF0000; margin-top: 10px; white-space: pre-wrap; }
         
@@ -55,9 +55,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 하드코딩 키 삭제
-FALLBACK_API_KEY = ""
-
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC"},
     "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q"},
@@ -70,7 +67,7 @@ KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
 
 # ==========================================
-# 1. 데이터 관리
+# 1. 데이터 관리 함수
 # ==========================================
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
@@ -132,17 +129,19 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (20개로 상향)
+# 2. 뉴스 수집 (시간 필터링 업그레이드)
 # ==========================================
-def fetch_news_strict_window(keywords, target_date, debug_container):
+def fetch_news_strict_window(keywords, start_dt, end_dt, debug_container):
+    """
+    정해진 start_dt ~ end_dt 사이의 뉴스만 수집
+    """
     all_items = []
-    end_dt = datetime.combine(target_date, datetime.min.time()) + timedelta(hours=6)
-    start_dt = end_dt - timedelta(hours=18)
     
-    debug_container.markdown(f"<div class='debug-log'>🕒 Time Filter: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')}</div>", unsafe_allow_html=True)
+    debug_container.markdown(f"<div class='debug-log'>🕒 Time Filter: {start_dt.strftime('%m/%d %H:%M')} ~ {end_dt.strftime('%m/%d %H:%M')} (KST)</div>", unsafe_allow_html=True)
     
     total_found = 0
     for kw in keywords:
+        # 2일치 넉넉히 가져와서 내부 필터링
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:2d&hl=ko&gl=KR&ceid=KR:ko"
         try:
             res = requests.get(url, timeout=5, verify=False)
@@ -176,7 +175,7 @@ def fetch_news_strict_window(keywords, target_date, debug_container):
     if not df.empty:
         df = df.sort_values(by='Timestamp', ascending=False)
         df = df.drop_duplicates(subset=['Title'])
-        # [변경] 요청하신대로 20개까지 수집
+        # 20개까지 시도
         return df.head(20).to_dict('records')
     return []
 
@@ -203,7 +202,7 @@ def fetch_news_general(keywords, limit=20):
     return []
 
 # ==========================================
-# 3. AI 분석 (자동 감량 로직 추가)
+# 3. AI 분석
 # ==========================================
 def inject_links_to_report(report_text, news_data):
     def replace_match(match):
@@ -216,12 +215,10 @@ def inject_links_to_report(report_text, news_data):
         return match.group(0)
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
-def generate_report_debug(api_key, news_data, debug_container):
-    # [전략] Flash 모델이 가장 용량 제한이 적으므로 1순위
+def generate_report_smart(api_key, news_data, debug_container):
     models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
     
-    # 내부 함수: 실제 호출 로직
-    def call_api(current_models, current_news):
+    def call_gemini(current_news):
         news_context = ""
         for i, item in enumerate(current_news):
             news_context += f"[{i+1}] {item['Title']} (Source: {item['Source']})\n"
@@ -256,8 +253,8 @@ def generate_report_debug(api_key, news_data, debug_container):
         headers = {'Content-Type': 'application/json'}
         data = {"contents": [{"parts": [{"text": prompt}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
 
-        for model in current_models:
-            debug_container.markdown(f"<div class='debug-log'>🔄 Trying Model: {model} (News Count: {len(current_news)})...</div>", unsafe_allow_html=True)
+        for model in models:
+            debug_container.markdown(f"<div class='debug-log'>🔄 Trying Model: {model} (Items: {len(current_news)})...</div>", unsafe_allow_html=True)
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             
             try:
@@ -272,34 +269,28 @@ def generate_report_debug(api_key, news_data, debug_container):
                     else:
                         debug_container.warning(f"⚠️ {model} Blocked: {res_json}")
                 else:
-                    error_msg = f"❌ {model} Failed: {response.status_code} {response.text[:200]}..."
+                    error_msg = f"❌ {model} Failed: {response.status_code}"
                     debug_container.markdown(f"<div class='error-log'>{error_msg}</div>", unsafe_allow_html=True)
                     
                     if response.status_code == 403:
-                        return False, "API Key Blocked (403). New Key Required."
-                    if response.status_code == 400:
-                        return False, "API Key Invalid (400)."
-                    
-                    # 429 에러(용량 초과)면 루프를 멈추고 리턴하여 상위에서 처리하도록 유도
+                        return False, "API Key Blocked (403)."
                     if response.status_code == 429:
                         return False, "429" 
 
             except Exception as e:
                 debug_container.error(f"💥 Exception: {str(e)}")
                 continue
-                
         return False, "All models failed"
 
-    # [1차 시도] 20개 전부 시도
-    success, result = call_api(models, news_data)
+    # [1차 시도]
+    success, result = call_gemini(news_data)
     
     if success:
         return True, result
-    elif result == "429" or "Quota" in result:
-        # [2차 시도 - 자동 감량] 429 발생 시 10개로 줄여서 재시도
-        debug_container.warning("⚠️ 입력 데이터가 너무 많아(429 Error) 기사를 10개로 줄여서 다시 시도합니다...")
+    elif result == "429":
+        debug_container.warning("⚠️ 입력 데이터 과다(429). 기사를 10개로 줄여서 다시 시도합니다...")
         time.sleep(3)
-        return call_api(models, news_data[:10]) # 상위 10개만
+        return call_gemini(news_data[:10])
     else:
         return False, result
 
@@ -315,16 +306,15 @@ with st.sidebar:
     selected_category = st.radio("카테고리", CATEGORIES, index=0, label_visibility="collapsed")
     st.divider()
     
-    with st.expander("🔐 API Key Settings", expanded=True):
+    # Secrets 자동 로드
+    api_key = ""
+    with st.expander("🔐 API Key Status", expanded=True):
         if "GEMINI_API_KEY" in st.secrets:
             api_key = st.secrets["GEMINI_API_KEY"]
-            st.success("✅ API Key loaded from secrets.toml")
+            st.success("✅ Key Loaded from Cloud Secrets")
         else:
-            st.warning("⚠️ No secrets found.")
-            user_key = st.text_input("Enter API Key", type="password")
-            api_key = user_key
-            if not api_key:
-                st.caption("Tip: Use .streamlit/secrets.toml to save key.")
+            st.warning("⚠️ No Secrets Found")
+            api_key = st.text_input("Manually Enter Key", type="password")
 
     st.markdown("---")
     with st.expander("📉 Global Stock", expanded=True):
@@ -346,7 +336,10 @@ with c_head: st.title(selected_category)
 if selected_category == "Daily Report":
     st.info("ℹ️ 매일 오전 6시 기준 반도체 소재관련 정보 Report 입니다.")
 
+    # 날짜 계산
     now_kst = datetime.utcnow() + timedelta(hours=9)
+    # 현재 시각이 오전 6시 이전이면 -> 전날 리포트가 최신으로 간주될 수 있으나,
+    # 사용자는 항상 "오늘" 날짜로 리포트 생성 원함
     if now_kst.hour < 6:
         target_date = (now_kst - timedelta(days=1)).date()
     else:
@@ -377,59 +370,50 @@ if selected_category == "Daily Report":
                     st.rerun()
         st.caption("⚠️ 관심 키워드를 추가하면 해당 주제로 보고서에 반영됩니다.")
     
+    # [수정됨] 리포트 존재 여부와 상관없이 버튼 상시 표시
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
-    if not today_report:
-        st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
-        
-        btn_disabled = not bool(api_key)
-        
-        if st.button("🚀 금일 리포트 생성 시작", type="primary", disabled=btn_disabled):
-            debug_box = st.container(border=True)
-            debug_box.write("🛠️ **Processing Log**")
-            
-            # 1. 수집 (20개 시도)
-            news_items = fetch_news_strict_window(daily_kws, target_date, debug_box)
-            
-            # 2. Fallback
-            if not news_items:
-                debug_box.warning("⚠️ 지정 시간 내 기사 없음 -> 범위 확장(24h) 시도...")
-                news_items = fetch_news_general(daily_kws, limit=20)
-                debug_box.write(f"🔄 Fallback 수집 결과: {len(news_items)}건")
-            
-            # 3. AI 분석
-            if not news_items:
-                debug_box.error("❌ 최종 기사 수집 실패. (검색어 확인 필요)")
-            else:
-                debug_box.write(f"🧠 AI 분석 시작... (입력 기사: {len(news_items)}건)")
-                success, result = generate_report_debug(api_key, news_items, debug_box)
-                
-                if success:
-                    save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
-                    save_daily_history(save_data)
-                    debug_box.success("🎉 생성 완료! 페이지를 새로고침 합니다.")
-                    time.sleep(2)
-                    st.rerun()
-                else:
-                    debug_box.error(f"🚨 최종 실패: {result}")
+    if today_report:
+        st.success(f"✅ {target_date} 리포트가 생성되어 있습니다.")
     else:
-        st.success(f"✅ {target_date} 리포트가 완료되었습니다.")
-        if st.button("🔄 리포트 다시 만들기 (덮어쓰기)", disabled=not api_key):
-            debug_box = st.container(border=True)
-            debug_box.write("🛠️ **Re-Generation Log**")
+        st.info(f"📢 {target_date} 리포트가 아직 없습니다.")
+
+    # 버튼: 항상 표시 (덮어쓰기 기능 포함)
+    if st.button("🚀 리포트 생성 (덮어쓰기)", type="primary", disabled=not bool(api_key)):
+        debug_box = st.container(border=True)
+        debug_box.write("🛠️ **Processing Log**")
+        
+        # [핵심] 수집 시간 범위 계산
+        # End: 현재 버튼 누른 시간 (now_kst)
+        # Start: 전일 12:00
+        end_dt = now_kst 
+        start_dt = datetime.combine(target_date - timedelta(days=1), dt_time(12, 0))
+        
+        # 1. 수집
+        news_items = fetch_news_strict_window(daily_kws, start_dt, end_dt, debug_box)
+        
+        # 2. Fallback
+        if not news_items:
+            debug_box.warning("⚠️ 지정 시간 내 기사 없음 -> 범위 확장(24h) 시도...")
+            news_items = fetch_news_general(daily_kws, limit=20)
+            debug_box.write(f"🔄 Fallback 수집 결과: {len(news_items)}건")
+        
+        # 3. AI 분석
+        if not news_items:
+            debug_box.error("❌ 최종 기사 수집 실패. (검색어 확인 필요)")
+        else:
+            debug_box.write(f"🧠 AI 분석 시작... (입력 기사: {len(news_items)}건)")
+            success, result = generate_report_smart(api_key, news_items, debug_box)
             
-            news_items = fetch_news_strict_window(daily_kws, target_date, debug_box)
-            if not news_items: news_items = fetch_news_general(daily_kws, limit=20)
-            
-            if news_items:
-                success, result = generate_report_debug(api_key, news_items, debug_box)
-                if success:
-                    save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
-                    save_daily_history(save_data)
-                    st.rerun()
+            if success:
+                save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
+                save_daily_history(save_data)
+                debug_box.success("🎉 생성 완료! 페이지를 새로고침 합니다.")
+                time.sleep(2)
+                st.rerun()
             else:
-                st.error("기사 없음")
+                debug_box.error(f"🚨 최종 실패: {result}")
 
     if history:
         for entry in history:
