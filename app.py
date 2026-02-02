@@ -10,7 +10,6 @@ import os
 import re
 import time
 import yfinance as yf
-import traceback
 
 # SSL 경고 무시
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -18,7 +17,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ==========================================
 # 0. 페이지 설정
 # ==========================================
-st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Final)", page_icon="💠")
+st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Key Debug)", page_icon="🔑")
 
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
@@ -36,7 +35,6 @@ st.markdown("""
         .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
         .report-box h2 { color: #1E3A8A; border-bottom: 2px solid #3B82F6; padding-bottom: 10px; margin-top: 30px; margin-bottom: 20px; font-size: 24px; font-weight: 700; }
         
-        /* 디버그 로그 스타일 */
         .debug-log { font-family: monospace; font-size: 12px; background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 4px solid #333; }
         .error-log { font-family: monospace; font-size: 13px; background: #FFEEEE; color: #CC0000; padding: 15px; border-radius: 5px; border: 1px solid #FF0000; margin-top: 10px; white-space: pre-wrap; }
         
@@ -49,8 +47,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# [중요] 만료된 키 삭제. 이제 키가 없으면 빈 값입니다.
-FALLBACK_API_KEY = ""
+# [중요] 문제의 원인인 '오래된 하드코딩 키'를 완전히 비워버립니다.
+# 이제 파일 로드에 실패하면 키가 없는 상태가 되어, 사용자에게 입력을 강제합니다.
+FALLBACK_API_KEY = "" 
 
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC"},
@@ -196,7 +195,7 @@ def fetch_news_general(keywords, limit=15):
     return []
 
 # ==========================================
-# 3. AI 분석 (모델명 수정: 404 해결)
+# 3. AI 분석 (모델명 수정)
 # ==========================================
 def inject_links_to_report(report_text, news_data):
     def replace_match(match):
@@ -210,8 +209,8 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_debug(api_key, news_data, debug_container):
-    # [수정] 404 에러를 유발하던 -latest 접미사 제거 및 모델명 표준화
-    models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    # [수정] 모델명 최적화 (가장 안정적인 모델부터)
+    models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
     
     news_context = ""
     for i, item in enumerate(news_data):
@@ -266,6 +265,9 @@ def generate_report_debug(api_key, news_data, debug_container):
                 error_msg = f"❌ {model} Failed: {response.status_code} {response.text}"
                 debug_container.markdown(f"<div class='error-log'>{error_msg}</div>", unsafe_allow_html=True)
                 
+                if response.status_code == 400: # 키 문제일 가능성 높음
+                    return False, "API Key Error (400). 키가 만료되었거나 잘못되었습니다. 새 키를 사이드바에 입력하세요."
+
                 if response.status_code == 429:
                     time.sleep(2)
                     continue
@@ -287,11 +289,31 @@ with st.sidebar:
     selected_category = st.radio("카테고리", CATEGORIES, index=0, label_visibility="collapsed")
     st.divider()
     
-    with st.expander("🔐 API Key", expanded=True):
-        user_key = st.text_input("Key", type="password")
-        if user_key: api_key = user_key
-        elif "GEMINI_API_KEY" in st.secrets: api_key = st.secrets["GEMINI_API_KEY"]
-        else: api_key = FALLBACK_API_KEY
+    # [핵심 기능] API 키 디버깅 및 입력 UI
+    with st.expander("🔐 API Key Settings", expanded=True):
+        # 1. 사용자가 직접 입력한 키
+        user_key = st.text_input("New API Key (Enter here)", type="password")
+        
+        # 2. secrets.toml 파일에서 불러온 키
+        secrets_key = st.secrets.get("GEMINI_API_KEY", "")
+        
+        # 3. 최종 결정 로직
+        if user_key:
+            api_key = user_key
+            key_source = "User Input (Side Bar)"
+        elif secrets_key:
+            api_key = secrets_key
+            key_source = "Secrets File (.streamlit/secrets.toml)"
+        else:
+            api_key = ""
+            key_source = "None (Please input key)"
+        
+        # [디버그] 현재 사용 중인 키 상태 표시
+        if api_key:
+            masked_key = api_key[:5] + "..." + api_key[-4:]
+            st.success(f"✅ Key Loaded!\nSource: {key_source}\nValue: {masked_key}")
+        else:
+            st.error("❌ No API Key Found!\n키를 입력해주세요.")
     
     st.markdown("---")
     with st.expander("📉 Global Stock", expanded=True):
@@ -348,12 +370,12 @@ if selected_category == "Daily Report":
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
     if not today_report:
-        # [중요] 키가 없으면 경고 표시
-        if not api_key:
-            st.warning("⚠️ API Key가 없습니다. 왼쪽 사이드바에 키를 입력해주세요.")
-            
         st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
-        if st.button("🚀 금일 리포트 생성 시작", type="primary", disabled=not api_key):
+        
+        # 키가 없으면 버튼 비활성화
+        btn_disabled = not bool(api_key)
+        
+        if st.button("🚀 금일 리포트 생성 시작", type="primary", disabled=btn_disabled):
             debug_box = st.container(border=True)
             debug_box.write("🛠️ **Processing Log**")
             
