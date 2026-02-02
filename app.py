@@ -18,7 +18,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ==========================================
 # 0. 페이지 설정
 # ==========================================
-st.set_page_config(layout="wide", page_title="Semi-Insight Hub (Debug)", page_icon="🔧")
+st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
 
 CATEGORIES = ["Daily Report", "기업정보", "반도체 정보", "Photoresist", "Wet chemical", "CMP Slurry", "Process Gas", "Wafer", "Package"]
 
@@ -40,10 +40,6 @@ st.markdown("""
         .debug-log { font-family: monospace; font-size: 12px; background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 4px solid #333; }
         .error-log { font-family: monospace; font-size: 13px; background: #FFEEEE; color: #CC0000; padding: 15px; border-radius: 5px; border: 1px solid #FF0000; margin-top: 10px; white-space: pre-wrap; }
         
-        section[data-testid="stSidebar"] div[data-testid="stMetricValue"] { font-size: 18px !important; font-weight: 600 !important; }
-        section[data-testid="stSidebar"] div[data-testid="stMetricDelta"] { font-size: 12px !important; }
-        section[data-testid="stSidebar"] div[data-testid="stMetricLabel"] { font-size: 12px !important; color: #64748B !important; }
-        
         .ref-link { font-size: 0.9em; color: #555; text-decoration: none; display: block; margin-bottom: 6px; padding: 5px; border-radius: 4px; transition: background 0.2s; }
         .ref-link:hover { background-color: #F1F5F9; color: #2563EB; }
         .ref-number { font-weight: bold; color: #3B82F6; margin-right: 8px; background: #DBEAFE; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
@@ -53,7 +49,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-FALLBACK_API_KEY = "AIzaSyCBSqIQBIYQbWtfQAxZ7D5mwCKFx-7VDJo"
+# [중요] 키가 차단되었으므로 기본키 삭제 (사용자가 직접 입력해야 함)
+FALLBACK_API_KEY = "" 
 
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC"},
@@ -173,7 +170,7 @@ def fetch_news_strict_window(keywords, target_date, debug_container):
     if not df.empty:
         df = df.sort_values(by='Timestamp', ascending=False)
         df = df.drop_duplicates(subset=['Title'])
-        return df.head(15).to_dict('records') # 15개 제한
+        return df.head(15).to_dict('records')
     return []
 
 def fetch_news_general(keywords, limit=15):
@@ -199,7 +196,7 @@ def fetch_news_general(keywords, limit=15):
     return []
 
 # ==========================================
-# 3. AI 분석 (슈퍼 디버깅 모드)
+# 3. AI 분석 (모델명 수정 및 디버깅)
 # ==========================================
 def inject_links_to_report(report_text, news_data):
     def replace_match(match):
@@ -213,13 +210,9 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_debug(api_key, news_data, debug_container):
-    """
-    상세 에러 로그를 화면에 직접 출력하는 디버그용 함수
-    """
-    # 1. 모델 설정
-    models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+    # [수정] 안정적인 모델명으로 변경 (latest 별칭 사용)
+    models = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest", "gemini-1.5-flash"]
     
-    # 2. 프롬프트 준비
     news_context = ""
     for i, item in enumerate(news_data):
         news_context += f"[{i+1}] {item['Title']} (Source: {item['Source']})\n"
@@ -254,9 +247,10 @@ def generate_report_debug(api_key, news_data, debug_container):
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
 
-    # 3. 모델 순회 시도
     for model in models:
         debug_container.markdown(f"<div class='debug-log'>🔄 Trying Model: {model}...</div>", unsafe_allow_html=True)
+        
+        # [중요] v1beta 엔드포인트 사용
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         
         try:
@@ -269,14 +263,17 @@ def generate_report_debug(api_key, news_data, debug_container):
                     debug_container.success(f"✅ Success with {model}")
                     return True, inject_links_to_report(raw_text, news_data)
                 else:
-                    debug_container.warning(f"⚠️ {model} Blocked (Safety?): {res_json}")
+                    debug_container.warning(f"⚠️ {model} Blocked: {res_json}")
             else:
-                # 에러 발생 시 상세 로그 출력
-                error_msg = f"❌ {model} Failed: {response.status_code}\n{response.text}"
+                # 에러 로그 출력
+                error_msg = f"❌ {model} Failed: {response.status_code} {response.text}"
                 debug_container.markdown(f"<div class='error-log'>{error_msg}</div>", unsafe_allow_html=True)
                 
+                # 403: 키 차단 -> 즉시 중단
+                if response.status_code == 403:
+                    return False, "API Key가 차단되었습니다. (403 Leaked). 새 키를 발급받으세요."
+                
                 if response.status_code == 429:
-                    debug_container.info("⏳ Quota Exceeded. Waiting 2s...")
                     time.sleep(2)
                     continue
         except Exception as e:
@@ -297,7 +294,8 @@ with st.sidebar:
     selected_category = st.radio("카테고리", CATEGORIES, index=0, label_visibility="collapsed")
     st.divider()
     
-    with st.expander("🔐 API Key"):
+    with st.expander("🔐 API Key", expanded=True):
+        st.info("⚠️ 기존 키가 차단되었습니다. 새 키를 입력하세요.")
         user_key = st.text_input("Key", type="password")
         if user_key: api_key = user_key
         elif "GEMINI_API_KEY" in st.secrets: api_key = st.secrets["GEMINI_API_KEY"]
@@ -360,7 +358,6 @@ if selected_category == "Daily Report":
     if not today_report:
         st.info(f"📢 {target_date} 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
-            # 디버그용 컨테이너 생성 (실시간 로그 출력)
             debug_box = st.container(border=True)
             debug_box.write("🛠️ **Processing Log**")
             
@@ -387,8 +384,7 @@ if selected_category == "Daily Report":
                     time.sleep(2)
                     st.rerun()
                 else:
-                    debug_box.error("🚨 최종 실패. 위의 에러 로그를 확인하세요.")
-                    # 실패 시 st.rerun() 하지 않음 -> 에러 로그 유지
+                    debug_box.error(f"🚨 최종 실패: {result}")
     else:
         st.success(f"✅ {target_date} 리포트가 완료되었습니다.")
         if st.button("🔄 리포트 다시 만들기 (덮어쓰기)"):
