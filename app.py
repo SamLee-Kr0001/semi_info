@@ -55,7 +55,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# [주식 티커: 정확도 개선 버전 유지]
+# [주식 티커 유지]
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "SMIC": "0981.HK"},
     "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q"},
@@ -64,7 +64,7 @@ STOCK_CATEGORIES = {
 }
 
 # ==========================================
-# 1. 데이터 관리 함수 (저장 기능 강화)
+# 1. 데이터 관리 함수
 # ==========================================
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
@@ -152,7 +152,7 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (지난주 금요일 로직 100% 동일 - 안정성 확보)
+# 2. 뉴스 수집 (Daily Report - 원본 유지)
 # ==========================================
 def fetch_news(keywords, days=1, limit=20, strict_time=False):
     all_items = []
@@ -198,7 +198,7 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False):
     return []
 
 # ==========================================
-# 3. AI 리포트 생성 (지난주 금요일 로직 100% 동일)
+# 3. AI 리포트 생성 (지난주 금요일 로직 유지)
 # ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
@@ -328,14 +328,13 @@ if selected_category == "Daily Report":
     
     with c_info: st.markdown(f"<div style='text-align:right; color:#888;'>Report Date<br><b>{target_date}</b></div>", unsafe_allow_html=True)
 
-    # [키워드 관리 + 즉시 저장 기능]
     with st.container(border=True):
         c1, c2 = st.columns([3, 1])
         new_kw = c1.text_input("수집 키워드 추가", placeholder="예: HBM, 패키징", label_visibility="collapsed")
         if c2.button("추가", use_container_width=True):
             if new_kw and new_kw not in st.session_state.keywords["Daily Report"]:
                 st.session_state.keywords["Daily Report"].append(new_kw)
-                save_keywords(st.session_state.keywords) # 저장 필수
+                save_keywords(st.session_state.keywords)
                 st.rerun()
         
         daily_kws = st.session_state.keywords["Daily Report"]
@@ -345,11 +344,10 @@ if selected_category == "Daily Report":
             for i, kw in enumerate(daily_kws):
                 if cols[i % 8].button(f"{kw} ×", key=f"del_{kw}"):
                     st.session_state.keywords["Daily Report"].remove(kw)
-                    save_keywords(st.session_state.keywords) # 저장 필수
+                    save_keywords(st.session_state.keywords)
                     st.rerun()
         st.caption("⚠️ 관심 키워드는 자동 저장 됩니다. 키워드가 많아질수록 오류발생 가능성이 높습니다. 왼편의 section별 news crawling 메뉴를 활용하세요.")
     
-    # [리포트 히스토리 로드]
     history = load_daily_history()
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
@@ -372,7 +370,7 @@ if selected_category == "Daily Report":
                 success, result = generate_report_with_citations(api_key, news_items)
                 if success:
                     save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
-                    save_daily_history(save_data) # [리포트 저장]
+                    save_daily_history(save_data)
                     status_box.update(label="🎉 리포트 생성 완료!", state="complete")
                     st.rerun()
                 else:
@@ -387,16 +385,14 @@ if selected_category == "Daily Report":
                 success, result = generate_report_with_citations(api_key, news_items)
                 if success:
                     save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
-                    save_daily_history(save_data) # [리포트 저장]
+                    save_daily_history(save_data)
                     status_box.update(label="🎉 재생성 완료!", state="complete")
                     st.rerun()
 
-    # [리포트 하단 저장 및 표시 (Expander 방식)]
     if history:
         st.markdown("---")
         st.subheader("🗂️ 지난 리포트 기록")
         for entry in history:
-            # 오늘 날짜는 기본 펼침, 과거 날짜는 접힘
             is_expanded = (entry['date'] == target_date_str)
             with st.expander(f"📅 {entry['date']} Daily Report", expanded=is_expanded):
                 st.markdown(f"<div class='report-box'>{entry['report']}</div>", unsafe_allow_html=True)
@@ -412,19 +408,26 @@ if selected_category == "Daily Report":
 # ----------------------------------
 else:
     with st.container(border=True):
-        c1, c2, c3 = st.columns([2, 1, 1])
+        c1, c2, c3 = st.columns([2, 1, 1]) # 컬럼 비율 조정
         new_kw = c1.text_input("키워드", label_visibility="collapsed")
+        
         if c2.button("추가", use_container_width=True):
             if new_kw:
                 st.session_state.keywords[selected_category].append(new_kw)
                 save_keywords(st.session_state.keywords)
                 st.rerun()
-        if c3.button("실행", type="primary", use_container_width=True):
+        
+        # [NEW] 기간 설정 기능 추가
+        search_days = c3.slider("📅 수집 기간 (일)", 1, 30, 3, help="최근 N일간의 뉴스를 검색합니다.")
+
+        if st.button("실행", type="primary", use_container_width=True):
             kws = st.session_state.keywords[selected_category]
             if kws:
-                news = fetch_news(kws, limit=20)
+                # [MODIFIED] fetch_news에 search_days 반영
+                news = fetch_news(kws, days=search_days, limit=30)
                 st.session_state.news_data[selected_category] = news
                 st.rerun()
+        
         curr_kws = st.session_state.keywords.get(selected_category, [])
         if curr_kws:
             st.write("")
@@ -437,7 +440,7 @@ else:
     
     data = st.session_state.news_data.get(selected_category, [])
     if data:
-        st.write(f"총 {len(data)}건 수집됨")
+        st.write(f"총 {len(data)}건 수집됨 (최근 {search_days}일)")
         for item in data:
             st.markdown(f"""<div class="news-card"><div class="news-meta">{item['Source']} | {item['Date']}</div><a href="{item['Link']}" target="_blank" class="news-title" style="text-decoration:none;">{item['Title']}</a></div>""", unsafe_allow_html=True)
     else:
