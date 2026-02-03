@@ -233,7 +233,7 @@ def generate_report_with_citations(api_key, news_data):
 
     prompt = f"""
     당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
-    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
+    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체와 반도체 소재 관련한 심층 분석 보고서]**를 작성하세요.
 
     **[작성 원칙 - 매우 중요]**
     1. **단순 요약 금지**: 뉴스 제목을 단순히 나열하거나 번역하지 마세요.
@@ -253,7 +253,7 @@ def generate_report_with_citations(api_key, news_data):
     - 반드시 인용 번호[n]를 포함할 것.
 
     ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
-    - 소부장, 파운드리, 메모리 등 섹터별 주요 단신을 종합하여 서술.
+    - 반도체 소재 그리고 소부장, 파운드리, 메모리 등 섹터별 주요 단신을 종합하여 서술.
 
     ## 💡 Analyst's View (투자 아이디어)
     - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
@@ -347,7 +347,7 @@ if selected_category == "Daily Report":
                     st.session_state.keywords["Daily Report"].remove(kw)
                     save_keywords(st.session_state.keywords) # 저장 필수
                     st.rerun()
-        st.caption("⚠️ 관심 키워드는 자동 저장됩니다.")
+        st.caption("⚠️ 관심 키워드는 자동 저장 됩니다. 키워드가 많아질수록 오류발생 가능성이 높습니다. 왼편의 section별 news crawling 메뉴를 활용하세요.")
     
     # [리포트 히스토리 로드]
     history = load_daily_history()
