@@ -76,7 +76,7 @@ def load_keywords():
                 if k in data: data[k] = v
         except: pass
     if not data.get("Daily Report"): 
-        data["Daily Report"] = ["반도체", "삼성전자", "SK하이닉스"] 
+        data["Daily Report"] = ["UEV", "반도체 소재", "반도체 공급망", "반도체 소부장", "희토류 규제"] 
     return data
 
 def save_keywords(data):
