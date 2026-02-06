@@ -10,15 +10,24 @@ import os
 import re
 import time
 import yfinance as yf
-from github import Github  # [필수] GitHub 연동 라이브러리
+from github import Github 
 
 # SSL 경고 무시
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==========================================
-# 0. 페이지 설정 및 Tailwind CSS
+# 0. 페이지 설정
 # ==========================================
 st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
+
+CATEGORIES = ["Daily Report", "P&C 소재", "EDTW 소재", "PKG 소재"]
+KEYWORD_FILE = 'keywords.json'
+HISTORY_FILE = 'daily_history.json'
+
+if 'news_data' not in st.session_state:
+    st.session_state.news_data = {cat: [] for cat in CATEGORIES}
+if 'daily_history' not in st.session_state:
+    st.session_state.daily_history = []
 
 st.markdown("""
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,22 +42,19 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-CATEGORIES = ["Daily Report", "P&C 소재", "EDTW 소재", "PKG 소재"]
-KEYWORD_FILE = 'keywords.json'
-HISTORY_FILE = 'daily_history.json'
-
-if 'news_data' not in st.session_state:
-    st.session_state.news_data = {cat: [] for cat in CATEGORIES}
-if 'daily_history' not in st.session_state:
-    st.session_state.daily_history = []
+# 주식 티커
+STOCK_CATEGORIES = {
+    "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
+    "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO"},
+    "🧪 Materials": {"Soulbrain": "357780.KQ", "Dongjin": "005290.KQ", "Hana Mat": "166090.KQ", "Wonik Mat": "104830.KQ", "TCK": "064760.KQ", "Foosung": "093370.KS", "PI Adv": "178920.KS", "ENF": "102710.KQ", "TEMC": "425040.KQ", "YC Chem": "112290.KQ", "Samsung SDI": "006400.KS", "Shin-Etsu": "4063.T", "Sumco": "3436.T", "Merck": "MRK.DE", "Entegris": "ENTG", "TOK": "4186.T", "Resonac": "4004.T", "Air Prod": "APD", "Linde": "LIN", "Qnity": "Q", "Nissan Chem": "4021.T", "Sumitomo": "4005.T"},
+    "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Advantest": "6857.T", "Hitachi HT": "8036.T", "Hanmi": "042700.KS", "Wonik IPS": "240810.KQ", "Jusung": "036930.KQ", "EO Tech": "039030.KQ", "Techwing": "089030.KQ", "Eugene": "084370.KQ", "PSK": "319660.KQ", "Zeus": "079370.KQ", "Top Eng": "065130.KQ"}
+}
 
 # ==========================================
-# 1. 데이터 관리 (GitHub Auto-Sync 적용)
+# 1. 데이터 관리 (GitHub Auto-Sync)
 # ==========================================
 def sync_to_github(filename, content_data):
-    """데이터를 GitHub 저장소에 자동으로 커밋&푸시"""
-    if "GITHUB_TOKEN" not in st.secrets or "REPO_NAME" not in st.secrets:
-        return False
+    if "GITHUB_TOKEN" not in st.secrets or "REPO_NAME" not in st.secrets: return False
     try:
         g = Github(st.secrets["GITHUB_TOKEN"])
         repo = g.get_repo(st.secrets["REPO_NAME"])
@@ -59,14 +65,10 @@ def sync_to_github(filename, content_data):
         except:
             repo.create_file(filename, f"Create {filename}", content_str)
         return True
-    except Exception as e:
-        print(f"GitHub Sync Error: {e}")
-        return False
+    except: return False
 
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
-    
-    # 1. GitHub에서 우선 로드 (기기 간 동기화)
     if "GITHUB_TOKEN" in st.secrets:
         try:
             g = Github(st.secrets["GITHUB_TOKEN"])
@@ -75,8 +77,6 @@ def load_keywords():
             loaded = json.loads(contents.decoded_content.decode("utf-8"))
             return loaded
         except: pass
-
-    # 2. 로컬 파일 로드 (Fallback)
     if os.path.exists(KEYWORD_FILE):
         try:
             with open(KEYWORD_FILE, 'r', encoding='utf-8') as f:
@@ -84,22 +84,18 @@ def load_keywords():
             for k, v in loaded.items():
                 if k in data: data[k] = v
         except: pass
-        
     if not data.get("Daily Report"): 
         data["Daily Report"] = ["반도체", "삼성전자", "SK하이닉스"] 
     return data
 
 def save_keywords(data):
-    # 로컬 저장
     try:
         with open(KEYWORD_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
     except: pass
-    # GitHub 저장
     sync_to_github(KEYWORD_FILE, data)
 
 def load_daily_history():
-    # 1. GitHub 로드
     if "GITHUB_TOKEN" in st.secrets:
         try:
             g = Github(st.secrets["GITHUB_TOKEN"])
@@ -107,7 +103,6 @@ def load_daily_history():
             contents = repo.get_contents(HISTORY_FILE)
             return json.loads(contents.decoded_content.decode("utf-8"))
         except: pass
-    # 2. 로컬 로드
     if os.path.exists(HISTORY_FILE):
         try:
             with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
@@ -119,30 +114,15 @@ def save_daily_history(new_report_data):
     history = load_daily_history()
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data)
-    
-    # 로컬 저장
     try:
         with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
             json.dump(history, f, ensure_ascii=False, indent=4)
     except: pass
-    
-    # GitHub 저장
     sync_to_github(HISTORY_FILE, history)
-    
-    # 세션 업데이트
     st.session_state.daily_history = history
 
-# 키워드 초기화
 if 'keywords' not in st.session_state:
     st.session_state.keywords = load_keywords()
-
-# 주식 티커 및 로직 (유지)
-STOCK_CATEGORIES = {
-    "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
-    "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO", "Qnity (Q)": "Q"},
-    "🧪 Materials": {"Soulbrain": "357780.KQ", "Dongjin": "005290.KQ", "Hana Mat": "166090.KQ", "Wonik Mat": "104830.KQ", "TCK": "064760.KQ", "Foosung": "093370.KS", "PI Adv": "178920.KS", "ENF": "102710.KQ", "TEMC": "425040.KQ", "YC Chem": "112290.KQ", "Samsung SDI": "006400.KS", "Shin-Etsu": "4063.T", "Sumco": "3436.T", "Merck": "MRK.DE", "Entegris": "ENTG", "TOK": "4186.T", "Resonac": "4004.T", "Air Prod": "APD", "Linde": "LIN", "Qnity": "Q", "Nissan Chem": "4021.T", "Sumitomo": "4005.T"},
-    "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Advantest": "6857.T", "Hitachi HT": "8036.T", "Hanmi": "042700.KS", "Wonik IPS": "240810.KQ", "Jusung": "036930.KQ", "EO Tech": "039030.KQ", "Techwing": "089030.KQ", "Eugene": "084370.KQ", "PSK": "319660.KQ", "Zeus": "079370.KQ", "Top Eng": "065130.KQ"}
-}
 
 @st.cache_data(ttl=300)
 def get_stock_prices_grouped():
@@ -170,27 +150,16 @@ def get_stock_prices_grouped():
 
                 change = current - prev
                 pct = (change / prev) * 100
-                
                 if ".KS" in symbol or ".KQ" in symbol: cur_sym = "₩"
                 elif ".T" in symbol: cur_sym = "¥"
                 elif ".HK" in symbol: cur_sym = "HK$"
                 elif ".DE" in symbol: cur_sym = "€"
                 else: cur_sym = "$"
-                
                 fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
                 
-                if change > 0: 
-                    color_class = "text-red-600 bg-red-50 px-2 py-0.5 rounded"
-                    arrow = "▲"
-                    sign = "+"
-                elif change < 0: 
-                    color_class = "text-blue-600 bg-blue-50 px-2 py-0.5 rounded"
-                    arrow = "▼"
-                    sign = ""
-                else: 
-                    color_class = "text-gray-500 bg-gray-100 px-2 py-0.5 rounded"
-                    arrow = "-"
-                    sign = ""
+                if change > 0: color_class, arrow, sign = "text-red-600 bg-red-50 px-2 py-0.5 rounded", "▲", "+"
+                elif change < 0: color_class, arrow, sign = "text-blue-600 bg-blue-50 px-2 py-0.5 rounded", "▼", ""
+                else: color_class, arrow, sign = "text-gray-500 bg-gray-100 px-2 py-0.5 rounded", "-", ""
                 
                 html_str = f"""
                 <div class="flex justify-between items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition duration-150">
@@ -206,44 +175,58 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 및 AI (기존 로직 유지)
+# 2. 뉴스 수집 (지난주 금요일 로직으로 완전 복구)
 # ==========================================
-def fetch_news(keywords, days=1, limit=20, strict_time=False, start_dt=None, end_dt=None):
+def fetch_news(keywords, days=1, limit=20, strict_time=False):
+    """안정성이 검증된 지난주 금요일 버전 뉴스 수집 함수"""
     all_items = []
-    if strict_time and start_dt and end_dt: pass
-    else:
-        end_dt = datetime.utcnow() + timedelta(hours=9)
-        start_dt = end_dt - timedelta(days=days)
+    
+    # 시간 필터링 기준 (KST)
+    now_kst = datetime.utcnow() + timedelta(hours=9)
+    end_target = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
+    if now_kst.hour < 6:
+        end_target -= timedelta(days=1)
+    start_target = end_target - timedelta(hours=18)
     
     for kw in keywords:
+        # RSS URL 구조 (심플)
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
         try:
             res = requests.get(url, timeout=5, verify=False)
             soup = BeautifulSoup(res.content, 'xml')
             items = soup.find_all('item')
+            
             for item in items:
-                try:
-                    pub_date_str = item.pubDate.text
-                    pub_date_gmt = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
-                    pub_date_kst = pub_date_gmt + timedelta(hours=9)
-                    if start_dt <= pub_date_kst <= end_dt:
-                        all_items.append({
-                            'Title': item.title.text,
-                            'Link': item.link.text,
-                            'Date': item.pubDate.text,
-                            'Source': item.source.text if item.source else "Google News",
-                            'ParsedDate': pub_date_kst
-                        })
-                except: continue
+                is_valid = True
+                # strict_time이 True일 때만 파이썬 레벨에서 필터링
+                if strict_time:
+                    try:
+                        pub_date_str = item.pubDate.text
+                        pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
+                        pub_date_kst = pub_date + timedelta(hours=9)
+                        if not (start_target <= pub_date_kst <= end_target):
+                            is_valid = False
+                    except: is_valid = True # 파싱 실패시 안전하게 포함
+                
+                if is_valid:
+                    all_items.append({
+                        'Title': item.title.text,
+                        'Link': item.link.text,
+                        'Date': item.pubDate.text,
+                        'Source': item.source.text if item.source else "Google News"
+                    })
         except: pass
         time.sleep(0.1)
+        
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.drop_duplicates(subset=['Title'])
-        df = df.sort_values(by='ParsedDate', ascending=False)
         return df.head(limit).to_dict('records')
     return []
 
+# ==========================================
+# 2-1. 글로벌 뉴스 (기능 유지)
+# ==========================================
 def translate_text_batch(api_key, texts, target_lang="Korean"):
     if not texts: return []
     model = "gemini-1.5-flash"
@@ -324,6 +307,9 @@ def fetch_news_global(api_key, keywords, days=3):
                 items_to_process[idx]['Title'] = f"{new_title} <span style='font-size:0.8em; color:#94A3B8;'>({items_to_process[idx]['Title']})</span>"
     return items_to_process
 
+# ==========================================
+# 3. AI 리포트 생성 (지난주 금요일 로직 복원)
+# ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
     try:
@@ -346,43 +332,48 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_with_citations(api_key, news_data):
+    # 1. 모델 자동 탐색 (금요일 로직)
     models = get_available_models(api_key)
-    if not models: models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    if not models:
+        models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
     
     news_context = ""
     for i, item in enumerate(news_data):
-        clean_title = re.sub(r'<[^>]+>', '', item['Title'])
-        news_context += f"[{i+1}] {clean_title} (Source: {item['Source']})\n"
+        news_context += f"[{i+1}] {item['Title']} (Source: {item['Source']})\n"
 
     prompt = f"""
     당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
     제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
 
-    **[작성 원칙]**
-    1. **서술형 작성**: 이슈별로 현상/원인/전망을 자연스러운 논리적 흐름(Narrative)으로 서술하세요.
-    2. **근거 명시**: 내용의 출처가 되는 뉴스 번호 **[1], [2]**를 문장 끝에 반드시 인용하세요.
-    3. **전문적 어조**: 투자자 리포트 톤앤매너를 유지하세요.
+    **[작성 원칙 - 매우 중요]**
+    1. **단순 요약 금지**: 뉴스 제목을 단순히 나열하거나 번역하지 마세요.
+    2. **서술형 작성**: 이슈별로 현상/원인/전망을 개조식(Bullet points)으로 나누지 말고, **하나의 자연스러운 논리적 흐름을 가진 줄글(Narrative Paragraph)**로 서술하세요. 전문적인 문체를 사용하세요.
+    3. **근거 명시**: 모든 주장이나 사실 언급 시 반드시 제공된 뉴스 번호 **[1], [2]**를 문장 끝에 인용하세요.
 
     [뉴스 데이터]
     {news_context}
     
     [보고서 구조 (Markdown)]
     ## 📊 Executive Summary (시장 총평)
-    - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화 요약.
+    - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화를 3~4문장으로 요약.
 
     ## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
-    - 중요 이슈 2~3가지를 선정하여 소제목을 달고 분석.
-    - 배경, 원인, 파급 효과를 연결하여 깊이 있게 서술.
+    - 가장 중요한 이슈 2~3가지를 선정하여 소제목을 달고 분석하세요.
+    - **중요**: 현상, 원인, 전망을 구분하여 나열하지 말고, **깊이 있는 서술형 문단**으로 작성하세요. 사건의 배경부터 파급 효과까지 매끄럽게 연결되도록 하세요.
+    - 반드시 인용 번호[n]를 포함할 것.
 
     ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
-    - 소부장, 파운드리, 메모리 등 섹터별 주요 단신 종합.
+    - 소부장, 파운드리, 메모리 등 섹터별 주요 단신을 종합하여 서술.
 
     ## 💡 Analyst's View (투자 아이디어)
-    - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트.
+    - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
     """
     
     headers = {'Content-Type': 'application/json'}
-    data = {"contents": [{"parts": [{"text": prompt}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
+    data = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]
+    }
 
     for model in models:
         if "vision" in model: continue
@@ -398,6 +389,7 @@ def generate_report_with_citations(api_key, news_data):
                 time.sleep(1) 
                 continue
         except: continue
+            
     return False, "AI 분석 실패 (모든 모델 응답 없음)"
 
 # ==========================================
@@ -416,7 +408,6 @@ with st.sidebar:
     
     st.markdown("<div class='h-4'></div>", unsafe_allow_html=True)
     
-    # GitHub 동기화 상태
     if "GITHUB_TOKEN" in st.secrets:
         st.markdown("<div class='text-xs text-green-600 font-bold mb-2'>✅ GitHub Auto-Sync Active</div>", unsafe_allow_html=True)
     
@@ -436,7 +427,7 @@ c_head, c_info = st.columns([3, 1])
 with c_head: st.markdown(f"<h1 class='text-3xl font-bold text-slate-800 mb-2'>{selected_category}</h1>", unsafe_allow_html=True)
 
 # ----------------------------------
-# [Mode 1] Daily Report
+# [Mode 1] Daily Report (안정성 확보)
 # ----------------------------------
 if selected_category == "Daily Report":
     st.markdown("<div class='bg-blue-50 text-blue-800 px-4 py-3 rounded-lg text-sm mb-6'>ℹ️ 매일 오전 6시 기준 반도체 정보 리포트입니다.</div>", unsafe_allow_html=True)
@@ -476,20 +467,21 @@ if selected_category == "Daily Report":
         st.info("📢 오늘의 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
             status_box = st.status("🚀 리포트 생성 중...", expanded=True)
-            end_dt = datetime.combine(target_date, dt_time(6, 0))
-            start_dt = end_dt - timedelta(hours=18)
-            status_box.write("📡 뉴스 수집 중...")
-            news_items = fetch_news(daily_kws, days=2, strict_time=True, start_dt=start_dt, end_dt=end_dt)
             
+            # 1단계: Strict Time으로 시도 (전일 12:00 ~ 금일 06:00)
+            status_box.write("📡 뉴스 수집 중 (엄격 필터링)...")
+            news_items = fetch_news(daily_kws, days=2, strict_time=True)
+            
+            # 2단계: 뉴스 없으면 Fallback (최근 24시간 전체)
             if not news_items:
-                status_box.update(label="⚠️ 범위 확장 검색 중...", state="running")
+                status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
                 time.sleep(1)
                 news_items = fetch_news(daily_kws, days=1, strict_time=False)
             
             if not news_items:
-                status_box.update(label="❌ 뉴스 수집 실패", state="error")
+                status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
             else:
-                status_box.write(f"🧠 AI 분석 중... (기사 {len(news_items)}건)")
+                status_box.write(f"🧠 AI 심층 분석 중... (기사 {len(news_items)}건)")
                 success, result = generate_report_with_citations(api_key, news_items)
                 if success:
                     save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
@@ -503,6 +495,7 @@ if selected_category == "Daily Report":
         st.success("✅ 리포트 생성 완료")
         if st.button("🔄 리포트 다시 만들기"):
             status_box = st.status("🚀 재생성 중...", expanded=True)
+            # 재생성 시에는 뉴스 확보를 위해 Loose 조건 우선 적용
             news_items = fetch_news(daily_kws, days=1, strict_time=False)
             if news_items:
                 success, result = generate_report_with_citations(api_key, news_items)
@@ -518,7 +511,11 @@ if selected_category == "Daily Report":
         for entry in history:
             is_today = (entry['date'] == target_date_str)
             with st.expander(f"{'🔥 ' if is_today else ''}{entry['date']} Daily Report", expanded=is_today):
-                st.markdown(f"<div class='bg-white p-6 rounded-xl shadow-sm border border-gray-100 leading-relaxed text-gray-800'>{entry['report']}</div>", unsafe_allow_html=True)
+                st.markdown(f"""
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 leading-relaxed text-gray-800">
+                    {entry['report']}
+                </div>
+                """, unsafe_allow_html=True)
                 st.markdown("<h4 class='text-sm font-bold text-slate-500 mt-4 mb-2'>📚 참고 기사</h4>", unsafe_allow_html=True)
                 for item in entry.get('articles', []):
                     st.markdown(f"<div class='flex items-start gap-2 mb-1 text-sm text-slate-600'><span class='text-blue-500 font-bold'>📄</span><a href='{item['Link']}' target='_blank' class='hover:text-blue-600 hover:underline transition'>{item['Title']}</a></div>", unsafe_allow_html=True)
@@ -542,6 +539,7 @@ else:
             kws = st.session_state.keywords[selected_category]
             if kws:
                 with st.spinner("🌍 5개국 뉴스 수집 중..."):
+                    # 여기에만 days 파라미터 적용
                     news = fetch_news_global(api_key, kws, days=search_days)
                     st.session_state.news_data[selected_category] = news
                     st.rerun()
@@ -549,12 +547,14 @@ else:
         curr_kws = st.session_state.keywords.get(selected_category, [])
         if curr_kws:
             st.write("")
+            st.markdown("<div class='flex flex-wrap gap-2'>", unsafe_allow_html=True)
             cols = st.columns(8)
             for i, kw in enumerate(curr_kws):
                 if cols[i%8].button(f"{kw} ×", key=f"gdel_{kw}"):
                     st.session_state.keywords[selected_category].remove(kw)
                     save_keywords(st.session_state.keywords)
                     st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
     data = st.session_state.news_data.get(selected_category, [])
     if data:
