@@ -11,7 +11,7 @@ import re
 import time
 import yfinance as yf
 from github import Github 
-
+ 
 # SSL 경고 무시
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
