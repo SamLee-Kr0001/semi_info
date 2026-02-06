@@ -43,7 +43,7 @@ st.markdown("""
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
         
-        /* [복구] 주식 정보 스타일 (이전 버전) */
+        /* 주식 정보 스타일 */
         .stock-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 5px 0; border-bottom: 1px dashed #e2e8f0; }
         .stock-name { font-weight: 600; color: #334155; }
         .stock-price { font-family: 'Consolas', monospace; font-weight: 600; font-size: 14px; }
@@ -63,7 +63,7 @@ st.markdown("""
 # 주식 티커
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
-    "🧠 AI ": {"NVIDIA": "NVDA", "Apple": "AAPL", "Alphabet (Google)": "GOOGL / GOOG", "Microsoft": "MSFT", "Meta": "META", "Amazon": "AMZN", "AMD": "AMD", "Tesla": "TSLA", "IBM": "IBM", "Oracle": "ORCL", "Broadcom": "AVGO"},
+    "🧠 AI ": {"NVIDIA": "NVDA", "Apple": "AAPL", "Alphabet (Google)": "GOOGL", "Microsoft": "MSFT", "Meta": "META", "Amazon": "AMZN", "Tesla": "TSLA", "IBM": "IBM", "Oracle": "ORCL", "Broadcom": "AVGO"},
     "🧪 Materials": {"Soulbrain": "357780.KQ", "Dongjin": "005290.KQ", "Hana Mat": "166090.KQ", "Wonik Mat": "104830.KQ", "TCK": "064760.KQ", "Foosung": "093370.KS", "PI Adv": "178920.KS", "ENF": "102710.KQ", "TEMC": "425040.KQ", "YC Chem": "112290.KQ", "Samsung SDI": "006400.KS", "Shin-Etsu": "4063.T", "Sumco": "3436.T", "Merck": "MRK.DE", "Entegris": "ENTG", "TOK": "4186.T", "Resonac": "4004.T", "Air Prod": "APD", "Linde": "LIN", "Qnity": "Q", "Nissan Chem": "4021.T", "Sumitomo": "4005.T"},
     "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Advantest": "6857.T", "Hitachi HT": "8036.T", "Hanmi": "042700.KS", "Wonik IPS": "240810.KQ", "Jusung": "036930.KQ", "EO Tech": "039030.KQ", "Techwing": "089030.KQ", "Eugene": "084370.KQ", "PSK": "319660.KQ", "Zeus": "079370.KQ", "Top Eng": "065130.KQ"}
 }
@@ -142,7 +142,6 @@ def save_daily_history(new_report_data):
 if 'keywords' not in st.session_state:
     st.session_state.keywords = load_keywords()
 
-# [복구] 주식 데이터 수집 (HTML 렌더링 스타일 원복)
 @st.cache_data(ttl=300)
 def get_stock_prices_grouped():
     result_map = {}
@@ -176,7 +175,6 @@ def get_stock_prices_grouped():
                 else: cur_sym = "$"
                 fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
                 
-                # [복구] 이전 스타일 클래스 사용
                 if change > 0: 
                     color_class = "up-color"
                     arrow = "▲"
@@ -203,9 +201,9 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (유사 주제 2개 제한)
+# 2. 뉴스 수집 (수집량 40개로 확대 및 밸런스 조정)
 # ==========================================
-def fetch_news(keywords, days=1, limit=20, strict_time=False, start_dt=None, end_dt=None):
+def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end_dt=None):
     all_items = []
     
     if strict_time and start_dt and end_dt:
@@ -214,8 +212,9 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False, start_dt=None, end
         end_dt = datetime.utcnow() + timedelta(hours=9)
         start_dt = end_dt - timedelta(days=days)
     
-    # 키워드당 수집 제한 (다양성 확보)
-    per_kw_limit = 2 if len(keywords) > 3 else 5
+    # [수정] 수집량이 40개로 늘어났으므로, 키워드당 제한도 조금 여유롭게 조정 (3~7개)
+    # 키워드가 많으면(4개 초과) 3개씩, 적으면 7개씩 수집
+    per_kw_limit = 3 if len(keywords) > 4 else 7
 
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
@@ -224,7 +223,7 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False, start_dt=None, end
             soup = BeautifulSoup(res.content, 'xml')
             items = soup.find_all('item')
             
-            kw_added = 0
+            kw_added_count = 0
             for item in items:
                 is_valid = True
                 if strict_time:
@@ -245,9 +244,10 @@ def fetch_news(keywords, days=1, limit=20, strict_time=False, start_dt=None, end
                             'Source': item.source.text if item.source else "Google News",
                             'ParsedDate': pub_date_kst if strict_time else None
                         })
-                        kw_added += 1
+                        kw_added_count += 1
                 
-                if kw_added >= per_kw_limit: break
+                if kw_added_count >= per_kw_limit:
+                    break
         except: pass
         time.sleep(0.1)
         
@@ -309,13 +309,12 @@ def fetch_news_global(api_key, keywords, days=3):
         "CN": {"gl": "CN", "hl": "zh-CN", "key": "CN"}
     }
     all_raw_items = []
-    # 글로벌 검색도 다양성을 위해 키워드당 2개 제한
-    per_kw_limit = 2 if len(keywords) > 3 else 5
+    # 글로벌 검색도 수집량 확대
+    per_kw_limit = 3 if len(keywords) > 4 else 7
 
     for kw in keywords:
         trans_map = get_translated_keywords(api_key, kw)
         trans_map["KR"] = kw
-        
         for country, conf in TARGETS.items():
             search_term = trans_map.get(conf["key"], kw)
             url = f"https://news.google.com/rss/search?q={quote(search_term)}+when:{days}d&hl={conf['hl']}&gl={conf['gl']}&ceid={conf['gl']}:{conf['hl']}"
@@ -323,7 +322,6 @@ def fetch_news_global(api_key, keywords, days=3):
                 res = requests.get(url, timeout=3, verify=False)
                 soup = BeautifulSoup(res.content, 'xml')
                 items = soup.find_all('item')
-                
                 kw_added = 0
                 for item in items:
                     all_raw_items.append({
@@ -337,11 +335,10 @@ def fetch_news_global(api_key, keywords, days=3):
                     if kw_added >= per_kw_limit: break
             except: pass
             time.sleep(0.1)
-            
     if not all_raw_items: return []
     df = pd.DataFrame(all_raw_items)
     df = df.drop_duplicates(subset=['Title'])
-    items_to_process = df.head(30).to_dict('records')
+    items_to_process = df.head(40).to_dict('records') # 40개까지 번역
     titles_to_translate = [x['Title'] for x in items_to_process if x['Lang'] != "KR"]
     indices_to_translate = [i for i, x in enumerate(items_to_process) if x['Lang'] != "KR"]
     if titles_to_translate:
@@ -387,7 +384,7 @@ def generate_report_with_citations(api_key, news_data):
 
     prompt = f"""
     당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
-    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
+    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체와 반도체 소재 관련한 심층 분석 보고서]**를 작성하세요.
 
     **[작성 원칙 - 매우 중요]**
     1. **단순 요약 금지**: 뉴스 제목을 단순히 나열하거나 번역하지 마세요.
@@ -515,13 +512,14 @@ if selected_category == "Daily Report":
             end_dt = datetime.combine(target_date, dt_time(6, 0))
             start_dt = end_dt - timedelta(hours=18)
             
-            status_box.write("📡 뉴스 수집 중 (다양성 확보 - 키워드별 제한 적용)...")
-            news_items = fetch_news(daily_kws, days=2, strict_time=True, start_dt=start_dt, end_dt=end_dt)
+            # [수정] 수집 개수 40개로 상향, 키워드당 제한은 fetch_news 내부에서 처리
+            status_box.write("📡 뉴스 수집 중 (키워드별 3~7건 수집)...")
+            news_items = fetch_news(daily_kws, days=2, limit=40, strict_time=True, start_dt=start_dt, end_dt=end_dt)
             
             if not news_items:
                 status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
                 time.sleep(1)
-                news_items = fetch_news(daily_kws, days=1, strict_time=False)
+                news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
             
             if not news_items:
                 status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
@@ -540,7 +538,7 @@ if selected_category == "Daily Report":
         st.success("✅ 리포트 생성 완료")
         if st.button("🔄 리포트 다시 만들기"):
             status_box = st.status("🚀 재생성 중...", expanded=True)
-            news_items = fetch_news(daily_kws, days=1, strict_time=False)
+            news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
             if news_items:
                 success, result = generate_report_with_citations(api_key, news_items)
                 if success:
@@ -555,7 +553,11 @@ if selected_category == "Daily Report":
         for entry in history:
             is_today = (entry['date'] == target_date_str)
             with st.expander(f"{'🔥 ' if is_today else ''}{entry['date']} Daily Report", expanded=is_today):
-                st.markdown(f"<div class='bg-white p-6 rounded-xl shadow-sm border border-gray-100 leading-relaxed text-gray-800'>{entry['report']}</div>", unsafe_allow_html=True)
+                st.markdown(f"""
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 leading-relaxed text-gray-800">
+                    {entry['report']}
+                </div>
+                """, unsafe_allow_html=True)
                 st.markdown("<h4 class='text-sm font-bold text-slate-500 mt-4 mb-2'>📚 참고 기사</h4>", unsafe_allow_html=True)
                 for item in entry.get('articles', []):
                     st.markdown(f"<div class='flex items-start gap-2 mb-1 text-sm text-slate-600'><span class='text-blue-500 font-bold'>📄</span><a href='{item['Link']}' target='_blank' class='hover:text-blue-600 hover:underline transition'>{item['Title']}</a></div>", unsafe_allow_html=True)
