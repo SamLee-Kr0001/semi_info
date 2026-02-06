@@ -43,7 +43,7 @@ st.markdown("""
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
         
-        /* 주식 정보 스타일 */
+        /* [복구] 주식 정보 스타일 (이전 버전 - 빨강/파랑) */
         .stock-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 5px 0; border-bottom: 1px dashed #e2e8f0; }
         .stock-name { font-weight: 600; color: #334155; }
         .stock-price { font-family: 'Consolas', monospace; font-weight: 600; font-size: 14px; }
@@ -175,6 +175,7 @@ def get_stock_prices_grouped():
                 else: cur_sym = "$"
                 fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
                 
+                # [안정 버전] 빨강/파랑 색상 클래스
                 if change > 0: 
                     color_class = "up-color"
                     arrow = "▲"
@@ -201,21 +202,24 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (수집량 40개로 확대 및 밸런스 조정)
+# 2. 뉴스 수집 (가장 안정적이었던 단순 RSS 로직)
 # ==========================================
 def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end_dt=None):
+    """
+    [안정 버전] 
+    - 복잡한 쿼터 제한 제거
+    - 순수하게 키워드별로 RSS 호출 후 합침
+    - limit=30으로 상향
+    """
     all_items = []
     
+    # 시간 필터링 설정
     if strict_time and start_dt and end_dt:
         pass
     else:
         end_dt = datetime.utcnow() + timedelta(hours=9)
         start_dt = end_dt - timedelta(days=days)
     
-    # [수정] 수집량이 40개로 늘어났으므로, 키워드당 제한도 조금 여유롭게 조정 (3~7개)
-    # 키워드가 많으면(4개 초과) 3개씩, 적으면 7개씩 수집
-    per_kw_limit = 3 if len(keywords) > 4 else 7
-
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
         try:
@@ -223,7 +227,6 @@ def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end
             soup = BeautifulSoup(res.content, 'xml')
             items = soup.find_all('item')
             
-            kw_added_count = 0
             for item in items:
                 is_valid = True
                 if strict_time:
@@ -236,6 +239,7 @@ def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end
                     except: is_valid = True 
                 
                 if is_valid:
+                    # 중복 체크
                     if not any(i['Title'] == item.title.text for i in all_items):
                         all_items.append({
                             'Title': item.title.text,
@@ -244,10 +248,6 @@ def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end
                             'Source': item.source.text if item.source else "Google News",
                             'ParsedDate': pub_date_kst if strict_time else None
                         })
-                        kw_added_count += 1
-                
-                if kw_added_count >= per_kw_limit:
-                    break
         except: pass
         time.sleep(0.1)
         
@@ -256,7 +256,7 @@ def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end
         df = df.drop_duplicates(subset=['Title'])
         if strict_time:
              df = df.sort_values(by='ParsedDate', ascending=False)
-        return df.head(limit).to_dict('records')
+        return df.head(limit).to_dict('records') # 상위 30개 끊기
     return []
 
 # ==========================================
@@ -309,9 +309,6 @@ def fetch_news_global(api_key, keywords, days=3):
         "CN": {"gl": "CN", "hl": "zh-CN", "key": "CN"}
     }
     all_raw_items = []
-    # 글로벌 검색도 수집량 확대
-    per_kw_limit = 3 if len(keywords) > 4 else 7
-
     for kw in keywords:
         trans_map = get_translated_keywords(api_key, kw)
         trans_map["KR"] = kw
@@ -322,7 +319,6 @@ def fetch_news_global(api_key, keywords, days=3):
                 res = requests.get(url, timeout=3, verify=False)
                 soup = BeautifulSoup(res.content, 'xml')
                 items = soup.find_all('item')
-                kw_added = 0
                 for item in items:
                     all_raw_items.append({
                         'Title': item.title.text,
@@ -331,14 +327,12 @@ def fetch_news_global(api_key, keywords, days=3):
                         'Source': f"[{country}] {item.source.text if item.source else 'Google News'}",
                         'Lang': conf['key']
                     })
-                    kw_added += 1
-                    if kw_added >= per_kw_limit: break
             except: pass
             time.sleep(0.1)
     if not all_raw_items: return []
     df = pd.DataFrame(all_raw_items)
     df = df.drop_duplicates(subset=['Title'])
-    items_to_process = df.head(40).to_dict('records') # 40개까지 번역
+    items_to_process = df.head(30).to_dict('records')
     titles_to_translate = [x['Title'] for x in items_to_process if x['Lang'] != "KR"]
     indices_to_translate = [i for i, x in enumerate(items_to_process) if x['Lang'] != "KR"]
     if titles_to_translate:
@@ -512,14 +506,14 @@ if selected_category == "Daily Report":
             end_dt = datetime.combine(target_date, dt_time(6, 0))
             start_dt = end_dt - timedelta(hours=18)
             
-            # [수정] 수집 개수 40개로 상향, 키워드당 제한은 fetch_news 내부에서 처리
-            status_box.write("📡 뉴스 수집 중 (키워드별 3~7건 수집)...")
-            news_items = fetch_news(daily_kws, days=2, limit=40, strict_time=True, start_dt=start_dt, end_dt=end_dt)
+            # [안정 버전] 단순 limit=30 적용
+            status_box.write("📡 뉴스 수집 중...")
+            news_items = fetch_news(daily_kws, days=2, limit=30, strict_time=True, start_dt=start_dt, end_dt=end_dt)
             
             if not news_items:
                 status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
                 time.sleep(1)
-                news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
+                news_items = fetch_news(daily_kws, days=1, limit=30, strict_time=False)
             
             if not news_items:
                 status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
@@ -538,7 +532,7 @@ if selected_category == "Daily Report":
         st.success("✅ 리포트 생성 완료")
         if st.button("🔄 리포트 다시 만들기"):
             status_box = st.status("🚀 재생성 중...", expanded=True)
-            news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
+            news_items = fetch_news(daily_kws, days=1, limit=30, strict_time=False)
             if news_items:
                 success, result = generate_report_with_citations(api_key, news_items)
                 if success:
