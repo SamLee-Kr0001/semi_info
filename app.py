@@ -11,7 +11,7 @@ import re
 import time
 import yfinance as yf
 from github import Github 
-
+ 
 # SSL 경고 무시
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -32,27 +32,9 @@ if 'daily_history' not in st.session_state:
 st.markdown("""
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
         .stApp { background-color: #F8FAFC; }
-        
-        /* 리포트 및 뉴스 카드 스타일 */
-        .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
-        .news-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 10px; }
-        .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
-        .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
-        
-        /* [복구] 주식 정보 스타일 (이전 버전 - 빨강/파랑) */
-        .stock-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 5px 0; border-bottom: 1px dashed #e2e8f0; }
-        .stock-name { font-weight: 600; color: #334155; }
-        .stock-price { font-family: 'Consolas', monospace; font-weight: 600; font-size: 14px; }
-        .up-color { color: #DC2626 !important; }   /* 빨강 */
-        .down-color { color: #2563EB !important; } /* 파랑 */
-        .flat-color { color: #64748B !important; } /* 회색 */
-        .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
-        
-        /* 기타 UI */
         section[data-testid="stSidebar"] { background-color: #FFFFFF; border-right: 1px solid #E2E8F0; }
         div.stButton > button { border-radius: 8px; font-weight: 600; transition: all 0.2s ease-in-out; }
         .streamlit-expanderHeader { background-color: #FFFFFF; border-radius: 8px; }
@@ -63,7 +45,7 @@ st.markdown("""
 # 주식 티커
 STOCK_CATEGORIES = {
     "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
-    "🧠 AI ": {"NVIDIA": "NVDA", "Apple": "AAPL", "Alphabet (Google)": "GOOGL", "Microsoft": "MSFT", "Meta": "META", "Amazon": "AMZN", "Tesla": "TSLA", "IBM": "IBM", "Oracle": "ORCL", "Broadcom": "AVGO"},
+    "🧠 Fabless": {"Nvidia": "NVDA", "Broadcom": "AVGO"},
     "🧪 Materials": {"Soulbrain": "357780.KQ", "Dongjin": "005290.KQ", "Hana Mat": "166090.KQ", "Wonik Mat": "104830.KQ", "TCK": "064760.KQ", "Foosung": "093370.KS", "PI Adv": "178920.KS", "ENF": "102710.KQ", "TEMC": "425040.KQ", "YC Chem": "112290.KQ", "Samsung SDI": "006400.KS", "Shin-Etsu": "4063.T", "Sumco": "3436.T", "Merck": "MRK.DE", "Entegris": "ENTG", "TOK": "4186.T", "Resonac": "4004.T", "Air Prod": "APD", "Linde": "LIN", "Qnity": "Q", "Nissan Chem": "4021.T", "Sumitomo": "4005.T"},
     "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Advantest": "6857.T", "Hitachi HT": "8036.T", "Hanmi": "042700.KS", "Wonik IPS": "240810.KQ", "Jusung": "036930.KQ", "EO Tech": "039030.KQ", "Techwing": "089030.KQ", "Eugene": "084370.KQ", "PSK": "319660.KQ", "Zeus": "079370.KQ", "Top Eng": "065130.KQ"}
 }
@@ -175,26 +157,17 @@ def get_stock_prices_grouped():
                 else: cur_sym = "$"
                 fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
                 
-                # [안정 버전] 빨강/파랑 색상 클래스
-                if change > 0: 
-                    color_class = "up-color"
-                    arrow = "▲"
-                    sign = "+"
-                elif change < 0: 
-                    color_class = "down-color"
-                    arrow = "▼"
-                    sign = ""
-                else: 
-                    color_class = "flat-color"
-                    arrow = "-"
-                    sign = ""
+                if change > 0: color_class, arrow, sign = "text-red-600 bg-red-50 px-2 py-0.5 rounded", "▲", "+"
+                elif change < 0: color_class, arrow, sign = "text-blue-600 bg-blue-50 px-2 py-0.5 rounded", "▼", ""
+                else: color_class, arrow, sign = "text-gray-500 bg-gray-100 px-2 py-0.5 rounded", "-", ""
                 
                 html_str = f"""
-                <div class="stock-row">
-                    <span class="stock-name">{name}</span>
-                    <span class="stock-price {color_class}">
-                        {fmt_price} <span style="font-size:0.9em; margin-left:3px;">{arrow} {sign}{pct:.2f}%</span>
-                    </span>
+                <div class="flex justify-between items-center py-2 border-b border-gray-100 hover:bg-gray-50 transition duration-150">
+                    <span class="text-sm font-semibold text-slate-700">{name}</span>
+                    <div class="text-right">
+                        <span class="block text-sm font-bold text-slate-800 font-mono">{fmt_price}</span>
+                        <span class="text-xs font-medium {color_class}">{arrow} {sign}{pct:.2f}%</span>
+                    </div>
                 </div>
                 """
                 result_map[name] = html_str
@@ -202,25 +175,21 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (가장 안정적이었던 단순 RSS 로직)
+# 2. 뉴스 수집 (지난주 금요일 로직으로 완전 복구)
 # ==========================================
-def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end_dt=None):
-    """
-    [안정 버전] 
-    - 복잡한 쿼터 제한 제거
-    - 순수하게 키워드별로 RSS 호출 후 합침
-    - limit=30으로 상향
-    """
+def fetch_news(keywords, days=1, limit=20, strict_time=False):
+    """안정성이 검증된 지난주 금요일 버전 뉴스 수집 함수"""
     all_items = []
     
-    # 시간 필터링 설정
-    if strict_time and start_dt and end_dt:
-        pass
-    else:
-        end_dt = datetime.utcnow() + timedelta(hours=9)
-        start_dt = end_dt - timedelta(days=days)
+    # 시간 필터링 기준 (KST)
+    now_kst = datetime.utcnow() + timedelta(hours=9)
+    end_target = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
+    if now_kst.hour < 6:
+        end_target -= timedelta(days=1)
+    start_target = end_target - timedelta(hours=18)
     
     for kw in keywords:
+        # RSS URL 구조 (심플)
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
         try:
             res = requests.get(url, timeout=5, verify=False)
@@ -229,38 +198,34 @@ def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end
             
             for item in items:
                 is_valid = True
+                # strict_time이 True일 때만 파이썬 레벨에서 필터링
                 if strict_time:
                     try:
                         pub_date_str = item.pubDate.text
                         pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                         pub_date_kst = pub_date + timedelta(hours=9)
-                        if not (start_dt <= pub_date_kst <= end_dt):
+                        if not (start_target <= pub_date_kst <= end_target):
                             is_valid = False
-                    except: is_valid = True 
+                    except: is_valid = True # 파싱 실패시 안전하게 포함
                 
                 if is_valid:
-                    # 중복 체크
-                    if not any(i['Title'] == item.title.text for i in all_items):
-                        all_items.append({
-                            'Title': item.title.text,
-                            'Link': item.link.text,
-                            'Date': item.pubDate.text,
-                            'Source': item.source.text if item.source else "Google News",
-                            'ParsedDate': pub_date_kst if strict_time else None
-                        })
+                    all_items.append({
+                        'Title': item.title.text,
+                        'Link': item.link.text,
+                        'Date': item.pubDate.text,
+                        'Source': item.source.text if item.source else "Google News"
+                    })
         except: pass
         time.sleep(0.1)
         
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.drop_duplicates(subset=['Title'])
-        if strict_time:
-             df = df.sort_values(by='ParsedDate', ascending=False)
-        return df.head(limit).to_dict('records') # 상위 30개 끊기
+        return df.head(limit).to_dict('records')
     return []
 
 # ==========================================
-# 2-1. 글로벌 뉴스
+# 2-1. 글로벌 뉴스 (기능 유지)
 # ==========================================
 def translate_text_batch(api_key, texts, target_lang="Korean"):
     if not texts: return []
@@ -343,7 +308,7 @@ def fetch_news_global(api_key, keywords, days=3):
     return items_to_process
 
 # ==========================================
-# 3. AI 리포트 생성
+# 3. AI 리포트 생성 (지난주 금요일 로직 복원)
 # ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
@@ -367,18 +332,18 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_with_citations(api_key, news_data):
+    # 1. 모델 자동 탐색 (금요일 로직)
     models = get_available_models(api_key)
     if not models:
         models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
     
     news_context = ""
     for i, item in enumerate(news_data):
-        clean_title = re.sub(r'<[^>]+>', '', item['Title'])
-        news_context += f"[{i+1}] {clean_title} (Source: {item['Source']})\n"
+        news_context += f"[{i+1}] {item['Title']} (Source: {item['Source']})\n"
 
     prompt = f"""
     당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
-    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체와 반도체 소재 관련한 심층 분석 보고서]**를 작성하세요.
+    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
 
     **[작성 원칙 - 매우 중요]**
     1. **단순 요약 금지**: 뉴스 제목을 단순히 나열하거나 번역하지 마세요.
@@ -398,7 +363,7 @@ def generate_report_with_citations(api_key, news_data):
     - 반드시 인용 번호[n]를 포함할 것.
 
     ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
-    - 반도체 소재 그리고 소부장, 파운드리, 메모리 등 섹터별 주요 단신을 종합하여 서술.
+    - 소부장, 파운드리, 메모리 등 섹터별 주요 단신을 종합하여 서술.
 
     ## 💡 Analyst's View (투자 아이디어)
     - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
@@ -453,7 +418,7 @@ with st.sidebar:
         stock_data = get_stock_prices_grouped()
         if stock_data:
             for cat, items in STOCK_CATEGORIES.items():
-                st.markdown(f"<div class='stock-header'>{cat}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='text-xs font-bold text-slate-500 uppercase mt-4 mb-2 tracking-wider'>{cat}</div>", unsafe_allow_html=True)
                 for name, symbol in items.items():
                     html_info = stock_data.get(name)
                     if html_info: st.markdown(html_info, unsafe_allow_html=True)
@@ -462,7 +427,7 @@ c_head, c_info = st.columns([3, 1])
 with c_head: st.markdown(f"<h1 class='text-3xl font-bold text-slate-800 mb-2'>{selected_category}</h1>", unsafe_allow_html=True)
 
 # ----------------------------------
-# [Mode 1] Daily Report
+# [Mode 1] Daily Report (안정성 확보)
 # ----------------------------------
 if selected_category == "Daily Report":
     st.markdown("<div class='bg-blue-50 text-blue-800 px-4 py-3 rounded-lg text-sm mb-6'>ℹ️ 매일 오전 6시 기준 반도체 정보 리포트입니다.</div>", unsafe_allow_html=True)
@@ -503,17 +468,15 @@ if selected_category == "Daily Report":
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
             status_box = st.status("🚀 리포트 생성 중...", expanded=True)
             
-            end_dt = datetime.combine(target_date, dt_time(6, 0))
-            start_dt = end_dt - timedelta(hours=18)
+            # 1단계: Strict Time으로 시도 (전일 12:00 ~ 금일 06:00)
+            status_box.write("📡 뉴스 수집 중 (엄격 필터링)...")
+            news_items = fetch_news(daily_kws, days=2, strict_time=True)
             
-            # [안정 버전] 단순 limit=30 적용
-            status_box.write("📡 뉴스 수집 중...")
-            news_items = fetch_news(daily_kws, days=2, limit=30, strict_time=True, start_dt=start_dt, end_dt=end_dt)
-            
+            # 2단계: 뉴스 없으면 Fallback (최근 24시간 전체)
             if not news_items:
                 status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
                 time.sleep(1)
-                news_items = fetch_news(daily_kws, days=1, limit=30, strict_time=False)
+                news_items = fetch_news(daily_kws, days=1, strict_time=False)
             
             if not news_items:
                 status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
@@ -532,7 +495,8 @@ if selected_category == "Daily Report":
         st.success("✅ 리포트 생성 완료")
         if st.button("🔄 리포트 다시 만들기"):
             status_box = st.status("🚀 재생성 중...", expanded=True)
-            news_items = fetch_news(daily_kws, days=1, limit=30, strict_time=False)
+            # 재생성 시에는 뉴스 확보를 위해 Loose 조건 우선 적용
+            news_items = fetch_news(daily_kws, days=1, strict_time=False)
             if news_items:
                 success, result = generate_report_with_citations(api_key, news_items)
                 if success:
@@ -575,6 +539,7 @@ else:
             kws = st.session_state.keywords[selected_category]
             if kws:
                 with st.spinner("🌍 5개국 뉴스 수집 중..."):
+                    # 여기에만 days 파라미터 적용
                     news = fetch_news_global(api_key, kws, days=search_days)
                     st.session_state.news_data[selected_category] = news
                     st.rerun()
@@ -596,7 +561,7 @@ else:
         st.markdown(f"<div class='text-sm text-slate-500 mb-4'>총 {len(data)}건 수집됨 (최근 {search_days}일)</div>", unsafe_allow_html=True)
         for item in data:
             st.markdown(f"""
-            <div class="news-card">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition duration-200 mb-3">
                 <div class="flex justify-between items-start">
                     <div class="text-xs font-bold text-blue-600 mb-1">{item['Source']}</div>
                     <div class="text-xs text-slate-400">{item['Date']}</div>
