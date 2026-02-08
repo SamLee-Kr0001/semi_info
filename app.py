@@ -4,7 +4,7 @@ import requests
 import urllib3
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time as dt_time  # [수정] dt_time 추가 필수
 import json
 import os
 import re
@@ -32,13 +32,18 @@ if 'daily_history' not in st.session_state:
 st.markdown("""
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
         .stApp { background-color: #F8FAFC; }
+        
+        /* 리포트 및 뉴스 카드 스타일 */
         .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
         .news-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 10px; }
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
+        
+        /* 주식 정보 스타일 (이전 버전 복구됨) */
         .stock-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 5px 0; border-bottom: 1px dashed #e2e8f0; }
         .stock-name { font-weight: 600; color: #334155; }
         .stock-price { font-family: 'Consolas', monospace; font-weight: 600; font-size: 14px; }
@@ -46,13 +51,18 @@ st.markdown("""
         .down-color { color: #2563EB !important; } /* 파랑 */
         .flat-color { color: #64748B !important; } /* 회색 */
         .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
-        .ref-link { font-size: 0.9em; color: #555; text-decoration: none; display: block; margin-bottom: 6px; padding: 5px; border-radius: 4px; transition: background 0.2s; }
+        
+        /* 기타 UI */
+        section[data-testid="stSidebar"] { background-color: #FFFFFF; border-right: 1px solid #E2E8F0; }
+        div.stButton > button { border-radius: 8px; font-weight: 600; transition: all 0.2s ease-in-out; }
+        .streamlit-expanderHeader { background-color: #FFFFFF; border-radius: 8px; }
+        a { text-decoration: none; }
     </style>
 """, unsafe_allow_html=True)
 
 # 주식 티커
 STOCK_CATEGORIES = {
-    "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
+    "🏭 Chipmakers": {"SK Hynix": "000660.KS", "Samsung": "005930.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
     "🧠 AI ": {"NVIDIA": "NVDA", "Apple": "AAPL", "Alphabet (Google)": "GOOGL", "Microsoft": "MSFT", "Meta": "META", "Amazon": "AMZN", "Tesla": "TSLA", "IBM": "IBM", "Oracle": "ORCL", "Broadcom": "AVGO"},
     "🧪 Materials": {"Soulbrain": "357780.KQ", "Dongjin": "005290.KQ", "Hana Mat": "166090.KQ", "Wonik Mat": "104830.KQ", "TCK": "064760.KQ", "Foosung": "093370.KS", "PI Adv": "178920.KS", "ENF": "102710.KQ", "TEMC": "425040.KQ", "YC Chem": "112290.KQ", "Samsung SDI": "006400.KS", "Shin-Etsu": "4063.T", "Sumco": "3436.T", "Merck": "MRK.DE", "Entegris": "ENTG", "TOK": "4186.T", "Resonac": "4004.T", "Air Prod": "APD", "Linde": "LIN", "Qnity": "Q", "Nissan Chem": "4021.T", "Sumitomo": "4005.T"},
     "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Advantest": "6857.T", "Hitachi HT": "8036.T", "Hanmi": "042700.KS", "Wonik IPS": "240810.KQ", "Jusung": "036930.KQ", "EO Tech": "039030.KQ", "Techwing": "089030.KQ", "Eugene": "084370.KQ", "PSK": "319660.KQ", "Zeus": "079370.KQ", "Top Eng": "065130.KQ"}
@@ -165,9 +175,18 @@ def get_stock_prices_grouped():
                 else: cur_sym = "$"
                 fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
                 
-                if change > 0: color_class, arrow, sign = "up-color", "▲", "+"
-                elif change < 0: color_class, arrow, sign = "down-color", "▼", ""
-                else: color_class, arrow, sign = "flat-color", "-", ""
+                if change > 0: 
+                    color_class = "up-color"
+                    arrow = "▲"
+                    sign = "+"
+                elif change < 0: 
+                    color_class = "down-color"
+                    arrow = "▼"
+                    sign = ""
+                else: 
+                    color_class = "flat-color"
+                    arrow = "-"
+                    sign = ""
                 
                 html_str = f"""
                 <div class="stock-row">
@@ -182,25 +201,27 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (수정됨: 40개 제한 + 키워드당 2개)
+# 2. 뉴스 수집 (수집량 확대 및 다양성 제한 적용)
 # ==========================================
-def fetch_news(keywords, days=1, limit=40, strict_time=False):
+def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end_dt=None):
     """
     [수정 사항]
     1. limit=40 (기존 20에서 상향)
-    2. 키워드별 수집 개수를 2개로 제한하여 특정 이슈 쏠림 방지
+    2. 키워드별 수집 개수를 2~5개로 제한하여 특정 이슈 쏠림 방지
     """
     all_items = []
     
     # 시간 필터링 기준 (KST)
-    now_kst = datetime.utcnow() + timedelta(hours=9)
-    end_target = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
-    if now_kst.hour < 6:
-        end_target -= timedelta(days=1)
-    start_target = end_target - timedelta(hours=18)
+    if not (strict_time and start_dt and end_dt):
+        now_kst = datetime.utcnow() + timedelta(hours=9)
+        end_dt = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
+        if now_kst.hour < 6:
+            end_dt -= timedelta(days=1)
+        start_dt = end_dt - timedelta(hours=18)
     
     # [설정] 키워드당 최대 수집 개수 (다양성 확보)
-    PER_KEYWORD_LIMIT = 2
+    # 키워드가 4개 이상이면 3개씩, 적으면 5개씩
+    per_kw_limit = 3 if len(keywords) > 4 else 5
 
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
@@ -209,9 +230,7 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False):
             soup = BeautifulSoup(res.content, 'xml')
             items = soup.find_all('item')
             
-            # [추가] 현재 키워드 수집 카운트
             kw_collected = 0
-            
             for item in items:
                 is_valid = True
                 if strict_time:
@@ -219,7 +238,7 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False):
                         pub_date_str = item.pubDate.text
                         pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                         pub_date_kst = pub_date + timedelta(hours=9)
-                        if not (start_target <= pub_date_kst <= end_target):
+                        if not (start_dt <= pub_date_kst <= end_dt):
                             is_valid = False
                     except: is_valid = True 
                 
@@ -230,20 +249,22 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False):
                             'Title': item.title.text,
                             'Link': item.link.text,
                             'Date': item.pubDate.text,
-                            'Source': item.source.text if item.source else "Google News"
+                            'Source': item.source.text if item.source else "Google News",
+                            'ParsedDate': pub_date_kst if strict_time else None
                         })
                         kw_collected += 1
                 
-                # [추가] 키워드당 2개 채우면 다음 키워드로
-                if kw_collected >= PER_KEYWORD_LIMIT:
+                # [추가] 키워드당 n개 채우면 다음 키워드로
+                if kw_collected >= per_kw_limit:
                     break
-                    
         except: pass
         time.sleep(0.1)
         
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.drop_duplicates(subset=['Title'])
+        if strict_time:
+             df = df.sort_values(by='ParsedDate', ascending=False)
         return df.head(limit).to_dict('records') # 40개까지 반환
     return []
 
@@ -297,9 +318,9 @@ def fetch_news_global(api_key, keywords, days=3):
         "CN": {"gl": "CN", "hl": "zh-CN", "key": "CN"}
     }
     all_raw_items = []
-    # 글로벌도 동일하게 2개 제한
-    PER_KEYWORD_LIMIT = 2
-    
+    # 글로벌 검색도 수집량 확대
+    per_kw_limit = 3 if len(keywords) > 4 else 5
+
     for kw in keywords:
         trans_map = get_translated_keywords(api_key, kw)
         trans_map["KR"] = kw
@@ -320,7 +341,7 @@ def fetch_news_global(api_key, keywords, days=3):
                         'Lang': conf['key']
                     })
                     kw_added += 1
-                    if kw_added >= PER_KEYWORD_LIMIT: break
+                    if kw_added >= per_kw_limit: break
             except: pass
             time.sleep(0.1)
     if not all_raw_items: return []
@@ -503,11 +524,13 @@ if selected_category == "Daily Report":
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
             status_box = st.status("🚀 리포트 생성 중...", expanded=True)
             
+            # [수정] 시간 설정을 함수 인자로 전달하도록 구조 변경
             end_dt = datetime.combine(target_date, dt_time(6, 0))
             start_dt = end_dt - timedelta(hours=18)
             
-            # [수정] 40개 제한, 키워드당 2개 제한 적용
-            status_box.write("📡 뉴스 수집 중 (키워드당 최대 2건, 총 40건)...")
+            status_box.write("📡 뉴스 수집 중 (다양성 확보 - 키워드별 제한 적용)...")
+            
+            # [수정] limit=40으로 상향, start_dt/end_dt 직접 전달
             news_items = fetch_news(daily_kws, days=2, limit=40, strict_time=True, start_dt=start_dt, end_dt=end_dt)
             
             if not news_items:
