@@ -130,7 +130,7 @@ def load_daily_history():
         except: return []
     return []
 
-# [중요 수정] 저장 순서 변경: 세션 -> 로컬 -> GitHub
+# [중요] 저장 순서: 세션 -> 로컬 -> GitHub (화면 표시 보장)
 def save_daily_history(new_report_data):
     # 1. 기존 데이터 로드
     history = load_daily_history()
@@ -139,7 +139,7 @@ def save_daily_history(new_report_data):
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data)
     
-    # [핵심] 3. 세션 상태 즉시 업데이트 (화면 표시 보장)
+    # 3. 세션 상태 즉시 업데이트 (화면 표시 보장)
     st.session_state.daily_history = history
     
     # 4. 로컬 파일 저장
@@ -204,9 +204,9 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (30개 제한, 키워드당 2~5개)
+# 2. 뉴스 수집 (심플하고 안정적인 로직 + 수집량 40개)
 # ==========================================
-def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end_dt=None):
+def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end_dt=None):
     all_items = []
     
     if not (strict_time and start_dt and end_dt):
@@ -215,7 +215,8 @@ def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end
         if now_kst.hour < 6: end_dt -= timedelta(days=1)
         start_dt = end_dt - timedelta(hours=18)
     
-    per_kw_limit = 2 if len(keywords) > 4 else 5
+    # 키워드당 수집 제한 (다양성 확보)
+    per_kw_limit = 3 if len(keywords) > 4 else 7
 
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
@@ -343,7 +344,7 @@ def fetch_news_global(api_key, keywords, days=3):
     return items_to_process
 
 # ==========================================
-# 3. AI 리포트 생성
+# 3. AI 리포트 생성 (가장 안정적인 코드 복원)
 # ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
@@ -367,13 +368,10 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_with_citations(api_key, news_data):
+    # [복구] 모델 자동 탐색 + 인자 2개만 받음
     models = get_available_models(api_key)
     if not models:
         models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
-    else:
-        if "gemini-1.5-flash" in models:
-            models.remove("gemini-1.5-flash")
-            models.insert(0, "gemini-1.5-flash")
     
     news_context = ""
     for i, item in enumerate(news_data):
@@ -428,6 +426,7 @@ def generate_report_with_citations(api_key, news_data):
                 time.sleep(1) 
                 continue
         except: continue
+            
     return False, "AI 분석 실패 (모든 모델 응답 없음)"
 
 # ==========================================
@@ -504,49 +503,56 @@ if selected_category == "Daily Report":
     if not today_report:
         st.info("📢 오늘의 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
-            status_box = st.status("🚀 리포트 생성 중...", expanded=True)
-            
-            end_dt = datetime.combine(target_date, dt_time(6, 0))
-            start_dt = end_dt - timedelta(hours=18)
-            
-            status_box.write("📡 뉴스 수집 중...")
-            news_items = fetch_news(daily_kws, days=2, limit=40, strict_time=True, start_dt=start_dt, end_dt=end_dt)
-            
-            if not news_items:
-                status_box.update(label="⚠️ 조건 미달. 확장 검색(24시간) 시도...", state="running")
-                time.sleep(1)
-                news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
-            
-            if not news_items:
-                status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
-            else:
-                status_box.write(f"🧠 AI 심층 분석 중... (기사 {len(news_items)}건)")
-                success, result = generate_report_with_citations(api_key, news_items)
-                if success:
-                    save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
-                    
-                    # [핵심] 저장 및 동기화
-                    status_box.write("💾 저장 및 동기화 중...")
-                    save_daily_history(save_data)
-                    
-                    status_box.update(label="🎉 완료!", state="complete")
+            # [디버깅 UI] 상세 과정 표시 (Expandable)
+            with st.status("🚀 리포트 생성 프로세스...", expanded=True) as status:
+                end_dt = datetime.combine(target_date, dt_time(6, 0))
+                start_dt = end_dt - timedelta(hours=18)
+                
+                status.write("📡 1. 뉴스 수집 중 (다양성 필터링)...")
+                news_items = fetch_news(daily_kws, days=2, limit=40, strict_time=True, start_dt=start_dt, end_dt=end_dt)
+                
+                if not news_items:
+                    status.write("⚠️ 조건 미달. 확장 검색(24시간) 시도...")
                     time.sleep(1)
-                    st.rerun()
+                    news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
+                
+                if not news_items:
+                    status.update(label="❌ 뉴스 수집 실패", state="error")
+                    st.error("수집된 뉴스가 없습니다.")
                 else:
-                    status_box.update(label="⚠️ AI 분석 실패", state="error")
-                    st.error(result)
+                    status.write(f"✅ 뉴스 {len(news_items)}건 수집 완료. AI 분석 요청 중...")
+                    
+                    # [복구] 인자 2개 (api_key, news_data)만 전달
+                    success, result = generate_report_with_citations(api_key, news_items)
+                    
+                    if success:
+                        status.write("💾 3. 저장 및 동기화 중...")
+                        save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
+                        save_daily_history(save_data)
+                        
+                        status.update(label="🎉 완료!", state="complete", expanded=False)
+                        st.rerun()
+                    else:
+                        status.update(label="⚠️ AI 분석 실패", state="error")
+                        st.error(result)
     else:
         st.success("✅ 리포트 생성 완료")
         if st.button("🔄 리포트 다시 만들기"):
-            status_box = st.status("🚀 재생성 중...", expanded=True)
-            news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
-            if news_items:
-                success, result = generate_report_with_citations(api_key, news_items)
-                if success:
-                    save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
-                    save_daily_history(save_data)
-                    status_box.update(label="🎉 완료!", state="complete")
-                    st.rerun()
+            with st.status("🚀 리포트 재생성 중...", expanded=True) as status:
+                status.write("📡 뉴스 재수집 중...")
+                news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
+                if news_items:
+                    status.write("🧠 AI 분석 중...")
+                    success, result = generate_report_with_citations(api_key, news_items)
+                    if success:
+                        status.write("💾 저장 중...")
+                        save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
+                        save_daily_history(save_data)
+                        status.update(label="🎉 완료!", state="complete", expanded=False)
+                        st.rerun()
+                    else:
+                        status.update(label="⚠️ 실패", state="error")
+                        st.error(result)
 
     if history:
         st.markdown("<div class='h-8'></div>", unsafe_allow_html=True)
