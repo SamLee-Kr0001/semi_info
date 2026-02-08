@@ -4,7 +4,7 @@ import requests
 import urllib3
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta, time as dt_time
+from datetime import datetime, timedelta
 import json
 import os
 import re
@@ -32,18 +32,13 @@ if 'daily_history' not in st.session_state:
 st.markdown("""
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
         .stApp { background-color: #F8FAFC; }
-        
-        /* 리포트 및 뉴스 카드 스타일 */
         .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
         .news-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 10px; }
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
-        
-        /* 주식 정보 스타일 (이전 버전 복구됨) */
         .stock-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 5px 0; border-bottom: 1px dashed #e2e8f0; }
         .stock-name { font-weight: 600; color: #334155; }
         .stock-price { font-family: 'Consolas', monospace; font-weight: 600; font-size: 14px; }
@@ -51,12 +46,7 @@ st.markdown("""
         .down-color { color: #2563EB !important; } /* 파랑 */
         .flat-color { color: #64748B !important; } /* 회색 */
         .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
-        
-        /* 기타 UI */
-        section[data-testid="stSidebar"] { background-color: #FFFFFF; border-right: 1px solid #E2E8F0; }
-        div.stButton > button { border-radius: 8px; font-weight: 600; transition: all 0.2s ease-in-out; }
-        .streamlit-expanderHeader { background-color: #FFFFFF; border-radius: 8px; }
-        a { text-decoration: none; }
+        .ref-link { font-size: 0.9em; color: #555; text-decoration: none; display: block; margin-bottom: 6px; padding: 5px; border-radius: 4px; transition: background 0.2s; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -175,18 +165,9 @@ def get_stock_prices_grouped():
                 else: cur_sym = "$"
                 fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
                 
-                if change > 0: 
-                    color_class = "up-color"
-                    arrow = "▲"
-                    sign = "+"
-                elif change < 0: 
-                    color_class = "down-color"
-                    arrow = "▼"
-                    sign = ""
-                else: 
-                    color_class = "flat-color"
-                    arrow = "-"
-                    sign = ""
+                if change > 0: color_class, arrow, sign = "up-color", "▲", "+"
+                elif change < 0: color_class, arrow, sign = "down-color", "▼", ""
+                else: color_class, arrow, sign = "flat-color", "-", ""
                 
                 html_str = f"""
                 <div class="stock-row">
@@ -201,25 +182,25 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (수집량 확대 및 다양성 제한 적용)
+# 2. 뉴스 수집 (수정됨: 40개 제한 + 키워드당 2개)
 # ==========================================
-def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end_dt=None):
+def fetch_news(keywords, days=1, limit=40, strict_time=False):
     """
-    [수정]
-    1. limit 기본값을 30으로 상향 (기존 20)
-    2. 키워드당 최대 2개만 수집하도록 제한 (per_kw_limit) -> 다양성 확보
+    [수정 사항]
+    1. limit=40 (기존 20에서 상향)
+    2. 키워드별 수집 개수를 2개로 제한하여 특정 이슈 쏠림 방지
     """
     all_items = []
     
-    # 시간 필터링 설정
-    if strict_time and start_dt and end_dt:
-        pass
-    else:
-        end_dt = datetime.utcnow() + timedelta(hours=9)
-        start_dt = end_dt - timedelta(days=days)
+    # 시간 필터링 기준 (KST)
+    now_kst = datetime.utcnow() + timedelta(hours=9)
+    end_target = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
+    if now_kst.hour < 6:
+        end_target -= timedelta(days=1)
+    start_target = end_target - timedelta(hours=18)
     
-    # [핵심] 키워드 개수가 적으면(3개 이하) 5개씩, 많으면 2개씩만 수집하여 골고루 반영
-    per_kw_limit = 2 if len(keywords) > 3 else 5
+    # [설정] 키워드당 최대 수집 개수 (다양성 확보)
+    PER_KEYWORD_LIMIT = 2
 
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
@@ -228,7 +209,8 @@ def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end
             soup = BeautifulSoup(res.content, 'xml')
             items = soup.find_all('item')
             
-            kw_added_count = 0 # 해당 키워드 수집 카운트
+            # [추가] 현재 키워드 수집 카운트
+            kw_collected = 0
             
             for item in items:
                 is_valid = True
@@ -237,34 +219,32 @@ def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end
                         pub_date_str = item.pubDate.text
                         pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                         pub_date_kst = pub_date + timedelta(hours=9)
-                        if not (start_dt <= pub_date_kst <= end_dt):
+                        if not (start_target <= pub_date_kst <= end_target):
                             is_valid = False
                     except: is_valid = True 
                 
                 if is_valid:
-                    # 제목 중복 방지
+                    # 중복 체크 (전체 리스트 기준)
                     if not any(i['Title'] == item.title.text for i in all_items):
                         all_items.append({
                             'Title': item.title.text,
                             'Link': item.link.text,
                             'Date': item.pubDate.text,
-                            'Source': item.source.text if item.source else "Google News",
-                            'ParsedDate': pub_date_kst if strict_time else None
+                            'Source': item.source.text if item.source else "Google News"
                         })
-                        kw_added_count += 1
+                        kw_collected += 1
                 
-                # [제한] 키워드당 n개 채우면 다음 키워드로 (쏠림 방지)
-                if kw_added_count >= per_kw_limit:
+                # [추가] 키워드당 2개 채우면 다음 키워드로
+                if kw_collected >= PER_KEYWORD_LIMIT:
                     break
+                    
         except: pass
         time.sleep(0.1)
         
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.drop_duplicates(subset=['Title'])
-        if strict_time:
-             df = df.sort_values(by='ParsedDate', ascending=False)
-        return df.head(limit).to_dict('records')
+        return df.head(limit).to_dict('records') # 40개까지 반환
     return []
 
 # ==========================================
@@ -317,9 +297,9 @@ def fetch_news_global(api_key, keywords, days=3):
         "CN": {"gl": "CN", "hl": "zh-CN", "key": "CN"}
     }
     all_raw_items = []
-    # 글로벌 검색도 동일하게 제한 적용
-    per_kw_limit = 2 if len(keywords) > 3 else 5
-
+    # 글로벌도 동일하게 2개 제한
+    PER_KEYWORD_LIMIT = 2
+    
     for kw in keywords:
         trans_map = get_translated_keywords(api_key, kw)
         trans_map["KR"] = kw
@@ -340,13 +320,13 @@ def fetch_news_global(api_key, keywords, days=3):
                         'Lang': conf['key']
                     })
                     kw_added += 1
-                    if kw_added >= per_kw_limit: break
+                    if kw_added >= PER_KEYWORD_LIMIT: break
             except: pass
             time.sleep(0.1)
     if not all_raw_items: return []
     df = pd.DataFrame(all_raw_items)
     df = df.drop_duplicates(subset=['Title'])
-    items_to_process = df.head(30).to_dict('records')
+    items_to_process = df.head(40).to_dict('records') # 40개
     titles_to_translate = [x['Title'] for x in items_to_process if x['Lang'] != "KR"]
     indices_to_translate = [i for i, x in enumerate(items_to_process) if x['Lang'] != "KR"]
     if titles_to_translate:
@@ -357,7 +337,7 @@ def fetch_news_global(api_key, keywords, days=3):
     return items_to_process
 
 # ==========================================
-# 3. AI 리포트 생성 (변경 없음)
+# 3. AI 리포트 생성
 # ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
@@ -381,8 +361,15 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_with_citations(api_key, news_data):
+    # [수정] Fallback 모델을 안정적인 1.5-flash로 우선 배치
     models = get_available_models(api_key)
-    if not models: models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    if not models:
+        models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+    else:
+        # 리스트에 있는 경우 우선순위 조정
+        if "gemini-1.5-flash" in models:
+            models.remove("gemini-1.5-flash")
+            models.insert(0, "gemini-1.5-flash")
     
     news_context = ""
     for i, item in enumerate(news_data):
@@ -391,7 +378,7 @@ def generate_report_with_citations(api_key, news_data):
 
     prompt = f"""
     당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
-    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체와 반도체 소재 관련한 심층 분석 보고서]**를 작성하세요.
+    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
 
     **[작성 원칙 - 매우 중요]**
     1. **단순 요약 금지**: 뉴스 제목을 단순히 나열하거나 번역하지 마세요.
@@ -416,9 +403,12 @@ def generate_report_with_citations(api_key, news_data):
     ## 💡 Analyst's View (투자 아이디어)
     - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
     """
-     
+    
     headers = {'Content-Type': 'application/json'}
-    data = {"contents": [{"parts": [{"text": prompt}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
+    data = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]
+    }
 
     for model in models:
         if "vision" in model: continue
@@ -434,6 +424,7 @@ def generate_report_with_citations(api_key, news_data):
                 time.sleep(1) 
                 continue
         except: continue
+            
     return False, "AI 분석 실패 (모든 모델 응답 없음)"
 
 # ==========================================
@@ -515,14 +506,14 @@ if selected_category == "Daily Report":
             end_dt = datetime.combine(target_date, dt_time(6, 0))
             start_dt = end_dt - timedelta(hours=18)
             
-            # [수정] 수집 개수 20 -> 30으로 확대 (fetch_news 함수 내부에서 다양성 제한 적용됨)
-            status_box.write("📡 뉴스 수집 중 (다양성 확보 - 키워드별 제한 적용)...")
-            news_items = fetch_news(daily_kws, days=2, limit=30, strict_time=True, start_dt=start_dt, end_dt=end_dt)
+            # [수정] 40개 제한, 키워드당 2개 제한 적용
+            status_box.write("📡 뉴스 수집 중 (키워드당 최대 2건, 총 40건)...")
+            news_items = fetch_news(daily_kws, days=2, limit=40, strict_time=True, start_dt=start_dt, end_dt=end_dt)
             
             if not news_items:
                 status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
                 time.sleep(1)
-                news_items = fetch_news(daily_kws, days=1, limit=30, strict_time=False)
+                news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
             
             if not news_items:
                 status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
@@ -541,7 +532,7 @@ if selected_category == "Daily Report":
         st.success("✅ 리포트 생성 완료")
         if st.button("🔄 리포트 다시 만들기"):
             status_box = st.status("🚀 재생성 중...", expanded=True)
-            news_items = fetch_news(daily_kws, days=1, limit=30, strict_time=False)
+            news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
             if news_items:
                 success, result = generate_report_with_citations(api_key, news_items)
                 if success:
