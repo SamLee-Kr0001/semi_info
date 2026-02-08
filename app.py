@@ -416,7 +416,7 @@ def generate_report_with_citations(api_key, news_data):
     ## 💡 Analyst's View (투자 아이디어)
     - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
     """
-    
+     
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
 
