@@ -32,13 +32,16 @@ if 'daily_history' not in st.session_state:
 st.markdown("""
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
         .stApp { background-color: #F8FAFC; }
+        
         .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
         .news-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 10px; }
         .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
         .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
+        
         .stock-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 5px 0; border-bottom: 1px dashed #e2e8f0; }
         .stock-name { font-weight: 600; color: #334155; }
         .stock-price { font-family: 'Consolas', monospace; font-weight: 600; font-size: 14px; }
@@ -47,6 +50,7 @@ st.markdown("""
         .flat-color { color: #64748B !important; }
         .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
         .ref-link { font-size: 0.9em; color: #555; text-decoration: none; display: block; margin-bottom: 6px; padding: 5px; border-radius: 4px; transition: background 0.2s; }
+        
         section[data-testid="stSidebar"] { background-color: #FFFFFF; border-right: 1px solid #E2E8F0; }
         div.stButton > button { border-radius: 8px; font-weight: 600; transition: all 0.2s ease-in-out; }
         .streamlit-expanderHeader { background-color: #FFFFFF; border-radius: 8px; }
@@ -81,6 +85,7 @@ def sync_to_github(filename, content_data):
 
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
+    # GitHub 로드 시도
     if "GITHUB_TOKEN" in st.secrets:
         try:
             g = Github(st.secrets["GITHUB_TOKEN"])
@@ -89,6 +94,7 @@ def load_keywords():
             loaded = json.loads(contents.decoded_content.decode("utf-8"))
             return loaded
         except: pass
+    # 로컬 로드
     if os.path.exists(KEYWORD_FILE):
         try:
             with open(KEYWORD_FILE, 'r', encoding='utf-8') as f:
@@ -101,10 +107,12 @@ def load_keywords():
     return data
 
 def save_keywords(data):
+    # 로컬 우선 저장
     try:
         with open(KEYWORD_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
     except: pass
+    # GitHub 비동기 저장 시도
     sync_to_github(KEYWORD_FILE, data)
 
 def load_daily_history():
@@ -122,16 +130,26 @@ def load_daily_history():
         except: return []
     return []
 
+# [중요 수정] 저장 순서 변경: 세션 -> 로컬 -> GitHub
 def save_daily_history(new_report_data):
+    # 1. 기존 데이터 로드
     history = load_daily_history()
+    
+    # 2. 리스트 업데이트 (최신순)
     history = [h for h in history if h['date'] != new_report_data['date']]
     history.insert(0, new_report_data)
+    
+    # [핵심] 3. 세션 상태 즉시 업데이트 (화면 표시 보장)
+    st.session_state.daily_history = history
+    
+    # 4. 로컬 파일 저장
     try:
         with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
             json.dump(history, f, ensure_ascii=False, indent=4)
     except: pass
+    
+    # 5. GitHub 저장은 마지막에 (실패해도 화면에는 뜸)
     sync_to_github(HISTORY_FILE, history)
-    st.session_state.daily_history = history
 
 if 'keywords' not in st.session_state:
     st.session_state.keywords = load_keywords()
@@ -186,9 +204,9 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (요청하신 개선 기능 포함)
+# 2. 뉴스 수집 (30개 제한, 키워드당 2~5개)
 # ==========================================
-def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end_dt=None):
+def fetch_news(keywords, days=1, limit=30, strict_time=False, start_dt=None, end_dt=None):
     all_items = []
     
     if not (strict_time and start_dt and end_dt):
@@ -197,8 +215,7 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end
         if now_kst.hour < 6: end_dt -= timedelta(days=1)
         start_dt = end_dt - timedelta(hours=18)
     
-    # [설정] 키워드당 최대 수집 개수 (3~7개)
-    per_kw_limit = 3 if len(keywords) > 4 else 7
+    per_kw_limit = 2 if len(keywords) > 4 else 5
 
     for kw in keywords:
         url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
@@ -206,7 +223,6 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end
             res = requests.get(url, timeout=5, verify=False)
             soup = BeautifulSoup(res.content, 'xml')
             items = soup.find_all('item')
-            
             kw_collected = 0
             for item in items:
                 is_valid = True
@@ -289,7 +305,7 @@ def fetch_news_global(api_key, keywords, days=3):
         "CN": {"gl": "CN", "hl": "zh-CN", "key": "CN"}
     }
     all_raw_items = []
-    per_kw_limit = 3 if len(keywords) > 4 else 5
+    per_kw_limit = 2 if len(keywords) > 4 else 5
     for kw in keywords:
         trans_map = get_translated_keywords(api_key, kw)
         trans_map["KR"] = kw
@@ -327,7 +343,7 @@ def fetch_news_global(api_key, keywords, days=3):
     return items_to_process
 
 # ==========================================
-# 3. AI 리포트 생성 (가장 안정적인 코드 복원)
+# 3. AI 리포트 생성
 # ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
@@ -345,7 +361,6 @@ def inject_links_to_report(report_text, news_data):
             idx = int(match.group(1)) - 1
             if 0 <= idx < len(news_data):
                 link = news_data[idx]['Link']
-                # [복구] 안정적인 HTML/Markdown 혼용 방식
                 return f"<a href='{link}' target='_blank' class='text-blue-600 font-bold hover:underline'>[{match.group(1)}]</a>"
         except: pass
         return match.group(0)
@@ -354,7 +369,11 @@ def inject_links_to_report(report_text, news_data):
 def generate_report_with_citations(api_key, news_data):
     models = get_available_models(api_key)
     if not models:
-        models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+        models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+    else:
+        if "gemini-1.5-flash" in models:
+            models.remove("gemini-1.5-flash")
+            models.insert(0, "gemini-1.5-flash")
     
     news_context = ""
     for i, item in enumerate(news_data):
@@ -409,7 +428,6 @@ def generate_report_with_citations(api_key, news_data):
                 time.sleep(1) 
                 continue
         except: continue
-            
     return False, "AI 분석 실패 (모든 모델 응답 없음)"
 
 # ==========================================
@@ -491,11 +509,11 @@ if selected_category == "Daily Report":
             end_dt = datetime.combine(target_date, dt_time(6, 0))
             start_dt = end_dt - timedelta(hours=18)
             
-            status_box.write("📡 뉴스 수집 중 (다양성 확보 - 키워드별 제한 적용)...")
+            status_box.write("📡 뉴스 수집 중...")
             news_items = fetch_news(daily_kws, days=2, limit=40, strict_time=True, start_dt=start_dt, end_dt=end_dt)
             
             if not news_items:
-                status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
+                status_box.update(label="⚠️ 조건 미달. 확장 검색(24시간) 시도...", state="running")
                 time.sleep(1)
                 news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
             
@@ -503,13 +521,16 @@ if selected_category == "Daily Report":
                 status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
             else:
                 status_box.write(f"🧠 AI 심층 분석 중... (기사 {len(news_items)}건)")
-                # [수정 완료] 이제 2개의 값을 기대하고, 함수도 2개를 반환하므로 오류 없음
                 success, result = generate_report_with_citations(api_key, news_items)
-                
                 if success:
                     save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
+                    
+                    # [핵심] 저장 및 동기화
+                    status_box.write("💾 저장 및 동기화 중...")
                     save_daily_history(save_data)
+                    
                     status_box.update(label="🎉 완료!", state="complete")
+                    time.sleep(1)
                     st.rerun()
                 else:
                     status_box.update(label="⚠️ AI 분석 실패", state="error")
