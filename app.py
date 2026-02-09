@@ -10,7 +10,8 @@ import os
 import re
 import time
 import yfinance as yf
-from github import Github 
+from github import Github
+import concurrent.futures
 
 # SSL 경고 무시
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -51,7 +52,7 @@ st.markdown("""
 
 # 주식 티커
 STOCK_CATEGORIES = {
-    "🏭 Chipmakers": {"SK Hynix": "000660.KS", "Samsung": "005930.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
+    "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
     "🧠 AI ": {"NVIDIA": "NVDA", "Apple": "AAPL", "Alphabet (Google)": "GOOGL", "Microsoft": "MSFT", "Meta": "META", "Amazon": "AMZN", "Tesla": "TSLA", "IBM": "IBM", "Oracle": "ORCL", "Broadcom": "AVGO"},
     "🧪 Materials": {"Soulbrain": "357780.KQ", "Dongjin": "005290.KQ", "Hana Mat": "166090.KQ", "Wonik Mat": "104830.KQ", "TCK": "064760.KQ", "Foosung": "093370.KS", "PI Adv": "178920.KS", "ENF": "102710.KQ", "TEMC": "425040.KQ", "YC Chem": "112290.KQ", "Samsung SDI": "006400.KS", "Shin-Etsu": "4063.T", "Sumco": "3436.T", "Merck": "MRK.DE", "Entegris": "ENTG", "TOK": "4186.T", "Resonac": "4004.T", "Air Prod": "APD", "Linde": "LIN", "Qnity": "Q", "Nissan Chem": "4021.T", "Sumitomo": "4005.T"},
     "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Advantest": "6857.T", "Hitachi HT": "8036.T", "Hanmi": "042700.KS", "Wonik IPS": "240810.KQ", "Jusung": "036930.KQ", "EO Tech": "039030.KQ", "Techwing": "089030.KQ", "Eugene": "084370.KQ", "PSK": "319660.KQ", "Zeus": "079370.KQ", "Top Eng": "065130.KQ"}
@@ -105,7 +106,7 @@ def save_keywords(data):
     sync_to_github(KEYWORD_FILE, data)
 
 def load_daily_history_from_source():
-    """원본 소스(GitHub/File)에서 데이터를 가져오는 함수"""
+    """앱 시작 시 1회만 호출되어 원본 데이터를 가져옴"""
     if "GITHUB_TOKEN" in st.secrets:
         try:
             g = Github(st.secrets["GITHUB_TOKEN"])
@@ -120,7 +121,7 @@ def load_daily_history_from_source():
         except: return []
     return []
 
-# [핵심 수정] 초기화 시에만 로드하고, 이후엔 Session State 사용
+# [핵심] 세션 초기화 로직 강화
 if 'news_data' not in st.session_state:
     st.session_state.news_data = {cat: [] for cat in CATEGORIES}
 
@@ -128,12 +129,11 @@ if 'keywords' not in st.session_state:
     st.session_state.keywords = load_keywords()
 
 if 'daily_history' not in st.session_state:
-    # 앱 시작 시 한 번만 로드
+    # 앱 구동 후 첫 실행 시에만 외부 소스에서 로드
     st.session_state.daily_history = load_daily_history_from_source()
 
 def save_daily_history(new_report_data):
-    # 1. 메모리(Session State) 즉시 업데이트 (화면 표시 보장)
-    # 중복 제거 후 최신순 추가
+    # 1. 세션 상태 즉시 업데이트 (화면 갱신 보장)
     current_history = [h for h in st.session_state.daily_history if h['date'] != new_report_data['date']]
     current_history.insert(0, new_report_data)
     st.session_state.daily_history = current_history
@@ -144,60 +144,75 @@ def save_daily_history(new_report_data):
             json.dump(current_history, f, ensure_ascii=False, indent=4)
     except: pass
     
-    # 3. GitHub 비동기 저장 (실패해도 화면에는 남음)
+    # 3. GitHub 비동기 저장
     sync_to_github(HISTORY_FILE, current_history)
+
+# 주식 개별 수집 함수 (병렬 처리용)
+def fetch_single_stock(name, symbol):
+    try:
+        ticker = yf.Ticker(symbol)
+        try:
+            current = ticker.fast_info['last_price']
+            prev = ticker.fast_info['previous_close']
+        except:
+            hist = ticker.history(period="1d")
+            if not hist.empty:
+                current = hist['Close'].iloc[-1]
+                prev = ticker.info.get('previousClose', current)
+            else:
+                hist_5d = ticker.history(period="5d")
+                if len(hist_5d) >= 1:
+                    current = hist_5d['Close'].iloc[-1]
+                    prev = hist_5d['Close'].iloc[-2] if len(hist_5d) >= 2 else current
+                else: return name, None
+
+        if current is None: return name, None
+
+        change = current - prev
+        pct = (change / prev) * 100
+        
+        if ".KS" in symbol or ".KQ" in symbol: cur_sym = "₩"
+        elif ".T" in symbol: cur_sym = "¥"
+        elif ".HK" in symbol: cur_sym = "HK$"
+        elif ".DE" in symbol: cur_sym = "€"
+        else: cur_sym = "$"
+        
+        fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
+        
+        if change > 0: color_class, arrow, sign = "up-color", "▲", "+"
+        elif change < 0: color_class, arrow, sign = "down-color", "▼", ""
+        else: color_class, arrow, sign = "flat-color", "-", ""
+        
+        html_str = f"""
+        <div class="stock-row">
+            <span class="stock-name">{name}</span>
+            <span class="stock-price {color_class}">
+                {fmt_price} <span style="font-size:0.9em; margin-left:3px;">{arrow} {sign}{pct:.2f}%</span>
+            </span>
+        </div>
+        """
+        return name, html_str
+    except: return name, None
 
 @st.cache_data(ttl=300)
 def get_stock_prices_grouped():
     result_map = {}
+    all_tickers = []
     for cat, items in STOCK_CATEGORIES.items():
         for name, symbol in items.items():
+            all_tickers.append((name, symbol))
+            
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_stock = {executor.submit(fetch_single_stock, name, symbol): name for name, symbol in all_tickers}
+        for future in concurrent.futures.as_completed(future_to_stock):
             try:
-                ticker = yf.Ticker(symbol)
-                try: 
-                    current = ticker.fast_info['last_price']
-                    prev = ticker.fast_info['previous_close']
-                except:
-                    try:
-                        hist = ticker.history(period="1d", interval="1m")
-                        if not hist.empty:
-                            current = hist['Close'].iloc[-1]
-                            prev = ticker.info.get('previousClose', current)
-                        else: raise ValueError
-                    except:
-                        hist = ticker.history(period="5d")
-                        if len(hist) >= 2:
-                            current = hist['Close'].iloc[-1]
-                            prev = hist['Close'].iloc[-2]
-                        else: continue
-
-                change = current - prev
-                pct = (change / prev) * 100
-                if ".KS" in symbol or ".KQ" in symbol: cur_sym = "₩"
-                elif ".T" in symbol: cur_sym = "¥"
-                elif ".HK" in symbol: cur_sym = "HK$"
-                elif ".DE" in symbol: cur_sym = "€"
-                else: cur_sym = "$"
-                fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
-                
-                if change > 0: color_class, arrow, sign = "up-color", "▲", "+"
-                elif change < 0: color_class, arrow, sign = "down-color", "▼", ""
-                else: color_class, arrow, sign = "flat-color", "-", ""
-                
-                html_str = f"""
-                <div class="stock-row">
-                    <span class="stock-name">{name}</span>
-                    <span class="stock-price {color_class}">
-                        {fmt_price} <span style="font-size:0.9em; margin-left:3px;">{arrow} {sign}{pct:.2f}%</span>
-                    </span>
-                </div>
-                """
-                result_map[name] = html_str
-            except Exception: pass
+                name, html = future.result()
+                if html: result_map[name] = html
+            except: pass
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (안정 로직 + 40개 제한)
+# 2. 뉴스 수집 (40개, 쏠림 방지)
 # ==========================================
 def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end_dt=None):
     all_items = []
@@ -336,7 +351,7 @@ def fetch_news_global(api_key, keywords, days=3):
     return items_to_process
 
 # ==========================================
-# 3. AI 리포트 생성 (안정 로직 복원)
+# 3. AI 리포트 생성 (가장 안정적인 코드 복원)
 # ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
@@ -361,7 +376,8 @@ def inject_links_to_report(report_text, news_data):
 
 def generate_report_with_citations(api_key, news_data):
     models = get_available_models(api_key)
-    if not models: models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+    if not models:
+        models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
     
     news_context = ""
     for i, item in enumerate(news_data):
@@ -372,31 +388,35 @@ def generate_report_with_citations(api_key, news_data):
     당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
     제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
 
-    **[작성 원칙]**
+    **[작성 원칙 - 매우 중요]**
     1. **단순 요약 금지**: 뉴스 제목을 단순히 나열하거나 번역하지 마세요.
-    2. **서술형 작성**: 이슈별로 현상/원인/전망을 자연스러운 논리적 흐름(Narrative)으로 서술하세요.
-    3. **근거 명시**: 내용의 출처가 되는 뉴스 번호 **[1], [2]**를 문장 끝에 반드시 인용하세요.
+    2. **서술형 작성**: 이슈별로 현상/원인/전망을 개조식(Bullet points)으로 나누지 말고, **하나의 자연스러운 논리적 흐름을 가진 줄글(Narrative Paragraph)**로 서술하세요. 전문적인 문체를 사용하세요.
+    3. **근거 명시**: 모든 주장이나 사실 언급 시 반드시 제공된 뉴스 번호 **[1], [2]**를 문장 끝에 인용하세요.
 
     [뉴스 데이터]
     {news_context}
     
     [보고서 구조 (Markdown)]
     ## 📊 Executive Summary (시장 총평)
-    - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화 요약.
+    - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화를 3~4문장으로 요약.
 
     ## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
-    - 중요 이슈 2~3가지를 선정하여 소제목을 달고 분석.
-    - 배경, 원인, 파급 효과를 연결하여 깊이 있게 서술.
+    - 가장 중요한 이슈 2~3가지를 선정하여 소제목을 달고 분석하세요.
+    - **중요**: 현상, 원인, 전망을 구분하여 나열하지 말고, **깊이 있는 서술형 문단**으로 작성하세요. 사건의 배경부터 파급 효과까지 매끄럽게 연결되도록 하세요.
+    - 반드시 인용 번호[n]를 포함할 것.
 
     ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
-    - 소부장, 파운드리, 메모리 등 섹터별 주요 단신 종합.
+    - 반도체 소재 그리고 소부장, 파운드리, 메모리 등 섹터별 주요 단신을 종합하여 서술.
 
     ## 💡 Analyst's View (투자 아이디어)
-    - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트.
+    - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
     """
     
     headers = {'Content-Type': 'application/json'}
-    data = {"contents": [{"parts": [{"text": prompt}]}], "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]}
+    data = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]
+    }
 
     for model in models:
         if "vision" in model: continue
@@ -412,6 +432,7 @@ def generate_report_with_citations(api_key, news_data):
                 time.sleep(1) 
                 continue
         except: continue
+            
     return False, "AI 분석 실패 (모든 모델 응답 없음)"
 
 # ==========================================
@@ -489,26 +510,28 @@ if selected_category == "Daily Report":
     if not today_report:
         st.info("📢 오늘의 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
-            # [디버깅] 진행 과정 표시
-            with st.status("🚀 리포트 생성 중...", expanded=True) as status:
+            # [디버깅 UI] 상세 과정 표시 (Expandable)
+            with st.status("🚀 리포트 생성 프로세스...", expanded=True) as status:
                 end_dt = datetime.combine(target_date, dt_time(6, 0))
                 start_dt = end_dt - timedelta(hours=18)
                 
-                status.write("📡 뉴스 수집 중 (40건)...")
+                status.write("📡 1. 뉴스 수집 중 (40건)...")
                 news_items = fetch_news(daily_kws, days=2, limit=40, strict_time=True, start_dt=start_dt, end_dt=end_dt)
                 
                 if not news_items:
                     status.write("⚠️ 조건 미달. 확장 검색 시도...")
+                    time.sleep(1)
                     news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
                 
                 if not news_items:
                     status.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
                 else:
-                    status.write(f"🧠 AI 분석 중... ({len(news_items)}건)")
+                    status.write(f"✅ 뉴스 {len(news_items)}건 수집 완료. AI 분석 요청 중...")
+                    
                     success, result = generate_report_with_citations(api_key, news_items)
                     
                     if success:
-                        status.write("💾 결과 저장 중...")
+                        status.write("💾 3. 저장 및 동기화 중...")
                         save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
                         save_daily_history(save_data)
                         
