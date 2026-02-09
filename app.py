@@ -77,7 +77,6 @@ def sync_to_github(filename, content_data):
 
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
-    # GitHub 로드 시도
     if "GITHUB_TOKEN" in st.secrets:
         try:
             g = Github(st.secrets["GITHUB_TOKEN"])
@@ -86,7 +85,6 @@ def load_keywords():
             loaded = json.loads(contents.decoded_content.decode("utf-8"))
             return loaded
         except: pass
-    # 로컬 로드
     if os.path.exists(KEYWORD_FILE):
         try:
             with open(KEYWORD_FILE, 'r', encoding='utf-8') as f:
@@ -106,7 +104,7 @@ def save_keywords(data):
     sync_to_github(KEYWORD_FILE, data)
 
 def load_daily_history_from_source():
-    """앱 시작 시 1회만 호출되어 원본 데이터를 가져옴"""
+    """원본(GitHub/File)에서 데이터 로드 - 앱 시작 시 1회만 사용"""
     if "GITHUB_TOKEN" in st.secrets:
         try:
             g = Github(st.secrets["GITHUB_TOKEN"])
@@ -121,7 +119,7 @@ def load_daily_history_from_source():
         except: return []
     return []
 
-# [핵심] 세션 초기화 로직 강화
+# [핵심 수정] Session State 초기화 및 보존 전략
 if 'news_data' not in st.session_state:
     st.session_state.news_data = {cat: [] for cat in CATEGORIES}
 
@@ -129,13 +127,18 @@ if 'keywords' not in st.session_state:
     st.session_state.keywords = load_keywords()
 
 if 'daily_history' not in st.session_state:
-    # 앱 구동 후 첫 실행 시에만 외부 소스에서 로드
+    # 앱이 처음 켜질 때만 GitHub/파일에서 불러옴
     st.session_state.daily_history = load_daily_history_from_source()
 
 def save_daily_history(new_report_data):
-    # 1. 세션 상태 즉시 업데이트 (화면 갱신 보장)
-    current_history = [h for h in st.session_state.daily_history if h['date'] != new_report_data['date']]
+    # 1. 세션(메모리) 즉시 업데이트 (화면에서 사라짐 방지)
+    # 기존 리스트 가져오기 (세션 기준)
+    current_history = st.session_state.daily_history
+    # 날짜 중복 제거
+    current_history = [h for h in current_history if h['date'] != new_report_data['date']]
+    # 최신 데이터 추가
     current_history.insert(0, new_report_data)
+    # 세션에 다시 저장
     st.session_state.daily_history = current_history
     
     # 2. 로컬 파일 저장
@@ -144,10 +147,10 @@ def save_daily_history(new_report_data):
             json.dump(current_history, f, ensure_ascii=False, indent=4)
     except: pass
     
-    # 3. GitHub 비동기 저장
+    # 3. GitHub 비동기 저장 (느려도 상관없음, 화면엔 이미 떴으니까)
     sync_to_github(HISTORY_FILE, current_history)
 
-# 주식 개별 수집 함수 (병렬 처리용)
+# 주식 함수 (병렬 처리 유지)
 def fetch_single_stock(name, symbol):
     try:
         ticker = yf.Ticker(symbol)
@@ -212,7 +215,7 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (40개, 쏠림 방지)
+# 2. 뉴스 수집 (안정 로직 + 40개)
 # ==========================================
 def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end_dt=None):
     all_items = []
@@ -351,7 +354,7 @@ def fetch_news_global(api_key, keywords, days=3):
     return items_to_process
 
 # ==========================================
-# 3. AI 리포트 생성 (가장 안정적인 코드 복원)
+# 3. AI 리포트 생성
 # ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
@@ -378,6 +381,10 @@ def generate_report_with_citations(api_key, news_data):
     models = get_available_models(api_key)
     if not models:
         models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+    else:
+        if "gemini-1.5-flash" in models:
+            models.remove("gemini-1.5-flash")
+            models.insert(0, "gemini-1.5-flash")
     
     news_context = ""
     for i, item in enumerate(news_data):
@@ -511,7 +518,7 @@ if selected_category == "Daily Report":
         st.info("📢 오늘의 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
             # [디버깅 UI] 상세 과정 표시 (Expandable)
-            with st.status("🚀 리포트 생성 프로세스...", expanded=True) as status:
+            with st.status("🚀 리포트 생성 중...", expanded=True) as status:
                 end_dt = datetime.combine(target_date, dt_time(6, 0))
                 start_dt = end_dt - timedelta(hours=18)
                 
@@ -519,15 +526,16 @@ if selected_category == "Daily Report":
                 news_items = fetch_news(daily_kws, days=2, limit=40, strict_time=True, start_dt=start_dt, end_dt=end_dt)
                 
                 if not news_items:
-                    status.write("⚠️ 조건 미달. 확장 검색 시도...")
+                    status.write("⚠️ 조건 미달. 확장 검색(24시간) 시도...")
                     time.sleep(1)
                     news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
                 
                 if not news_items:
                     status.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
                 else:
-                    status.write(f"✅ 뉴스 {len(news_items)}건 수집 완료. AI 분석 요청 중...")
+                    status.write(f"🧠 AI 심층 분석 중... ({len(news_items)}건)")
                     
+                    # [복구] 인자 2개 (api_key, news_data)만 전달
                     success, result = generate_report_with_citations(api_key, news_items)
                     
                     if success:
@@ -544,7 +552,7 @@ if selected_category == "Daily Report":
         st.success("✅ 리포트 생성 완료")
         if st.button("🔄 리포트 다시 만들기"):
             with st.status("🚀 재생성 중...", expanded=True) as status:
-                status.write("📡 뉴스 수집 중...")
+                status.write("📡 뉴스 재수집 중...")
                 news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
                 if news_items:
                     status.write("🧠 AI 분석 중...")
