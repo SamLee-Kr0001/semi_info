@@ -385,7 +385,7 @@ def generate_report_with_citations(api_key, news_data):
 
     prompt = f"""
     당신은 글로벌 반도체 투자 및 전략 수석 애널리스트입니다. 
-    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 심층 분석 보고서]**를 작성하세요.
+    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 소재 심층 분석 보고서]**를 작성하세요.
 
     **[작성 원칙 - 매우 중요]**
     1. **단순 요약 금지**: 뉴스 제목을 단순히 나열하거나 번역하지 마세요.
@@ -397,7 +397,7 @@ def generate_report_with_citations(api_key, news_data):
     
     [보고서 구조 (Markdown)]
     ## 📊 Executive Summary (시장 총평)
-    - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화를 3~4문장으로 요약.
+    - 오늘 반도체 시장과 기술적 변화의 핵심 분위기와  소재 중심의 이슈를 3~4문장으로 요약.
 
     ## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
     - 가장 중요한 이슈 2~3가지를 선정하여 소제목을 달고 분석하세요.
@@ -405,10 +405,10 @@ def generate_report_with_citations(api_key, news_data):
     - 반드시 인용 번호[n]를 포함할 것.
 
     ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
-    - 반도체 소재 그리고 소부장, 파운드리, 메모리 등 섹터별 주요 단신을 종합하여 서술.
+    - 반도체 소재 그리고 소부장 기술의 변화와 공급망관련 주요 단신을 종합하여 서술.
 
-    ## 💡 Analyst's View (투자 아이디어)
-    - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
+    ## 💡 Analyst's View (시사점)
+    - 중요한 반도체 기술과 소재 특이점 관련 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
     """
     
     headers = {'Content-Type': 'application/json'}
