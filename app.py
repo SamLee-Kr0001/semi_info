@@ -596,7 +596,7 @@ else:
                     news = fetch_news_global(api_key, kws, days=search_days)
                     st.session_state.news_data[selected_category] = news
                     st.rerun()
-        
+         
         curr_kws = st.session_state.keywords.get(selected_category, [])
         if curr_kws:
             st.write("")
