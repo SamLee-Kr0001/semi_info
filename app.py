@@ -59,24 +59,36 @@ STOCK_CATEGORIES = {
 }
 
 # ==========================================
-# 1. 데이터 관리 (GitHub Auto-Sync)
+# 1. 데이터 관리 (GitHub 저장 디버깅 강화)
 # ==========================================
 def sync_to_github(filename, content_data):
-    if "GITHUB_TOKEN" not in st.secrets or "REPO_NAME" not in st.secrets: return False
+    """GitHub 저장 및 오류 메시지 반환"""
+    if "GITHUB_TOKEN" not in st.secrets or "REPO_NAME" not in st.secrets:
+        return False, "Secrets 설정 누락"
+        
     try:
         g = Github(st.secrets["GITHUB_TOKEN"])
         repo = g.get_repo(st.secrets["REPO_NAME"])
         content_str = json.dumps(content_data, ensure_ascii=False, indent=4)
+        
         try:
+            # 파일이 존재하면 업데이트
             contents = repo.get_contents(filename)
             repo.update_file(contents.path, f"Update {filename}", content_str, contents.sha)
+            return True, "업데이트 성공"
         except:
-            repo.create_file(filename, f"Create {filename}", content_str)
-        return True
-    except: return False
+            # 파일이 없으면 생성
+            try:
+                repo.create_file(filename, f"Create {filename}", content_str)
+                return True, "생성 성공"
+            except Exception as e:
+                return False, f"생성 실패: {str(e)}"
+    except Exception as e:
+        return False, f"GitHub 연결/권한 오류: {str(e)}"
 
 def load_keywords():
     data = {cat: [] for cat in CATEGORIES}
+    # 1. GitHub 우선 로드
     if "GITHUB_TOKEN" in st.secrets:
         try:
             g = Github(st.secrets["GITHUB_TOKEN"])
@@ -85,26 +97,23 @@ def load_keywords():
             loaded = json.loads(contents.decoded_content.decode("utf-8"))
             return loaded
         except: pass
-    if os.path.exists(KEYWORD_FILE):
-        try:
-            with open(KEYWORD_FILE, 'r', encoding='utf-8') as f:
-                loaded = json.load(f)
-            for k, v in loaded.items():
-                if k in data: data[k] = v
-        except: pass
+    
+    # 2. 로컬 파일 (기본값)
     if not data.get("Daily Report"): 
         data["Daily Report"] = ["반도체", "삼성전자", "SK하이닉스"] 
     return data
 
 def save_keywords(data):
+    # 로컬엔 임시 저장
     try:
         with open(KEYWORD_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
     except: pass
+    # GitHub 저장 시도 (백그라운드)
     sync_to_github(KEYWORD_FILE, data)
 
 def load_daily_history_from_source():
-    """원본(GitHub/File)에서 데이터 로드 - 앱 시작 시 1회만 사용"""
+    """앱 시작 시 GitHub에서 데이터 로드"""
     if "GITHUB_TOKEN" in st.secrets:
         try:
             g = Github(st.secrets["GITHUB_TOKEN"])
@@ -112,45 +121,28 @@ def load_daily_history_from_source():
             contents = repo.get_contents(HISTORY_FILE)
             return json.loads(contents.decoded_content.decode("utf-8"))
         except: pass
-    if os.path.exists(HISTORY_FILE):
-        try:
-            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except: return []
     return []
 
-# [핵심 수정] Session State 초기화 및 보존 전략
+# 세션 초기화
 if 'news_data' not in st.session_state:
     st.session_state.news_data = {cat: [] for cat in CATEGORIES}
-
 if 'keywords' not in st.session_state:
     st.session_state.keywords = load_keywords()
-
 if 'daily_history' not in st.session_state:
-    # 앱이 처음 켜질 때만 GitHub/파일에서 불러옴
     st.session_state.daily_history = load_daily_history_from_source()
 
-def save_daily_history(new_report_data):
-    # 1. 세션(메모리) 즉시 업데이트 (화면에서 사라짐 방지)
-    # 기존 리스트 가져오기 (세션 기준)
-    current_history = st.session_state.daily_history
-    # 날짜 중복 제거
-    current_history = [h for h in current_history if h['date'] != new_report_data['date']]
-    # 최신 데이터 추가
+def save_daily_history_secure(new_report_data):
+    """안전한 저장 함수: 세션 저장 -> GitHub 저장 -> 결과 반환"""
+    # 1. 세션(메모리) 우선 업데이트 (화면 표시용)
+    current_history = [h for h in st.session_state.daily_history if h['date'] != new_report_data['date']]
     current_history.insert(0, new_report_data)
-    # 세션에 다시 저장
     st.session_state.daily_history = current_history
     
-    # 2. 로컬 파일 저장
-    try:
-        with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
-            json.dump(current_history, f, ensure_ascii=False, indent=4)
-    except: pass
-    
-    # 3. GitHub 비동기 저장 (느려도 상관없음, 화면엔 이미 떴으니까)
-    sync_to_github(HISTORY_FILE, current_history)
+    # 2. GitHub 저장 시도
+    success, msg = sync_to_github(HISTORY_FILE, current_history)
+    return success, msg
 
-# 주식 함수 (병렬 처리 유지)
+# 주식 데이터 병렬 처리
 def fetch_single_stock(name, symbol):
     try:
         ticker = yf.Ticker(symbol)
@@ -170,7 +162,6 @@ def fetch_single_stock(name, symbol):
                 else: return name, None
 
         if current is None: return name, None
-
         change = current - prev
         pct = (change / prev) * 100
         
@@ -179,21 +170,13 @@ def fetch_single_stock(name, symbol):
         elif ".HK" in symbol: cur_sym = "HK$"
         elif ".DE" in symbol: cur_sym = "€"
         else: cur_sym = "$"
-        
         fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
         
         if change > 0: color_class, arrow, sign = "up-color", "▲", "+"
         elif change < 0: color_class, arrow, sign = "down-color", "▼", ""
         else: color_class, arrow, sign = "flat-color", "-", ""
         
-        html_str = f"""
-        <div class="stock-row">
-            <span class="stock-name">{name}</span>
-            <span class="stock-price {color_class}">
-                {fmt_price} <span style="font-size:0.9em; margin-left:3px;">{arrow} {sign}{pct:.2f}%</span>
-            </span>
-        </div>
-        """
+        html_str = f"""<div class="stock-row"><span class="stock-name">{name}</span><span class="stock-price {color_class}">{fmt_price} <span style="font-size:0.9em; margin-left:3px;">{arrow} {sign}{pct:.2f}%</span></span></div>"""
         return name, html_str
     except: return name, None
 
@@ -204,7 +187,6 @@ def get_stock_prices_grouped():
     for cat, items in STOCK_CATEGORIES.items():
         for name, symbol in items.items():
             all_tickers.append((name, symbol))
-            
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         future_to_stock = {executor.submit(fetch_single_stock, name, symbol): name for name, symbol in all_tickers}
         for future in concurrent.futures.as_completed(future_to_stock):
@@ -219,7 +201,6 @@ def get_stock_prices_grouped():
 # ==========================================
 def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end_dt=None):
     all_items = []
-    
     if not (strict_time and start_dt and end_dt):
         now_kst = datetime.utcnow() + timedelta(hours=9)
         end_dt = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
@@ -354,7 +335,7 @@ def fetch_news_global(api_key, keywords, days=3):
     return items_to_process
 
 # ==========================================
-# 3. AI 리포트 생성
+# 3. AI 리포트 생성 (안정 로직 복원)
 # ==========================================
 def get_available_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
@@ -381,10 +362,6 @@ def generate_report_with_citations(api_key, news_data):
     models = get_available_models(api_key)
     if not models:
         models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
-    else:
-        if "gemini-1.5-flash" in models:
-            models.remove("gemini-1.5-flash")
-            models.insert(0, "gemini-1.5-flash")
     
     news_context = ""
     for i, item in enumerate(news_data):
@@ -408,15 +385,14 @@ def generate_report_with_citations(api_key, news_data):
     - 오늘 반도체 시장의 핵심 분위기와 가장 중요한 변화를 3~4문장으로 요약.
 
     ## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
-    - 가장 중요한 이슈 2~3가지를 선정하여 소제목을 달고 분석하세요.
-    - **중요**: 현상, 원인, 전망을 구분하여 나열하지 말고, **깊이 있는 서술형 문단**으로 작성하세요. 사건의 배경부터 파급 효과까지 매끄럽게 연결되도록 하세요.
-    - 반드시 인용 번호[n]를 포함할 것.
+    - 가장 중요한 이슈 2~3가지를 선정하여 소제목을 달고 분석.
+    - 배경, 원인, 파급 효과를 연결하여 깊이 있게 서술.
 
     ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
-    - 반도체 소재 그리고 소부장, 파운드리, 메모리 등 섹터별 주요 단신을 종합하여 서술.
+    - 소부장, 파운드리, 메모리 등 섹터별 주요 단신 종합.
 
     ## 💡 Analyst's View (투자 아이디어)
-    - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
+    - 오늘의 뉴스가 주는 시사점과 향후 관전 포인트.
     """
     
     headers = {'Content-Type': 'application/json'}
@@ -439,7 +415,6 @@ def generate_report_with_citations(api_key, news_data):
                 time.sleep(1) 
                 continue
         except: continue
-            
     return False, "AI 분석 실패 (모든 모델 응답 없음)"
 
 # ==========================================
@@ -510,15 +485,14 @@ if selected_category == "Daily Report":
                     st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
     
-    # [핵심] 화면 표시: 세션 상태를 직접 사용 (덮어쓰기 방지)
+    # [핵심] 화면 표시: 세션 상태를 직접 사용
     history = st.session_state.daily_history
     today_report = next((h for h in history if h['date'] == target_date_str), None)
     
     if not today_report:
         st.info("📢 오늘의 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
-            # [디버깅 UI] 상세 과정 표시 (Expandable)
-            with st.status("🚀 리포트 생성 중...", expanded=True) as status:
+            with st.status("🚀 리포트 생성 프로세스...", expanded=True) as status:
                 end_dt = datetime.combine(target_date, dt_time(6, 0))
                 start_dt = end_dt - timedelta(hours=18)
                 
@@ -526,7 +500,7 @@ if selected_category == "Daily Report":
                 news_items = fetch_news(daily_kws, days=2, limit=40, strict_time=True, start_dt=start_dt, end_dt=end_dt)
                 
                 if not news_items:
-                    status.write("⚠️ 조건 미달. 확장 검색(24시간) 시도...")
+                    status.write("⚠️ 조건 미달. 확장 검색 시도...")
                     time.sleep(1)
                     news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
                 
@@ -534,16 +508,22 @@ if selected_category == "Daily Report":
                     status.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
                 else:
                     status.write(f"🧠 AI 심층 분석 중... ({len(news_items)}건)")
-                    
-                    # [복구] 인자 2개 (api_key, news_data)만 전달
                     success, result = generate_report_with_citations(api_key, news_items)
                     
                     if success:
-                        status.write("💾 3. 저장 및 동기화 중...")
+                        status.write("💾 3. 저장 및 GitHub 동기화 중...")
                         save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
-                        save_daily_history(save_data)
                         
-                        status.update(label="🎉 완료!", state="complete", expanded=False)
+                        # [핵심] 저장 결과 확인
+                        gh_success, gh_msg = save_daily_history_secure(save_data)
+                        
+                        if gh_success:
+                            status.update(label=f"🎉 저장 완료! ({gh_msg})", state="complete", expanded=False)
+                        else:
+                            status.update(label="⚠️ 저장 경고 (로컬엔 저장됨)", state="warning", expanded=True)
+                            st.warning(f"GitHub 저장 실패: {gh_msg}")
+                            time.sleep(3) # 에러 메시지 읽을 시간 부여
+                        
                         st.rerun()
                     else:
                         status.update(label="⚠️ AI 분석 실패", state="error")
@@ -552,7 +532,7 @@ if selected_category == "Daily Report":
         st.success("✅ 리포트 생성 완료")
         if st.button("🔄 리포트 다시 만들기"):
             with st.status("🚀 재생성 중...", expanded=True) as status:
-                status.write("📡 뉴스 재수집 중...")
+                status.write("📡 뉴스 수집 중...")
                 news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
                 if news_items:
                     status.write("🧠 AI 분석 중...")
@@ -560,7 +540,12 @@ if selected_category == "Daily Report":
                     if success:
                         status.write("💾 저장 중...")
                         save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
-                        save_daily_history(save_data)
+                        gh_success, gh_msg = save_daily_history_secure(save_data)
+                        
+                        if not gh_success:
+                            st.warning(f"GitHub 저장 실패: {gh_msg}")
+                            time.sleep(2)
+                            
                         status.update(label="🎉 완료!", state="complete", expanded=False)
                         st.rerun()
                     else:
