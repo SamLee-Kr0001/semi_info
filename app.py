@@ -52,7 +52,7 @@ st.markdown("""
 
 # 주식 티커
 STOCK_CATEGORIES = {
-    "🏭 Chipmakers": {"SK Hynix": "000660.KS", "Samsung": "005930.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
+    "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
     "🧠 AI ": {"NVIDIA": "NVDA", "Apple": "AAPL", "Alphabet (Google)": "GOOGL", "Microsoft": "MSFT", "Meta": "META", "Amazon": "AMZN", "Tesla": "TSLA", "IBM": "IBM", "Oracle": "ORCL", "Broadcom": "AVGO"},
     "🧪 Materials": {"Soulbrain": "357780.KQ", "Dongjin": "005290.KQ", "Hana Mat": "166090.KQ", "Wonik Mat": "104830.KQ", "TCK": "064760.KQ", "Foosung": "093370.KS", "PI Adv": "178920.KS", "ENF": "102710.KQ", "TEMC": "425040.KQ", "YC Chem": "112290.KQ", "Samsung SDI": "006400.KS", "Shin-Etsu": "4063.T", "Sumco": "3436.T", "Merck": "MRK.DE", "Entegris": "ENTG", "TOK": "4186.T", "Resonac": "4004.T", "Air Prod": "APD", "Linde": "LIN", "Qnity": "Q", "Nissan Chem": "4021.T", "Sumitomo": "4005.T"},
     "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Advantest": "6857.T", "Hitachi HT": "8036.T", "Hanmi": "042700.KS", "Wonik IPS": "240810.KQ", "Jusung": "036930.KQ", "EO Tech": "039030.KQ", "Techwing": "089030.KQ", "Eugene": "084370.KQ", "PSK": "319660.KQ", "Zeus": "079370.KQ", "Top Eng": "065130.KQ"}
@@ -67,7 +67,7 @@ def sync_to_github(filename, content_data):
         g = Github(st.secrets["GITHUB_TOKEN"])
         repo = g.get_repo(st.secrets["REPO_NAME"])
         
-        # [핵심] JSON 저장 시 datetime 객체가 있으면 에러 발생 -> default=str로 방어
+        # JSON 저장 시 datetime 객체가 있으면 에러 발생 -> default=str로 방어
         content_str = json.dumps(content_data, ensure_ascii=False, indent=4, default=str)
         
         try:
@@ -136,7 +136,7 @@ def save_daily_history(new_report_data):
     current_history.insert(0, new_report_data)
     st.session_state.daily_history = current_history
     
-    # 로컬 저장 (default=str 추가로 안전장치)
+    # 로컬 저장
     try:
         with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
             json.dump(current_history, f, ensure_ascii=False, indent=4, default=str)
@@ -200,7 +200,7 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (안정 로직 + 40개)
+# 2. 뉴스 수집
 # ==========================================
 def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end_dt=None):
     all_items = []
@@ -229,7 +229,6 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end
                         pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                         pub_date_kst = pub_date + timedelta(hours=9)
                         if not (start_dt <= pub_date_kst <= end_dt): is_valid = False
-                        # [핵심 수정] datetime 객체를 문자열로 변환하여 저장
                         pub_date_str_val = pub_date_kst.strftime("%Y-%m-%d %H:%M:%S")
                     except: is_valid = True 
                 
@@ -240,7 +239,7 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end
                             'Link': item.link.text,
                             'Date': item.pubDate.text,
                             'Source': item.source.text if item.source else "Google News",
-                            'ParsedDate': pub_date_str_val # 이제 문자열입니다 (JSON 저장 가능)
+                            'ParsedDate': pub_date_str_val
                         })
                         kw_collected += 1
                 if kw_collected >= per_kw_limit: break
@@ -250,7 +249,6 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.drop_duplicates(subset=['Title'])
-        # 문자열이지만 정렬을 위해 임시 변환
         if strict_time: 
             df['TempDate'] = pd.to_datetime(df['ParsedDate'], errors='coerce')
             df = df.sort_values(by='TempDate', ascending=False)
@@ -481,7 +479,6 @@ if selected_category == "Daily Report":
     
     st.markdown(f"<div class='text-right text-sm text-slate-500 mb-4'>Report Date: <b>{target_date}</b></div>", unsafe_allow_html=True)
 
-    # [수정] 키워드 추가 영역을 st.expander로 감싸고 기본적으로 닫힘(expanded=False) 처리
     with st.expander("⚙️ 키워드 관리 (클릭하여 열기)", expanded=False):
         c1, c2 = st.columns([3, 1])
         new_kw = c1.text_input("수집 키워드 추가", placeholder="예: HBM, 패키징", label_visibility="collapsed")
@@ -577,9 +574,11 @@ else:
         new_kw = c1.text_input("키워드", label_visibility="collapsed")
         if c2.button("추가", use_container_width=True):
             if new_kw:
-                st.session_state.keywords[selected_category].append(new_kw)
-                save_keywords(st.session_state.keywords)
-                st.rerun()
+                # [수정] 중복 키워드 방지
+                if new_kw not in st.session_state.keywords[selected_category]:
+                    st.session_state.keywords[selected_category].append(new_kw)
+                    save_keywords(st.session_state.keywords)
+                    st.rerun()
         
         search_days = c3.slider("검색 기간", 1, 30, 3)
 
@@ -597,7 +596,8 @@ else:
             st.markdown("<div class='flex flex-wrap gap-2'>", unsafe_allow_html=True)
             cols = st.columns(8)
             for i, kw in enumerate(curr_kws):
-                if cols[i%8].button(f"{kw} ×", key=f"gdel_{kw}"):
+                # [수정] 버튼 키(Key)에 인덱스(i)와 카테고리를 넣어 유일성 보장
+                if cols[i%8].button(f"{kw} ×", key=f"gdel_{selected_category}_{i}_{kw}"):
                     st.session_state.keywords[selected_category].remove(kw)
                     save_keywords(st.session_state.keywords)
                     st.rerun()
