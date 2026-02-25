@@ -52,7 +52,7 @@ st.markdown("""
 
 # 주식 티커
 STOCK_CATEGORIES = {
-    "🏭 Chipmakers": {"Samsung": "005930.KS", "SK Hynix": "000660.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
+    "🏭 Chipmakers": {"SK Hynix": "000660.KS", "Samsung": "005930.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
     "🧠 AI ": {"NVIDIA": "NVDA", "Apple": "AAPL", "Alphabet": "GOOGL", "Microsoft": "MSFT", "Meta": "META", "Amazon": "AMZN", "Tesla": "TSLA", "IBM": "IBM", "Oracle": "ORCL", "Broadcom": "AVGO"},
     "🧪 Materials": {"Soulbrain": "357780.KQ", "Dongjin": "005290.KQ", "Hana Mat": "166090.KQ", "Wonik Mat": "104830.KQ", "TCK": "064760.KQ", "Foosung": "093370.KS", "PI Adv": "178920.KS", "ENF": "102710.KQ", "TEMC": "425040.KQ", "YC Chem": "112290.KQ", "Samsung SDI": "006400.KS", "Shin-Etsu": "4063.T", "Sumco": "3436.T", "Merck": "MRK.DE", "Entegris": "ENTG", "TOK": "4186.T", "Resonac": "4004.T", "Air Prod": "APD", "Linde": "LIN", "Qnity": "Q", "Nissan Chem": "4021.T", "Sumitomo": "4005.T"},
     "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Advantest": "6857.T", "Hitachi HT": "8036.T", "Hanmi": "042700.KS", "Wonik IPS": "240810.KQ", "Jusung": "036930.KQ", "EO Tech": "039030.KQ", "Techwing": "089030.KQ", "Eugene": "084370.KQ", "PSK": "319660.KQ", "Zeus": "079370.KQ", "Top Eng": "065130.KQ"}
@@ -67,7 +67,7 @@ def sync_to_github(filename, content_data):
         g = Github(st.secrets["GITHUB_TOKEN"])
         repo = g.get_repo(st.secrets["REPO_NAME"])
         
-        # JSON 저장 시 datetime 객체가 있으면 에러 발생 -> default=str로 방어
+        # [핵심] JSON 저장 시 datetime 객체가 있으면 에러 발생 -> default=str로 방어
         content_str = json.dumps(content_data, ensure_ascii=False, indent=4, default=str)
         
         try:
@@ -136,7 +136,7 @@ def save_daily_history(new_report_data):
     current_history.insert(0, new_report_data)
     st.session_state.daily_history = current_history
     
-    # 로컬 저장
+    # 로컬 저장 (default=str 추가로 안전장치)
     try:
         with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
             json.dump(current_history, f, ensure_ascii=False, indent=4, default=str)
@@ -145,28 +145,33 @@ def save_daily_history(new_report_data):
     # GitHub 저장
     sync_to_github(HISTORY_FILE, current_history)
 
-# 주식 데이터 병렬 처리
+# ==========================================
+# 주식 데이터 수집 (정확도 개선 적용)
+# ==========================================
 def fetch_single_stock(name, symbol):
     try:
         ticker = yf.Ticker(symbol)
+        
+        # 1. 5일치 데이터를 확보하여 가장 안정적인 전일 종가 세팅
+        hist_5d = ticker.history(period="5d")
+        if hist_5d.empty: return name, None
+        
+        # 데이터가 1일치밖에 없으면 현재가를 전일종가로 사용, 아니면 확실한 전일 종가 사용
+        prev = hist_5d['Close'].iloc[-2] if len(hist_5d) >= 2 else hist_5d['Close'].iloc[-1]
+        current = hist_5d['Close'].iloc[-1]
+        
+        # 2. 장중 실시간 시세를 위해 가장 최신 거래가(2분봉) 덮어쓰기 시도
         try:
-            current = ticker.fast_info['last_price']
-            prev = ticker.fast_info['previous_close']
+            hist_live = ticker.history(period="1d", interval="2m")
+            if not hist_live.empty:
+                current = hist_live['Close'].iloc[-1]
         except:
-            hist = ticker.history(period="1d")
-            if not hist.empty:
-                current = hist['Close'].iloc[-1]
-                prev = ticker.info.get('previousClose', current)
-            else:
-                hist_5d = ticker.history(period="5d")
-                if len(hist_5d) >= 1:
-                    current = hist_5d['Close'].iloc[-1]
-                    prev = hist_5d['Close'].iloc[-2] if len(hist_5d) >= 2 else current
-                else: return name, None
+            pass
 
-        if current is None: return name, None
+        if current is None or pd.isna(current): return name, None
+        
         change = current - prev
-        pct = (change / prev) * 100
+        pct = (change / prev) * 100 if prev != 0 else 0
         
         if ".KS" in symbol or ".KQ" in symbol: cur_sym = "₩"
         elif ".T" in symbol: cur_sym = "¥"
@@ -183,7 +188,7 @@ def fetch_single_stock(name, symbol):
         return name, html_str
     except: return name, None
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=300) # 캐시는 유지 (5분마다 알아서 풀림)
 def get_stock_prices_grouped():
     result_map = {}
     all_tickers = []
@@ -200,7 +205,7 @@ def get_stock_prices_grouped():
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집
+# 2. 뉴스 수집 (안정 로직 + 40개)
 # ==========================================
 def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end_dt=None):
     all_items = []
@@ -229,6 +234,7 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end
                         pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                         pub_date_kst = pub_date + timedelta(hours=9)
                         if not (start_dt <= pub_date_kst <= end_dt): is_valid = False
+                        # [핵심 수정] datetime 객체를 문자열로 변환하여 저장
                         pub_date_str_val = pub_date_kst.strftime("%Y-%m-%d %H:%M:%S")
                     except: is_valid = True 
                 
@@ -239,7 +245,7 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end
                             'Link': item.link.text,
                             'Date': item.pubDate.text,
                             'Source': item.source.text if item.source else "Google News",
-                            'ParsedDate': pub_date_str_val
+                            'ParsedDate': pub_date_str_val # 이제 문자열입니다 (JSON 저장 가능)
                         })
                         kw_collected += 1
                 if kw_collected >= per_kw_limit: break
@@ -249,6 +255,7 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.drop_duplicates(subset=['Title'])
+        # 문자열이지만 정렬을 위해 임시 변환
         if strict_time: 
             df['TempDate'] = pd.to_datetime(df['ParsedDate'], errors='coerce')
             df = df.sort_values(by='TempDate', ascending=False)
@@ -437,6 +444,25 @@ def generate_report_with_citations(api_key, news_data):
 # ==========================================
 # 4. 메인 앱 UI
 # ==========================================
+# [추가] 구버전 Streamlit 에러 방지를 위한 st.fragment 폴리필
+if not hasattr(st, "fragment"):
+    def dummy_fragment(**kwargs):
+        return lambda f: f
+    st.fragment = dummy_fragment
+
+# [추가] 주식 위젯을 별도 조각(Fragment)으로 분리 (5분 자동 업데이트)
+@st.fragment(run_every=300)
+def render_stock_widget():
+    if st.button("🔄 시세 업데이트", use_container_width=True):
+        get_stock_prices_grouped.clear() # Fragment 내부 버튼은 해당 블록만 새로고침 유발
+    stock_data = get_stock_prices_grouped()
+    if stock_data:
+        for cat, items in STOCK_CATEGORIES.items():
+            st.markdown(f"<div class='stock-header'>{cat}</div>", unsafe_allow_html=True)
+            for name, symbol in items.items():
+                html_info = stock_data.get(name)
+                if html_info: st.markdown(html_info, unsafe_allow_html=True)
+
 with st.sidebar:
     st.markdown("<h2 class='text-2xl font-bold text-slate-800 mb-4'>Semi-Insight</h2>", unsafe_allow_html=True)
     selected_category = st.radio("카테고리", CATEGORIES, index=0)
@@ -453,17 +479,9 @@ with st.sidebar:
     if "GITHUB_TOKEN" in st.secrets:
         st.markdown("<div class='text-xs text-green-600 font-bold mb-2'>✅ GitHub Auto-Sync Active</div>", unsafe_allow_html=True)
     
-    with st.expander("📉 Global Stock (실시간)", expanded=True):
-        if st.button("🔄 시세 업데이트", use_container_width=True):
-            get_stock_prices_grouped.clear()
-            st.rerun()
-        stock_data = get_stock_prices_grouped()
-        if stock_data:
-            for cat, items in STOCK_CATEGORIES.items():
-                st.markdown(f"<div class='stock-header'>{cat}</div>", unsafe_allow_html=True)
-                for name, symbol in items.items():
-                    html_info = stock_data.get(name)
-                    if html_info: st.markdown(html_info, unsafe_allow_html=True)
+    with st.expander("📉 Global Stock (실시간/5분 자동갱신)", expanded=True):
+        # 분리된 주식 렌더링 함수 호출
+        render_stock_widget()
 
 c_head, c_info = st.columns([3, 1])
 with c_head: st.markdown(f"<h1 class='text-3xl font-bold text-slate-800 mb-2'>{selected_category}</h1>", unsafe_allow_html=True)
