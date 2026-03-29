@@ -1,5 +1,270 @@
 [
     {
+        "date": "2026-03-30",
+        "report": "## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)\n\n### 중동 사태 발(發) 반도체 공급망 위협 가중 및 핵심 소재난 현실화\n\n현재 중동 지역의 지정학적 불안정성이 심화되면서, 글로벌 반도체 산업은 전례 없는 공급망 위협에 직면하고 있다 [3, 5, 13, 15, 36, 37]. 특히 예멘 후티 반군의 참전으로 인한 홍해 항로의 위협은 글로벌 에너지 공급망에 비상이 걸리게 했으며 <a href='https://news.google.com/rss/articles/CBMicEFVX3lxTE1ZTHpZOVdITWVORmxORjFVUEhGVGhGQmdUNEpQOVhuejhjQktVcndtU1pUckw3eEd4TGlFckc1U2VBWE1jeTE1QVJkcEdKdVNkN2RNRXBwRHV0TE1EMHhXZVk2UFdBcVVZZHBqZE9va3bSAXBBVV95cUxNWUx6WTlXSE1lTkZsTkYxVVBIRlRoRkJnVDRKUDlYbno4Y0JLVXJ3bVNaVHJMN3hHeExpRXJHNVNlQVhNY3kxNUFSZHBHSnVTZDdkTUVwcER1dExNRDB4V2VZNlBXQXFVWWRwamRPb2t2?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[13]</a>, 이는 산업계 전반에 걸친 '에너지 쇼크'를 현실화하여 '5부제'와 같은 비상 경영 체제 돌입 가능성까지 거론되는 상황이다 <a href='https://news.google.com/rss/articles/CBMidkFVX3lxTE8yQ2ljbVFtVnoxbzh1LWZPZFJyMmJnQ3MtdXNXc3ZmS0pmNnJ3cUJhc2xGVkhlamNKLWtMbEZ0UzFTLVYtZE4wTFNDRmFRaE9XYWxSNG91TjVYWmhFMF9oaVE4U3RMTVRVWW9vSjUwaE11cGFBSnfSAXZBVV95cUxPMkNpY21RbVZ6MW84dS1mT2RScjJiZ0NzLXVzV3N2ZktKZjZyd3FCYXNsRlZIZWpjSi1rTGxGdFMxUy1WLWROMExTQ0ZhUWhPV2FsUjRvdU41WFpoRTBfaGlROFN0TE1UVVlvb0o1MGhNdXBhQUp3?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[21]</a>. 이처럼 불안정한 국제 정세는 반도체 제조의 핵심 소재 공급에도 직접적인 타격을 주고 있다. 무엇보다 반도체 공정에서 냉각, 불활성 분위기 조성, 에칭 가스 희석 등 필수적인 역할을 하는 헬륨 생산의 약 3분의 1이 중동 사태로 인해 중단되었다는 보고는 '헬륨 대란'에 대한 강력한 경고음으로, K-반도체 산업의 비용 부담을 가중시키는 결정적인 요인이 되고 있다 [19, 34]. 또한, 중동 지역의 알루미늄 공장이 잇따라 피격당하며 글로벌 알루미늄 공급망이 심각하게 흔들리는 등 [12, 22], 핵심 원자재 수급 불안정은 반도체 제조 전반의 불확실성을 증폭시키고 있다. 이러한 복합적인 공급망 쇼크는 K-반도체 산업에 이중고로 작용하며 <a href='https://news.google.com/rss/articles/CBMidEFVX3lxTE4wM1N4aHVBaENYT1M1YlBmT09sUHphWGZnOXBBZnJHNk5oeWJCbWdkYzlrcVRjRF9SbEc5RTJ1Xy1zUDZ2d2RMMG9PeDR1Q1RoRnlfcHEyc3YwX1dWVDRCU0xzTTVnaWZxWU9fUnhUb0R6NlRI?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[3]</a>, 안정적인 생산 환경 유지를 위한 비상 계획 수립 및 공급망 다변화 전략 마련이 시급함을 시사한다. 국제 기관들이 반도체 의존도가 높은 한국의 경제성장률 전망치를 연달아 하향 조정하는 것도 이러한 공급망 리스크가 현실화될 경우 발생할 경제적 파급 효과에 대한 우려를 반영하는 것이다 [8, 15].\n\n### 메모리 넘어 비메모리까지, 전방위적 '칩플레이션' 확산 및 시장 변동성 증대\n\n최근 반도체 시장은 메모리 반도체 호황을 넘어 비메모리 영역까지 가격 인상 압력이 전방위적으로 확산되는 '칩플레이션(Chipflation)' 공포에 휩싸이고 있다 [1, 7]. 기존에 메모리 반도체를 중심으로 나타나던 가격 상승세가 이제는 비메모리 반도체까지 번지며 시장 전반의 가격 인상을 주도하고 있으며 [1, 7], 이는 중국 시장에서도 4월 반도체 및 전자부품 가격 인상이 예고되는 등 글로벌적인 현상으로 관측된다 <a href='https://news.google.com/rss/articles/CBMiXEFVX3lxTFBFZ0dVMUFnWnJFYXgxeTExbVE3NlgzcWg2R1hmb3gyYkNnLXB0ejRRbFJLWWYwMmYyQ2VweFI1OFVNR09fZ3RWOTBJR3BQSHd6dGZMZmRZZHFTX3Mw?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[9]</a>. 이러한 칩플레이션의 확산은 단순히 특정 제품군의 수요 증가를 넘어, 중동발 공급망 교란으로 인한 원자재 및 에너지 비용 상승 압력이 복합적으로 작용한 결과로 분석된다 [3, 21, 34]. 특히 반도체 생산에 필수적인 산업가스 및 주요 소재의 가격 상승은 제조 원가 부담을 가중시키고, 이는 최종 제품 가격 인상으로 전이되는 연쇄 효과를 낳고 있다 [4, 9]. 나아가 AI 반도체 수요의 폭발적 증가는 이러한 가격 상승 추세를 더욱 부추기는 요인으로 작용하고 있으며 <a href='https://news.google.com/rss/articles/CBMijwFBVV95cUxNZlFxcG9SQTN4a2FnQkY5Vk1RQU1XczNqdkN2MW9EQWppeVZ3RWJOVUNic0M4RThtM2lBVld6UVZ4YlFFNmxUUDRVYmZxYXZxR01xcWRsWWxKZUZBRWVpeGRmbmg1WUt6bDZETmRrR1NKcjItU2FXbFJOb3hBNkxMMFRnQWhsLWN0TUxvamFpSQ?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[14]</a>, 이러한 시장 환경은 반도체 기업들에게 단기적인 실적 개선의 기회를 제공하는 동시에, 전방 산업의 원가 부담을 증가시켜 투자 심리를 위축시킬 수 있는 잠재적 위험을 내포한다. 삼성전자와 같은 '반도체 빅2'의 운용 전략이 높은 수익률을 기록하며 시장에서 통하고 있다는 분석은 <a href='https://news.google.com/rss/articles/CBMiUkFVX3lxTE00N3Z2SkRFVTN3RU5xcV9xNXBrNnplay1aaktrcVM0TEt1eUpvUkRqYzU3TEY0bV8wRHlnQVd1RmVfeWI2SlUzc1VqMkJzSWx2dHc?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[33]</a>, 현재의 고변동성 시장 상황에서 리스크 관리 및 효율적인 생산 전략이 얼마나 중요한지를 방증한다. 이처럼 전방위적인 가격 상승 압력은 글로벌 경제 성장의 주요 변수로 작용하며, 한국 경제 성장률 전망치 하향 조정의 배경 중 하나로 작용하고 있다 [8, 15].\n\n## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)\n\n글로벌 반도체 소재 및 소부장(소재, 부품, 장비) 산업은 중동 사태로 인한 공급망 재편 압박과 각국의 기술 자립화 노력이라는 이중적 도전 과제에 직면해 있다. 특히 중동발 에너지 쇼크는 산업 전반의 비상 경영 체제를 유발하며 <a href='https://news.google.com/rss/articles/CBMidkFVX3lxTE8yQ2ljbVFtVnoxbzh1LWZPZFJyMmJnQ3MtdXNXc3ZmS0pmNnJ3cUJhc2xGVkhlamNKLWtMbEZ0UzFTLVYtZE4wTFNDRmFRaE9XYWxSNG91TjVYWmhFMF9oaVE4U3RMTVRVWW9vSjUwaE11cGFBSnfSAXZBVV95cUxPMkNpY21RbVZ6MW84dS1mT2RScjJiZ0NzLXVzV3N2ZktKZjZyd3FCYXNsRlZIZWpjSi1rTGxGdFMxUy1WLWROMExTQ0ZhUWhPV2FsUjRvdU41WFpoRTBfaGlROFN0TE1UVVlvb0o1MGhNdXBhQUp3?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[21]</a>, 안정적인 산업가스 공급망 확보가 미래 성장 가속화를 위한 핵심 요소임을 다시금 강조하고 있다 <a href='https://news.google.com/rss/articles/CBMiVkFVX3lxTFBqWUpULUlILWdVQmRrN2JEX1JBVVNNWWJBYVQ4MWNsMVNuZVVpM2xNMDNzZXhaYlZHSkhCbDJvMDhzNXBJbXhvNGRjYkFzTTJhT1BRTmF3?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[4]</a>. 반도체 생산에 필수적인 헬륨의 공급 차질은 K-반도체 산업의 비용 부담을 가중시키며 [19, 34], 대체 공급원 확보 및 효율적 활용 기술 개발이 시급한 과제로 부상했다.\n\n한편, 세계 각국은 자국 중심의 반도체 기술 자립 및 공급망 강화에 매진하고 있다. 중국은 5나노 장비 공개와 함께 반도체 자급률 80% 달성이라는 목표를 재확인하며 '반도체 굴기 2.0' 전략을 가속화하고 있다 [17, 23, 24, 32]. 이는 '중국판 ASML' 개발을 핵심 과제로 삼아 자체적인 장비 기술력을 확보하려는 노력의 일환으로 해석되며 [23, 24], 과거의 실패에도 불구하고 전략적 중요성을 감안한 재도전이 글로벌 반도체 기술 경쟁에 새로운 변수로 작용할 전망이다 <a href='https://news.google.com/rss/articles/CBMiWkFVX3lxTE5XMWFtSXNHaF9xaG10VU9uRWZxVWZBQkNycVFLdE5JTnNuYktxZW1LUGthNUNKZDhBWHR2SzFreFl1cHIxNlQyeU1rOVAwUFJBV2tVcTJZQVBqUdIBVEFVX3lxTFB4WExMU0ZmeWdMMFhXVWNrZjJrRGRCSTN4b2lHTEtfNzZZOFRPUm1xTEJpZ0RyWVRJUXQ1V3oyakx5SW9UTmVhM3pUNzl3SWVMQzdkWA?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[32]</a>. 일본 또한 도쿄 일렉트론을 중심으로 반도체 전략을 추진하며 글로벌 경쟁력을 확보하려는 움직임을 보이고 있다 <a href='https://news.google.com/rss/articles/CBMiSkFVX3lxTE5pNWVIdk9Ma003Tmk4Rzl6ODdqbEI0NUgweS1qb29xelF6aF9nVVhaUnJyQWE2QVBWTTZCLWlIaUJMQloyLUFodllR?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[25]</a>. 서구권 국가들은 핵심 광물 공급망 형성에 호주와 같은 자원 부국과의 협력을 강화하는 추세이며 <a href='https://news.google.com/rss/articles/CBMiWkFVX3lxTE4xWjY4S3R4dDFRY3hPQ1lCLTR5aGZ4MXd6WXBVczQ2S0FyNC1MSkJPRFNhYTZtR0RwUVg0c1BWWHdOUGdFQVlEeWhVSWxIU1VTRWxBVmlQVExrZ9IBVEFVX3lxTE9SR0JWR3NPQ1F6dHZ3TkZFZTl2TS1hcG9XSkI5OW5TLW8xaGF0V1ZycEUxTExRcm9DUkVyT1FDMmRTQVRvS3haT21xN0hvaUpNTVhxTA?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[27]</a>, 이는 반도체 소재 공급망의 안정성을 확보하려는 광범위한 지정학적 노력의 일환이다.\n\n기술 개발 측면에서는 삼성전자가 2028년 '꿈의 반도체' 양산을 목표로 초미세 공정 혁신을 지속하고 있으며 <a href='https://news.google.com/rss/articles/CBMiWkFVX3lxTFB6VWdmMzJ2bG5uM1pOMzhGTEI1cHhOQ3lwYjZ3MVpoOFhOdlo1Nk9MMUpLMVB2RDdaYnhUVXhuUVpka2VHclZ1d0p5R2tIRHpUNnNBZTRnVzJvZ9IBVEFVX3lxTE5UUTJrT3ptbTBoVkJrSnloa1VOcnpPdTY2UnJOMFF5Wmgxc0NkdVhObVNsSTQ0Y3hVcW9UaHNEdnoyaFpWM0k5eEFKbmZxYmZqMnprdA?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[16]</a>, 'AI 반도체의 민주화'라는 새로운 기술 패러다임이 주목받고 있다 <a href='https://news.google.com/rss/articles/CBMijwFBVV95cUxNZlFxcG9SQTN4a2FnQkY5Vk1RQU1XczNqdkN2MW9EQWppeVZ3RWJOVUNic0M4RThtM2lBVld6UVZ4YlFFNmxUUDRVYmZxYXZxR01xcWRsWWxKZUZBRWVpeGRmbmg1WUt6bDZETmRrR1NKcjItU2FXbFJOb3hBNkxMMFRnQWhsLWN0TUxvamFpSQ?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[14]</a>. 국내에서는 특수 분야 반도체의 국산화가 진전을 보여 4인치 웨이퍼에서 95%의 높은 수율을 달성하는 등 기술 자립의 가능성을 입증했다 <a href='https://news.google.com/rss/articles/CBMiTkFVX3lxTE84bllpMFFjU2J2MzBZZThDclR5elJKRlp4ejZYTWFyVXQ0RjN5QWd6clRIbTY3QTBicUIwQlhGbjhpa1Z3c2lQaV9vS3pyUQ?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[26]</a>. 용인 반도체 클러스터의 계획대로 추진이 국가 생존 전략으로 제시되며 국내 반도체 생태계 강화의 중요성이 강조되고 있다 <a href='https://news.google.com/rss/articles/CBMibkFVX3lxTFBfVWtlTVVCTU8yWTF2Zy1WUGhORlRXYjBNQ3BLNzFreUJNRzNQMXM0VGx2Y0VSZERIQlRXYURWRW9HY0ZtRlNiVjU2cTYzU1FaUmtyRUNXblBUc1l3Mk1iUzAwWW9fMWtMUnBJcGhB?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[18]</a>. 핵심 소부장 기업들은 삼성전자의 역대급 실적 수혜가 예상되는 종목으로 거론되며 투자자들의 관심을 받고 있으며 <a href='https://news.google.com/rss/articles/CBMicEFVX3lxTE9XM2R0SVhJenRmM1NPLWkzTnprYTh1bkFJNmVsTmh0QldEc1VXRUIyOUpqN1VkYWllbWxfTTdKMXJWQWFoc3UtUlA1Rm1TSFNLWUdyOVdfbVVydjF0Q0JvTEZOZVlMRmVVNGVtQjlJalPSAXRBVV95cUxQdjdIQVZHSzE1WWJiV2NCTkpCV2pVOENUYk9pb3lhaXd0S0VFNHFGdlQ1bnRwTmpNNE1fRWJoUl9zcW1rX3VELTdpRW8yMWFGd0lPSEZNYzY3S2JNaG5jRmp1Q0Zqbzc2VC1Da3dxelA3MlpxeA?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[10]</a>, 타워 반도체(TSEM)의 일본 Fab 7 이전 및 새로운 AI 광학 제품 출시 또한 특정 영역에서의 기술 진보를 시사한다 <a href='https://news.google.com/rss/articles/CBMiqwFBVV95cUxOR3NZMEU3V3V6UTJIaDdPOW9MbFFLX0lYd1dBQ0c1NTdibUVIZHZ4SnFfVS1sUkdNYXR6SURWenpLWnlnMmZMZGpZWnFZNC12azQtc2VvNWNnNUw0WDBuc0NtdjE0bjZLbFVxVlBLMm0zaXI2cEhOQ19oWDRNRGlSUG9HSmpXalRhUy1YRHZGcEtQNzktYnNycFVQSTJhNnptdTcyV2FzZnBUZ3PSAasBQVVfeXFMTkdzWTBFN1d1elEySGg3TzlvTGxRS19JWHdXQUNHNTU3Ym1FSGR2eEpxX1UtbFJHTWF0eklEVnp6S1p5ZzJmTGRqWVpxWTQtdms0LXNlbzVjZzVMNFgwbnNDbXYxNG42S2xVcVZQSzJtM2lyNnBITkNfaFg0TURpUlBvR0pqV2pUYVMtWER2RnBLUDc5LWJzcnBVUEkyYTZ6bXU3Mldhc2ZwVGdz?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[28]</a>. 배터리 소재 분야에서는 삼성SDI와 LG엔솔이 전고체 배터리 로드맵을 가시화하며 미래 에너지 저장 기술의 변화를 예고하고 있다 <a href='https://news.google.com/rss/articles/CBMid0FVX3lxTE1hdGgyMnBPNGVLd19jZE1wWHhSbmlESUl2UXJJVUMzR3Z3UVB0c0RELUowVDFjc0lNR1NxQ292d1M5Mlp0MWViTmVLLURKN21fX2RwSXZxb1oyZEItRll4bTVLeV9sSTNzeS1xakhQbHY4SGNVc1NZ0gF3QVVfeXFMTWF0aDIycE80ZUt3X2NkTXBYeFJuaURJSXZRcklVQzNHdndRUHRzREQtSjBUMWNzSU1HU3FDb3Z3UzkyWnQxZWJOZUstREo3bV9fZHBJdnFvWjJkQi1GWXhtNUt5X2xJM3N5LXFqSFBsdjhIY1VzU1k?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[20]</a>. 기업 차원에서는 롯데케미칼이 대산공장 물적분할 후 HD현대케미칼과의 합병을 통해 사업 구조를 재편하는 등 효율성 증대와 경쟁력 강화를 꾀하는 움직임도 나타나고 있다 <a href='https://news.google.com/rss/articles/CBMiakFVX3lxTE54MktTVUxyWUdDcUplOVc4YVBlTF9rVko1Y0tHM2Zqb21UekwwTWJXYWtSMW9Xb0g4ZXEwOXZYY3Nuck1Xd1dPSUE0VjdTaEdKWlNXWVl1VV84YXVZWFN2akQ3ekpLVHFHVWc?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[31]</a>. 이러한 일련의 변화들은 글로벌 반도체 및 소재 산업이 지정학적 불확실성과 기술 패권 경쟁 속에서 자립화와 혁신을 동시에 추구하는 복합적인 양상을 띠고 있음을 명확히 보여준다.\n\n## 💡 Analyst's View (시사점)\n\n오늘의 뉴스는 중동 지정학적 리스크가 반도체 핵심 소재 공급망 전반에 미치는 치명적 영향과 더불어, 각국의 기술 자립화 경쟁 심화가 글로벌 반도체 시장의 불확실성을 가중시키고 있음을 명확히 보여주며, 안정적인 소재 공급망 확보 및 첨단 기술 혁신을 통한 자생력 강화가 최우선 과제임을 시사한다.\n\n## 📊 Executive Summary (시장 총평)\n\n오늘 반도체 시장은 중동 지역의 지정학적 불안정성 심화로 핵심 산업가스 및 원자재 공급망에 심각한 위협을 받고 있으며, 특히 헬륨 공급 차질은 K-반도체 산업의 비용 부담을 가중시키고 있다 [19, 34]. 이러한 공급망 압박과 더불어 메모리를 넘어 비메모리까지 가격 인상이 확산되는 '칩플레이션' 현상이 두드러지고 있다 [1, 7]. 동시에 중국의 공격적인 반도체 자급률 목표와 자국 중심의 기술 개발 노력은 글로벌 반도체 패권 경쟁을 더욱 격화시킬 것이며 [17, 23, 24], 이는 소재 및 소부장 기업들의 전략적 중요성을 더욱 부각시키고 있다 <a href='https://news.google.com/rss/articles/CBMicEFVX3lxTE9XM2R0SVhJenRmM1NPLWkzTnprYTh1bkFJNmVsTmh0QldEc1VXRUIyOUpqN1VkYWllbWxfTTdKMXJWQWFoc3UtUlA1Rm1TSFNLWUdyOVdfbVVydjF0Q0JvTEZOZVlMRmVVNGVtQjlJalPSAXRBVV95cUxQdjdIQVZHSzE1WWJiV2NCTkpCV2pVOENUYk9pb3lhaXd0S0VFNHFGdlQ1bnRwTmpNNE1fRWJoUl9zcW1rX3VELTdpRW8yMWFGd0lPSEZNYzY3S2JNaG5jRmp1Q0Zqbzc2VC1Da3dxelA3MlpxeA?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[10]</a>. 전반적으로 불안정한 시장 환경 속에서 안정적인 공급망 확보와 첨단 기술 혁신을 통한 경쟁력 강화가 그 어느 때보다 중요한 시점이다.",
+        "articles": [
+            {
+                "Title": "메모리 넘어 비메모리까지… 반도체 가격 전방위로 오른다 - 조선비즈 - Chosunbiz",
+                "Link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxPTW1HX3ZaeENMRER4dlhsSVNTQUoyM2RLZUtuNmQzQTJ1eHB2WTlCbVdPcFhRQVhYNGxXUmlUTmNXajh0aUphZGdKVUNzTnRVRmhIc0p0UUhCanFHaHN1c0FaTG9EWENpOW5FWkV3NGwtNEc5YkJqTTI1M25RZlI2b3pB0gGWAUFVX3lxTE82cy1kMzF3RlRocFh0WTctVnlUdG1wN0NnTWlXd196aTF5UW5YNGFfVGlkWUpvSk84eHZrUVRjZmRfbjg2TFktY21aQjZXTVppcVlUcmJabTl0NlpsallsSDBUYnhWeHVDYmNXVi05ZEd4S3pWbzdqS25GRlZtT3pCdHg0NUlGLUhsT2FhUFhnandfdzRzZw?oc=5",
+                "Date": "Sun, 29 Mar 2026 21:00:00 GMT",
+                "Source": "Chosunbiz",
+                "ParsedDate": "2026-03-30 06:00:00"
+            },
+            {
+                "Title": "[증시전망] 중동 불안·반도체 우려에 '흔들'…미·이란 협상 분수령 - 네이트",
+                "Link": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFB5OWVjdEltNE0xczhtb1ZEdzJMbUozMWt5S1h2THZYZzhuLTZEZHJjMDNwTHFfTFBQcFZHVHZOZ0xxRHpaalRpdF9qd1VISmxvS2Jr?oc=5",
+                "Date": "Sun, 29 Mar 2026 21:00:00 GMT",
+                "Source": "네이트",
+                "ParsedDate": "2026-03-30 06:00:00"
+            },
+            {
+                "Title": "중동發 공급망 쇼크ㆍ터보퀀트 변수까지… K-반도체 ‘이중고’ - dnews.co.kr",
+                "Link": "https://news.google.com/rss/articles/CBMidEFVX3lxTE4wM1N4aHVBaENYT1M1YlBmT09sUHphWGZnOXBBZnJHNk5oeWJCbWdkYzlrcVRjRF9SbEc5RTJ1Xy1zUDZ2d2RMMG9PeDR1Q1RoRnlfcHEyc3YwX1dWVDRCU0xzTTVnaWZxWU9fUnhUb0R6NlRI?oc=5",
+                "Date": "Sun, 29 Mar 2026 20:40:14 GMT",
+                "Source": "dnews.co.kr",
+                "ParsedDate": "2026-03-30 05:40:14"
+            },
+            {
+                "Title": "[자동차] 안정적인 산업가스 공급망 확보로 미래 성장 가속 - 중앙일보",
+                "Link": "https://news.google.com/rss/articles/CBMiVkFVX3lxTFBqWUpULUlILWdVQmRrN2JEX1JBVVNNWWJBYVQ4MWNsMVNuZVVpM2xNMDNzZXhaYlZHSkhCbDJvMDhzNXBJbXhvNGRjYkFzTTJhT1BRTmF3?oc=5",
+                "Date": "Sun, 29 Mar 2026 20:30:00 GMT",
+                "Source": "중앙일보",
+                "ParsedDate": "2026-03-30 05:30:00"
+            },
+            {
+                "Title": "[글로벌 비즈 브리핑] 중동 사태 장기화...곧 반도체도 못 만든다 外 - v.daum.net",
+                "Link": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE1WaGF3bTh3UVlCakZ6eVV3UVpqQy02OXVZYVA4cUtyN0RSQnlCVm1nZ1UyR0RuYzdmNVJaSktTN3ljdzlyQ196SVM5UUd6aGc?oc=5",
+                "Date": "Sun, 29 Mar 2026 19:48:00 GMT",
+                "Source": "v.daum.net",
+                "ParsedDate": "2026-03-30 04:48:00"
+            },
+            {
+                "Title": "이란 미사일 2주 후 고갈?… 발사대 파괴·공급망 마비 직면 [중동 미사일 전쟁] - 글로벌이코노믹",
+                "Link": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxPRlRfOGFBNjNpSDl3WEVHbW83Q3NhdVVnZFBLU1RIVExDa1pybXNvbC1XMk4tTmdybVBORjFra3BmTmhRZ1czWVIxcUQ0TUJyNHpkcUpWRTJBb0J0YTlhTWxDYW4tVXh5VDEwOFgwNmF6endQYmJRMzRqc1VoRmdpZEgtV0VsUFlX?oc=5",
+                "Date": "Sun, 29 Mar 2026 19:15:00 GMT",
+                "Source": "글로벌이코노믹",
+                "ParsedDate": "2026-03-30 04:15:00"
+            },
+            {
+                "Title": "비메모리까지?… '칩플레이션' 공포 확산 - mt.co.kr",
+                "Link": "https://news.google.com/rss/articles/CBMickFVX3lxTE1Cb2M1R1hxSzVOTWNIZVFoVjN5RlFPTENsUkpLbWI5RGJhS3ZDbTgyU2cxNHhWV1VjZ1A5ak41TnQzM2REMVFNQ3N1UDE0d1RHNlRIQkE2UEo0ZXBWVS1SVkMyTmJEX29OZG9Od19oZHJjUQ?oc=5",
+                "Date": "Sun, 29 Mar 2026 19:12:00 GMT",
+                "Source": "mt.co.kr",
+                "ParsedDate": "2026-03-30 04:12:00"
+            },
+            {
+                "Title": "국제 기관들, ‘반도체 의존’ 韓 경제성장률 전망치 연달아 하향 - 1waynews.com",
+                "Link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE9nT29zZENiMDhjdlJicjdLOEpwWjhLV1IxLTVFRElEZDZLYWlFOTBwQmZPMFBNcmk2ZmZQT05RQTJZbmJjbEJSUTdTQ3M4NTJsaXRlelk1aExQNVFWTXZoTnV3WWNCeXlK?oc=5",
+                "Date": "Sun, 29 Mar 2026 15:23:49 GMT",
+                "Source": "1waynews.com",
+                "ParsedDate": "2026-03-30 00:23:49"
+            },
+            {
+                "Title": "[중국증시 주간 포인트] ②반도체∙전자부품∙철강∙제지업 4월 가격인상, 국내 항공노선 유류할증료 인상, 섹터 대장주 실적 집중 공개, 엔트그룹∙샤오펑 이슈 - newspim.com",
+                "Link": "https://news.google.com/rss/articles/CBMiXEFVX3lxTFBFZ0dVMUFnWnJFYXgxeTExbVE3NlgzcWg2R1hmb3gyYkNnLXB0ejRRbFJLWWYwMmYyQ2VweFI1OFVNR09fZ3RWOTBJR3BQSHd6dGZMZmRZZHFTX3Mw?oc=5",
+                "Date": "Sun, 29 Mar 2026 15:02:00 GMT",
+                "Source": "newspim.com",
+                "ParsedDate": "2026-03-30 00:02:00"
+            },
+            {
+                "Title": "삼성전자의 역대급 실적 수혜가 예상되는 핵심 소부장 종목 리스트 - 더페어",
+                "Link": "https://news.google.com/rss/articles/CBMicEFVX3lxTE9XM2R0SVhJenRmM1NPLWkzTnprYTh1bkFJNmVsTmh0QldEc1VXRUIyOUpqN1VkYWllbWxfTTdKMXJWQWFoc3UtUlA1Rm1TSFNLWUdyOVdfbVVydjF0Q0JvTEZOZVlMRmVVNGVtQjlJalPSAXRBVV95cUxQdjdIQVZHSzE1WWJiV2NCTkpCV2pVOENUYk9pb3lhaXd0S0VFNHFGdlQ1bnRwTmpNNE1fRWJoUl9zcW1rX3VELTdpRW8yMWFGd0lPSEZNYzY3S2JNaG5jRmp1Q0Zqbzc2VC1Da3dxelA3MlpxeA?oc=5",
+                "Date": "Sun, 29 Mar 2026 15:00:00 GMT",
+                "Source": "더페어",
+                "ParsedDate": "2026-03-30 00:00:00"
+            },
+            {
+                "Title": "[특파원 리포트] 메모리 호황 속 ‘칩4 동맹’의 퇴조 - 조선일보",
+                "Link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxNTlVMbXBHRUhsY01KbGotRkRTSVM2SFFhN2x4UldXN000OWU3SXBuNGhfWS1ULVNOY1gwVnkyXzgzSHNtMTRDUW05Y2x0YXFSX0lDOHBXdHVtSXhtckQ5V2xPT0QzNUNIY3JiSWIzR1c3NktIV0lRMzk4dEtuV1Y5OENsTzNnX083dlJ1blFXSnZ5eEpC0gGoAUFVX3lxTFBJNWpTbzl1U1YtSTdESklrVy05YzFjNXFCVUlHRnRiZWFlQ3FwWXBiTmJkeTZNdlc1MEpTaDZGT2JxSm1xNHdMNDBVMUVyMHlCRzNydEtVcGZRek82RjNYLVdwUVlOU2ZaT0NqYnNwdmdmQ3pOWE9JaWRvLS1KOE5QVFY4bjNGUS1OQnhsRTJxSkdfZk82Qy03NWlPaHhVblc1T20zWUttZg?oc=5",
+                "Date": "Sun, 29 Mar 2026 14:37:00 GMT",
+                "Source": "조선일보",
+                "ParsedDate": "2026-03-29 23:37:00"
+            },
+            {
+                "Title": "중동 전쟁 직격탄…알루미늄 생산 차질·글로벌 공급망 흔들 - 포인트데일리",
+                "Link": "https://news.google.com/rss/articles/CBMidEFVX3lxTE9hODBBcWt5MjRTZ3FYX2c4VkJnWXBMbnVpOE81NEFCUEJSUFVIQjVWeHZuZ1lON285REVtWV82Q0dfQTVHYldIUEpVTGZTLUtNNzZPQVo2UWxXWlhma0Utby1hSlB6Y21QQXpYZDREM1hJYTlD0gF0QVVfeXFMT2E4MEFxa3kyNFNncVhfZzhWQmdZcExudWk4TzU0QUJQQlJQVUhCNVZ4dm5nWU43bzlERW1ZXzZDR19BNUdiV0hQSlVMZlMtS003Nk9BWjZRbFdaWGZrRS1vLWFKUHpjbVBBelhkNEQzWElhOUM?oc=5",
+                "Date": "Sun, 29 Mar 2026 13:08:25 GMT",
+                "Source": "포인트데일리",
+                "ParsedDate": "2026-03-29 22:08:25"
+            },
+            {
+                "Title": "중동 전쟁, 예멘 후티 참전으로 격랑…글로벌 에너지 공급망 '비상' - 데일리굿뉴스",
+                "Link": "https://news.google.com/rss/articles/CBMicEFVX3lxTE1ZTHpZOVdITWVORmxORjFVUEhGVGhGQmdUNEpQOVhuejhjQktVcndtU1pUckw3eEd4TGlFckc1U2VBWE1jeTE1QVJkcEdKdVNkN2RNRXBwRHV0TE1EMHhXZVk2UFdBcVVZZHBqZE9va3bSAXBBVV95cUxNWUx6WTlXSE1lTkZsTkYxVVBIRlRoRkJnVDRKUDlYbno4Y0JLVXJ3bVNaVHJMN3hHeExpRXJHNVNlQVhNY3kxNUFSZHBHSnVTZDdkTUVwcER1dExNRDB4V2VZNlBXQXFVWWRwamRPb2t2?oc=5",
+                "Date": "Sun, 29 Mar 2026 11:06:36 GMT",
+                "Source": "데일리굿뉴스",
+                "ParsedDate": "2026-03-29 20:06:36"
+            },
+            {
+                "Title": "댓글 : 8. Chip War의 종착점: AI 반도체의 민주화 - 네이버 프리미엄콘텐츠",
+                "Link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNZlFxcG9SQTN4a2FnQkY5Vk1RQU1XczNqdkN2MW9EQWppeVZ3RWJOVUNic0M4RThtM2lBVld6UVZ4YlFFNmxUUDRVYmZxYXZxR01xcWRsWWxKZUZBRWVpeGRmbmg1WUt6bDZETmRrR1NKcjItU2FXbFJOb3hBNkxMMFRnQWhsLWN0TUxvamFpSQ?oc=5",
+                "Date": "Sun, 29 Mar 2026 11:00:00 GMT",
+                "Source": "네이버 프리미엄콘텐츠",
+                "ParsedDate": "2026-03-29 20:00:00"
+            },
+            {
+                "Title": "韓성장률 줄하향 조짐…반도체 공급망도 막힐라(종합) - 국제신문",
+                "Link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxPWWNQRlRzSGNrVFkzZjFBNnU0MEdDcl9ZcUFaX1Iyd2JIZ3Fic1pJUHlpc01lWXNjVGF3LU9xaGl1Mm5FUzZFVHhxZk5UREtmb3ZSUTJpRWVhREUtMF9rWFJTNGRqbWJ0NXhIb0llSGpGSk5iaXNWSHZWMWJ5a21Wd1pUYTlhRjBNTWo5VDB3?oc=5",
+                "Date": "Sun, 29 Mar 2026 10:14:00 GMT",
+                "Source": "국제신문",
+                "ParsedDate": "2026-03-29 19:14:00"
+            },
+            {
+                "Title": "삼성전자, 2028년 '꿈의 반도체' 양산한다 - 한국경제",
+                "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTFB6VWdmMzJ2bG5uM1pOMzhGTEI1cHhOQ3lwYjZ3MVpoOFhOdlo1Nk9MMUpLMVB2RDdaYnhUVXhuUVpka2VHclZ1d0p5R2tIRHpUNnNBZTRnVzJvZ9IBVEFVX3lxTE5UUTJrT3ptbTBoVkJrSnloa1VOcnpPdTY2UnJOMFF5Wmgxc0NkdVhObVNsSTQ0Y3hVcW9UaHNEdnoyaFpWM0k5eEFKbmZxYmZqMnprdA?oc=5",
+                "Date": "Sun, 29 Mar 2026 09:07:51 GMT",
+                "Source": "한국경제",
+                "ParsedDate": "2026-03-29 18:07:51"
+            },
+            {
+                "Title": "5나노 장비 공개한 中…\"칩 자급률 80% 목표\" - 한국경제",
+                "Link": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE9TRXhmZXlWUmJPd3VkRUdvOGhhQ2lfRktRQVk0NmdIM2RhMjFtQ09hS0xLejFEclc3emEyT1lsalk0VnVpc1hoSkZEUDhobFk0aXd2TdIBVEFVX3lxTE9TRXhmZXlWUmJPd3VkRUdvOGhhQ2lfRktRQVk0NmdIM2RhMjFtQ09hS0xLejFEclc3emEyT1lsalk0VnVpc1hoSkZEUDhobFk0aXd2TQ?oc=5",
+                "Date": "Sun, 29 Mar 2026 09:06:26 GMT",
+                "Source": "한국경제",
+                "ParsedDate": "2026-03-29 18:06:26"
+            },
+            {
+                "Title": "[인터뷰] 유승훈 서울과기대 미래에너지융합학과 교수 “용인 반도체 클러스터, 계획대로 추진하는 것이 생존 전략” - 중부일보",
+                "Link": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBfVWtlTVVCTU8yWTF2Zy1WUGhORlRXYjBNQ3BLNzFreUJNRzNQMXM0VGx2Y0VSZERIQlRXYURWRW9HY0ZtRlNiVjU2cTYzU1FaUmtyRUNXblBUc1l3Mk1iUzAwWW9fMWtMUnBJcGhB?oc=5",
+                "Date": "Sun, 29 Mar 2026 09:00:00 GMT",
+                "Source": "중부일보",
+                "ParsedDate": "2026-03-29 18:00:00"
+            },
+            {
+                "Title": "중동 전쟁으로 헬륨 생산 3분의 1 중단…韓 반도체 산업 위협 - 동아사이언스",
+                "Link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE9sbGQ4YUpPdlAxVVlzdWNFdDdSazZTNHppVVBncGJhaEJPV1U4WEhFUW1ybU5RVTFnMHh2SnhibS1rUEE2aXBUWUlzcHBTVmJF?oc=5",
+                "Date": "Sun, 29 Mar 2026 09:00:00 GMT",
+                "Source": "동아사이언스",
+                "ParsedDate": "2026-03-29 18:00:00"
+            },
+            {
+                "Title": "삼성SDI·LG엔솔이 뛴다... K-배터리 거인들 전고체 로드맵 가시화 - 핀포인트뉴스",
+                "Link": "https://news.google.com/rss/articles/CBMid0FVX3lxTE1hdGgyMnBPNGVLd19jZE1wWHhSbmlESUl2UXJJVUMzR3Z3UVB0c0RELUowVDFjc0lNR1NxQ292d1M5Mlp0MWViTmVLLURKN21fX2RwSXZxb1oyZEItRll4bTVLeV9sSTNzeS1xakhQbHY4SGNVc1NZ0gF3QVVfeXFMTWF0aDIycE80ZUt3X2NkTXBYeFJuaURJSXZRcklVQzNHdndRUHRzREQtSjBUMWNzSU1HU3FDb3Z3UzkyWnQxZWJOZUstREo3bV9fZHBJdnFvWjJkQi1GWXhtNUt5X2xJM3N5LXFqSFBsdjhIY1VzU1k?oc=5",
+                "Date": "Sun, 29 Mar 2026 08:58:49 GMT",
+                "Source": "핀포인트뉴스",
+                "ParsedDate": "2026-03-29 17:58:49"
+            },
+            {
+                "Title": "중동발 '에너지 쇼크' 현실화···산업계, '5부제' 등 비상 경영 체제 돌입 - 시사저널e",
+                "Link": "https://news.google.com/rss/articles/CBMidkFVX3lxTE8yQ2ljbVFtVnoxbzh1LWZPZFJyMmJnQ3MtdXNXc3ZmS0pmNnJ3cUJhc2xGVkhlamNKLWtMbEZ0UzFTLVYtZE4wTFNDRmFRaE9XYWxSNG91TjVYWmhFMF9oaVE4U3RMTVRVWW9vSjUwaE11cGFBSnfSAXZBVV95cUxPMkNpY21RbVZ6MW84dS1mT2RScjJiZ0NzLXVzV3N2ZktKZjZyd3FCYXNsRlZIZWpjSi1rTGxGdFMxUy1WLWROMExTQ0ZhUWhPV2FsUjRvdU41WFpoRTBfaGlROFN0TE1UVVlvb0o1MGhNdXBhQUp3?oc=5",
+                "Date": "Sun, 29 Mar 2026 08:12:55 GMT",
+                "Source": "시사저널e",
+                "ParsedDate": "2026-03-29 17:12:55"
+            },
+            {
+                "Title": "중동 알루미늄 공장 잇따라 피격…공급망 타격 심각 - mbn.co.kr",
+                "Link": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxPWTVQcWRMUmM1cXlqbk5OajhJdzJHOXpOVlAyR2RtRlRwcWphalBMakwxNklSOUNDa25BN2hhbXVHOURtQ2g1SVRRZm9nX2gzb1AzR0hrWmJIdV9qNEdzd3JzNDduWmUxWWZseHFEQmpnN0tTS3JRTF9xeDhGMFdoaEluanJ1UFdvQ25J0gFMQVVfeXFMTVRQS1V3NkdlZEh5WnZROThUbFd6NVNJS0c1V19uOHVFOXRNZmJtTFVmWlRha3RTRlk4XzlxZWFKWWFKdUFWTUNJcW9veQ?oc=5",
+                "Date": "Sun, 29 Mar 2026 08:07:51 GMT",
+                "Source": "mbn.co.kr",
+                "ParsedDate": "2026-03-29 17:07:51"
+            },
+            {
+                "Title": "“중국판 ASML이 관건”…반도체 자급률 80% 내건 中 전략은 - 중앙일보",
+                "Link": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE9WZl81UkVkeHQ0cFBJOUJSNmZLOVZoT0o2RS0tQXR0djVrUlhRSnI3NXAwcVFROEpNWUJGSFRueTBxZVlHS2szaEprLXFxM1VtbkxVS0NB?oc=5",
+                "Date": "Sun, 29 Mar 2026 08:05:18 GMT",
+                "Source": "중앙일보",
+                "ParsedDate": "2026-03-29 17:05:18"
+            },
+            {
+                "Title": "“중국판 ASML이 관건”…반도체 자급률 80% 내건 中 전략은 - 미주중앙일보",
+                "Link": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE1iR1psb2EyWW5CRjA5SWJCTUk3TWt4Rk9GRld0WXNGTWlONHJmeDNUVHZSeGROdGlUWVdrdVN2UmxPa1NSY1NtX1RIM1VrejdpSzFRdnJXRm55RlJjY2RLMHhn?oc=5",
+                "Date": "Sun, 29 Mar 2026 08:05:00 GMT",
+                "Source": "미주중앙일보",
+                "ParsedDate": "2026-03-29 17:05:00"
+            },
+            {
+                "Title": "일본 반도체 전략과 도쿄 일렉트론의 역할 - 브런치",
+                "Link": "https://news.google.com/rss/articles/CBMiSkFVX3lxTE5pNWVIdk9Ma003Tmk4Rzl6ODdqbEI0NUgweS1qb29xelF6aF9nVVhaUnJyQWE2QVBWTTZCLWlIaUJMQloyLUFodllR?oc=5",
+                "Date": "Sun, 29 Mar 2026 07:30:00 GMT",
+                "Source": "브런치",
+                "ParsedDate": "2026-03-29 16:30:00"
+            },
+            {
+                "Title": "특수 분야 반도체 국산화 준비 완료…4인치 웨이퍼 수율 95% 달성 - 전자신문",
+                "Link": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE84bllpMFFjU2J2MzBZZThDclR5elJKRlp4ejZYTWFyVXQ0RjN5QWd6clRIbTY3QTBicUIwQlhGbjhpa1Z3c2lQaV9vS3pyUQ?oc=5",
+                "Date": "Sun, 29 Mar 2026 07:00:00 GMT",
+                "Source": "전자신문",
+                "ParsedDate": "2026-03-29 16:00:00"
+            },
+            {
+                "Title": "서구권 핵심 광물 공급망 형성과 호주의 역할 - 한국경제",
+                "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE4xWjY4S3R4dDFRY3hPQ1lCLTR5aGZ4MXd6WXBVczQ2S0FyNC1MSkJPRFNhYTZtR0RwUVg0c1BWWHdOUGdFQVlEeWhVSWxIU1VTRWxBVmlQVExrZ9IBVEFVX3lxTE9SR0JWR3NPQ1F6dHZ3TkZFZTl2TS1hcG9XSkI5OW5TLW8xaGF0V1ZycEUxTExRcm9DUkVyT1FDMmRTQVRvS3haT21xN0hvaUpNTVhxTA?oc=5",
+                "Date": "Sun, 29 Mar 2026 06:22:12 GMT",
+                "Source": "한국경제",
+                "ParsedDate": "2026-03-29 15:22:12"
+            },
+            {
+                "Title": "타워 반도체(TSEM), 일본 Fab 7 이전과 새로운 AI 광학 제품 출시 후 5.1% 상승 - simplywall.st",
+                "Link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxOR3NZMEU3V3V6UTJIaDdPOW9MbFFLX0lYd1dBQ0c1NTdibUVIZHZ4SnFfVS1sUkdNYXR6SURWenpLWnlnMmZMZGpZWnFZNC12azQtc2VvNWNnNUw0WDBuc0NtdjE0bjZLbFVxVlBLMm0zaXI2cEhOQ19oWDRNRGlSUG9HSmpXalRhUy1YRHZGcEtQNzktYnNycFVQSTJhNnptdTcyV2FzZnBUZ3PSAasBQVVfeXFMTkdzWTBFN1d1elEySGg3TzlvTGxRS19JWHdXQUNHNTU3Ym1FSGR2eEpxX1UtbFJHTWF0eklEVnp6S1p5ZzJmTGRqWVpxWTQtdms0LXNlbzVjZzVMNFgwbnNDbXYxNG42S2xVcVZQSzJtM2lyNnBITkNfaFg0TURpUlBvR0pqV2pUYVMtWER2RnBLUDc5LWJzcnBVUEkyYTZ6bXU3Mldhc2ZwVGdz?oc=5",
+                "Date": "Sun, 29 Mar 2026 06:05:48 GMT",
+                "Source": "simplywall.st",
+                "ParsedDate": "2026-03-29 15:05:48"
+            },
+            {
+                "Title": "안성 동신산단 농업진흥지역 해제 최종 승인 확정 - 자치안성신문",
+                "Link": "https://news.google.com/rss/articles/CBMifEFVX3lxTE5KZ01uYU05YnpHTUhxUzRGWFRWNVVfaHFDVzhGN3NteDhVS0ozLWRjcXkzWmdjWGFpVE5PTEoxdVN1TGllNk5saUlyLUk0SHRjM2JSWEJjYWV0dWQ0Q2l5UFlqQ00yZ2tldE9PSm01LTlEZTBhOEFQRGh2OWs?oc=5",
+                "Date": "Sun, 29 Mar 2026 05:56:56 GMT",
+                "Source": "자치안성신문",
+                "ParsedDate": "2026-03-29 14:56:56"
+            },
+            {
+                "Title": "패션업계 발등의 불, ‘과불화화합물 규제’ 어떻게 대응할 것인가 - 한국섬유신문",
+                "Link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTFBhMERSaEg5ekJPQnNvX0x6MVpxc0pZQ2pGbjhZY0JDRWlSSHY1LWdZYWgtcHpkVnY4MHltckNqN1Q5WXJUbzJvc2c5SEVzbHNkVERhU2tBUXJYZjlsUHMzR0xPVTZoaG9I?oc=5",
+                "Date": "Sun, 29 Mar 2026 05:52:00 GMT",
+                "Source": "한국섬유신문",
+                "ParsedDate": "2026-03-29 14:52:00"
+            },
+            {
+                "Title": "롯데케미칼, 대산공장 물적분할 후 HD현대케미칼과 합병… 사업 구조 재편 가속 - 포인트경제",
+                "Link": "https://news.google.com/rss/articles/CBMiakFVX3lxTE54MktTVUxyWUdDcUplOVc4YVBlTF9rVko1Y0tHM2Zqb21UekwwTWJXYWtSMW9Xb0g4ZXEwOXZYY3Nuck1Xd1dPSUE0VjdTaEdKWlNXWVl1VV84YXVZWFN2akQ3ekpLVHFHVWc?oc=5",
+                "Date": "Sun, 29 Mar 2026 05:39:01 GMT",
+                "Source": "포인트경제",
+                "ParsedDate": "2026-03-29 14:39:01"
+            },
+            {
+                "Title": "자급률 목표 실패했지만…다시 꺼내 든 '반도체 굴기 2.0' [차이나 워치] - 한국경제",
+                "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5XMWFtSXNHaF9xaG10VU9uRWZxVWZBQkNycVFLdE5JTnNuYktxZW1LUGthNUNKZDhBWHR2SzFreFl1cHIxNlQyeU1rOVAwUFJBV2tVcTJZQVBqUdIBVEFVX3lxTFB4WExMU0ZmeWdMMFhXVWNrZjJrRGRCSTN4b2lHTEtfNzZZOFRPUm1xTEJpZ0RyWVRJUXQ1V3oyakx5SW9UTmVhM3pUNzl3SWVMQzdkWA?oc=5",
+                "Date": "Sun, 29 Mar 2026 05:24:22 GMT",
+                "Source": "한국경제",
+                "ParsedDate": "2026-03-29 14:24:22"
+            },
+            {
+                "Title": "1년간 48% 수익 내더니 최상위 성과까지…‘반도체 빅2’ 운용 전략 통했다 - 매일경제",
+                "Link": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE00N3Z2SkRFVTN3RU5xcV9xNXBrNnplay1aaktrcVM0TEt1eUpvUkRqYzU3TEY0bV8wRHlnQVd1RmVfeWI2SlUzc1VqMkJzSWx2dHc?oc=5",
+                "Date": "Sun, 29 Mar 2026 04:25:26 GMT",
+                "Source": "매일경제",
+                "ParsedDate": "2026-03-29 13:25:26"
+            },
+            {
+                "Title": "중동 사태에 '헬륨 대란' 경고음…'K-반도체' 비용 부담 가중 - 아시아타임즈",
+                "Link": "https://news.google.com/rss/articles/CBMiXkFVX3lxTE9lNFFVTnVWaUlEdlZLTEVzNk9JNWRqR3lVbE5Ra01CU29mODdFN0oxMkRPd2J6VFB0OXBBNVFIaXcxQ1p6Qm5UZGhqRElGNGpjbkN3SENDNGxEeUZXSWc?oc=5",
+                "Date": "Sun, 29 Mar 2026 04:08:00 GMT",
+                "Source": "아시아타임즈",
+                "ParsedDate": "2026-03-29 13:08:00"
+            },
+            {
+                "Title": "급등 축하합니다. (차백신연구소, 에코플라스틱, 셀바스AI, 펄어비스, PI첨단소재, 큐리오시스, 삼양패키징, 경보제약, SK오션플랜트, 알멕, DL이앤씨, 미래에셋생명 등) - 네이버 프리미엄콘텐츠",
+                "Link": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxQOHNkYVpfc004MW5OWUlkYUhaUFNXQ3ZNOHdleV9LcEpMTFdJeVh4TU5Gc3BXUTNXWUhpUS1IMkJtV1pxc25hU0NjNzNtZkFFZzRSbktwVTZkMFRxZk5ZVjVyTjVnM0dZai1PLVVNdWxBeExnTFIzQ09DSHJDXzY3dHpVNEJycXhzRzBn?oc=5",
+                "Date": "Sun, 29 Mar 2026 03:45:00 GMT",
+                "Source": "네이버 프리미엄콘텐츠",
+                "ParsedDate": "2026-03-29 12:45:00"
+            },
+            {
+                "Title": "미 일 프랑스까지 참전, 한국 반도체 해상로… - 브런치",
+                "Link": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE1fZlNpZDFVSHJ2RzdVV19YaEttNHBlVXQ0TDdmSFR0bDg3MVFpRkRwVDh4czFiVDZqaE5kaklxdEVsYU1yRDdCb1ZscXlkQkN6R25r?oc=5",
+                "Date": "Sun, 29 Mar 2026 03:33:19 GMT",
+                "Source": "브런치",
+                "ParsedDate": "2026-03-29 12:33:19"
+            },
+            {
+                "Title": "'한 달 맞은 중동 전쟁' 산업계 비상, 반도체·항공·자동차 등 제조업 위태 - 메트로신문",
+                "Link": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE1iUXMwUDItSENCMkFyTFJkWU9zWGZvTGtGUzIweDdOdWUydlRmc2VXQV9Ra3ppSnhVNjZ3bXVIdzVCWVAtcHJ5RERIRVYwZTM2UkJCNnlQNHVUUGVWbXJSbQ?oc=5",
+                "Date": "Sun, 29 Mar 2026 03:22:03 GMT",
+                "Source": "메트로신문",
+                "ParsedDate": "2026-03-29 12:22:03"
+            }
+        ]
+    },
+    {
         "date": "2026-03-28",
         "report": "## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)\n\n오늘 반도체 산업은 인재 유출 위기, 중동발 공급망 불안정성, 그리고 미중 기술 패권 경쟁 심화라는 복합적인 도전 과제에 직면해 있습니다. 최근 일론 머스크의 한국 엔지니어들을 향한 대규모 영입 시도는 삼성과 SK하이닉스 등 국내 주요 기업들의 인력 이탈 우려를 증폭시키며, 글로벌 반도체 인력 쟁탈전이 가속화되고 있음을 명확히 보여줍니다 <a href='https://news.google.com/rss/articles/CBMieEFVX3lxTE1XZ2NaVEZWbXEyaHFJS09XSF9QSXVURTBnTDdzeXdCUm0xdGxEdV9pWEJDbkgzYVMxd2U0Z0Q4NXFhQmRBNWktd2FtZ2pvZW1LNTRmSHhMMjdILUp4aXF6N3dWQ3NQTWE4U3l2dFJoQ1lETGNwLWJJcw?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[1]</a>, <a href='https://news.google.com/rss/articles/CBMiTkFVX3lxTE9GV2cycUFrQlJfaWVYVnBfWUQ0aVVySE9zUTVqQ2tRT2pJLWlDWmZsME5hdXI4aDZqRUx1UFd5ZE12dGwxSGhaSkdQQ1ZwZw?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[2]</a>. 이러한 현상은 단순히 특정 기업의 인재 유출을 넘어, 반도체 생태계가 국력을 좌우하는 핵심 경쟁력으로 부상하면서 각국이 자본 투자, 기술 통합, 그리고 후발 주자 견제를 통해 자국 산업을 강화하려는 추세와 맞물려 있습니다 <a href='https://news.google.com/rss/articles/CBMidEFVX3lxTE1sWWtocERwT2pCRlpBQXNoRElzY2lwRTg4YW9rWUF5dlZ1Nm1mU0RvZkpwMUtXdjdKN29hZHhrZzVUNFdOVXEzbzAxZjNnN1A3MGNPRU9yTWpRYWtHcTU0ai1uVWNsWXN6VGNrVWZiYThTRHFO0gF0QVVfeXFMTWxZa2hwRHBPakJGWkFBc2hESXNjaXBFODhhb2tZQXl2VnU2bWZTRG9mSnAxS1d2N0o3b2FkeGtnNVQ0V05VcTNvMDFmM2c3UDcwY09FT3JNalFha0dxNTRqLW5VY2xZc3pUY2tVZmJhOFNEcU4?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[14]</a>. 핵심 인력의 유출은 장기적으로 연구 개발 역량 약화 및 기술 격차 발생으로 이어져, 한국 반도체 산업의 지속 가능한 성장에 중대한 위협 요인으로 작용할 수 있습니다.\n\n동시에, 중동 지역의 지정학적 불안정성은 반도체 생산에 필수적인 핵심 소재의 공급망에 심각한 차질을 야기할 수 있다는 우려를 낳고 있습니다. 특히, 호르무즈 해협 봉쇄 가능성이 제기되면서 요소 및 알루미늄 등 광범위한 산업 원자재의 아시아 공급망에 연쇄 쇼크가 발생할 수 있다는 경고가 나왔으며 <a href='https://news.google.com/rss/articles/CBMijwFBVV95cUxNQkxMN0h5a1M0WGhIRUxKb3ptNzkwYm9yTWtZaXVIbDJNVnJMd1UycldmempzN3ZNMGNLM09DX1gyV2Z4Z0hLQUVwaDF4eDJwUWlGcWZ1UFZ2aGJKcTRMVHFwNjl2eEZWT0RQbTQxOFZLZUt1eWpNS2h1QzhCT0pNSWdLUHVzQjRGX0N3aUh0Y9IBowFBVV95cUxNaGEybkplQ1NCOFpWV194WTRYdVNxUGstb1ZfaVlBb2Zhd05pU2gybFJYRkJjbXl1V1o5a2tjSlZya1JEUlhhY1VCWmFYOFd5WVAtSEZTN25DMFVjRVp4d3dtTlBZMWp0dUJtRmc5bHd5ajc2aENEc2RUTXlfVlRwejlOZmlhcEhFR09ZUG1VSEVRRXVZTmt0ZXdYUjJETzE5OVBN?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[3]</a>, 이는 반도체 제조 공정에 필수적으로 사용되는 헬륨 공급망에도 직접적인 위협으로 다가오고 있습니다 <a href='https://news.google.com/rss/articles/CBMiWkFVX3lxTE9ibnpDV29wWFRabXpkS2lrdGZZdllmRmpHMEhQRW5jcGJDejctbWp5aV9aYktrOGYxX0dEUlhldmZRdVR2ckxIWEdRNnBaZ3dOVlA3eU9SY1ZtZ9IBVEFVX3lxTE9CajM1UFlkMF9KdTFYYWx6WVBkNVJmUHN6RnZmREh0VGJQOWU3enBwaWdBek1WZjJOc21vdU9Zak0xVDZaeC10QlY3ZVBjeER5M0x0Mg?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[13]</a>, <a href='https://news.google.com/rss/articles/CBMidEFVX3lxTE9YMVlEMWIzU000cUM4RS15N0hCV3lPdENKY2Q3R2EzSklwMDlfenFGMGQxUVI1UnZwQUZFLXJjbEE5M3JIVzZTUUo0UGJpdUhtVXNudzBsSWdKeFJYS050VHBJRDdvUEpaeGhXQ1F2RlljYUZP0gF0QVVfeXFMT1gxWUQxYjNTTTRxQzhFLXk3SEJXeU90Q0pjZDdHYTNKSXAwOV96cUYwZDFRUjVSdnBBRkUtcmNsQTkzckhXNlNRSjRQYml1SG1Vc253MGxJZ0p4UlhLTnRUcElEN29QSlp4aFdDUXZGWWNhRk8?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[16]</a>. 중동발 헬륨 공급 중단 시 삼성과 SK의 반도체 냉각 시스템에 심각한 리스크가 발생할 수 있으며 <a href='https://news.google.com/rss/articles/CBMidEFVX3lxTE9YMVlEMWIzU000cUM4RS15N0hCV3lPdENKY2Q3R2EzSklwMDlfenFGMGQxUVI1UnZwQUZFLXJjbEE5M3JIVzZTUUo0UGJpdUhtVXNudzBsSWdKeFJYS050VHBJRDdvUEpaeGhXQ1F2RlljYUZP0gF0QVVfeXFMT1gxWUQxYjNTTTRxQzhFLXk3SEJXeU90Q0pjZDdHYTNKSXAwOV96cUYwZDFRUjVSdnBBRkUtcmNsQTkzckhXNlNRSjRQYml1SG1Vc253MGxJZ0p4UlhLTnRUcElEN29QSlp4aFdDUXZGWWNhRk8?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[16]</a>, 이미 중동전쟁 장기화로 인해 헬륨 공급 차질 및 핵심 소재 가격 급등 가능성이 제기되고 있습니다 <a href='https://news.google.com/rss/articles/CBMibkFVX3lxTE5qM041ZlU0S1FndDZIVnhxOXA2OHlxdVlzS19YSlE0eVZsYXlKa2ViZnAzdXpaT1FiT0JITHUwTVA4RkVWN3JIT202a1RLVHdmeWZ6aV9lcEFfdnY0S0Z0c3JReFI4T0ZMTHZkTmtR?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[26]</a>, <a href='https://news.google.com/rss/articles/CBMiYEFVX3lxTE94MkRZcHdaeE1rNmJwT2RXTXM5LWYtdDNBcHdmaVExLWhwNXNuT1JmcUJ6TWpQSEppWXUxak1JbXJwb01BLXN6dWtzNGFfOGFPRkk4ZC03NGlwaml5bUVaWdIBYEFVX3lxTE94MkRZcHdaeE1rNmJwT2RXTXM5LWYtdDNBcHdmaVExLWhwNXNuT1JmcUJ6TWpQSEppWXUxak1JbXJwb01BLXN6dWtzNGFfOGFPRkk4ZC03NGlwaml5bUVaWQ?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[30]</a>, <a href='https://news.google.com/rss/articles/CBMiT0FVX3lxTE1rRlpaZXhQWHJ5bTgwYkNWLVdLS1d3V2VIekNjQnRoZktlVzZ2UWNpTmhOcmZ3S2V1Rkc0cGVrVHpqSzdudFFIckFWOVp5S2s?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[34]</a>. 산업부는 경제단체들과 긴급회의를 소집하여 공급망 및 에너지 대응 방안을 논의하는 등 <a href='https://news.google.com/rss/articles/CBMic0FVX3lxTFBNRVFoNGJXRXdpbnd5Y2JkZ0VKQXJNMHRGTXhLNkdMVEdZbE5iczExQm9QV3I1VUJGdDlMWDFmSDQ2R2taS2lTT3ZNWFRIS0JTc1IyMmkzMExfdlNnSXg1eFhtaFdwZDZfcTN4VzRkaEN2TGM?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[9]</a>, <a href='https://news.google.com/rss/articles/CBMia0FVX3lxTE5WVHpHOTEzS1QzMEtxN0x2UnNsOGYwUnlzOEJudENCQVVQTEN3dDRBMFdwdGZ0bW4zRWljaGtESlhrSUJ0VlBVTmowa2tLaUdmRDZkR1ZzbGU1OWNha19NOGFGc3NTY3FJLTRB?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[36]</a> 이러한 위협에 선제적으로 대응하기 위한 움직임을 보이고 있으나, 중소기업을 중심으로 한 피해 사례는 계속 증가하고 있습니다 <a href='https://news.google.com/rss/articles/CBMiX0FVX3lxTE5pN1FpYndDa0R1YWcxZFpxWjNRcTRDYWdZUk00NVdMREhPUFppa0YyZTROZE0wekh4M0NHU1ZPY3dPMzFNYmlUbVRfZm41TXhsZHVJT3JzZ1B6R2hUX25R?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[17]</a>. 이러한 상황은 반도체 산업의 전반적인 생산 비용 상승과 공급 안정성 저해로 이어져, 전 세계적인 반도체 슈퍼사이클 기조에도 불확실성을 더할 수 있습니다 <a href='https://news.google.com/rss/articles/CBMiVEFVX3lxTE5wV3pzV1QtT05jS0p0eFREaFd5NjVzdFk4Mkt2NDBGYTE2bnFvZmJWWU5PRWZpNmtZUEh0N2l5NzlCSUVhYkNzWUZlYTRDbnVWS2FQYg?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[12]</a>.\n\n더불어, 미중 간 기술 패권 경쟁은 중국의 SMIC가 이란 군부에 칩 제조 기술 및 반도체 제조 장비를 공급했다는 의혹이 제기되며 새로운 변수로 부상했습니다 <a href='https://news.google.com/rss/articles/CBMiY0FVX3lxTE9rZTBROUJMMkloUUJuNlJKMFRSVXRSamRrYVp6OFh4ZkdlX005N2pHVUFUSURTZmxvSmVlNVRvUGtCbjFGWEpUWFYyV3lJSGVmbW0xeGhYLXppcW1vYTVCQ25kONIBY0FVX3lxTE9rZTBROUJMMkloUUJuNlJKMFRSVXRSamRrYVp6OFh4ZkdlX005N2pHVUFUSURTZmxvSmVlNVRvUGtCbjFGWEpUWFYyV3lJSGVmbW0xeGhYLXppcW1vYTVCQ25kOA?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[5]</a>, <a href='https://news.google.com/rss/articles/CBMiVkFVX3lxTE9RVllzdGZ2dGsxNkpWbWkxanYzZEtGWjhjUmpDV3I4aGp3Y1hsUUo5eGpXUi1NR0Q2bW1VbW9VM1czSjBLSEtUZ2xyRWNTTUVrdmYwdXJn?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[10]</a>, <a href='https://news.google.com/rss/articles/CBMiggFBVV95cUxNS2JPUllrQTNtY2J3YTBrem5SWXZfSzFFVEtsWVdQQVEyUHRuZXR0RUtsNV9GUTNTWGZ6bFdMM0twZ1BrSk56d3FrRk5raThnTUZjV2NubTdlNmtZZ0w3bTNfcVk1b3NnYUpGcmh4VzVORmtLbWJjUjNuQWNXMmoyUEl3?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[21]</a>. 중국은 해당 의혹을 '가짜 뉴스'로 일축하고 있으나 <a href='https://news.google.com/rss/articles/CBMibkFVX3lxTFBUWFVCa0I4Uk95YmpDRjlTOHBfM3dxcTZtV3pEMWF0azJ1eXA5NVRFT3FUVWxiUk16QnNqdHlqcmNJZmYzWWp4Qjh5V3BfNXkxNklkWk1OblF0YkZTYkV0bGtYUEhST2pyeVQ3VG1B?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[15]</a>, 미국 국무부가 '팍스 실리카' 펀드를 출범하며 자국 중심의 반도체 생태계 강화를 추진하는 등 <a href='https://news.google.com/rss/articles/CBMieEFVX3lxTE1xODByUDdhTFFNelVKLS05NTZLaXdiT05JWGk3emI3dDQ4UWVheHFyclZWNmVmRFZrdUwzbk1aa3hxaFNKZk1GV2dQdExHdllDZ1JWdHBpZzZCODE1TktTenpoMnRUdDdFNTAtRUdsMVR3LV80TXhHYdIBeEFVX3lxTE1xODByUDdhTFFNelVKLS05NTZLaXdiT05JWGk3emI3dDQ4UWVheHFyclZWNmVmRFZrdUwzbk1aa3hxaFNKZk1GV2dQdExHdllDZ1JWdHBpZzZCODE1TktTenpoMnRUdDdFNTAtRUdsMVR3LV80TXhHYQ?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[18]</a>, 반도체 기술의 지정학적 민감성과 국가 안보적 중요성이 더욱 부각되고 있습니다. 이러한 갈등은 미국과 동맹국들의 대중국 반도체 수출 통제 강화로 이어질 수 있으며, 이는 특정 기술 및 장비에 대한 접근성을 제한하고 글로벌 반도체 공급망 재편을 더욱 가속화할 잠재력을 내포하고 있습니다. 대만 역시 자국의 반도체 기술 보호를 위한 국제 협력을 강화하며 한국에 대한 과제를 던지고 있습니다 <a href='https://news.google.com/rss/articles/CBMiTEFVX3lxTE5wZm9CZ3Fxc2lCRUw1TjBJMHU4TlVSaWVTUVRPazFyXzY3OUZ4ejg3b04zOUVEVjdIS2ZfTGU5emRrcEUwbnljeHZ0UHQ?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[27]</a>.\n\n## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)\n\n최근 반도체 산업에서는 미래 기술 주도권 확보를 위한 소재 및 장비 기술 개발과 함께 공급망 다변화 노력이 집중적으로 이루어지고 있습니다. 특히, AI 반도체 패키징의 핵심으로 부상하고 있는 '꿈의 기판' 유리기판 기술은 높은 난이도로 인해 넘어야 할 산이 많지만 <a href='https://news.google.com/rss/articles/CBMivgFBVV95cUxPa1h0RnJjakpXaFlBMUJoY3hndVkxekhONi1tZ1FOcllIWEUwVjlxLXh6MmRPRUhUSlRCZGJPT0RhY2ZZdHhUemZRVG5xdzVvUmREdy0xdnN6QmplWml2ZjRLb3VIWXhWTmJsUG1zQVFhSWxLUlprc0NhWHBSbkkza1g2THBpRUZReUpOLWFfeFVUeEtVRlJILWtUZkVXUERtb0M4blRmdW5NSWJZU3BqLURPeE1pMDcxUU9IM1J3?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[6]</a>, 나인테크가 유리기판용 구리 충진 장비 파일럿 설계를 완료하며 상용화 가능성에 대한 기대감을 높이고 있습니다 <a href='https://news.google.com/rss/articles/CBMiZkFVX3lxTE1CRFJaZEcwTEFEN3RKRlhDUEJzZHFLMngtZ1BXaDNTeFM5RDZTQWpGaldhLVpIai02UnBMQUNqM0RHSmg5UzhmYUZYN05iQmZvSzFjQW1RNVd6bTNZMVpaaFNQeVpaUQ?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[11]</a>, <a href='https://news.google.com/rss/articles/CBMiZ0FVX3lxTE1DVkRFTk54T0hIREpaZFNUb3hYSGpFb0hGRVI3Z096UGZBUnZISUpneXViLW5LdmtnbTFoN0ZsYkpBWW04LWpiSWNvUVB6SVRDa0g0dTRKOTk5M3lmam9UZjh4OGJQS1U?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[33]</a>. 이는 차세대 패키징 기술 발전의 중요한 이정표가 될 것으로 전망됩니다. 한편, 전력 효율이 중요한 전기차 및 산업용 전력 반도체 분야에서는 일본 기업인 롬, 도시바, 미쓰비시가 '전력반도체 3각 연합'을 발표하며 기술 및 시장 지배력 강화를 꾀하고 있습니다 <a href='https://news.google.com/rss/articles/CBMiakFVX3lxTFBKU2EyUFhEZ0cwUjViY2hTSWxYMmRfVzN1dERtbDh5WEhuRkJ3aVJPcHNKMjlCcmZSSTVEcUJqOFdFbklNYi1URzl6cXdCdXFPMGZHbkhYUkdFVUpRWVFiajl1MXRzV3BGQ2c?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[7]</a>, <a href='https://news.google.com/rss/articles/CBMiYEFVX3lxTFB1SmRaU2pEWWlPN3pEUWgtWGdEcXRlM0V1bDlxTXFpV3VxMGtwam8xUlBOVWQya3pJbDFiUnkwdVAtVVZjYU9iTjRMdnZuRDZGZV9BbEUyX1FOZWNQVDdTRQ?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[8]</a>. 이러한 연합은 특정 기술 분야에서의 국경을 초월한 협력 모델을 제시하며, 전력 반도체 시장의 경쟁 구도를 변화시킬 가능성을 보여줍니다.\n\n공급망 안정화를 위한 움직임도 활발합니다. OCI홀딩스는 반도체 슈퍼사이클에 대응하고 첨단소재 중심으로 조직을 개편하며, 반도체 및 배터리 관련 사업 대응을 강화하고 있습니다 <a href='https://news.google.com/rss/articles/CBMiVEFVX3lxTE5wV3pzV1QtT05jS0p0eFREaFd5NjVzdFk4Mkt2NDBGYTE2bnFvZmJWWU5PRWZpNmtZUEh0N2l5NzlCSUVhYkNzWUZlYTRDbnVWS2FQYg?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[12]</a>, <a href='https://news.google.com/rss/articles/CBMigwFBVV95cUxNRjVBalNUMkhqY3NubXM1TGxDSFdCcHRvalBwcGJVLS0tb0pKS05PTjcxSERZTmNuVWRaYUozRmFtU2RfcGlZU1JjSDJPU0tsSVREcTVMZU5ZYnh3VmlsMkdZMkdoT2tPREpkdUpGU0FpR3l3UDJnZFdxZXA2bU05elRwaw?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[31]</a>, <a href='https://news.google.com/rss/articles/CBMibkFVX3lxTE8ybVJhTnE4OXVmcnFyc1ozVHZZbzJoTjFNV2V4eFBKZ1VMcDJoblhDdW1PbEZaVFhmMWFxT3BpWjFCODBZVE5XVjV5NTNjVU5yOUpEcTR0Q3NiX3dnZDNKWE9iVFdnVjNUOHQxdVBB?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[37]</a>. 삼성SDI는 LFP 양극재 공급망을 전방위적으로 확장하기 위해 지분 투자를 단행했으며 <a href='https://news.google.com/rss/articles/CBMiZkFVX3lxTE1pdXp1TUxGeXpUN2Y0ak1qc0FweVB4XzBIMnc4ci1lQU9PNUpfZ3dzNGY4eHNER0F4cFFtdDdJSjRlVGVjNEJVbnh0b1JxeENIR0lzSGh1bF82WlFKUmgwRFFJUlZXUQ?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[32]</a>, 포스코인터내셔널은 전기차 핵심 소재인 중희토류의 글로벌 공급망 구축에 박차를 가하고 <a href='https://news.google.com/rss/articles/CBMiQ0FVX3lxTFBhb0pCblVId2pGSE5qNjNwNDRRRWU4LTRtRWVDdVJ5SWsxdEZua0w2Z2ZyeWU5d21BMXltWjYydGtzUE0?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[20]</a>. 포스코는 산업가스 입지를 확장하여 대외 변동성에 선제적으로 대응하고 있습니다 <a href='https://news.google.com/rss/articles/CBMib0FVX3lxTE9RU1BTY3BicjhidnhVQjVrSnVJdHFLX2d5R2szbHVpaHc3ajZvSWN4WGQyTjE0S3o4ek02dDVxVGdudVJNdDYyN0hKYVVTakJvNjRsMTREbEU1eEcySVZ6TERGY0poNmlKSFZSd1E2Z9IBb0FVX3lxTE9RU1BTY3BicjhidnhVQjVrSnVJdHFLX2d5R2szbHVpaHc3ajZvSWN4WGQyTjE0S3o4ek02dDVxVGdudVJNdDYyN0hKYVVTakJvNjRsMTREbEU1eEcySVZ6TERGY0poNmlKSFZSd1E2Zw?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[35]</a>. 이와 같은 노력은 주요 소재의 특정 지역 의존도를 낮추고 안정적인 수급 기반을 마련하려는 전략적 움직임으로 해석됩니다. 또한, 유럽 연합(EU)의 PFAS(과불화화합물) 규제가 3월 말 발표될 예정이며 <a href='https://news.google.com/rss/articles/CBMiYEFVX3lxTE1teTR3bU9lRGV3eGd2RGZqREZucVhrZDgxbFRQeVlmZTNYNDhYekM1emF0WjZwMXdaME9GempwRXZWYVVkVW9XRG1YS2pDbndjRTAxb2VPWFJvLXFlYTdTQg?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[22]</a>, <a href='https://news.google.com/rss/articles/CBMiY0FVX3lxTE1waW9yZlJMbVliSVpfOFVnMm9zWXMtSzNuaS0xNnFBVVZiRFYweU1iLUdXcnVqRGNKRnRZSHJtYkZhRGFOcW42TzlvdGwxcmQ4TnR0N3NxYzBwRnFITUstQVRPaw?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[23]</a>, 이는 반도체 제조 공정에서 사용되는 특정 화학물질의 레시피 전환 및 PFAS-free 인증 필요성을 야기하며 <a href='https://news.google.com/rss/articles/CBMiYEFVX3lxTE1teTR3bU9lRGV3eGd2RGZqREZucVhrZDgxbFRQeVlmZTNYNDhYekM1emF0WjZwMXdaME9GempwRXZWYVVkVW9XRG1YS2pDbndjRTAxb2VPWFJvLXFlYTdTQg?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[22]</a>, <a href='https://news.google.com/rss/articles/CBMiY0FVX3lxTE1waW9yZlJMbVliSVpfOFVnMm9zWXMtSzNuaS0xNnFBVVZiRFYweU1iLUdXcnVqRGNKRnRZSHJtYkZhRGFOcW42TzlvdGwxcmQ4TnR0N3NxYzBwRnFITUstQVRPaw?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[23]</a>, 환경 규제가 소재 산업에 미치는 영향력을 다시금 상기시키고 있습니다. PFAS는 '영원한 화학물질'로 불리며 인체에 유해한 영향을 미칠 수 있다는 우려가 제기되고 있습니다 <a href='https://news.google.com/rss/articles/CBMiXEFVX3lxTE5mZWhDZl95clk0dm1wVnIyLVYtMUVZc0VmWldkQlIwaGM2RWgwclZnaXF4MlA1M3ZMTzF2S0VyUG9XY1FBaUNKb0NZRmdqaVpkQkR3a3hVd2lQUW8w?oc=5' target='_blank' class='text-blue-600 font-bold hover:underline'>[40]</a>.\n\n## 💡 Analyst's View (시사점)\n\n오늘의 뉴스는 글로벌 반도체 산업이 단순한 기술 경쟁을 넘어, 인재 확보, 핵심 소재 공급망 안정성, 그리고 지정학적 리스크 관리가 복합적으로 작용하는 '총력전'의 시대에 진입했음을 시사합니다. 특히, 기술 진보만큼이나 '사람'과 '재료'라는 본질적 요소의 안정적 확보가 기업과 국가의 생존 및 경쟁력을 좌우하는 핵심 관전 포인트가 될 것입니다.\n\n## 📊 Executive Summary (시장 총평)\n\n오늘의 반도체 시장은 인재 유출 가속화와 중동발 헬륨 공급망 불안정성이라는 이중고에 직면해 있습니다. 유리기판 기술과 전력 반도체 연합과 같은 기술적 진보는 지속되고 있지만, 미중 기술 갈등 심화와 PFAS 규제 등 지정학적, 환경적 요인들이 소재 공급망에 중대한 영향을 미치고 있습니다. 이는 기업들이 인력 유지와 핵심 소재 확보를 최우선 전략으로 삼아 능동적으로 대응해야 할 시점임을 분명히 보여줍니다.",
         "articles": [
