@@ -2,18 +2,25 @@ import streamlit as st
 import pandas as pd
 import requests
 import urllib3
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta, time as dt_time
+from datetime import datetime, timedelta, time as dt_time, timezone
 import json
 import os
 import re
 import time
+import logging
 import yfinance as yf
 from github import Github
 import concurrent.futures
 
-# SSL 경고 무시
+# ==========================================
+# 로깅 설정
+# ==========================================
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger(__name__)
+
+# SSL 경고 무시 (Google News RSS 수집 전용)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==========================================
@@ -25,59 +32,463 @@ CATEGORIES = ["Daily Report", "P&C 소재", "EDTW 소재", "PKG 소재"]
 KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
 
+# [수정] api_key / search_days 전역 기본값 선언 → NameError 방지
+api_key = ""
+search_days = 3
+
 st.markdown("""
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-        .stApp { background-color: #F8FAFC; }
-        .report-box { background-color: #FFFFFF; padding: 50px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; line-height: 1.8; color: #334155; font-size: 16px; }
-        .news-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 10px; }
-        .news-title { font-size: 16px !important; font-weight: 700 !important; color: #111827 !important; text-decoration: none; display: block; margin-bottom: 6px; }
-        .news-meta { font-size: 12px !important; color: #94A3B8 !important; }
-        .stock-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 5px 0; border-bottom: 1px dashed #e2e8f0; }
-        .stock-name { font-weight: 600; color: #334155; }
-        .stock-price { font-family: 'Consolas', monospace; font-weight: 600; font-size: 14px; }
-        .up-color { color: #DC2626 !important; }
-        .down-color { color: #2563EB !important; }
-        .flat-color { color: #64748B !important; }
-        .stock-header { font-size: 13px; font-weight: 700; color: #475569; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px; }
-        .ref-link { font-size: 0.9em; color: #555; text-decoration: none; display: block; margin-bottom: 6px; padding: 5px; border-radius: 4px; transition: background 0.2s; }
-        section[data-testid="stSidebar"] { background-color: #FFFFFF; border-right: 1px solid #E2E8F0; }
-        div.stButton > button { border-radius: 8px; font-weight: 600; transition: all 0.2s ease-in-out; }
-        .streamlit-expanderHeader { background-color: #FFFFFF; border-radius: 8px; }
-        a { text-decoration: none; }
-    </style>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Design Tokens ────────────────────────────────── */
+:root {
+    --bg:          #F5F5F3;
+    --bg-2:        #EBEBЕ8;
+    --surface:     #FFFFFF;
+    --surface-2:   #F9F9F7;
+    --border:      #E4E4E0;
+    --border-2:    #D0D0CA;
+    --text-primary:   #18181B;
+    --text-secondary: #71717A;
+    --text-muted:     #A1A1AA;
+    --accent:      #2563EB;
+    --accent-soft: #EFF6FF;
+    --up:          #DC2626;
+    --down:        #2563EB;
+    --flat:        #71717A;
+    --radius:      10px;
+    --radius-lg:   16px;
+    --shadow:      0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:   0 4px 16px rgba(0,0,0,0.07);
+    --transition:  0.18s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="dark"] {
+    --bg:          #0F0F11;
+    --bg-2:        #18181B;
+    --surface:     #1C1C1F;
+    --surface-2:   #232327;
+    --border:      #2A2A2F;
+    --border-2:    #36363D;
+    --text-primary:   #FAFAFA;
+    --text-secondary: #A1A1AA;
+    --text-muted:     #52525B;
+    --accent:      #3B82F6;
+    --accent-soft: #1E3A5F;
+    --up:          #F87171;
+    --down:        #60A5FA;
+    --flat:        #71717A;
+    --shadow:      0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md:   0 4px 20px rgba(0,0,0,0.4);
+}
+
+/* ── Base Reset ───────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body,
+[class*="css"],
+.stApp,
+.stApp > div,
+[data-testid="stAppViewContainer"] {
+    font-family: 'DM Sans', sans-serif !important;
+    background-color: var(--bg) !important;
+    color: var(--text-primary) !important;
+    transition: background-color var(--transition), color var(--transition);
+}
+a { text-decoration: none; color: inherit; }
+
+/* ── Sidebar ──────────────────────────────────────── */
+section[data-testid="stSidebar"] {
+    background-color: var(--surface) !important;
+    border-right: 1px solid var(--border) !important;
+    transition: background-color var(--transition), border-color var(--transition);
+}
+section[data-testid="stSidebar"] * {
+    color: var(--text-primary) !important;
+}
+section[data-testid="stSidebar"] .stRadio label,
+section[data-testid="stSidebar"] .stExpander {
+    background: transparent !important;
+}
+section[data-testid="stSidebar"] [data-testid="stExpander"] {
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+}
+
+/* ── App Logo / Branding ──────────────────────────── */
+.si-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+.si-logo-mark {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; line-height: 1;
+    flex-shrink: 0;
+}
+.si-logo-text {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-primary) !important;
+}
+.si-logo-sub {
+    font-size: 11px;
+    color: var(--text-muted) !important;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* ── Dark Mode Toggle ─────────────────────────────── */
+.dm-toggle-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    margin-bottom: 4px;
+}
+.dm-label {
+    font-size: 13px;
+    color: var(--text-secondary) !important;
+    font-weight: 500;
+}
+.dm-toggle {
+    position: relative;
+    width: 40px; height: 22px;
+    cursor: pointer;
+}
+.dm-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.dm-slider {
+    position: absolute; inset: 0;
+    background: var(--border-2);
+    border-radius: 999px;
+    transition: background var(--transition);
+}
+.dm-slider::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: white;
+    transition: transform var(--transition);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.dm-toggle input:checked + .dm-slider { background: var(--accent); }
+.dm-toggle input:checked + .dm-slider::after { transform: translateX(18px); }
+
+/* ── Status Badge ─────────────────────────────────── */
+.si-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 999px;
+    background: #D1FAE5; color: #065F46;
+}
+[data-theme="dark"] .si-badge { background: #064E3B; color: #6EE7B7; }
+
+/* ── Page Header ──────────────────────────────────── */
+.si-page-header {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+.si-page-title {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+}
+.si-page-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* ── Info Banner ──────────────────────────────────── */
+.si-banner {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(37,99,235,0.15);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--accent) !important;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+[data-theme="dark"] .si-banner {
+    background: rgba(59,130,246,0.08);
+    border-color: rgba(59,130,246,0.2);
+}
+
+/* ── Report Card ──────────────────────────────────── */
+.si-report-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 40px 44px;
+    line-height: 1.85;
+    font-size: 15px;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+    margin-bottom: 24px;
+    transition: background var(--transition), border-color var(--transition);
+}
+.si-report-card h2 {
+    font-size: 16px; font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin: 28px 0 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+.si-report-card h3 {
+    font-size: 14px; font-weight: 600;
+    color: var(--text-secondary);
+    margin: 20px 0 6px;
+}
+.si-report-card p { margin: 0 0 14px; }
+
+/* ── News Card ────────────────────────────────────── */
+.si-news-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+.si-news-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
+}
+.si-news-source {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--accent) !important;
+    margin-bottom: 5px;
+}
+.si-news-title {
+    font-size: 14px; font-weight: 500;
+    color: var(--text-primary) !important;
+    line-height: 1.5;
+    display: block;
+}
+.si-news-title:hover { color: var(--accent) !important; }
+.si-news-date {
+    font-size: 11px; color: var(--text-muted) !important;
+    margin-top: 4px;
+}
+
+/* ── Stock Widget ─────────────────────────────────── */
+.si-stock-section {
+    margin-top: 14px;
+}
+.si-stock-group-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted) !important;
+    padding: 10px 0 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+}
+.si-stock-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    transition: background var(--transition);
+}
+.si-stock-row:last-child { border-bottom: none; }
+.si-stock-name {
+    font-size: 12px; font-weight: 500;
+    color: var(--text-secondary) !important;
+}
+.si-stock-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; font-weight: 500;
+    text-align: right;
+}
+.si-stock-change { font-size: 11px; margin-left: 6px; }
+.up-color   { color: var(--up)   !important; }
+.down-color { color: var(--down) !important; }
+.flat-color { color: var(--flat) !important; }
+
+/* ── Archive Entry ────────────────────────────────── */
+.si-archive-ref {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-secondary) !important;
+    transition: color var(--transition);
+}
+.si-archive-ref:hover { color: var(--accent) !important; }
+.si-archive-ref:last-child { border-bottom: none; }
+
+/* ── Keyword Tag ──────────────────────────────────── */
+div.stButton > button {
+    font-family: 'DM Sans', sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    border-radius: 6px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--surface-2) !important;
+    color: var(--text-primary) !important;
+    transition: all var(--transition) !important;
+    padding: 4px 10px !important;
+}
+div.stButton > button:hover {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    background: var(--accent-soft) !important;
+}
+div.stButton > button[kind="primary"] {
+    background: var(--accent) !important;
+    color: #fff !important;
+    border-color: var(--accent) !important;
+}
+div.stButton > button[kind="primary"]:hover {
+    background: #1D4ED8 !important;
+    border-color: #1D4ED8 !important;
+    color: #fff !important;
+}
+
+/* ── Inputs ───────────────────────────────────────── */
+.stTextInput input, .stTextArea textarea {
+    font-family: 'DM Sans', sans-serif !important;
+    background: var(--surface) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    font-size: 13px !important;
+    transition: border-color var(--transition) !important;
+}
+.stTextInput input:focus, .stTextArea textarea:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1) !important;
+}
+
+/* ── Expander ─────────────────────────────────────── */
+[data-testid="stExpander"] {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    transition: background var(--transition) !important;
+}
+.streamlit-expanderHeader {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: var(--text-secondary) !important;
+    background: transparent !important;
+}
+
+/* ── Alerts / Status ──────────────────────────────── */
+.stAlert, [data-testid="stNotification"] {
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    color: var(--text-primary) !important;
+    font-size: 13px !important;
+}
+
+/* ── Divider ──────────────────────────────────────── */
+hr { border-color: var(--border) !important; margin: 16px 0 !important; }
+
+/* ── Slider ───────────────────────────────────────── */
+.stSlider [data-testid="stTickBar"] { color: var(--text-muted) !important; }
+
+/* ── Scrollbar ────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 999px; }
+
+/* ── Misc ─────────────────────────────────────────── */
+.block-container { padding-top: 28px !important; padding-bottom: 40px !important; }
+[data-testid="stStatusWidget"] { display: none !important; }
+</style>
+
+<script>
+// Dark mode persistence via localStorage
+(function() {
+    const saved = localStorage.getItem('si_dark_mode');
+    if (saved === 'true') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+})();
+
+function toggleDarkMode(checked) {
+    if (checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('si_dark_mode', 'true');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('si_dark_mode', 'false');
+    }
+}
+</script>
 """, unsafe_allow_html=True)
 
+# ==========================================
 # 주식 티커
+# [수정] "Qnity": "Q" → "Q"는 IQVIA 티커와 충돌. 실제 DuPont 분사 티커로 교체 필요
+# 임시로 제거하고 주석 처리
+# ==========================================
 STOCK_CATEGORIES = {
-    "🏭 Chipmakers": {"SK Hynix": "000660.KS", "Samsung": "005930.KS", "Micron": "MU", "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"},
-    "🧠 AI ": {"NVIDIA": "NVDA", "Apple": "AAPL", "Alphabet": "GOOGL", "Microsoft": "MSFT", "Meta": "META", "Amazon": "AMZN", "Tesla": "TSLA", "IBM": "IBM", "Oracle": "ORCL", "Broadcom": "AVGO"},
-    "🧪 Materials": {"Soulbrain": "357780.KQ", "Dongjin": "005290.KQ", "Hana Mat": "166090.KQ", "Wonik Mat": "104830.KQ", "TCK": "064760.KQ", "Foosung": "093370.KS", "PI Adv": "178920.KS", "ENF": "102710.KQ", "TEMC": "425040.KQ", "YC Chem": "112290.KQ", "Samsung SDI": "006400.KS", "Shin-Etsu": "4063.T", "Sumco": "3436.T", "Merck": "MRK.DE", "Entegris": "ENTG", "TOK": "4186.T", "Resonac": "4004.T", "Air Prod": "APD", "Linde": "LIN", "Qnity": "Q", "Nissan Chem": "4021.T", "Sumitomo": "4005.T"},
-    "⚙️ Equipment": {"ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T", "KLA": "KLAC", "Advantest": "6857.T", "Hitachi HT": "8036.T", "Hanmi": "042700.KS", "Wonik IPS": "240810.KQ", "Jusung": "036930.KQ", "EO Tech": "039030.KQ", "Techwing": "089030.KQ", "Eugene": "084370.KQ", "PSK": "319660.KQ", "Zeus": "079370.KQ", "Top Eng": "065130.KQ"}
+    "🏭 Chipmakers": {
+        "SK Hynix": "000660.KS", "Samsung": "005930.KS", "Micron": "MU",
+        "TSMC": "TSM", "Intel": "INTC", "AMD": "AMD", "SMIC": "0981.HK"
+    },
+    "🧠 AI": {
+        "NVIDIA": "NVDA", "Apple": "AAPL", "Alphabet": "GOOGL", "Microsoft": "MSFT",
+        "Meta": "META", "Amazon": "AMZN", "Tesla": "TSLA", "IBM": "IBM",
+        "Oracle": "ORCL", "Broadcom": "AVGO"
+    },
+    "🧪 Materials": {
+        "Soulbrain": "357780.KQ", "Dongjin": "005290.KQ", "Hana Mat": "166090.KQ",
+        "Wonik Mat": "104830.KQ", "TCK": "064760.KQ", "Foosung": "093370.KS",
+        "PI Adv": "178920.KS", "ENF": "102710.KQ", "TEMC": "425040.KQ",
+        "YC Chem": "112290.KQ", "Samsung SDI": "006400.KS", "Shin-Etsu": "4063.T",
+        "Sumco": "3436.T", "Merck": "MRK.DE", "Entegris": "ENTG", "TOK": "4186.T",
+        "Resonac": "4004.T", "Air Prod": "APD", "Linde": "LIN",
+        # "Qnity": "Q",  # [수정] "Q"는 IQVIA 티커와 충돌 → 실제 티커 확인 후 재추가 필요
+        "Nissan Chem": "4021.T", "Sumitomo": "4005.T"
+    },
+    "⚙️ Equipment": {
+        "ASML": "ASML", "AMAT": "AMAT", "Lam Res": "LRCX", "TEL": "8035.T",
+        "KLA": "KLAC", "Advantest": "6857.T", "Hitachi HT": "8036.T",
+        "Hanmi": "042700.KS", "Wonik IPS": "240810.KQ", "Jusung": "036930.KQ",
+        "EO Tech": "039030.KQ", "Techwing": "089030.KQ", "Eugene": "084370.KQ",
+        "PSK": "319660.KQ", "Zeus": "079370.KQ", "Top Eng": "065130.KQ"
+    }
 }
 
 # ==========================================
 # 1. 데이터 관리 (GitHub Auto-Sync)
 # ==========================================
 def sync_to_github(filename, content_data):
-    if "GITHUB_TOKEN" not in st.secrets or "REPO_NAME" not in st.secrets: return False
+    if "GITHUB_TOKEN" not in st.secrets or "REPO_NAME" not in st.secrets:
+        return False
     try:
         g = Github(st.secrets["GITHUB_TOKEN"])
         repo = g.get_repo(st.secrets["REPO_NAME"])
-        
-        # [핵심] JSON 저장 시 datetime 객체가 있으면 에러 발생 -> default=str로 방어
         content_str = json.dumps(content_data, ensure_ascii=False, indent=4, default=str)
-        
         try:
             contents = repo.get_contents(filename)
             repo.update_file(contents.path, f"Update {filename}", content_str, contents.sha)
-        except:
+        except Exception:
             repo.create_file(filename, f"Create {filename}", content_str)
         return True
     except Exception as e:
-        print(f"GitHub Error: {e}")
+        logger.warning(f"GitHub sync error [{filename}]: {e}")
         return False
 
 def load_keywords():
@@ -89,23 +500,27 @@ def load_keywords():
             contents = repo.get_contents(KEYWORD_FILE)
             loaded = json.loads(contents.decoded_content.decode("utf-8"))
             return loaded
-        except: pass
+        except Exception as e:
+            logger.warning(f"GitHub keyword load error: {e}")
     if os.path.exists(KEYWORD_FILE):
         try:
             with open(KEYWORD_FILE, 'r', encoding='utf-8') as f:
                 loaded = json.load(f)
             for k, v in loaded.items():
-                if k in data: data[k] = v
-        except: pass
-    if not data.get("Daily Report"): 
-        data["Daily Report"] = ["반도체", "삼성전자", "SK하이닉스"] 
+                if k in data:
+                    data[k] = v
+        except Exception as e:
+            logger.warning(f"Local keyword load error: {e}")
+    if not data.get("Daily Report"):
+        data["Daily Report"] = ["반도체", "삼성전자", "SK하이닉스"]
     return data
 
 def save_keywords(data):
     try:
         with open(KEYWORD_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
-    except: pass
+    except Exception as e:
+        logger.warning(f"Local keyword save error: {e}")
     sync_to_github(KEYWORD_FILE, data)
 
 def load_daily_history_from_source():
@@ -115,14 +530,19 @@ def load_daily_history_from_source():
             repo = g.get_repo(st.secrets["REPO_NAME"])
             contents = repo.get_contents(HISTORY_FILE)
             return json.loads(contents.decoded_content.decode("utf-8"))
-        except: pass
+        except Exception as e:
+            logger.warning(f"GitHub history load error: {e}")
     if os.path.exists(HISTORY_FILE):
         try:
             with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except: return []
+        except Exception as e:
+            logger.warning(f"Local history load error: {e}")
     return []
 
+# ==========================================
+# Session State 초기화
+# ==========================================
 if 'news_data' not in st.session_state:
     st.session_state.news_data = {cat: [] for cat in CATEGORIES}
 if 'keywords' not in st.session_state:
@@ -131,132 +551,169 @@ if 'daily_history' not in st.session_state:
     st.session_state.daily_history = load_daily_history_from_source()
 
 def save_daily_history(new_report_data):
-    # 세션 업데이트
     current_history = [h for h in st.session_state.daily_history if h['date'] != new_report_data['date']]
     current_history.insert(0, new_report_data)
     st.session_state.daily_history = current_history
-    
-    # 로컬 저장 (default=str 추가로 안전장치)
     try:
         with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
             json.dump(current_history, f, ensure_ascii=False, indent=4, default=str)
-    except: pass
-    
-    # GitHub 저장
+    except Exception as e:
+        logger.warning(f"Local history save error: {e}")
     sync_to_github(HISTORY_FILE, current_history)
 
 # ==========================================
-# 주식 데이터 수집 (정확도 개선 적용)
+# 주식 데이터 수집
 # ==========================================
 def fetch_single_stock(name, symbol):
     try:
         ticker = yf.Ticker(symbol)
-        
-        # 1. 5일치 데이터를 확보하여 가장 안정적인 전일 종가 세팅
         hist_5d = ticker.history(period="5d")
-        if hist_5d.empty: return name, None
-        
-        # 데이터가 1일치밖에 없으면 현재가를 전일종가로 사용, 아니면 확실한 전일 종가 사용
+        if hist_5d.empty:
+            return name, None
+
         prev = hist_5d['Close'].iloc[-2] if len(hist_5d) >= 2 else hist_5d['Close'].iloc[-1]
         current = hist_5d['Close'].iloc[-1]
-        
-        # 2. 장중 실시간 시세를 위해 가장 최신 거래가(2분봉) 덮어쓰기 시도
+
+        # 장중 실시간 시세 덮어쓰기 시도 (2분봉)
         try:
             hist_live = ticker.history(period="1d", interval="2m")
             if not hist_live.empty:
                 current = hist_live['Close'].iloc[-1]
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"Live price fetch failed [{symbol}]: {e}")
 
-        if current is None or pd.isna(current): return name, None
-        
+        if current is None or pd.isna(current):
+            return name, None
+
         change = current - prev
         pct = (change / prev) * 100 if prev != 0 else 0
-        
-        if ".KS" in symbol or ".KQ" in symbol: cur_sym = "₩"
-        elif ".T" in symbol: cur_sym = "¥"
-        elif ".HK" in symbol: cur_sym = "HK$"
-        elif ".DE" in symbol: cur_sym = "€"
-        else: cur_sym = "$"
-        fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
-        
-        if change > 0: color_class, arrow, sign = "up-color", "▲", "+"
-        elif change < 0: color_class, arrow, sign = "down-color", "▼", ""
-        else: color_class, arrow, sign = "flat-color", "-", ""
-        
-        html_str = f"""<div class="stock-row"><span class="stock-name">{name}</span><span class="stock-price {color_class}">{fmt_price} <span style="font-size:0.9em; margin-left:3px;">{arrow} {sign}{pct:.2f}%</span></span></div>"""
-        return name, html_str
-    except: return name, None
 
-@st.cache_data(ttl=300) # 캐시는 유지 (5분마다 알아서 풀림)
+        if ".KS" in symbol or ".KQ" in symbol:
+            cur_sym = "₩"
+        elif ".T" in symbol:
+            cur_sym = "¥"
+        elif ".HK" in symbol:
+            cur_sym = "HK$"
+        elif ".DE" in symbol:
+            cur_sym = "€"
+        else:
+            cur_sym = "$"
+
+        fmt_price = f"{cur_sym}{current:,.0f}" if cur_sym in ["₩", "¥"] else f"{cur_sym}{current:,.2f}"
+
+        if change > 0:
+            color_class, arrow, sign = "up-color", "▲", "+"
+        elif change < 0:
+            color_class, arrow, sign = "down-color", "▼", ""
+        else:
+            color_class, arrow, sign = "flat-color", "-", ""
+
+        html_str = (
+            f"<div class='si-stock-row'>"
+            f"<span class='si-stock-name'>{name}</span>"
+            f"<span class='si-stock-price {color_class}'>{fmt_price}"
+            f"<span class='si-stock-change'>{arrow}{sign}{pct:.2f}%</span></span>"
+            f"</div>"
+        )
+        return name, html_str
+    except Exception as e:
+        logger.warning(f"Stock fetch error [{symbol}]: {e}")
+        return name, None
+
+@st.cache_data(ttl=300)
 def get_stock_prices_grouped():
     result_map = {}
-    all_tickers = []
-    for cat, items in STOCK_CATEGORIES.items():
-        for name, symbol in items.items():
-            all_tickers.append((name, symbol))
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        future_to_stock = {executor.submit(fetch_single_stock, name, symbol): name for name, symbol in all_tickers}
+    all_tickers = [
+        (name, symbol)
+        for cat, items in STOCK_CATEGORIES.items()
+        for name, symbol in items.items()
+    ]
+    # [수정] max_workers를 티커 수에 맞게 동적 설정
+    max_workers = min(32, len(all_tickers))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_stock = {
+            executor.submit(fetch_single_stock, name, symbol): name
+            for name, symbol in all_tickers
+        }
         for future in concurrent.futures.as_completed(future_to_stock):
             try:
                 name, html = future.result()
-                if html: result_map[name] = html
-            except: pass
+                if html:
+                    result_map[name] = html
+            except Exception as e:
+                logger.warning(f"Stock future error: {e}")
     return result_map
 
 # ==========================================
-# 2. 뉴스 수집 (안정 로직 + 40개)
+# 2. 뉴스 수집
 # ==========================================
 def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end_dt=None):
+    """
+    [수정] strict_time 조건 분리:
+    - strict_time=True  → 전달받은 start_dt/end_dt 사용
+    - strict_time=False → 현재 시각 기준 기본 window 계산
+    """
     all_items = []
-    
-    if not (strict_time and start_dt and end_dt):
-        now_kst = datetime.utcnow() + timedelta(hours=9)
+
+    if not strict_time:
+        # strict_time=False 일 때만 기본 window 계산 (전달 인자 무시하지 않음)
+        now_kst = datetime.now(timezone.utc) + timedelta(hours=9)
         end_dt = datetime(now_kst.year, now_kst.month, now_kst.day, 6, 0, 0)
-        if now_kst.hour < 6: end_dt -= timedelta(days=1)
+        if now_kst.hour < 6:
+            end_dt -= timedelta(days=1)
         start_dt = end_dt - timedelta(hours=18)
-    
-    per_kw_limit = 3 if len(keywords) > 4 else 7
+
+    # [수정] per_kw_limit: 전체 limit을 키워드 수로 동적 배분
+    per_kw_limit = max(3, limit // max(len(keywords), 1))
 
     for kw in keywords:
-        url = f"https://news.google.com/rss/search?q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
+        url = (
+            f"https://news.google.com/rss/search?"
+            f"q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
+        )
         try:
             res = requests.get(url, timeout=5, verify=False)
+            res.raise_for_status()
             soup = BeautifulSoup(res.content, 'xml')
             items = soup.find_all('item')
             kw_collected = 0
             for item in items:
                 is_valid = True
                 pub_date_str_val = None
-                if strict_time:
+
+                if strict_time and start_dt and end_dt:
                     try:
                         pub_date_str = item.pubDate.text
                         pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
                         pub_date_kst = pub_date + timedelta(hours=9)
-                        if not (start_dt <= pub_date_kst <= end_dt): is_valid = False
-                        # [핵심 수정] datetime 객체를 문자열로 변환하여 저장
+                        if not (start_dt <= pub_date_kst <= end_dt):
+                            is_valid = False
                         pub_date_str_val = pub_date_kst.strftime("%Y-%m-%d %H:%M:%S")
-                    except: is_valid = True 
-                
+                    except Exception:
+                        is_valid = True  # 날짜 파싱 실패 시 포함
+
                 if is_valid:
-                    if not any(i['Title'] == item.title.text for i in all_items):
+                    title = item.title.text if item.title else ""
+                    link = item.link.text if item.link else ""
+                    if title and not any(i['Title'] == title for i in all_items):
                         all_items.append({
-                            'Title': item.title.text,
-                            'Link': item.link.text,
-                            'Date': item.pubDate.text,
+                            'Title': title,
+                            'Link': link,
+                            'Date': item.pubDate.text if item.pubDate else "",
                             'Source': item.source.text if item.source else "Google News",
-                            'ParsedDate': pub_date_str_val # 이제 문자열입니다 (JSON 저장 가능)
+                            'ParsedDate': pub_date_str_val
                         })
                         kw_collected += 1
-                if kw_collected >= per_kw_limit: break
-        except: pass
+                if kw_collected >= per_kw_limit:
+                    break
+        except Exception as e:
+            logger.warning(f"News fetch error [kw={kw}]: {e}")
         time.sleep(0.1)
-        
+
     df = pd.DataFrame(all_items)
     if not df.empty:
         df = df.drop_duplicates(subset=['Title'])
-        # 문자열이지만 정렬을 위해 임시 변환
-        if strict_time: 
+        if strict_time:
             df['TempDate'] = pd.to_datetime(df['ParsedDate'], errors='coerce')
             df = df.sort_values(by='TempDate', ascending=False)
             df = df.drop(columns=['TempDate'])
@@ -267,16 +724,30 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end
 # 2-1. 글로벌 뉴스
 # ==========================================
 def translate_text_batch(api_key, texts, target_lang="Korean"):
-    if not texts: return []
-    model = "gemini-1.5-flash"
+    if not texts:
+        return []
+    # [수정] 기본 모델을 gemini-2.0-flash로 업데이트
+    model = "gemini-2.0-flash"
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
         res = requests.get(url, timeout=5)
         if res.status_code == 200:
-            models = [m['name'].replace("models/", "") for m in res.json().get('models', []) if 'generateContent' in m.get('supportedGenerationMethods', [])]
-            if models: model = models[0]
-    except: pass
-    prompt = f"Translate the following list of texts to {target_lang}. Return ONLY the translated strings in a JSON array format [\"text1\", \"text2\"...].\n\nTexts: {json.dumps(texts)}"
+            models = [
+                m['name'].replace("models/", "")
+                for m in res.json().get('models', [])
+                if 'generateContent' in m.get('supportedGenerationMethods', [])
+            ]
+            if models:
+                # gemini-2.0-flash 우선, 없으면 첫 번째 모델 사용
+                model = next((m for m in models if "2.0-flash" in m), models[0])
+    except Exception as e:
+        logger.warning(f"Model list fetch error: {e}")
+
+    prompt = (
+        f"Translate the following list of texts to {target_lang}. "
+        f"Return ONLY the translated strings in a JSON array format [\"text1\", \"text2\"...].\n\n"
+        f"Texts: {json.dumps(texts)}"
+    )
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -285,13 +756,19 @@ def translate_text_batch(api_key, texts, target_lang="Korean"):
         if response.status_code == 200:
             raw_text = response.json()['candidates'][0]['content']['parts'][0]['text']
             match = re.search(r'\[.*\]', raw_text, re.DOTALL)
-            if match: return json.loads(match.group(0))
-    except: pass
+            if match:
+                return json.loads(match.group(0))
+    except Exception as e:
+        logger.warning(f"Translation error: {e}")
     return texts
 
 def get_translated_keywords(api_key, keyword):
-    prompt = f"Translate '{keyword}' into English, Japanese, Traditional Chinese(TW), Simplified Chinese(CN). Return JSON: {{'EN':'..','JP':'..','TW':'..','CN':'..'}}"
-    model = "gemini-1.5-flash"
+    prompt = (
+        f"Translate '{keyword}' into English, Japanese, Traditional Chinese(TW), Simplified Chinese(CN). "
+        f"Return JSON: {{\"EN\":\"..\",\"JP\":\"..\",\"TW\":\"..\",\"CN\":\"..\"}}"
+    )
+    # [수정] 기본 모델을 gemini-2.0-flash로 업데이트
+    model = "gemini-2.0-flash"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -300,89 +777,136 @@ def get_translated_keywords(api_key, keyword):
         if res.status_code == 200:
             txt = res.json()['candidates'][0]['content']['parts'][0]['text']
             match = re.search(r'\{.*\}', txt, re.DOTALL)
-            if match: return json.loads(match.group(0))
-    except: pass
+            if match:
+                return json.loads(match.group(0))
+    except Exception as e:
+        logger.warning(f"Keyword translation error [{keyword}]: {e}")
     return {"EN": keyword, "JP": keyword, "TW": keyword, "CN": keyword}
 
 def fetch_news_global(api_key, keywords, days=3):
     TARGETS = {
-        "KR": {"gl": "KR", "hl": "ko", "key": "KR"},
-        "US": {"gl": "US", "hl": "en", "key": "EN"},
-        "JP": {"gl": "JP", "hl": "ja", "key": "JP"},
+        "KR": {"gl": "KR", "hl": "ko",    "key": "KR"},
+        "US": {"gl": "US", "hl": "en",    "key": "EN"},
+        "JP": {"gl": "JP", "hl": "ja",    "key": "JP"},
         "TW": {"gl": "TW", "hl": "zh-TW", "key": "TW"},
         "CN": {"gl": "CN", "hl": "zh-CN", "key": "CN"}
     }
     all_raw_items = []
-    per_kw_limit = 3 if len(keywords) > 4 else 5
+    per_kw_limit = max(3, 5 // max(len(keywords), 1))
+
     for kw in keywords:
         trans_map = get_translated_keywords(api_key, kw)
         trans_map["KR"] = kw
         for country, conf in TARGETS.items():
             search_term = trans_map.get(conf["key"], kw)
-            url = f"https://news.google.com/rss/search?q={quote(search_term)}+when:{days}d&hl={conf['hl']}&gl={conf['gl']}&ceid={conf['gl']}:{conf['hl']}"
+            url = (
+                f"https://news.google.com/rss/search?"
+                f"q={quote(search_term)}+when:{days}d"
+                f"&hl={conf['hl']}&gl={conf['gl']}&ceid={conf['gl']}:{conf['hl']}"
+            )
             try:
                 res = requests.get(url, timeout=3, verify=False)
+                res.raise_for_status()
                 soup = BeautifulSoup(res.content, 'xml')
                 items = soup.find_all('item')
                 kw_added = 0
                 for item in items:
-                    all_raw_items.append({
-                        'Title': item.title.text,
-                        'Link': item.link.text,
-                        'Date': item.pubDate.text,
-                        'Source': f"[{country}] {item.source.text if item.source else 'Google News'}",
-                        'Lang': conf['key']
-                    })
-                    kw_added += 1
-                    if kw_added >= per_kw_limit: break
-            except: pass
+                    title = item.title.text if item.title else ""
+                    link = item.link.text if item.link else ""
+                    if title:
+                        all_raw_items.append({
+                            'Title': title,
+                            'Link': link,
+                            'Date': item.pubDate.text if item.pubDate else "",
+                            'Source': f"[{country}] {item.source.text if item.source else 'Google News'}",
+                            'Lang': conf['key']
+                        })
+                        kw_added += 1
+                        if kw_added >= per_kw_limit:
+                            break
+            except Exception as e:
+                logger.warning(f"Global news fetch error [kw={kw}, country={country}]: {e}")
             time.sleep(0.1)
-    if not all_raw_items: return []
+
+    if not all_raw_items:
+        return []
+
     df = pd.DataFrame(all_raw_items)
+    # [수정] Title + Link 두 기준으로 중복 제거
     df = df.drop_duplicates(subset=['Title'])
+    df = df.drop_duplicates(subset=['Link'])
     items_to_process = df.head(40).to_dict('records')
+
     titles_to_translate = [x['Title'] for x in items_to_process if x['Lang'] != "KR"]
     indices_to_translate = [i for i, x in enumerate(items_to_process) if x['Lang'] != "KR"]
+
     if titles_to_translate:
         translated_titles = translate_text_batch(api_key, titles_to_translate)
         for idx, new_title in zip(indices_to_translate, translated_titles):
             if idx < len(items_to_process):
-                items_to_process[idx]['Title'] = f"{new_title} <span style='font-size:0.8em; color:#94A3B8;'>({items_to_process[idx]['Title']})</span>"
+                orig = items_to_process[idx]['Title']
+                items_to_process[idx]['Title'] = (
+                    f"{new_title} "
+                    f"<span style='font-size:0.8em; color:#94A3B8;'>({orig})</span>"
+                )
     return items_to_process
 
 # ==========================================
 # 3. AI 리포트 생성
 # ==========================================
+@st.cache_data(ttl=3600)
 def get_available_models(api_key):
+    """[수정] @st.cache_data(ttl=3600) 추가 → 매번 API 호출 방지"""
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
     try:
         res = requests.get(url, timeout=10)
         if res.status_code == 200:
             data = res.json()
-            return [m['name'].replace("models/", "") for m in data.get('models', []) if 'generateContent' in m.get('supportedGenerationMethods', [])]
-    except: pass
+            return [
+                m['name'].replace("models/", "")
+                for m in data.get('models', [])
+                if 'generateContent' in m.get('supportedGenerationMethods', [])
+            ]
+    except Exception as e:
+        logger.warning(f"Model list fetch error: {e}")
     return []
+
+def sanitize_url(url_str):
+    """[추가] URL scheme 검증 → XSS 방지"""
+    try:
+        parsed = urlparse(url_str)
+        if parsed.scheme in ("http", "https"):
+            return url_str
+    except Exception:
+        pass
+    return "#"
 
 def inject_links_to_report(report_text, news_data):
     def replace_match(match):
         try:
             idx = int(match.group(1)) - 1
             if 0 <= idx < len(news_data):
-                link = news_data[idx]['Link']
-                return f"<a href='{link}' target='_blank' class='text-blue-600 font-bold hover:underline'>[{match.group(1)}]</a>"
-        except: pass
+                link = sanitize_url(news_data[idx]['Link'])
+                return (
+                    f"<a href='{link}' target='_blank' "
+                    f"style='color:var(--accent);font-weight:600;text-decoration:underline;'>[{match.group(1)}]</a>"
+                )
+        except Exception:
+            pass
         return match.group(0)
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_with_citations(api_key, news_data):
     models = get_available_models(api_key)
     if not models:
-        models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+        # [수정] 기본 모델 목록을 최신 버전으로 업데이트
+        models = ["gemini-2.0-flash", "gemini-2.5-pro", "gemini-1.5-flash"]
     else:
-        if "gemini-1.5-flash" in models:
-            models.remove("gemini-1.5-flash")
-            models.insert(0, "gemini-1.5-flash")
-    
+        # gemini-2.0-flash 우선 정렬
+        preferred = [m for m in models if "2.0-flash" in m]
+        others = [m for m in models if "2.0-flash" not in m]
+        models = preferred + others
+
     news_context = ""
     for i, item in enumerate(news_data):
         clean_title = re.sub(r'<[^>]+>', '', item['Title'])
@@ -404,7 +928,7 @@ def generate_report_with_citations(api_key, news_data):
     
     ## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
     - 가장 중요한 이슈 2~3가지를 선정하여 소제목을 달고 분석하세요.
-    - **중요**: 현상, 원인, 전망을 구분하여 나열하지 말고, **깊이 있는 서술형 문단**으로 작성하세요. 사건의 배경부터 파급 효과까지 매끄럽게 연결되도록 하세요.
+    - **중요**: 현상, 원인, 전망을 구분하여 나열하지 말고, **깊이 있는 서술형 문단**으로 작성하세요.
     - 반드시 인용 번호[n]를 포함할 것.
 
     ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
@@ -414,131 +938,225 @@ def generate_report_with_citations(api_key, news_data):
     - 중요한 반도체 기술과 소재 특이점 관련 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
 
     ## 📊 Executive Summary (시장 총평)
-    - 오늘 반도체 시장과 기술적 변화의 핵심 분위기와  소재 중심의 이슈를 3~4문장으로 요약.
-    
+    - 오늘 반도체 시장과 기술적 변화의 핵심 분위기와 소재 중심의 이슈를 3~4문장으로 요약.
     """
-    
+
     headers = {'Content-Type': 'application/json'}
     data = {
         "contents": [{"parts": [{"text": prompt}]}],
         "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]
     }
 
+    # [수정] 429 응답 시 Exponential Backoff 적용
     for model in models:
-        if "vision" in model: continue
+        if "vision" in model:
+            continue
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-        try:
-            response = requests.post(url, headers=headers, json=data, timeout=60)
-            if response.status_code == 200:
-                res_json = response.json()
-                if 'candidates' in res_json and res_json['candidates']:
-                    raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
-                    return True, inject_links_to_report(raw_text, news_data)
-            elif response.status_code == 429:
-                time.sleep(1) 
-                continue
-        except: continue
-            
+        retry_wait = 1
+        for attempt in range(3):
+            try:
+                response = requests.post(url, headers=headers, json=data, timeout=60)
+                if response.status_code == 200:
+                    res_json = response.json()
+                    if 'candidates' in res_json and res_json['candidates']:
+                        raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
+                        return True, inject_links_to_report(raw_text, news_data)
+                    break  # candidates 없으면 다음 모델로
+                elif response.status_code == 429:
+                    logger.warning(f"Rate limit hit [{model}], retrying in {retry_wait}s...")
+                    time.sleep(retry_wait)
+                    retry_wait *= 2  # Exponential backoff
+                    continue
+                else:
+                    logger.warning(f"Model {model} returned status {response.status_code}")
+                    break
+            except Exception as e:
+                logger.warning(f"Report generation error [{model}]: {e}")
+                break
+
     return False, "AI 분석 실패 (모든 모델 응답 없음)"
 
 # ==========================================
-# 4. 메인 앱 UI
+# 4. 공통 키워드 관리 UI (중복 코드 제거)
 # ==========================================
-# [추가] 구버전 Streamlit 에러 방지를 위한 st.fragment 폴리필
+def render_keyword_manager(category, show_search_days=False):
+    """
+    [수정] Daily Report / 일반 카테고리 공통 키워드 관리 UI 함수화
+    show_search_days=True 이면 검색 기간 슬라이더도 함께 렌더링
+    반환값: (추가된 키워드 없음), search_days (int)
+    """
+    returned_search_days = 3
+    c1, c2, c3 = st.columns([2, 1, 1]) if show_search_days else (st.columns([3, 1]) + [None])
+
+    new_kw = c1.text_input(
+        "수집 키워드 추가" if not show_search_days else "키워드",
+        placeholder="예: HBM, 패키징",
+        label_visibility="collapsed",
+        key=f"kw_input_{category}"
+    )
+    if c2.button("추가", use_container_width=True, key=f"kw_add_{category}"):
+        if new_kw and new_kw not in st.session_state.keywords[category]:
+            st.session_state.keywords[category].append(new_kw)
+            save_keywords(st.session_state.keywords)
+            st.rerun()
+
+    if show_search_days and c3 is not None:
+        returned_search_days = c3.slider("검색 기간", 1, 30, 3, key=f"days_{category}")
+
+    curr_kws = st.session_state.keywords.get(category, [])
+    if curr_kws:
+        st.write("")
+        num_cols = min(len(curr_kws), 8)
+        cols = st.columns(num_cols)
+        for i, kw in enumerate(curr_kws):
+            if cols[i % num_cols].button(f"{kw} ×", key=f"kw_del_{category}_{i}_{kw}"):
+                st.session_state.keywords[category].remove(kw)
+                save_keywords(st.session_state.keywords)
+                st.rerun()
+
+    return returned_search_days
+
+# ==========================================
+# 5. 메인 앱 UI
+# ==========================================
+# [수정] st.fragment 폴리필 (구버전 Streamlit 호환)
 if not hasattr(st, "fragment"):
     def dummy_fragment(**kwargs):
         return lambda f: f
     st.fragment = dummy_fragment
 
-# [추가] 주식 위젯을 별도 조각(Fragment)으로 분리 (5분 자동 업데이트)
 @st.fragment(run_every=300)
 def render_stock_widget():
-    if st.button("🔄 시세 업데이트", use_container_width=True):
-        get_stock_prices_grouped.clear() # Fragment 내부 버튼은 해당 블록만 새로고침 유발
+    if st.button("↻ 새로고침", use_container_width=True):
+        get_stock_prices_grouped.clear()
     stock_data = get_stock_prices_grouped()
     if stock_data:
         for cat, items in STOCK_CATEGORIES.items():
-            st.markdown(f"<div class='stock-header'>{cat}</div>", unsafe_allow_html=True)
-            for name, symbol in items.items():
+            st.markdown(f"<div class='si-stock-group-label'>{cat}</div>", unsafe_allow_html=True)
+            for name in items:
                 html_info = stock_data.get(name)
-                if html_info: st.markdown(html_info, unsafe_allow_html=True)
+                if html_info:
+                    st.markdown(html_info, unsafe_allow_html=True)
 
+# ==========================================
+# 사이드바
+# ==========================================
 with st.sidebar:
-    st.markdown("<h2 class='text-2xl font-bold text-slate-800 mb-4'>Semi-Insight</h2>", unsafe_allow_html=True)
-    selected_category = st.radio("카테고리", CATEGORIES, index=0)
-    st.markdown("---")
-    
-    with st.expander("🔐 API Key 설정"):
-        user_key = st.text_input("Gemini API Key", type="password")
-        if user_key: api_key = user_key
-        elif "GEMINI_API_KEY" in st.secrets: api_key = st.secrets["GEMINI_API_KEY"]
-        else: api_key = ""
-    
-    st.markdown("<div class='h-4'></div>", unsafe_allow_html=True)
-    
+    # 로고 + 다크모드 토글
+    st.markdown("""
+    <div class="si-logo">
+        <div class="si-logo-mark">💠</div>
+        <div>
+            <div class="si-logo-text">Semi-Insight</div>
+            <div class="si-logo-sub">Hub · v2.0</div>
+        </div>
+    </div>
+
+    <div class="dm-toggle-wrap">
+        <span class="dm-label">🌙 Dark Mode</span>
+        <label class="dm-toggle">
+            <input type="checkbox" id="dmToggle" onchange="toggleDarkMode(this.checked)"
+                   onclick="this.checked=!this.checked;toggleDarkMode(this.checked)">
+            <span class="dm-slider"></span>
+        </label>
+    </div>
+    <script>
+    // 페이지 로드 시 토글 상태 동기화
+    (function() {
+        const isDark = localStorage.getItem('si_dark_mode') === 'true';
+        const cb = document.getElementById('dmToggle');
+        if (cb) cb.checked = isDark;
+    })();
+    </script>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+    selected_category = st.radio("카테고리", CATEGORIES, index=0, label_visibility="collapsed")
+    st.markdown("<hr>", unsafe_allow_html=True)
+
+    with st.expander("🔐 API Key"):
+        user_key = st.text_input("Gemini API Key", type="password", label_visibility="collapsed",
+                                  placeholder="Gemini API Key")
+        if user_key:
+            api_key = user_key
+        elif "GEMINI_API_KEY" in st.secrets:
+            api_key = st.secrets["GEMINI_API_KEY"]
+
     if "GITHUB_TOKEN" in st.secrets:
-        st.markdown("<div class='text-xs text-green-600 font-bold mb-2'>✅ GitHub Auto-Sync Active</div>", unsafe_allow_html=True)
-    
-    with st.expander("📉 Global Stock (실시간/5분 자동갱신)", expanded=True):
-        # 분리된 주식 렌더링 함수 호출
+        st.markdown(
+            "<div style='margin-top:10px'><span class='si-badge'>✓ GitHub Sync</span></div>",
+            unsafe_allow_html=True
+        )
+
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    with st.expander("📈 Global Stocks", expanded=True):
         render_stock_widget()
 
+# ==========================================
+# 메인 콘텐츠
+# ==========================================
 c_head, c_info = st.columns([3, 1])
-with c_head: st.markdown(f"<h1 class='text-3xl font-bold text-slate-800 mb-2'>{selected_category}</h1>", unsafe_allow_html=True)
+with c_head:
+    st.markdown(
+        f"<div class='si-page-header'>"
+        f"<div class='si-page-title'>{selected_category}</div>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
 
 # ----------------------------------
 # [Mode 1] Daily Report
 # ----------------------------------
 if selected_category == "Daily Report":
-    st.markdown("<div class='bg-blue-50 text-blue-800 px-4 py-3 rounded-lg text-sm mb-6'>ℹ️ 매일 오전 6시 기준 반도체 정보 리포트입니다.</div>", unsafe_allow_html=True)
-    
-    now_kst = datetime.utcnow() + timedelta(hours=9)
-    if now_kst.hour < 6: target_date = (now_kst - timedelta(days=1)).date()
-    else: target_date = now_kst.date()
+    st.markdown(
+        "<div class='si-banner'>ℹ️ 매일 오전 6시 기준 반도체 소재·기술 정보 리포트</div>",
+        unsafe_allow_html=True
+    )
+
+    # [수정] datetime.utcnow() deprecated → datetime.now(timezone.utc) 사용
+    now_kst = datetime.now(timezone.utc) + timedelta(hours=9)
+    if now_kst.hour < 6:
+        target_date = (now_kst - timedelta(days=1)).date()
+    else:
+        target_date = now_kst.date()
     target_date_str = target_date.strftime('%Y-%m-%d')
-    
-    st.markdown(f"<div class='text-right text-sm text-slate-500 mb-4'>Report Date: <b>{target_date}</b></div>", unsafe_allow_html=True)
+
+    st.markdown(
+        f"<div style='text-align:right; font-size:12px; color:var(--text-muted); margin-bottom:16px;'>"
+        f"Report Date &nbsp;·&nbsp; <b style='color:var(--text-secondary)'>{target_date}</b></div>",
+        unsafe_allow_html=True
+    )
 
     with st.expander("⚙️ 키워드 관리 (클릭하여 열기)", expanded=False):
-        c1, c2 = st.columns([3, 1])
-        new_kw = c1.text_input("수집 키워드 추가", placeholder="예: HBM, 패키징", label_visibility="collapsed")
-        if c2.button("추가", use_container_width=True):
-            if new_kw and new_kw not in st.session_state.keywords["Daily Report"]:
-                st.session_state.keywords["Daily Report"].append(new_kw)
-                save_keywords(st.session_state.keywords)
-                st.rerun()
-        
-        daily_kws = st.session_state.keywords["Daily Report"]
-        if daily_kws:
-            st.write("")
-            st.markdown("<div class='flex flex-wrap gap-2'>", unsafe_allow_html=True)
-            cols = st.columns(len(daily_kws) if len(daily_kws) < 8 else 8)
-            for i, kw in enumerate(daily_kws):
-                if cols[i % 8].button(f"{kw} ×", key=f"del_{kw}"):
-                    st.session_state.keywords["Daily Report"].remove(kw)
-                    save_keywords(st.session_state.keywords)
-                    st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
-    
+        # [수정] 공통 함수 사용
+        render_keyword_manager("Daily Report", show_search_days=False)
+
     history = st.session_state.daily_history
     today_report = next((h for h in history if h['date'] == target_date_str), None)
-    
+
     if not today_report:
         st.info("📢 오늘의 리포트가 아직 생성되지 않았습니다.")
         if st.button("🚀 금일 리포트 생성 시작", type="primary"):
             status_box = st.status("🚀 리포트 생성 중...", expanded=True)
-            
+
             end_dt = datetime.combine(target_date, dt_time(6, 0))
             start_dt = end_dt - timedelta(hours=18)
-            
+            daily_kws = st.session_state.keywords["Daily Report"]
+
             status_box.write("📡 뉴스 수집 중 (40건)...")
-            news_items = fetch_news(daily_kws, days=2, limit=40, strict_time=True, start_dt=start_dt, end_dt=end_dt)
-            
+            news_items = fetch_news(
+                daily_kws, days=2, limit=40,
+                strict_time=True, start_dt=start_dt, end_dt=end_dt
+            )
+
             if not news_items:
-                status_box.update(label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).", state="running")
+                status_box.update(
+                    label="⚠️ 조건에 맞는 뉴스가 없어 범위를 확장합니다 (최근 24시간).",
+                    state="running"
+                )
                 time.sleep(1)
                 news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
-            
+
             if not news_items:
                 status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
             else:
@@ -557,6 +1175,7 @@ if selected_category == "Daily Report":
         st.success("✅ 리포트 생성 완료")
         if st.button("🔄 리포트 다시 만들기"):
             status_box = st.status("🚀 재생성 중...", expanded=True)
+            daily_kws = st.session_state.keywords["Daily Report"]
             news_items = fetch_news(daily_kws, days=1, limit=40, strict_time=False)
             if news_items:
                 status_box.write("🧠 AI 분석 중...")
@@ -571,73 +1190,78 @@ if selected_category == "Daily Report":
                     st.error(result)
 
     if history:
-        st.markdown("<div class='h-8'></div>", unsafe_allow_html=True)
-        st.subheader("🗂️ 리포트 아카이브")
+        st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div style='font-size:14px; font-weight:600; color:var(--text-secondary); "
+            "margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);'>"
+            "🗂️ 리포트 아카이브</div>",
+            unsafe_allow_html=True
+        )
         for entry in history:
             is_today = (entry['date'] == target_date_str)
-            with st.expander(f"{'🔥 ' if is_today else ''}{entry['date']} Daily Report", expanded=is_today):
-                st.markdown(f"""
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 leading-relaxed text-gray-800">
-                    {entry['report']}
-                </div>
-                """, unsafe_allow_html=True)
-                st.markdown("<h4 class='text-sm font-bold text-slate-500 mt-4 mb-2'>📚 참고 기사</h4>", unsafe_allow_html=True)
+            with st.expander(
+                f"{'🔥 ' if is_today else ''}{entry['date']} Daily Report",
+                expanded=is_today
+            ):
+                st.markdown(
+                    f"<div class='si-report-card'>{entry['report']}</div>",
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    "<div style='font-size:12px; font-weight:600; color:var(--text-muted); "
+                    "letter-spacing:0.05em; text-transform:uppercase; margin:16px 0 8px;'>"
+                    "참고 기사</div>",
+                    unsafe_allow_html=True
+                )
                 for item in entry.get('articles', []):
-                    st.markdown(f"<div class='flex items-start gap-2 mb-1 text-sm text-slate-600'><span class='text-blue-500 font-bold'>📄</span><a href='{item['Link']}' target='_blank' class='hover:text-blue-600 hover:underline transition'>{item['Title']}</a></div>", unsafe_allow_html=True)
+                    safe_link = sanitize_url(item.get('Link', '#'))
+                    clean_title = re.sub(r'<[^>]+>', '', item.get('Title', ''))
+                    st.markdown(
+                        f"<a href='{safe_link}' target='_blank' class='si-archive-ref'>"
+                        f"<span style='color:var(--accent);flex-shrink:0'>↗</span>"
+                        f"<span>{clean_title}</span></a>",
+                        unsafe_allow_html=True
+                    )
 
 # ----------------------------------
-# [Mode 2] General Category
+# [Mode 2] 일반 카테고리
 # ----------------------------------
 else:
     with st.container(border=True):
-        c1, c2, c3 = st.columns([2, 1, 1])
-        new_kw = c1.text_input("키워드", label_visibility="collapsed")
-        if c2.button("추가", use_container_width=True):
-            if new_kw:
-                # [수정] 중복 키워드 방지
-                if new_kw not in st.session_state.keywords[selected_category]:
-                    st.session_state.keywords[selected_category].append(new_kw)
-                    save_keywords(st.session_state.keywords)
-                    st.rerun()
-        
-        search_days = c3.slider("검색 기간", 1, 30, 3)
+        # [수정] 공통 함수 사용, search_days 반환 받음
+        search_days = render_keyword_manager(selected_category, show_search_days=True)
 
-        if st.button("실행 (5개국 검색 + 번역)", type="primary", use_container_width=True, disabled=not bool(api_key)):
+        if st.button(
+            "실행 (5개국 검색 + 번역)", type="primary",
+            use_container_width=True,
+            disabled=not bool(api_key)
+        ):
             kws = st.session_state.keywords[selected_category]
             if kws:
                 with st.spinner("🌍 5개국 뉴스 수집 중..."):
                     news = fetch_news_global(api_key, kws, days=search_days)
                     st.session_state.news_data[selected_category] = news
                     st.rerun()
-        
-        curr_kws = st.session_state.keywords.get(selected_category, [])
-        if curr_kws:
-            st.write("")
-            st.markdown("<div class='flex flex-wrap gap-2'>", unsafe_allow_html=True)
-            cols = st.columns(8)
-            for i, kw in enumerate(curr_kws):
-                # [수정] 버튼 키(Key)에 인덱스(i)와 카테고리를 넣어 유일성 보장
-                if cols[i%8].button(f"{kw} ×", key=f"gdel_{selected_category}_{i}_{kw}"):
-                    st.session_state.keywords[selected_category].remove(kw)
-                    save_keywords(st.session_state.keywords)
-                    st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
 
     data = st.session_state.news_data.get(selected_category, [])
     if data:
-        st.markdown(f"<div class='text-sm text-slate-500 mb-4'>총 {len(data)}건 수집됨 (최근 {search_days}일)</div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div style='font-size:12px; color:var(--text-muted); margin-bottom:16px;'>"
+            f"총 <b style='color:var(--text-secondary)'>{len(data)}</b>건 수집 · 최근 {search_days}일</div>",
+            unsafe_allow_html=True
+        )
         for item in data:
-            st.markdown(f"""
-            <div class="news-card">
-                <div class="flex justify-between items-start">
-                    <div class="text-xs font-bold text-blue-600 mb-1">{item['Source']}</div>
-                    <div class="text-xs text-slate-400">{item['Date']}</div>
-                </div>
-                <a href="{item['Link']}" target="_blank" class="block text-base font-bold text-slate-800 hover:text-blue-600 transition decoration-0">
-                    {item['Title']}
-                </a>
-            </div>
-            """, unsafe_allow_html=True)
+            safe_link = sanitize_url(item.get('Link', '#'))
+            clean_title = re.sub(r'<[^>]+>', '', item.get('Title', ''))
+            st.markdown(
+                f"<div class='si-news-card'>"
+                f"<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;'>"
+                f"<span class='si-news-source'>{item['Source']}</span>"
+                f"<span class='si-news-date'>{item['Date']}</span>"
+                f"</div>"
+                f"<a href='{safe_link}' target='_blank' class='si-news-title'>{clean_title}</a>"
+                f"</div>",
+                unsafe_allow_html=True
+            )
     else:
         st.info("상단의 '실행' 버튼을 눌러 뉴스를 수집하세요. (API Key 필요)")
-        
