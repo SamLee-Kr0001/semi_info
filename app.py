@@ -36,405 +36,300 @@ HISTORY_FILE = 'daily_history.json'
 api_key = ""
 search_days = 3
 
-st.markdown("""
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+# ==========================================
+# 다크모드 session_state 초기화
+# ==========================================
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = False
+
+# ── 테마별 토큰 (hex 고정값, CSS 변수 미사용) ──────────
+def get_theme():
+    if st.session_state.dark_mode:
+        return {
+            "bg":           "#0F0F11",
+            "surface":      "#1C1C1F",
+            "surface2":     "#232327",
+            "border":       "#2A2A2F",
+            "border2":      "#36363D",
+            "text":         "#FAFAFA",
+            "text2":        "#A1A1AA",
+            "muted":        "#52525B",
+            "accent":       "#3B82F6",
+            "accent_soft":  "#1e2d3d",
+            "up":           "#F87171",
+            "down":         "#60A5FA",
+            "flat":         "#71717A",
+            "badge_bg":     "#064E3B",
+            "badge_fg":     "#6EE7B7",
+            "shadow":       "0 4px 20px rgba(0,0,0,0.4)",
+        }
+    else:
+        return {
+            "bg":           "#F7F7F5",
+            "surface":      "#FFFFFF",
+            "surface2":     "#F9F9F7",
+            "border":       "#E4E4E0",
+            "border2":      "#D0D0CA",
+            "text":         "#18181B",
+            "text2":        "#71717A",
+            "muted":        "#A1A1AA",
+            "accent":       "#2563EB",
+            "accent_soft":  "#EFF6FF",
+            "up":           "#DC2626",
+            "down":         "#2563EB",
+            "flat":         "#71717A",
+            "badge_bg":     "#D1FAE5",
+            "badge_fg":     "#065F46",
+            "shadow":       "0 4px 16px rgba(0,0,0,0.07)",
+        }
+
+T = get_theme()
+
+# ── CSS 주입: hex 고정값만 사용, Streamlit 호환 선택자만 사용 ──
+st.markdown(f"""
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* ── Design Tokens ────────────────────────────────── */
-:root {
-    --bg:          #F5F5F3;
-    --bg-2:        #EBEBЕ8;
-    --surface:     #FFFFFF;
-    --surface-2:   #F9F9F7;
-    --border:      #E4E4E0;
-    --border-2:    #D0D0CA;
-    --text-primary:   #18181B;
-    --text-secondary: #71717A;
-    --text-muted:     #A1A1AA;
-    --accent:      #2563EB;
-    --accent-soft: #EFF6FF;
-    --up:          #DC2626;
-    --down:        #2563EB;
-    --flat:        #71717A;
-    --radius:      10px;
-    --radius-lg:   16px;
-    --shadow:      0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md:   0 4px 16px rgba(0,0,0,0.07);
-    --transition:  0.18s cubic-bezier(0.4,0,0.2,1);
-}
-[data-theme="dark"] {
-    --bg:          #0F0F11;
-    --bg-2:        #18181B;
-    --surface:     #1C1C1F;
-    --surface-2:   #232327;
-    --border:      #2A2A2F;
-    --border-2:    #36363D;
-    --text-primary:   #FAFAFA;
-    --text-secondary: #A1A1AA;
-    --text-muted:     #52525B;
-    --accent:      #3B82F6;
-    --accent-soft: #1E3A5F;
-    --up:          #F87171;
-    --down:        #60A5FA;
-    --flat:        #71717A;
-    --shadow:      0 1px 3px rgba(0,0,0,0.3);
-    --shadow-md:   0 4px 20px rgba(0,0,0,0.4);
-}
-
-/* ── Base Reset ───────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; }
-html, body,
-[class*="css"],
-.stApp,
-.stApp > div,
-[data-testid="stAppViewContainer"] {
+/* ── Font ── */
+html, body, [class*="css"], .stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stHeader"],
+[data-testid="stSidebar"],
+.block-container {{
     font-family: 'DM Sans', sans-serif !important;
-    background-color: var(--bg) !important;
-    color: var(--text-primary) !important;
-    transition: background-color var(--transition), color var(--transition);
-}
-a { text-decoration: none; color: inherit; }
+}}
 
-/* ── Sidebar ──────────────────────────────────────── */
-section[data-testid="stSidebar"] {
-    background-color: var(--surface) !important;
-    border-right: 1px solid var(--border) !important;
-    transition: background-color var(--transition), border-color var(--transition);
-}
-section[data-testid="stSidebar"] * {
-    color: var(--text-primary) !important;
-}
-section[data-testid="stSidebar"] .stRadio label,
-section[data-testid="stSidebar"] .stExpander {
-    background: transparent !important;
-}
-section[data-testid="stSidebar"] [data-testid="stExpander"] {
-    background: var(--surface-2) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-}
+/* ── App background ── */
+.stApp, [data-testid="stAppViewContainer"] {{
+    background-color: {T['bg']} !important;
+}}
+.block-container {{
+    background-color: {T['bg']} !important;
+    padding-top: 28px !important;
+    padding-bottom: 48px !important;
+}}
 
-/* ── App Logo / Branding ──────────────────────────── */
-.si-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 28px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-}
-.si-logo-mark {
-    width: 32px; height: 32px;
-    background: var(--accent);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; line-height: 1;
-    flex-shrink: 0;
-}
-.si-logo-text {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    color: var(--text-primary) !important;
-}
-.si-logo-sub {
-    font-size: 11px;
-    color: var(--text-muted) !important;
-    font-weight: 400;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
+/* ── Sidebar ── */
+section[data-testid="stSidebar"] > div:first-child {{
+    background-color: {T['surface']} !important;
+    border-right: 1px solid {T['border']} !important;
+}}
 
-/* ── Dark Mode Toggle ─────────────────────────────── */
-.dm-toggle-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 0;
-    margin-bottom: 4px;
-}
-.dm-label {
-    font-size: 13px;
-    color: var(--text-secondary) !important;
-    font-weight: 500;
-}
-.dm-toggle {
-    position: relative;
-    width: 40px; height: 22px;
-    cursor: pointer;
-}
-.dm-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-.dm-slider {
-    position: absolute; inset: 0;
-    background: var(--border-2);
-    border-radius: 999px;
-    transition: background var(--transition);
-}
-.dm-slider::after {
-    content: '';
-    position: absolute;
-    top: 3px; left: 3px;
-    width: 16px; height: 16px;
-    border-radius: 50%;
-    background: white;
-    transition: transform var(--transition);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-.dm-toggle input:checked + .dm-slider { background: var(--accent); }
-.dm-toggle input:checked + .dm-slider::after { transform: translateX(18px); }
+/* ── Text defaults ── */
+.stMarkdown, .stMarkdown p, .stMarkdown li,
+.stRadio label, .stCheckbox label,
+p, span, div, li {{
+    color: {T['text']} !important;
+}}
+label[data-testid="stWidgetLabel"] {{
+    color: {T['text2']} !important;
+    font-size: 13px !important;
+}}
 
-/* ── Status Badge ─────────────────────────────────── */
-.si-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 0.05em; text-transform: uppercase;
-    padding: 3px 8px; border-radius: 999px;
-    background: #D1FAE5; color: #065F46;
-}
-[data-theme="dark"] .si-badge { background: #064E3B; color: #6EE7B7; }
+/* ── Buttons ── */
+div.stButton > button {{
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    border-radius: 7px !important;
+    padding: 5px 14px !important;
+    border: 1px solid {T['border2']} !important;
+    background-color: {T['surface2']} !important;
+    color: {T['text']} !important;
+    transition: all 0.15s ease !important;
+    box-shadow: none !important;
+}}
+div.stButton > button:hover {{
+    border-color: {T['accent']} !important;
+    color: {T['accent']} !important;
+    background-color: {T['accent_soft']} !important;
+}}
+div.stButton > button[kind="primary"] {{
+    background-color: {T['accent']} !important;
+    color: #ffffff !important;
+    border-color: {T['accent']} !important;
+}}
+div.stButton > button[kind="primary"]:hover {{
+    opacity: 0.88 !important;
+}}
 
-/* ── Page Header ──────────────────────────────────── */
-.si-page-header {
-    margin-bottom: 24px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-}
-.si-page-title {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    color: var(--text-primary);
-    margin: 0 0 4px 0;
-}
-.si-page-sub {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-weight: 400;
-}
+/* ── Text inputs ── */
+.stTextInput input, .stTextArea textarea, .stSelectbox select {{
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 13px !important;
+    background-color: {T['surface']} !important;
+    color: {T['text']} !important;
+    border: 1px solid {T['border2']} !important;
+    border-radius: 7px !important;
+}}
+.stTextInput input:focus, .stTextArea textarea:focus {{
+    border-color: {T['accent']} !important;
+    box-shadow: 0 0 0 3px {T['accent']}22 !important;
+}}
 
-/* ── Info Banner ──────────────────────────────────── */
-.si-banner {
+/* ── Expanders ── */
+[data-testid="stExpander"] {{
+    background-color: {T['surface']} !important;
+    border: 1px solid {T['border']} !important;
+    border-radius: 9px !important;
+    overflow: hidden;
+}}
+[data-testid="stExpander"] summary {{
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: {T['text2']} !important;
+    background-color: {T['surface']} !important;
+}}
+
+/* ── Containers ── */
+[data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"] {{
+    background-color: {T['surface']} !important;
+    border: 1px solid {T['border']} !important;
+    border-radius: 10px !important;
+}}
+
+/* ── Alerts ── */
+[data-testid="stAlert"] {{
+    background-color: {T['surface2']} !important;
+    border: 1px solid {T['border']} !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    color: {T['text']} !important;
+}}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {{ width: 5px; }}
+::-webkit-scrollbar-track {{ background: transparent; }}
+::-webkit-scrollbar-thumb {{ background: {T['border2']}; border-radius: 999px; }}
+
+/* ── Custom component classes (hex only) ── */
+
+/* Logo */
+.si-logo {{
     display: flex; align-items: center; gap: 10px;
-    background: var(--accent-soft);
-    border: 1px solid rgba(37,99,235,0.15);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    font-size: 13px;
-    color: var(--accent) !important;
-    margin-bottom: 20px;
-    font-weight: 500;
-}
-[data-theme="dark"] .si-banner {
-    background: rgba(59,130,246,0.08);
-    border-color: rgba(59,130,246,0.2);
-}
-
-/* ── Report Card ──────────────────────────────────── */
-.si-report-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 40px 44px;
-    line-height: 1.85;
-    font-size: 15px;
-    color: var(--text-primary);
-    box-shadow: var(--shadow-md);
-    margin-bottom: 24px;
-    transition: background var(--transition), border-color var(--transition);
-}
-.si-report-card h2 {
-    font-size: 16px; font-weight: 600;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-    margin: 28px 0 10px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-}
-.si-report-card h3 {
+    margin-bottom: 20px; padding-bottom: 16px;
+    border-bottom: 1px solid {T['border']};
+}}
+.si-logo-mark {{
+    width: 30px; height: 30px; background: {T['accent']};
+    border-radius: 7px; display: flex; align-items: center;
+    justify-content: center; font-size: 15px; flex-shrink: 0;
+}}
+.si-logo-text {{
     font-size: 14px; font-weight: 600;
-    color: var(--text-secondary);
-    margin: 20px 0 6px;
-}
-.si-report-card p { margin: 0 0 14px; }
+    letter-spacing: -0.02em; color: {T['text']} !important;
+}}
+.si-logo-sub {{
+    font-size: 10px; color: {T['muted']} !important;
+    letter-spacing: 0.06em; text-transform: uppercase;
+}}
 
-/* ── News Card ────────────────────────────────────── */
-.si-news-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-bottom: 8px;
-    transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
-}
-.si-news-card:hover {
-    border-color: var(--accent);
-    box-shadow: var(--shadow-md);
-}
-.si-news-source {
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 0.05em; text-transform: uppercase;
-    color: var(--accent) !important;
-    margin-bottom: 5px;
-}
-.si-news-title {
-    font-size: 14px; font-weight: 500;
-    color: var(--text-primary) !important;
-    line-height: 1.5;
-    display: block;
-}
-.si-news-title:hover { color: var(--accent) !important; }
-.si-news-date {
-    font-size: 11px; color: var(--text-muted) !important;
-    margin-top: 4px;
-}
+/* Badge */
+.si-badge {{
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 999px;
+    background: {T['badge_bg']}; color: {T['badge_fg']} !important;
+}}
 
-/* ── Stock Widget ─────────────────────────────────── */
-.si-stock-section {
-    margin-top: 14px;
-}
-.si-stock-group-label {
+/* Info banner */
+.si-banner {{
+    display: flex; align-items: center; gap: 10px;
+    background: {T['accent_soft']}; border: 1px solid {T['accent']}26;
+    border-radius: 8px; padding: 11px 15px;
+    font-size: 13px; color: {T['accent']} !important;
+    margin-bottom: 20px; font-weight: 500;
+}}
+
+/* Page header */
+.si-page-title {{
+    font-size: 21px; font-weight: 600;
+    letter-spacing: -0.03em; color: {T['text']};
+    margin: 0 0 16px 0; padding-bottom: 16px;
+    border-bottom: 1px solid {T['border']};
+}}
+
+/* News cards */
+.si-news-card {{
+    background: {T['surface']};
+    border: 1px solid {T['border']};
+    border-radius: 9px; padding: 13px 15px; margin-bottom: 7px;
+}}
+.si-news-card:hover {{
+    border-color: {T['accent']};
+    box-shadow: {T['shadow']};
+}}
+.si-news-source {{
     font-size: 10px; font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--text-muted) !important;
-    padding: 10px 0 4px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 4px;
-}
-.si-stock-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-    border-bottom: 1px solid var(--border);
-    transition: background var(--transition);
-}
-.si-stock-row:last-child { border-bottom: none; }
-.si-stock-name {
-    font-size: 12px; font-weight: 500;
-    color: var(--text-secondary) !important;
-}
-.si-stock-price {
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: {T['accent']} !important; margin-bottom: 4px;
+}}
+.si-news-title {{
+    font-size: 13px; font-weight: 500;
+    color: {T['text']} !important; line-height: 1.5; display: block;
+}}
+.si-news-title:hover {{ color: {T['accent']} !important; }}
+.si-news-date {{
+    font-size: 11px; color: {T['muted']} !important; margin-top: 3px;
+}}
+
+/* Report card */
+.si-report-card {{
+    background: {T['surface']};
+    border: 1px solid {T['border']};
+    border-radius: 12px; padding: 36px 40px;
+    line-height: 1.85; font-size: 15px;
+    color: {T['text']};
+    box-shadow: {T['shadow']}; margin-bottom: 20px;
+}}
+.si-report-card h2 {{
+    font-size: 15px; font-weight: 600;
+    color: {T['text']}; margin: 24px 0 8px;
+    padding-bottom: 8px; border-bottom: 1px solid {T['border']};
+}}
+.si-report-card h3 {{
+    font-size: 13px; font-weight: 600; color: {T['text2']}; margin: 16px 0 5px;
+}}
+.si-report-card p {{ margin: 0 0 12px; }}
+.si-report-card a {{
+    color: {T['accent']} !important; font-weight: 600; text-decoration: underline;
+}}
+
+/* Stock widget */
+.si-stock-label {{
+    font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: {T['muted']} !important;
+    padding: 8px 0 3px; border-bottom: 1px solid {T['border']}; margin-bottom: 2px;
+}}
+.si-stock-row {{
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 0; border-bottom: 1px solid {T['border']};
+}}
+.si-stock-row:last-child {{ border-bottom: none; }}
+.si-stock-name {{
+    font-size: 11px; font-weight: 500; color: {T['text2']} !important;
+}}
+.si-stock-price {{
     font-family: 'DM Mono', monospace;
-    font-size: 12px; font-weight: 500;
-    text-align: right;
-}
-.si-stock-change { font-size: 11px; margin-left: 6px; }
-.up-color   { color: var(--up)   !important; }
-.down-color { color: var(--down) !important; }
-.flat-color { color: var(--flat) !important; }
+    font-size: 11px; font-weight: 500; text-align: right;
+}}
+.si-stock-chg {{ font-size: 10px; margin-left: 4px; }}
+.up-color   {{ color: {T['up']}   !important; }}
+.down-color {{ color: {T['down']} !important; }}
+.flat-color {{ color: {T['flat']} !important; }}
 
-/* ── Archive Entry ────────────────────────────────── */
-.si-archive-ref {
-    display: flex; align-items: flex-start; gap: 8px;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-    color: var(--text-secondary) !important;
-    transition: color var(--transition);
-}
-.si-archive-ref:hover { color: var(--accent) !important; }
-.si-archive-ref:last-child { border-bottom: none; }
+/* Archive refs */
+.si-archive-ref {{
+    display: flex; align-items: flex-start; gap: 7px;
+    padding: 5px 0; border-bottom: 1px solid {T['border']};
+    font-size: 13px; color: {T['text2']} !important;
+}}
+.si-archive-ref:hover {{ color: {T['accent']} !important; }}
+.si-archive-ref:last-child {{ border-bottom: none; }}
 
-/* ── Keyword Tag ──────────────────────────────────── */
-div.stButton > button {
-    font-family: 'DM Sans', sans-serif !important;
-    font-weight: 500 !important;
-    font-size: 13px !important;
-    border-radius: 6px !important;
-    border: 1px solid var(--border) !important;
-    background: var(--surface-2) !important;
-    color: var(--text-primary) !important;
-    transition: all var(--transition) !important;
-    padding: 4px 10px !important;
-}
-div.stButton > button:hover {
-    border-color: var(--accent) !important;
-    color: var(--accent) !important;
-    background: var(--accent-soft) !important;
-}
-div.stButton > button[kind="primary"] {
-    background: var(--accent) !important;
-    color: #fff !important;
-    border-color: var(--accent) !important;
-}
-div.stButton > button[kind="primary"]:hover {
-    background: #1D4ED8 !important;
-    border-color: #1D4ED8 !important;
-    color: #fff !important;
-}
-
-/* ── Inputs ───────────────────────────────────────── */
-.stTextInput input, .stTextArea textarea {
-    font-family: 'DM Sans', sans-serif !important;
-    background: var(--surface) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-    font-size: 13px !important;
-    transition: border-color var(--transition) !important;
-}
-.stTextInput input:focus, .stTextArea textarea:focus {
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.1) !important;
-}
-
-/* ── Expander ─────────────────────────────────────── */
-[data-testid="stExpander"] {
-    background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-    transition: background var(--transition) !important;
-}
-.streamlit-expanderHeader {
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    color: var(--text-secondary) !important;
-    background: transparent !important;
-}
-
-/* ── Alerts / Status ──────────────────────────────── */
-.stAlert, [data-testid="stNotification"] {
-    background: var(--surface-2) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-    color: var(--text-primary) !important;
-    font-size: 13px !important;
-}
-
-/* ── Divider ──────────────────────────────────────── */
-hr { border-color: var(--border) !important; margin: 16px 0 !important; }
-
-/* ── Slider ───────────────────────────────────────── */
-.stSlider [data-testid="stTickBar"] { color: var(--text-muted) !important; }
-
-/* ── Scrollbar ────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 999px; }
-
-/* ── Misc ─────────────────────────────────────────── */
-.block-container { padding-top: 28px !important; padding-bottom: 40px !important; }
-[data-testid="stStatusWidget"] { display: none !important; }
+/* Misc */
+a {{ text-decoration: none; }}
+hr {{ border-color: {T['border']} !important; margin: 12px 0 !important; }}
 </style>
-
-<script>
-// Dark mode persistence via localStorage
-(function() {
-    const saved = localStorage.getItem('si_dark_mode');
-    if (saved === 'true') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-    }
-})();
-
-function toggleDarkMode(checked) {
-    if (checked) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        localStorage.setItem('si_dark_mode', 'true');
-    } else {
-        document.documentElement.removeAttribute('data-theme');
-        localStorage.setItem('si_dark_mode', 'false');
-    }
-}
-</script>
 """, unsafe_allow_html=True)
 
 # ==========================================
@@ -612,7 +507,7 @@ def fetch_single_stock(name, symbol):
             f"<div class='si-stock-row'>"
             f"<span class='si-stock-name'>{name}</span>"
             f"<span class='si-stock-price {color_class}'>{fmt_price}"
-            f"<span class='si-stock-change'>{arrow}{sign}{pct:.2f}%</span></span>"
+            f"<span class='si-stock-chg'>{arrow}{sign}{pct:.2f}%</span></span>"
             f"</div>"
         )
         return name, html_str
@@ -887,9 +782,10 @@ def inject_links_to_report(report_text, news_data):
             idx = int(match.group(1)) - 1
             if 0 <= idx < len(news_data):
                 link = sanitize_url(news_data[idx]['Link'])
+                accent = T['accent']
                 return (
                     f"<a href='{link}' target='_blank' "
-                    f"style='color:var(--accent);font-weight:600;text-decoration:underline;'>[{match.group(1)}]</a>"
+                    f"style='color:{accent};font-weight:600;text-decoration:underline;'>[{match.group(1)}]</a>"
                 )
         except Exception:
             pass
@@ -1032,7 +928,7 @@ def render_stock_widget():
     stock_data = get_stock_prices_grouped()
     if stock_data:
         for cat, items in STOCK_CATEGORIES.items():
-            st.markdown(f"<div class='si-stock-group-label'>{cat}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='si-stock-label'>{cat}</div>", unsafe_allow_html=True)
             for name in items:
                 html_info = stock_data.get(name)
                 if html_info:
@@ -1042,41 +938,31 @@ def render_stock_widget():
 # 사이드바
 # ==========================================
 with st.sidebar:
-    # 로고 + 다크모드 토글
-    st.markdown("""
+    # 로고
+    st.markdown(f"""
     <div class="si-logo">
         <div class="si-logo-mark">💠</div>
         <div>
-            <div class="si-logo-text">Semi-Insight</div>
-            <div class="si-logo-sub">Hub · v2.0</div>
+            <div class="si-logo-text">Semi-Insight Hub</div>
+            <div class="si-logo-sub">Semiconductor Intelligence</div>
         </div>
     </div>
-
-    <div class="dm-toggle-wrap">
-        <span class="dm-label">🌙 Dark Mode</span>
-        <label class="dm-toggle">
-            <input type="checkbox" id="dmToggle" onchange="toggleDarkMode(this.checked)"
-                   onclick="this.checked=!this.checked;toggleDarkMode(this.checked)">
-            <span class="dm-slider"></span>
-        </label>
-    </div>
-    <script>
-    // 페이지 로드 시 토글 상태 동기화
-    (function() {
-        const isDark = localStorage.getItem('si_dark_mode') === 'true';
-        const cb = document.getElementById('dmToggle');
-        if (cb) cb.checked = isDark;
-    })();
-    </script>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+    # 다크모드 토글 (Streamlit native → session_state 기반)
+    dark_toggled = st.toggle("🌙 Dark Mode", value=st.session_state.dark_mode)
+    if dark_toggled != st.session_state.dark_mode:
+        st.session_state.dark_mode = dark_toggled
+        st.rerun()
+
+    st.markdown("<hr>", unsafe_allow_html=True)
     selected_category = st.radio("카테고리", CATEGORIES, index=0, label_visibility="collapsed")
     st.markdown("<hr>", unsafe_allow_html=True)
 
     with st.expander("🔐 API Key"):
-        user_key = st.text_input("Gemini API Key", type="password", label_visibility="collapsed",
-                                  placeholder="Gemini API Key")
+        user_key = st.text_input("Gemini API Key", type="password",
+                                  label_visibility="collapsed",
+                                  placeholder="Gemini API Key를 입력하세요")
         if user_key:
             api_key = user_key
         elif "GEMINI_API_KEY" in st.secrets:
@@ -1084,11 +970,12 @@ with st.sidebar:
 
     if "GITHUB_TOKEN" in st.secrets:
         st.markdown(
-            "<div style='margin-top:10px'><span class='si-badge'>✓ GitHub Sync</span></div>",
+            "<div style='margin-top:10px'><span class='si-badge'>✓ GitHub Sync On</span></div>",
             unsafe_allow_html=True
         )
 
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+
     with st.expander("📈 Global Stocks", expanded=True):
         render_stock_widget()
 
@@ -1098,9 +985,7 @@ with st.sidebar:
 c_head, c_info = st.columns([3, 1])
 with c_head:
     st.markdown(
-        f"<div class='si-page-header'>"
-        f"<div class='si-page-title'>{selected_category}</div>"
-        f"</div>",
+        f"<div class='si-page-title'>{selected_category}</div>",
         unsafe_allow_html=True
     )
 
@@ -1122,8 +1007,8 @@ if selected_category == "Daily Report":
     target_date_str = target_date.strftime('%Y-%m-%d')
 
     st.markdown(
-        f"<div style='text-align:right; font-size:12px; color:var(--text-muted); margin-bottom:16px;'>"
-        f"Report Date &nbsp;·&nbsp; <b style='color:var(--text-secondary)'>{target_date}</b></div>",
+        f"<div style='text-align:right; font-size:12px; color:{T['muted']}; margin-bottom:16px;'>"
+        f"Report Date &nbsp;·&nbsp; <b style='color:{T['text2']}'>{target_date}</b></div>",
         unsafe_allow_html=True
     )
 
@@ -1192,8 +1077,8 @@ if selected_category == "Daily Report":
     if history:
         st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
         st.markdown(
-            "<div style='font-size:14px; font-weight:600; color:var(--text-secondary); "
-            "margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);'>"
+            f"<div style='font-size:14px; font-weight:600; color:{T['text2']}; "
+            f"margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid {T['border']};'>"
             "🗂️ 리포트 아카이브</div>",
             unsafe_allow_html=True
         )
@@ -1208,17 +1093,18 @@ if selected_category == "Daily Report":
                     unsafe_allow_html=True
                 )
                 st.markdown(
-                    "<div style='font-size:12px; font-weight:600; color:var(--text-muted); "
-                    "letter-spacing:0.05em; text-transform:uppercase; margin:16px 0 8px;'>"
+                    f"<div style='font-size:12px; font-weight:600; color:{T['muted']}; "
+                    f"letter-spacing:0.05em; text-transform:uppercase; margin:16px 0 8px;'>"
                     "참고 기사</div>",
                     unsafe_allow_html=True
                 )
                 for item in entry.get('articles', []):
                     safe_link = sanitize_url(item.get('Link', '#'))
                     clean_title = re.sub(r'<[^>]+>', '', item.get('Title', ''))
+                    accent = T['accent']
                     st.markdown(
                         f"<a href='{safe_link}' target='_blank' class='si-archive-ref'>"
-                        f"<span style='color:var(--accent);flex-shrink:0'>↗</span>"
+                        f"<span style='color:{accent};flex-shrink:0'>↗</span>"
                         f"<span>{clean_title}</span></a>",
                         unsafe_allow_html=True
                     )
@@ -1246,8 +1132,8 @@ else:
     data = st.session_state.news_data.get(selected_category, [])
     if data:
         st.markdown(
-            f"<div style='font-size:12px; color:var(--text-muted); margin-bottom:16px;'>"
-            f"총 <b style='color:var(--text-secondary)'>{len(data)}</b>건 수집 · 최근 {search_days}일</div>",
+            f"<div style='font-size:12px; color:{T['muted']}; margin-bottom:16px;'>"
+            f"총 <b style='color:{T['text2']}'>{len(data)}</b>건 수집 · 최근 {search_days}일</div>",
             unsafe_allow_html=True
         )
         for item in data:
