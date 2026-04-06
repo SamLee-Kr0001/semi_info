@@ -640,3 +640,4 @@ else:
             """, unsafe_allow_html=True)
     else:
         st.info("상단의 '실행' 버튼을 눌러 뉴스를 수집하세요. (API Key 필요)")
+        
