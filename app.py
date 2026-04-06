@@ -85,252 +85,102 @@ def get_theme():
 
 T = get_theme()
 
-# ── CSS 주입: hex 고정값만 사용, Streamlit 호환 선택자만 사용 ──
-st.markdown(f"""
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+# ── CSS 주입 ─────────────────────────────────────────────────
+# {{ }} 이스케이프 없이 .format()으로 hex 값 주입 → 파싱 오류 원천 차단
+_FONT = '<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">'
+
+_CSS = """
 <style>
-/* ── Font ── */
 html, body, [class*="css"], .stApp,
 [data-testid="stAppViewContainer"],
 [data-testid="stHeader"],
 [data-testid="stSidebar"],
-.block-container {{
+.block-container {
     font-family: 'DM Sans', sans-serif !important;
-}}
-
-/* ── App background ── */
-.stApp, [data-testid="stAppViewContainer"] {{
-    background-color: {T['bg']} !important;
-}}
-.block-container {{
-    background-color: {T['bg']} !important;
-    padding-top: 28px !important;
-    padding-bottom: 48px !important;
-}}
-
-/* ── Sidebar ── */
-section[data-testid="stSidebar"] > div:first-child {{
-    background-color: {T['surface']} !important;
-    border-right: 1px solid {T['border']} !important;
-}}
-
-/* ── Text defaults ── */
-.stMarkdown, .stMarkdown p, .stMarkdown li,
-.stRadio label, .stCheckbox label,
-p, span, div, li {{
-    color: {T['text']} !important;
-}}
-label[data-testid="stWidgetLabel"] {{
-    color: {T['text2']} !important;
-    font-size: 13px !important;
-}}
-
-/* ── Buttons ── */
-div.stButton > button {{
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    border-radius: 7px !important;
-    padding: 5px 14px !important;
-    border: 1px solid {T['border2']} !important;
-    background-color: {T['surface2']} !important;
-    color: {T['text']} !important;
-    transition: all 0.15s ease !important;
-    box-shadow: none !important;
-}}
-div.stButton > button:hover {{
-    border-color: {T['accent']} !important;
-    color: {T['accent']} !important;
-    background-color: {T['accent_soft']} !important;
-}}
-div.stButton > button[kind="primary"] {{
-    background-color: {T['accent']} !important;
-    color: #ffffff !important;
-    border-color: {T['accent']} !important;
-}}
-div.stButton > button[kind="primary"]:hover {{
-    opacity: 0.88 !important;
-}}
-
-/* ── Text inputs ── */
-.stTextInput input, .stTextArea textarea, .stSelectbox select {{
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 13px !important;
-    background-color: {T['surface']} !important;
-    color: {T['text']} !important;
-    border: 1px solid {T['border2']} !important;
-    border-radius: 7px !important;
-}}
-.stTextInput input:focus, .stTextArea textarea:focus {{
-    border-color: {T['accent']} !important;
-    box-shadow: 0 0 0 3px {T['accent']}22 !important;
-}}
-
-/* ── Expanders ── */
-[data-testid="stExpander"] {{
-    background-color: {T['surface']} !important;
-    border: 1px solid {T['border']} !important;
-    border-radius: 9px !important;
-    overflow: hidden;
-}}
-[data-testid="stExpander"] summary {{
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    color: {T['text2']} !important;
-    background-color: {T['surface']} !important;
-}}
-
-/* ── Containers ── */
-[data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"] {{
-    background-color: {T['surface']} !important;
-    border: 1px solid {T['border']} !important;
-    border-radius: 10px !important;
-}}
-
-/* ── Alerts ── */
-[data-testid="stAlert"] {{
-    background-color: {T['surface2']} !important;
-    border: 1px solid {T['border']} !important;
-    border-radius: 8px !important;
-    font-size: 13px !important;
-    color: {T['text']} !important;
-}}
-
-/* ── Scrollbar ── */
-::-webkit-scrollbar {{ width: 5px; }}
-::-webkit-scrollbar-track {{ background: transparent; }}
-::-webkit-scrollbar-thumb {{ background: {T['border2']}; border-radius: 999px; }}
-
-/* ── Custom component classes (hex only) ── */
-
-/* Logo */
-.si-logo {{
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 20px; padding-bottom: 16px;
-    border-bottom: 1px solid {T['border']};
-}}
-.si-logo-mark {{
-    width: 30px; height: 30px; background: {T['accent']};
-    border-radius: 7px; display: flex; align-items: center;
-    justify-content: center; font-size: 15px; flex-shrink: 0;
-}}
-.si-logo-text {{
-    font-size: 14px; font-weight: 600;
-    letter-spacing: -0.02em; color: {T['text']} !important;
-}}
-.si-logo-sub {{
-    font-size: 10px; color: {T['muted']} !important;
-    letter-spacing: 0.06em; text-transform: uppercase;
-}}
-
-/* Badge */
-.si-badge {{
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
-    text-transform: uppercase; padding: 3px 8px; border-radius: 999px;
-    background: {T['badge_bg']}; color: {T['badge_fg']} !important;
-}}
-
-/* Info banner */
-.si-banner {{
-    display: flex; align-items: center; gap: 10px;
-    background: {T['accent_soft']}; border: 1px solid {T['accent']}26;
-    border-radius: 8px; padding: 11px 15px;
-    font-size: 13px; color: {T['accent']} !important;
-    margin-bottom: 20px; font-weight: 500;
-}}
-
-/* Page header */
-.si-page-title {{
-    font-size: 21px; font-weight: 600;
-    letter-spacing: -0.03em; color: {T['text']};
-    margin: 0 0 16px 0; padding-bottom: 16px;
-    border-bottom: 1px solid {T['border']};
-}}
-
-/* News cards */
-.si-news-card {{
-    background: {T['surface']};
-    border: 1px solid {T['border']};
-    border-radius: 9px; padding: 13px 15px; margin-bottom: 7px;
-}}
-.si-news-card:hover {{
-    border-color: {T['accent']};
-    box-shadow: {T['shadow']};
-}}
-.si-news-source {{
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.07em; text-transform: uppercase;
-    color: {T['accent']} !important; margin-bottom: 4px;
-}}
-.si-news-title {{
-    font-size: 13px; font-weight: 500;
-    color: {T['text']} !important; line-height: 1.5; display: block;
-}}
-.si-news-title:hover {{ color: {T['accent']} !important; }}
-.si-news-date {{
-    font-size: 11px; color: {T['muted']} !important; margin-top: 3px;
-}}
-
-/* Report card */
-.si-report-card {{
-    background: {T['surface']};
-    border: 1px solid {T['border']};
-    border-radius: 12px; padding: 36px 40px;
-    line-height: 1.85; font-size: 15px;
-    color: {T['text']};
-    box-shadow: {T['shadow']}; margin-bottom: 20px;
-}}
-.si-report-card h2 {{
-    font-size: 15px; font-weight: 600;
-    color: {T['text']}; margin: 24px 0 8px;
-    padding-bottom: 8px; border-bottom: 1px solid {T['border']};
-}}
-.si-report-card h3 {{
-    font-size: 13px; font-weight: 600; color: {T['text2']}; margin: 16px 0 5px;
-}}
-.si-report-card p {{ margin: 0 0 12px; }}
-.si-report-card a {{
-    color: {T['accent']} !important; font-weight: 600; text-decoration: underline;
-}}
-
-/* Stock widget */
-.si-stock-label {{
-    font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; color: {T['muted']} !important;
-    padding: 8px 0 3px; border-bottom: 1px solid {T['border']}; margin-bottom: 2px;
-}}
-.si-stock-row {{
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 4px 0; border-bottom: 1px solid {T['border']};
-}}
-.si-stock-row:last-child {{ border-bottom: none; }}
-.si-stock-name {{
-    font-size: 11px; font-weight: 500; color: {T['text2']} !important;
-}}
-.si-stock-price {{
-    font-family: 'DM Mono', monospace;
-    font-size: 11px; font-weight: 500; text-align: right;
-}}
-.si-stock-chg {{ font-size: 10px; margin-left: 4px; }}
-.up-color   {{ color: {T['up']}   !important; }}
-.down-color {{ color: {T['down']} !important; }}
-.flat-color {{ color: {T['flat']} !important; }}
-
-/* Archive refs */
-.si-archive-ref {{
-    display: flex; align-items: flex-start; gap: 7px;
-    padding: 5px 0; border-bottom: 1px solid {T['border']};
-    font-size: 13px; color: {T['text2']} !important;
-}}
-.si-archive-ref:hover {{ color: {T['accent']} !important; }}
-.si-archive-ref:last-child {{ border-bottom: none; }}
-
-/* Misc */
-a {{ text-decoration: none; }}
-hr {{ border-color: {T['border']} !important; margin: 12px 0 !important; }}
+}
+.stApp, [data-testid="stAppViewContainer"] { background-color: BG !important; }
+.block-container { background-color: BG !important; padding-top: 28px !important; padding-bottom: 48px !important; }
+section[data-testid="stSidebar"] > div:first-child { background-color: SURFACE !important; border-right: 1px solid BORDER !important; }
+.stMarkdown, .stMarkdown p, .stMarkdown li, .stRadio label, .stCheckbox label, p, span, div, li { color: TEXT !important; }
+label[data-testid="stWidgetLabel"] { color: TEXT2 !important; font-size: 13px !important; }
+div.stButton > button {
+    font-family: 'DM Sans', sans-serif !important; font-size: 13px !important;
+    font-weight: 500 !important; border-radius: 7px !important; padding: 5px 14px !important;
+    border: 1px solid BORDER2 !important; background-color: SURFACE2 !important;
+    color: TEXT !important; transition: all 0.15s ease !important; box-shadow: none !important;
+}
+div.stButton > button:hover { border-color: ACCENT !important; color: ACCENT !important; background-color: ACCENT_SOFT !important; }
+div.stButton > button[kind="primary"] { background-color: ACCENT !important; color: #ffffff !important; border-color: ACCENT !important; }
+div.stButton > button[kind="primary"]:hover { opacity: 0.88 !important; }
+.stTextInput input, .stTextArea textarea {
+    font-family: 'DM Sans', sans-serif !important; font-size: 13px !important;
+    background-color: SURFACE !important; color: TEXT !important;
+    border: 1px solid BORDER2 !important; border-radius: 7px !important;
+}
+.stTextInput input:focus, .stTextArea textarea:focus { border-color: ACCENT !important; }
+[data-testid="stExpander"] { background-color: SURFACE !important; border: 1px solid BORDER !important; border-radius: 9px !important; overflow: hidden; }
+[data-testid="stExpander"] summary { font-size: 13px !important; font-weight: 500 !important; color: TEXT2 !important; background-color: SURFACE !important; }
+[data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"] { background-color: SURFACE !important; border: 1px solid BORDER !important; border-radius: 10px !important; }
+[data-testid="stAlert"] { background-color: SURFACE2 !important; border: 1px solid BORDER !important; border-radius: 8px !important; font-size: 13px !important; color: TEXT !important; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: BORDER2; border-radius: 999px; }
+.si-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid BORDER; }
+.si-logo-mark { width: 30px; height: 30px; background: ACCENT; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.si-logo-text { font-size: 14px; font-weight: 600; letter-spacing: -0.02em; color: TEXT !important; }
+.si-logo-sub  { font-size: 10px; color: MUTED !important; letter-spacing: 0.06em; text-transform: uppercase; }
+.si-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: BADGE_BG; color: BADGE_FG !important; }
+.si-banner { display: flex; align-items: center; gap: 10px; background: ACCENT_SOFT; border: 1px solid BORDER; border-radius: 8px; padding: 11px 15px; font-size: 13px; color: ACCENT !important; margin-bottom: 20px; font-weight: 500; }
+.si-page-title { font-size: 21px; font-weight: 600; letter-spacing: -0.03em; color: TEXT; margin: 0 0 16px 0; padding-bottom: 16px; border-bottom: 1px solid BORDER; }
+.si-news-card { background: SURFACE; border: 1px solid BORDER; border-radius: 9px; padding: 13px 15px; margin-bottom: 7px; }
+.si-news-card:hover { border-color: ACCENT; box-shadow: SHADOW; }
+.si-news-source { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: ACCENT !important; margin-bottom: 4px; }
+.si-news-title { font-size: 13px; font-weight: 500; color: TEXT !important; line-height: 1.5; display: block; }
+.si-news-title:hover { color: ACCENT !important; }
+.si-news-date { font-size: 11px; color: MUTED !important; margin-top: 3px; }
+.si-report-card { background: SURFACE; border: 1px solid BORDER; border-radius: 12px; padding: 36px 40px; line-height: 1.85; font-size: 15px; color: TEXT; box-shadow: SHADOW; margin-bottom: 20px; }
+.si-report-card h2 { font-size: 15px; font-weight: 600; color: TEXT; margin: 24px 0 8px; padding-bottom: 8px; border-bottom: 1px solid BORDER; }
+.si-report-card h3 { font-size: 13px; font-weight: 600; color: TEXT2; margin: 16px 0 5px; }
+.si-report-card p  { margin: 0 0 12px; }
+.si-report-card a  { color: ACCENT !important; font-weight: 600; text-decoration: underline; }
+.si-stock-label { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: MUTED !important; padding: 8px 0 3px; border-bottom: 1px solid BORDER; margin-bottom: 2px; }
+.si-stock-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid BORDER; }
+.si-stock-row:last-child { border-bottom: none; }
+.si-stock-name  { font-size: 11px; font-weight: 500; color: TEXT2 !important; }
+.si-stock-price { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; text-align: right; }
+.si-stock-chg   { font-size: 10px; margin-left: 4px; }
+.up-color   { color: UP   !important; }
+.down-color { color: DOWN !important; }
+.flat-color { color: FLAT !important; }
+.si-archive-ref { display: flex; align-items: flex-start; gap: 7px; padding: 5px 0; border-bottom: 1px solid BORDER; font-size: 13px; color: TEXT2 !important; }
+.si-archive-ref:hover { color: ACCENT !important; }
+.si-archive-ref:last-child { border-bottom: none; }
+a  { text-decoration: none; }
+hr { border-color: BORDER !important; margin: 12px 0 !important; }
 </style>
-""", unsafe_allow_html=True)
+"""
+
+def _inject_css(t):
+    css = _CSS
+    css = css.replace("BG",          t["bg"])
+    css = css.replace("SURFACE2",    t["surface2"])
+    css = css.replace("SURFACE",     t["surface"])
+    css = css.replace("BORDER2",     t["border2"])
+    css = css.replace("BORDER",      t["border"])
+    css = css.replace("TEXT2",       t["text2"])
+    css = css.replace("TEXT",        t["text"])
+    css = css.replace("ACCENT_SOFT", t["accent_soft"])
+    css = css.replace("ACCENT",      t["accent"])
+    css = css.replace("MUTED",       t["muted"])
+    css = css.replace("BADGE_BG",    t["badge_bg"])
+    css = css.replace("BADGE_FG",    t["badge_fg"])
+    css = css.replace("SHADOW",      t["shadow"])
+    css = css.replace("UP",          t["up"])
+    css = css.replace("DOWN",        t["down"])
+    css = css.replace("FLAT",        t["flat"])
+    st.markdown(_FONT + css, unsafe_allow_html=True)
+
+_inject_css(T)
 
 # ==========================================
 # 주식 티커
