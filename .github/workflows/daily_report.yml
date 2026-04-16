@@ -1,1 +1,74 @@
+# .github/workflows/daily_report.yml
+#
+# 매일 06:00 KST (= 21:00 UTC 전일) 자동 리포트 생성
+# 수동 실행: GitHub Actions 탭 → "Run workflow"
+#
+# 필요한 GitHub Secrets (Settings → Secrets → Actions):
+#   GEMINI_API_KEY  : Gemini API 키
+#   REPO_NAME       : "username/repo-name" (예: sam/semi-insight-hub)
+#
+# GITHUB_TOKEN은 Actions에서 자동 제공되므로 별도 등록 불필요.
 
+name: Daily Report Generator
+
+on:
+  schedule:
+    # 매일 21:00 UTC = 06:00 KST (다음날)
+    - cron: "0 21 * * *"
+  workflow_dispatch:
+    # 수동 실행 시 날짜 강제 지정 가능 (비워두면 오늘 날짜 사용)
+    inputs:
+      force_date:
+        description: "강제 실행 날짜 (YYYY-MM-DD, 비워두면 자동)"
+        required: false
+        default: ""
+
+jobs:
+  generate:
+    name: Generate Daily Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: write   # daily_history.json 커밋 권한
+
+    steps:
+      # ── 1. 코드 체크아웃 ──────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Python 환경 설정 ───────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      # ── 3. 의존성 설치 ────────────────────────────────────
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install \
+            requests \
+            beautifulsoup4 \
+            lxml \
+            PyGithub \
+            urllib3
+
+      # ── 4. 리포트 생성 실행 ───────────────────────────────
+      - name: Run report generator
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN:   ${{ secrets.GITHUB_TOKEN }}
+          REPO_NAME:      ${{ secrets.REPO_NAME }}
+          FORCE_DATE:     ${{ github.event.inputs.force_date }}
+        run: |
+          python generate_report.py
+
+      # ── 5. 실행 결과 요약 ─────────────────────────────────
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Daily Report Generator" >> $GITHUB_STEP_SUMMARY
+          echo "- 실행 시각 (UTC): $(date -u '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+          echo "- 실행 시각 (KST): $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
