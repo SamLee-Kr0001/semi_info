@@ -13,6 +13,7 @@ Streamlit / session_state 완전 미사용.
   GEMINI_API_KEY=... GITHUB_TOKEN=... REPO_NAME=user/repo python generate_report.py
 """
 
+import concurrent.futures
 import json
 import logging
 import os
@@ -118,10 +119,68 @@ def load_keywords() -> list[str]:
 # ════════════════════════════════════════════════════════════
 # 3. 뉴스 수집
 # ════════════════════════════════════════════════════════════
+def _fetch_keyword_news(kw: str, per_kw: int, start_dt: datetime, end_dt: datetime) -> tuple[list[dict], list[dict]]:
+    """단일 키워드 RSS를 1회만 조회하여 (시간필터 통과 목록, 원본 전체 목록)을 함께 반환.
+    폴백 시 재크롤링 없이 이 원본 목록을 그대로 재사용한다."""
+    url = (
+        f"https://news.google.com/rss/search?"
+        f"q={quote(kw)}+when:{NEWS_DAYS}d&hl=ko&gl=KR&ceid=KR:ko"
+    )
+    filtered: list[dict] = []
+    raw: list[dict] = []
+    try:
+        res = requests.get(url, timeout=8, verify=False)
+        res.raise_for_status()
+        soup = BeautifulSoup(res.content, "xml")
+        for item in soup.find_all("item"):
+            title = item.title.text.strip() if item.title else ""
+            if not title:
+                continue
+            link  = item.link.text.strip()  if item.link  else ""
+            src   = item.source.text.strip() if item.source else "Google News"
+            date_raw = item.pubDate.text if item.pubDate else ""
+            parsed_date_str = None
+
+            # 시간 필터
+            is_valid = True
+            try:
+                pub_dt = datetime.strptime(date_raw, "%a, %d %b %Y %H:%M:%S %Z")
+                pub_dt_kst = pub_dt + timedelta(hours=9)
+                parsed_date_str = pub_dt_kst.strftime("%Y-%m-%d %H:%M:%S")
+                if not (start_dt <= pub_dt_kst <= end_dt):
+                    is_valid = False
+            except Exception:
+                pass  # 파싱 실패 시 포함
+
+            entry = {
+                "Title": title, "Link": link, "Date": date_raw,
+                "Source": src, "ParsedDate": parsed_date_str,
+            }
+            if len(raw) < per_kw:
+                raw.append(entry)
+            if is_valid and len(filtered) < per_kw:
+                filtered.append(entry)
+            if len(filtered) >= per_kw and len(raw) >= per_kw:
+                break
+    except Exception as e:
+        logger.warning(f"뉴스 수집 오류 [kw={kw}]: {e}")
+    return filtered, raw
+
+
+def _dedupe(items: list[dict]) -> list[dict]:
+    seen, unique = set(), []
+    for item in items:
+        if item["Title"] not in seen:
+            seen.add(item["Title"])
+            unique.append(item)
+    return unique
+
+
 def fetch_news(keywords: list[str], target_date_str: str) -> list[dict]:
     """
     target_date 전날 12:00 KST ~ target_date 06:00 KST 범위 뉴스 수집.
-    범위 내 뉴스가 없으면 최근 NEWS_DAYS일로 폴백.
+    범위 내 뉴스가 없으면 이미 수집해 둔 전체 뉴스로 폴백(재크롤링 없음).
+    키워드별 요청은 병렬로 실행해 크롤링 시간을 단축한다.
     """
     target_date = datetime.strptime(target_date_str, "%Y-%m-%d")
     end_dt   = target_date.replace(hour=6, minute=0, second=0)
@@ -129,96 +188,25 @@ def fetch_news(keywords: list[str], target_date_str: str) -> list[dict]:
 
     logger.info(f"뉴스 수집 범위: {start_dt} ~ {end_dt} KST")
 
-    all_items: list[dict] = []
     per_kw = max(3, NEWS_LIMIT // max(len(keywords), 1))
+    filtered_all: list[dict] = []
+    raw_all: list[dict] = []
 
-    for kw in keywords:
-        url = (
-            f"https://news.google.com/rss/search?"
-            f"q={quote(kw)}+when:{NEWS_DAYS}d&hl=ko&gl=KR&ceid=KR:ko"
-        )
-        try:
-            res = requests.get(url, timeout=8, verify=False)
-            res.raise_for_status()
-            soup  = BeautifulSoup(res.content, "xml")
-            items = soup.find_all("item")
-            kw_count = 0
-            for item in items:
-                title = item.title.text.strip() if item.title else ""
-                link  = item.link.text.strip()  if item.link  else ""
-                src   = item.source.text.strip() if item.source else "Google News"
-                date_raw = item.pubDate.text if item.pubDate else ""
-                parsed_date_str = None
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(keywords))) as executor:
+        futures = [executor.submit(_fetch_keyword_news, kw, per_kw, start_dt, end_dt) for kw in keywords]
+        for future in concurrent.futures.as_completed(futures):
+            filtered, raw = future.result()
+            filtered_all.extend(filtered)
+            raw_all.extend(raw)
 
-                # 시간 필터
-                is_valid = True
-                try:
-                    pub_dt = datetime.strptime(date_raw, "%a, %d %b %Y %H:%M:%S %Z")
-                    pub_dt_kst = pub_dt + timedelta(hours=9)
-                    parsed_date_str = pub_dt_kst.strftime("%Y-%m-%d %H:%M:%S")
-                    if not (start_dt <= pub_dt_kst <= end_dt):
-                        is_valid = False
-                except Exception:
-                    pass  # 파싱 실패 시 포함
+    unique_filtered = _dedupe(filtered_all)
+    if len(unique_filtered) < 5:
+        logger.warning(f"시간 필터 결과 {len(unique_filtered)}건 → 폴백: 이미 수집된 전체 뉴스 재사용")
+        result_pool = _dedupe(raw_all)
+    else:
+        result_pool = unique_filtered
 
-                if is_valid and title:
-                    if not any(i["Title"] == title for i in all_items):
-                        all_items.append({
-                            "Title":      title,
-                            "Link":       link,
-                            "Date":       date_raw,
-                            "Source":     src,
-                            "ParsedDate": parsed_date_str,
-                        })
-                        kw_count += 1
-                if kw_count >= per_kw:
-                    break
-        except Exception as e:
-            logger.warning(f"뉴스 수집 오류 [kw={kw}]: {e}")
-        time.sleep(0.15)
-
-    # 시간 필터 결과가 부족하면 폴백: 최근 NEWS_DAYS일 전체
-    if len(all_items) < 5:
-        logger.warning(f"시간 필터 결과 {len(all_items)}건 → 폴백: 전체 {NEWS_DAYS}일")
-        all_items = []
-        for kw in keywords:
-            url = (
-                f"https://news.google.com/rss/search?"
-                f"q={quote(kw)}+when:{NEWS_DAYS}d&hl=ko&gl=KR&ceid=KR:ko"
-            )
-            try:
-                res = requests.get(url, timeout=8, verify=False)
-                res.raise_for_status()
-                soup  = BeautifulSoup(res.content, "xml")
-                items = soup.find_all("item")
-                kw_count = 0
-                for item in items:
-                    title = item.title.text.strip() if item.title else ""
-                    link  = item.link.text.strip()  if item.link  else ""
-                    src   = item.source.text.strip() if item.source else "Google News"
-                    date_raw = item.pubDate.text if item.pubDate else ""
-                    if title and not any(i["Title"] == title for i in all_items):
-                        all_items.append({
-                            "Title":      title,
-                            "Link":       link,
-                            "Date":       date_raw,
-                            "Source":     src,
-                            "ParsedDate": None,
-                        })
-                        kw_count += 1
-                    if kw_count >= per_kw:
-                        break
-            except Exception as e:
-                logger.warning(f"폴백 뉴스 수집 오류 [kw={kw}]: {e}")
-            time.sleep(0.15)
-
-    # 중복 제거 후 상위 NEWS_LIMIT건
-    seen, unique = set(), []
-    for item in all_items:
-        if item["Title"] not in seen:
-            seen.add(item["Title"])
-            unique.append(item)
-    result = unique[:NEWS_LIMIT]
+    result = result_pool[:NEWS_LIMIT]
     logger.info(f"뉴스 수집 완료: {len(result)}건")
     return result
 
@@ -226,8 +214,11 @@ def fetch_news(keywords: list[str], target_date_str: str) -> list[dict]:
 # ════════════════════════════════════════════════════════════
 # 4. AI 리포트 생성
 # ════════════════════════════════════════════════════════════
+DEFAULT_MODEL = "gemini-2.0-flash"  # 매번 모델 목록을 조회하지 않고 바로 사용 (지연 시간 단축)
+
+
 def _get_best_model() -> str:
-    """사용 가능한 Gemini 모델 중 최선 선택"""
+    """사용 가능한 Gemini 모델 중 최선 선택 (DEFAULT_MODEL 실패 시에만 조회)"""
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models?key={GEMINI_API_KEY}"
         res = requests.get(url, timeout=10)
@@ -246,24 +237,29 @@ def _get_best_model() -> str:
                     return found
     except Exception as e:
         logger.warning(f"모델 목록 조회 실패: {e}")
-    return "gemini-2.0-flash"
+    return DEFAULT_MODEL
 
 
 def generate_report(news_data: list[dict]) -> str:
     """뉴스 데이터로 AI 리포트 생성 (링크 주입 없이 순수 Markdown 반환)"""
-    model = _get_best_model()
-
     news_context = "\n".join(
         f"[{i+1}] {re.sub(r'<[^>]+>', '', item['Title'])} (출처: {item['Source']})"
         for i, item in enumerate(news_data)
     )
 
-    prompt = f"""당신은 글로벌 반도체 소재의 전략 수석 엔지니어입니다.
-제공된 뉴스 데이터를 바탕으로 전문가 수준의 [일일 반도체 기술·소재 심층 분석 보고서]를 작성하세요.
+    prompt = f"""당신은 글로벌 반도체 소재 전략 수석 애널리스트입니다.
+아래 뉴스 데이터만 근거로 삼아, 바쁜 임원이 핵심을 즉시 파악할 수 있는
+[일일 반도체 기술·소재 브리핑]을 작성하세요.
+
+[절대 금지]
+- "오늘날 반도체 산업은", "최근 반도체 업계에서는"과 같은 상투적이고 의미 없는
+  도입 문장을 쓰지 마세요. 배경 설명 없이 바로 사실과 숫자로 시작하세요.
+- 뉴스 제목 나열이나 단순 번역 금지.
+- 뉴스에 없는 내용은 추측하지 마세요.
 
 [작성 원칙]
-1. 단순 요약 금지 - 뉴스 제목을 나열하지 마세요.
-2. 서술형 작성 - bullet point 없이 자연스러운 논리 흐름의 서술형 단락으로 작성하세요.
+1. 두괄식(Lead with the conclusion) - 모든 섹션은 첫 문장에 결론·핵심 판단을 제시한 뒤 근거를 설명하세요.
+2. 서술형 - bullet point 없이 논리적으로 이어지는 문단으로, 군더더기 없이 간결하게 작성하세요.
 3. 근거 명시 - 모든 주장에 뉴스 번호 [1], [2] 등을 반드시 인용하세요.
 
 [뉴스 데이터]
@@ -271,34 +267,39 @@ def generate_report(news_data: list[dict]) -> str:
 
 [보고서 구조 - Markdown 형식]
 
-## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
-가장 중요한 이슈 2~3가지를 소제목과 함께 서술형 단락으로 분석. 인용 번호 필수.
+## 📌 핵심 요약 (Executive Brief)
+오늘 가장 중요한 판단 3~4개를 각 1문장으로, 결론부터 제시. 문장마다 인용 번호 포함.
 
-## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
-반도체 소재·소부장 기술 변화와 공급망 주요 동향 서술.
+## 🚨 핵심 이슈 심층 분석
+가장 중요한 이슈 2~3가지를 소제목으로 나누어, 각 소제목 첫 문장에 결론을 제시한 뒤
+근거와 배경을 서술형으로 상세히 분석. 인용 번호 필수.
+
+## 🕸️ 공급망 및 기술 동향
+반도체 소재·소부장 기술 변화와 공급망 관련 동향 중 핵심만 결론 우선으로 서술.
 
 ## 💡 Analyst's View (시사점)
-오늘 뉴스가 주는 핵심 시사점과 향후 관전 포인트 서술.
-
-## 📊 Executive Summary (시장 총평)
-오늘 반도체 시장 분위기와 소재 중심 이슈 3~4문장 요약.
+오늘 뉴스가 주는 시사점과 향후 관전 포인트를 결론부터 서술.
 """
 
     headers = {"Content-Type": "application/json"}
     body    = {
         "contents": [{"parts": [{"text": prompt}]}],
         "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}],
-        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 4096},
+        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 2560},
     }
-    url = (
-        f"https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{model}:generateContent?key={GEMINI_API_KEY}"
-    )
 
+    def _call(model: str):
+        url = (
+            f"https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{model}:generateContent?key={GEMINI_API_KEY}"
+        )
+        return requests.post(url, headers=headers, json=body, timeout=120)
+
+    model = DEFAULT_MODEL
     retry_wait = 2
     for attempt in range(4):
         try:
-            resp = requests.post(url, headers=headers, json=body, timeout=120)
+            resp = _call(model)
             if resp.status_code == 200:
                 candidates = resp.json().get("candidates", [])
                 if candidates:
@@ -306,6 +307,11 @@ def generate_report(news_data: list[dict]) -> str:
                     logger.info(f"리포트 생성 완료 ({len(text)} chars)")
                     return text
                 logger.warning("candidates 없음 → 재시도")
+            elif resp.status_code == 404 and model == DEFAULT_MODEL:
+                # 기본 모델 사용 불가 → 사용 가능한 모델로 교체 후 재시도
+                model = _get_best_model()
+                logger.warning(f"기본 모델 사용 불가 → {model}(으)로 전환")
+                continue
             elif resp.status_code == 429:
                 logger.warning(f"Rate limit → {retry_wait}s 대기 후 재시도 (attempt {attempt+1})")
                 time.sleep(retry_wait)

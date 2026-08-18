@@ -392,14 +392,57 @@ def get_stock_prices_grouped():
 # ==========================================
 # 2. 뉴스 수집
 # ==========================================
+def _fetch_keyword_news(kw, per_kw_limit, days, strict_time, start_dt, end_dt):
+    """단일 키워드 RSS를 1회만 조회하여 (시간필터 통과 목록, 원본 전체 목록)을 함께 반환.
+    시간필터 결과가 부족할 때 재크롤링 없이 원본 목록을 그대로 폴백에 사용한다."""
+    url = (
+        f"https://news.google.com/rss/search?"
+        f"q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
+    )
+    filtered, raw = [], []
+    try:
+        res = requests.get(url, timeout=5, verify=False)
+        res.raise_for_status()
+        soup = BeautifulSoup(res.content, 'xml')
+        for item in soup.find_all('item'):
+            title = item.title.text if item.title else ""
+            if not title:
+                continue
+            link = item.link.text if item.link else ""
+            date_raw = item.pubDate.text if item.pubDate else ""
+            src = item.source.text if item.source else "Google News"
+
+            is_valid = True
+            pub_date_str_val = None
+            if strict_time and start_dt and end_dt:
+                try:
+                    pub_date = datetime.strptime(date_raw, "%a, %d %b %Y %H:%M:%S %Z")
+                    pub_date_kst = pub_date + timedelta(hours=9)
+                    pub_date_str_val = pub_date_kst.strftime("%Y-%m-%d %H:%M:%S")
+                    if not (start_dt <= pub_date_kst <= end_dt):
+                        is_valid = False
+                except Exception:
+                    is_valid = True  # 날짜 파싱 실패 시 포함
+
+            entry = {'Title': title, 'Link': link, 'Date': date_raw, 'Source': src, 'ParsedDate': pub_date_str_val}
+            if len(raw) < per_kw_limit:
+                raw.append(entry)
+            if is_valid and len(filtered) < per_kw_limit:
+                filtered.append(entry)
+            if len(filtered) >= per_kw_limit and len(raw) >= per_kw_limit:
+                break
+    except Exception as e:
+        logger.warning(f"News fetch error [kw={kw}]: {e}")
+    return filtered, raw
+
+
 def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end_dt=None):
     """
     [수정] strict_time 조건 분리:
-    - strict_time=True  → 전달받은 start_dt/end_dt 사용
+    - strict_time=True  → 전달받은 start_dt/end_dt 사용, 결과 부족 시 이미 수집한 뉴스로 자동 폴백(재크롤링 없음)
     - strict_time=False → 현재 시각 기준 기본 window 계산
+    키워드별 요청은 병렬로 실행해 수집 시간을 단축한다.
     """
-    all_items = []
-
     if not strict_time:
         # strict_time=False 일 때만 기본 window 계산 (전달 인자 무시하지 않음)
         now_kst = datetime.now(timezone.utc) + timedelta(hours=9)
@@ -411,59 +454,35 @@ def fetch_news(keywords, days=1, limit=40, strict_time=False, start_dt=None, end
     # [수정] per_kw_limit: 전체 limit을 키워드 수로 동적 배분
     per_kw_limit = max(3, limit // max(len(keywords), 1))
 
-    for kw in keywords:
-        url = (
-            f"https://news.google.com/rss/search?"
-            f"q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
-        )
-        try:
-            res = requests.get(url, timeout=5, verify=False)
-            res.raise_for_status()
-            soup = BeautifulSoup(res.content, 'xml')
-            items = soup.find_all('item')
-            kw_collected = 0
-            for item in items:
-                is_valid = True
-                pub_date_str_val = None
+    filtered_all, raw_all = [], []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(keywords))) as executor:
+        futures = [
+            executor.submit(_fetch_keyword_news, kw, per_kw_limit, days, strict_time, start_dt, end_dt)
+            for kw in keywords
+        ]
+        for future in concurrent.futures.as_completed(futures):
+            filtered, raw = future.result()
+            filtered_all.extend(filtered)
+            raw_all.extend(raw)
 
-                if strict_time and start_dt and end_dt:
-                    try:
-                        pub_date_str = item.pubDate.text
-                        pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z")
-                        pub_date_kst = pub_date + timedelta(hours=9)
-                        if not (start_dt <= pub_date_kst <= end_dt):
-                            is_valid = False
-                        pub_date_str_val = pub_date_kst.strftime("%Y-%m-%d %H:%M:%S")
-                    except Exception:
-                        is_valid = True  # 날짜 파싱 실패 시 포함
+    def _to_df(items, sort_by_date):
+        d = pd.DataFrame(items)
+        if not d.empty:
+            d = d.drop_duplicates(subset=['Title'])
+            if sort_by_date:
+                d['TempDate'] = pd.to_datetime(d['ParsedDate'], errors='coerce')
+                d = d.sort_values(by='TempDate', ascending=False)
+                d = d.drop(columns=['TempDate'])
+        return d
 
-                if is_valid:
-                    title = item.title.text if item.title else ""
-                    link = item.link.text if item.link else ""
-                    if title and not any(i['Title'] == title for i in all_items):
-                        all_items.append({
-                            'Title': title,
-                            'Link': link,
-                            'Date': item.pubDate.text if item.pubDate else "",
-                            'Source': item.source.text if item.source else "Google News",
-                            'ParsedDate': pub_date_str_val
-                        })
-                        kw_collected += 1
-                if kw_collected >= per_kw_limit:
-                    break
-        except Exception as e:
-            logger.warning(f"News fetch error [kw={kw}]: {e}")
-        time.sleep(0.1)
+    df = _to_df(filtered_all, sort_by_date=strict_time)
+    if strict_time and len(df) < 5:
+        logger.warning(f"시간 필터 결과 {len(df)}건 → 폴백: 이미 수집된 뉴스 재사용")
+        df = _to_df(raw_all, sort_by_date=False)
 
-    df = pd.DataFrame(all_items)
-    if not df.empty:
-        df = df.drop_duplicates(subset=['Title'])
-        if strict_time:
-            df['TempDate'] = pd.to_datetime(df['ParsedDate'], errors='coerce')
-            df = df.sort_values(by='TempDate', ascending=False)
-            df = df.drop(columns=['TempDate'])
-        return df.head(limit).to_dict('records')
-    return []
+    if df.empty:
+        return []
+    return df.head(limit).to_dict('records')
 
 # ==========================================
 # 2-1. 글로벌 뉴스
@@ -659,38 +678,46 @@ def generate_report_with_citations(api_key, news_data):
         news_context += f"[{i+1}] {clean_title} (Source: {item['Source']})\n"
 
     prompt = f"""
-    당신은 글로벌 반도체 소재의 중요 전략 수석 엔지니어 입니다. 
-    제공된 뉴스 데이터를 바탕으로 전문가 수준의 **[일일 반도체 기술과 반도체 소재 심층 분석 보고서]**를 작성하세요.
+    당신은 글로벌 반도체 소재 전략 수석 애널리스트입니다.
+    아래 뉴스 데이터만 근거로 삼아, 바쁜 임원이 핵심을 즉시 파악할 수 있는
+    **[일일 반도체 기술·소재 브리핑]**을 작성하세요.
 
-    **[작성 원칙 - 매우 중요]**
-    1. **단순 요약 금지**: 뉴스 제목을 단순히 나열하거나 번역하지 마세요.
-    2. **서술형 작성**: 이슈별로 현상/원인/전망을 개조식(Bullet points)으로 나누지 말고, **하나의 자연스러운 논리적 흐름을 가진 줄글(Narrative Paragraph)**로 서술하세요. 전문적인 문체를 사용하세요.
+    **[절대 금지]**
+    - "오늘날 반도체 산업은", "최근 반도체 업계에서는"과 같은 상투적이고 의미 없는
+      도입 문장을 쓰지 마세요. 배경 설명 없이 바로 사실과 숫자로 시작하세요.
+    - 뉴스 제목을 단순히 나열하거나 번역하지 마세요.
+    - 뉴스에 없는 내용은 추측하지 마세요.
+
+    **[작성 원칙]**
+    1. **두괄식(Lead with the conclusion)**: 모든 섹션은 첫 문장에 결론·핵심 판단을 제시한 뒤 근거를 설명하세요.
+    2. **서술형 작성**: bullet point 없이 논리적으로 이어지는 문단으로, 군더더기 없이 간결하게 작성하세요.
     3. **근거 명시**: 모든 주장이나 사실 언급 시 반드시 제공된 뉴스 번호 **[1], [2]**를 문장 끝에 인용하세요.
 
     [뉴스 데이터]
     {news_context}
-    
+
     [보고서 구조 (Markdown)]
-    
+
+    ## 📌 핵심 요약 (Executive Brief)
+    - 오늘 가장 중요한 판단 3~4개를 각 1문장으로, 결론부터 제시. 문장마다 인용 번호 포함.
+
     ## 🚨 Key Issues & Deep Dive (핵심 이슈 심층 분석)
-    - 가장 중요한 이슈 2~3가지를 선정하여 소제목을 달고 분석하세요.
-    - **중요**: 현상, 원인, 전망을 구분하여 나열하지 말고, **깊이 있는 서술형 문단**으로 작성하세요.
+    - 가장 중요한 이슈 2~3가지를 선정하여 소제목을 달고, 첫 문장에 결론을 제시한 뒤
+      근거와 배경을 **깊이 있는 서술형 문단**으로 상세히 분석하세요.
     - 반드시 인용 번호[n]를 포함할 것.
 
     ## 🕸️ Supply Chain & Tech Trends (공급망 및 기술 동향)
-    - 반도체 소재 그리고 소부장 기술의 변화와 공급망관련 주요 단신을 종합하여 서술.
+    - 반도체 소재·소부장 기술 변화와 공급망 관련 동향 중 핵심만 결론 우선으로 서술.
 
     ## 💡 Analyst's View (시사점)
-    - 중요한 반도체 기술과 소재 특이점 관련 오늘의 뉴스가 주는 시사점과 향후 관전 포인트 한 줄 정리.
-
-    ## 📊 Executive Summary (시장 총평)
-    - 오늘 반도체 시장과 기술적 변화의 핵심 분위기와 소재 중심의 이슈를 3~4문장으로 요약.
+    - 오늘 뉴스가 주는 시사점과 향후 관전 포인트를 결론부터 서술.
     """
 
     headers = {'Content-Type': 'application/json'}
     data = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}]
+        "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}],
+        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 2560}
     }
 
     # [수정] 429 응답 시 Exponential Backoff 적용
@@ -903,14 +930,11 @@ if selected_category == "Daily Report":
                 daily_kws = st.session_state.keywords["Daily Report"]
 
                 status_box.write("📡 뉴스 수집 중 (40건)...")
+                # fetch_news 내부에서 시간필터 결과가 부족하면 재크롤링 없이 자동 폴백 처리
                 news_items = fetch_news(
                     daily_kws, days=2, limit=40,
                     strict_time=True, start_dt=start_dt, end_dt=end_dt
                 )
-                if not news_items:
-                    status_box.update(label="⚠️ 시간 범위 내 뉴스 없음 → 최근 2일로 확장", state="running")
-                    time.sleep(0.5)
-                    news_items = fetch_news(daily_kws, days=2, limit=40, strict_time=False)
 
                 if not news_items:
                     status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
