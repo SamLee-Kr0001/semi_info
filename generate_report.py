@@ -44,7 +44,7 @@ KEYWORD_FILE  = "keywords.json"
 HISTORY_FILE  = "daily_history.json"
 DEFAULT_KEYWORDS = ["반도체", "삼성전자", "SK하이닉스", "HBM", "NAND", "파운드리"]
 MAX_HISTORY   = 30          # 아카이브 최대 보관 수
-NEWS_LIMIT    = 40
+NEWS_LIMIT    = 25          # 무료 Gemini API 토큰 한도에 맞춰 수집 기사 수 축소 (기존 40 → 25)
 NEWS_DAYS     = 2           # 수집 기간 (일)
 NEWS_WINDOW_H = 18          # 수집 시간 윈도우 (시간): 전날 12:00 ~ 당일 06:00
 
@@ -255,37 +255,26 @@ def generate_report(news_data: list[dict]) -> str:
     )
 
     prompt = f"""당신은 글로벌 반도체 소재 전략 수석 애널리스트입니다.
-아래 뉴스 데이터만 근거로 삼아, 바쁜 임원이 핵심을 즉시 파악할 수 있는
-[일일 반도체 기술·소재 브리핑]을 작성하세요.
+아래 뉴스만 근거로, 바쁜 임원이 핵심을 즉시 파악할 [일일 반도체 기술·소재 브리핑]을 작성하세요.
 
-[절대 금지]
-- "오늘날 반도체 산업은", "최근 반도체 업계에서는"과 같은 상투적이고 의미 없는
-  도입 문장을 쓰지 마세요. 배경 설명 없이 바로 사실과 숫자로 시작하세요.
-- 뉴스 제목 나열이나 단순 번역 금지.
-- 뉴스에 없는 내용은 추측하지 마세요.
-
-[작성 원칙]
-1. 두괄식(Lead with the conclusion) - 모든 섹션은 첫 문장에 결론·핵심 판단을 제시한 뒤 근거를 설명하세요.
-2. 서술형 - bullet point 없이 논리적으로 이어지는 문단으로, 군더더기 없이 간결하게 작성하세요.
-3. 근거 명시 - 모든 주장에 뉴스 번호 [1], [2] 등을 반드시 인용하세요.
+[절대 금지] "오늘날 반도체 산업은" 같은 상투적 도입 문장 금지 - 바로 사실로 시작. 제목 나열/번역 금지. 뉴스에 없는 내용 추측 금지.
+[작성 원칙] 1) 두괄식: 각 섹션 첫 문장에 결론 제시 후 근거. 2) 서술형, 군더더기 없이 간결하게. 3) 모든 주장에 뉴스 번호 [1][2] 인용.
 
 [뉴스 데이터]
 {news_context}
 
-[보고서 구조 - Markdown 형식]
-
+[보고서 구조 - Markdown]
 ## 📌 핵심 요약 (Executive Brief)
-오늘 가장 중요한 판단 3~4개를 각 1문장으로, 결론부터 제시. 문장마다 인용 번호 포함.
+가장 중요한 판단 3~4개를 각 1문장, 결론부터. 인용 번호 포함.
 
 ## 🚨 핵심 이슈 심층 분석
-가장 중요한 이슈 2~3가지를 소제목으로 나누어, 각 소제목 첫 문장에 결론을 제시한 뒤
-근거와 배경을 서술형으로 상세히 분석. 인용 번호 필수.
+이슈 2~3가지, 소제목마다 결론 먼저 제시 후 서술형으로 상세 분석. 인용 번호 필수.
 
 ## 🕸️ 공급망 및 기술 동향
-반도체 소재·소부장 기술 변화와 공급망 관련 동향 중 핵심만 결론 우선으로 서술.
+소재·소부장 기술 변화와 공급망 핵심만 결론 우선 서술.
 
 ## 💡 Analyst's View (시사점)
-오늘 뉴스가 주는 시사점과 향후 관전 포인트를 결론부터 서술.
+시사점과 향후 관전 포인트를 결론부터 서술.
 """
 
     headers = {"Content-Type": "application/json"}
@@ -294,7 +283,7 @@ def generate_report(news_data: list[dict]) -> str:
         "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}],
         "generationConfig": {
             "temperature": 0.4,
-            "maxOutputTokens": 3072,
+            "maxOutputTokens": 2048,  # 무료 Gemini API 토큰 한도에 맞춘 보수적인 출력 예산
             # gemini-2.5 계열은 기본적으로 "thinking" 토큰이 maxOutputTokens를 잠식해
             # 실제 응답이 조기 절단될 수 있으므로 명시적으로 비활성화
             "thinkingConfig": {"thinkingBudget": 0},
