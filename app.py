@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import base64
 import requests
 import urllib3
 from urllib.parse import quote, urlparse
@@ -31,6 +32,7 @@ st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠
 CATEGORIES = ["Daily Report", "P&C 소재", "EDTW 소재", "PKG 소재"]
 KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
+MAX_HISTORY = 30  # 아카이브 최대 보관 수 (generate_report.py와 동일하게 유지)
 
 # [수정] api_key / search_days 전역 기본값 선언 → NameError 방지
 api_key = ""
@@ -274,6 +276,12 @@ def load_daily_history_from_source():
             g = Github(st.secrets["GITHUB_TOKEN"])
             repo = g.get_repo(st.secrets["REPO_NAME"])
             contents = repo.get_contents(HISTORY_FILE)
+            if contents.encoding == "none":
+                # Contents API는 1MB 초과 파일에 inline content를 주지 않음(encoding="none").
+                # 이 경우 decoded_content가 예외를 던지므로 Git Blob API로 원본을 다시 조회한다.
+                blob = repo.get_git_blob(contents.sha)
+                raw = base64.b64decode(blob.content)
+                return json.loads(raw.decode("utf-8"))
             return json.loads(contents.decoded_content.decode("utf-8"))
         except Exception as e:
             logger.warning(f"GitHub history load error: {e}")
@@ -298,6 +306,7 @@ if 'daily_history' not in st.session_state:
 def save_daily_history(new_report_data):
     current_history = [h for h in st.session_state.daily_history if h['date'] != new_report_data['date']]
     current_history.insert(0, new_report_data)
+    current_history = current_history[:MAX_HISTORY]  # 무제한 증가 방지 (GitHub Contents API 1MB 제한 대비)
     st.session_state.daily_history = current_history
     try:
         with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
@@ -717,7 +726,13 @@ def generate_report_with_citations(api_key, news_data):
     data = {
         "contents": [{"parts": [{"text": prompt}]}],
         "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}],
-        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 2560}
+        "generationConfig": {
+            "temperature": 0.4,
+            "maxOutputTokens": 3072,
+            # gemini-2.5 계열은 기본적으로 "thinking" 토큰이 maxOutputTokens를 잠식해
+            # 실제 응답이 조기 절단될 수 있으므로 명시적으로 비활성화
+            "thinkingConfig": {"thinkingBudget": 0},
+        }
     }
 
     # [수정] 429 응답 시 Exponential Backoff 적용
@@ -733,6 +748,10 @@ def generate_report_with_citations(api_key, news_data):
                     res_json = response.json()
                     if 'candidates' in res_json and res_json['candidates']:
                         raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
+                        if len(raw_text) < 300 or "##" not in raw_text:
+                            # 응답이 비정상적으로 짧거나(조기 절단) 구조가 없으면 폐기하고 재시도
+                            logger.warning(f"리포트가 비정상적으로 짧음 [{model}] ({len(raw_text)} chars) → 재시도")
+                            continue
                         return True, inject_links_to_report(raw_text, news_data)
                     break  # candidates 없으면 다음 모델로
                 elif response.status_code == 429:

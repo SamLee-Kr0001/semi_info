@@ -13,6 +13,7 @@ Streamlit / session_state 완전 미사용.
   GEMINI_API_KEY=... GITHUB_TOKEN=... REPO_NAME=user/repo python generate_report.py
 """
 
+import base64
 import concurrent.futures
 import json
 import logging
@@ -73,6 +74,12 @@ def _read_json_from_github(filename: str, default):
     try:
         repo = _get_repo()
         contents = repo.get_contents(filename)
+        if contents.encoding == "none":
+            # Contents API는 1MB 초과 파일에 inline content를 주지 않음(encoding="none").
+            # 이 경우 decoded_content가 예외를 던지므로 Git Blob API로 원본을 다시 조회한다.
+            blob = repo.get_git_blob(contents.sha)
+            raw = base64.b64decode(blob.content)
+            return json.loads(raw.decode("utf-8"))
         return json.loads(contents.decoded_content.decode("utf-8"))
     except Exception as e:
         logger.warning(f"GitHub 읽기 실패 [{filename}]: {e}")
@@ -285,7 +292,13 @@ def generate_report(news_data: list[dict]) -> str:
     body    = {
         "contents": [{"parts": [{"text": prompt}]}],
         "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}],
-        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 2560},
+        "generationConfig": {
+            "temperature": 0.4,
+            "maxOutputTokens": 3072,
+            # gemini-2.5 계열은 기본적으로 "thinking" 토큰이 maxOutputTokens를 잠식해
+            # 실제 응답이 조기 절단될 수 있으므로 명시적으로 비활성화
+            "thinkingConfig": {"thinkingBudget": 0},
+        },
     }
 
     def _call(model: str):
@@ -304,6 +317,10 @@ def generate_report(news_data: list[dict]) -> str:
                 candidates = resp.json().get("candidates", [])
                 if candidates:
                     text = candidates[0]["content"]["parts"][0]["text"]
+                    if len(text) < 300 or "##" not in text:
+                        # 응답이 비정상적으로 짧거나(조기 절단) 구조가 없으면 폐기하고 재시도
+                        logger.warning(f"리포트가 비정상적으로 짧음 ({len(text)} chars) → 재시도")
+                        continue
                     logger.info(f"리포트 생성 완료 ({len(text)} chars)")
                     return text
                 logger.warning("candidates 없음 → 재시도")
