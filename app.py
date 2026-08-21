@@ -32,7 +32,9 @@ DAILY_REPORT = "Daily Report"
 KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
 MAX_HISTORY = 30   # 아카이브 최대 보관 수 (generate_report.py와 동일하게 유지)
-NEWS_LIMIT = 25    # 무료 Gemini API 토큰 한도에 맞춰 수집 기사 수 축소 (기존 40 → 25)
+NEWS_LIMIT = 40    # 기사 제목 40건은 입력 토큰 몇 천 개 수준 → 무료 티어에서도 여유 있음.
+                    # 과거 응답 절단 문제의 실제 원인은 기사 수가 아니라 gemini-2.5의
+                    # "thinking" 토큰이 출력 예산을 잠식한 것이었고 thinkingBudget=0으로 해결됨.
 
 # [수정] api_key 전역 기본값 선언 → NameError 방지
 api_key = ""

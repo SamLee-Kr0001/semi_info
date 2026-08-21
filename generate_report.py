@@ -44,7 +44,9 @@ KEYWORD_FILE  = "keywords.json"
 HISTORY_FILE  = "daily_history.json"
 DEFAULT_KEYWORDS = ["반도체", "삼성전자", "SK하이닉스", "HBM", "NAND", "파운드리"]
 MAX_HISTORY   = 30          # 아카이브 최대 보관 수
-NEWS_LIMIT    = 25          # 무료 Gemini API 토큰 한도에 맞춰 수집 기사 수 축소 (기존 40 → 25)
+NEWS_LIMIT    = 40          # 기사 제목 40건은 입력 토큰 몇 천 개 수준 → 무료 티어에서도 여유 있음.
+                             # 과거 응답 절단 문제의 실제 원인은 기사 수가 아니라 gemini-2.5의
+                             # "thinking" 토큰이 출력 예산을 잠식한 것이었고 thinkingBudget=0으로 해결됨.
 NEWS_DAYS     = 2           # 수집 기간 (일)
 NEWS_WINDOW_H = 18          # 수집 시간 윈도우 (시간): 전날 12:00 ~ 당일 06:00
 
