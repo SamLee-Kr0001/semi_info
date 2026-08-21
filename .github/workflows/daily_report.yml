@@ -1,13 +1,11 @@
 # .github/workflows/daily_report.yml
 #
-# 매일 06:00 KST (= 21:00 UTC 전일) MatChain Insight 자동 리포트 생성
-# 4개 카테고리(Daily Report / 기술 동향 / 기업 변화 / SCM·공급망) 각각에 대해
-# 한국·미국·일본·대만·중국 5개국 뉴스를 수집하고 Gemini로 인용 기반 리포트를 생성한다.
+# 매일 06:00 KST (= 21:00 UTC 전일) 자동 리포트 생성
 # 수동 실행: GitHub Actions 탭 → "Run workflow"
 #
 # 필요한 GitHub Secrets (Settings → Secrets → Actions):
 #   GEMINI_API_KEY  : Gemini API 키
-#   REPO_NAME       : "username/repo-name" (예: samlee-kr0001/semi_info)
+#   REPO_NAME       : "username/repo-name" (예: sam/semi-insight-hub)
 #
 # GITHUB_TOKEN은 Actions에서 자동 제공되므로 별도 등록 불필요.
 
@@ -17,13 +15,19 @@ on:
   schedule:
     # 매일 21:00 UTC = 06:00 KST (다음날)
     - cron: "0 21 * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    # 수동 실행 시 날짜 강제 지정 가능 (비워두면 오늘 날짜 사용)
+    inputs:
+      force_date:
+        description: "강제 실행 날짜 (YYYY-MM-DD, 비워두면 자동)"
+        required: false
+        default: ""
 
 jobs:
   generate:
     name: Generate Daily Report
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     permissions:
       contents: write   # daily_history.json 커밋 권한
@@ -57,6 +61,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GITHUB_TOKEN:   ${{ secrets.GITHUB_TOKEN }}
           REPO_NAME:      ${{ secrets.REPO_NAME }}
+          FORCE_DATE:     ${{ github.event.inputs.force_date }}
         run: |
           python generate_report.py
 
