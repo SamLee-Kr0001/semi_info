@@ -3,5 +3,12 @@ pandas
 requests
 beautifulsoup4
 lxml
-yfinance
+selenium
+webdriver-manager
+google-generativeai>=0.7.0
+deep-translator
+google-generativeai
+duckduckgo-search
+schedule
+plotly
 PyGithub
