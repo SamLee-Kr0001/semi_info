@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>과제관리 대시보드</title>
+<style>
+:root{
+  --bg:#F6F6F4; --surface:#FFFFFF; --surface2:#FAFAF9; --border:#E5E5E1; --border2:#D3D3CD;
+  --text:#18181B; --text2:#6B7280; --muted:#9CA3AF;
+  --accent:#2563EB; --accent-soft:#EFF6FF;
+  --ok:#059669; --ok-soft:#ECFDF5;
+  --warn:#D97706; --warn-soft:#FFFBEB;
+  --danger:#DC2626; --danger-soft:#FEF2F2;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --radius:10px;
+}
+html[data-theme="dark"]{
+  --bg:#0F0F11; --surface:#1A1A1D; --surface2:#212125; --border:#2A2A2F; --border2:#3A3A42;
+  --text:#F4F4F5; --text2:#A1A1AA; --muted:#6B7280;
+  --accent:#60A5FA; --accent-soft:#17253A;
+  --ok:#34D399; --ok-soft:#0E2A21;
+  --warn:#FBBF24; --warn-soft:#2E2412;
+  --danger:#F87171; --danger-soft:#33191A;
+  --shadow:0 2px 8px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",Roboto,"Helvetica Neue",sans-serif;
+  font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+button{font-family:inherit;font-size:13px;cursor:pointer;border-radius:7px;border:1px solid var(--border2);
+  background:var(--surface);color:var(--text);padding:6px 13px;transition:.13s}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{opacity:.88;color:#fff}
+button.ghost{background:transparent;border-color:transparent;color:var(--text2);padding:4px 8px}
+button.ghost:hover{background:var(--surface2);color:var(--accent)}
+button.danger{color:var(--danger);border-color:var(--border2)}
+button.danger:hover{border-color:var(--danger);background:var(--danger-soft)}
+input,select,textarea{font-family:inherit;font-size:13px;background:var(--surface);color:var(--text);
+  border:1px solid var(--border2);border-radius:7px;padding:6px 9px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+textarea{resize:vertical;line-height:1.6}
+.wrap{max-width:1400px;margin:0 auto;padding:22px 26px 60px}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+h1{font-size:18px;font-weight:700;letter-spacing:-.02em;margin:0}
+.sub{font-size:12px;color:var(--text2);margin-top:1px}
+.hspace{flex:1}
+.hbtns{display:flex;gap:7px;flex-wrap:wrap}
+
+/* ---------- tabs ---------- */
+nav.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:22px;overflow-x:auto}
+nav.tabs button{border:none;background:none;border-radius:0;padding:9px 15px;color:var(--text2);
+  font-weight:500;border-bottom:2px solid transparent;white-space:nowrap}
+nav.tabs button:hover{color:var(--text);background:var(--surface2)}
+nav.tabs button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.panel{display:none}
+.panel.active{display:block}
+
+/* ---------- kpi ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:22px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.kpi .l{font-size:12px;color:var(--text2);font-weight:500}
+.kpi .v{font-size:27px;font-weight:700;letter-spacing:-.02em;margin-top:3px;line-height:1.1}
+.kpi .d{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ---------- cards / grid ---------- */
+.grid2{display:grid;grid-template-columns:minmax(320px,1fr) minmax(320px,1.25fr);gap:16px;margin-bottom:20px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.card h3{font-size:13px;font-weight:600;margin:0 0 14px;color:var(--text);
+  display:flex;align-items:center;justify-content:space-between}
+.card h3 .n{font-size:11px;color:var(--muted);font-weight:500}
+
+/* ---------- donut ---------- */
+.donut-row{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.donut{flex-shrink:0}
+.legend{display:flex;flex-direction:column;gap:7px;font-size:13px;flex:1;min-width:130px}
+.legend div{display:flex;align-items:center;gap:8px}
+.dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.legend .cnt{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ---------- bars ---------- */
+.bar{margin-bottom:9px}
+.bar .t{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--text2)}
+.bar .t b{color:var(--text);font-weight:600}
+.bar .track{height:7px;background:var(--surface2);border:1px solid var(--border);border-radius:99px;overflow:hidden}
+.bar .fill{height:100%;background:var(--accent);border-radius:99px}
+
+/* ---------- badges ---------- */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;
+  padding:2px 8px;border-radius:99px;white-space:nowrap;line-height:1.5}
+.b-접수{color:var(--text2);background:var(--surface2);border:1px solid var(--border)}
+.b-진행중{color:var(--accent);background:var(--accent-soft)}
+.b-완료{color:var(--ok);background:var(--ok-soft)}
+.b-보류{color:var(--warn);background:var(--warn-soft)}
+.b-cat{color:var(--text2);background:var(--surface2);border:1px solid var(--border);font-weight:500}
+.b-dday{font-variant-numeric:tabular-nums}
+.b-over{color:var(--danger);background:var(--danger-soft)}
+.b-soon{color:var(--warn);background:var(--warn-soft)}
+.b-far{color:var(--text2);background:var(--surface2);border:1px solid var(--border)}
+
+/* ---------- task rows ---------- */
+.trow{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:9px;box-shadow:var(--shadow);overflow:hidden}
+.thead{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;flex-wrap:wrap}
+.thead:hover{background:var(--surface2)}
+.thead .tt{font-weight:600;flex:1;min-width:180px}
+.thead .meta{font-size:12px;color:var(--text2);display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.pminibar{width:64px;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:99px;overflow:hidden;flex-shrink:0}
+.pminibar i{display:block;height:100%;background:var(--accent)}
+.tbody{display:none;padding:4px 16px 16px;border-top:1px solid var(--border);background:var(--surface2)}
+.trow.open .tbody{display:block}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:14px 0}
+.f label{display:block;font-size:11px;color:var(--text2);font-weight:600;margin-bottom:3px;
+  text-transform:uppercase;letter-spacing:.04em}
+.goal{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;
+  font-size:13px;color:var(--text);margin-top:12px}
+.hist{margin-top:14px}
+.hist .hi{border-left:2px solid var(--border2);padding:3px 0 9px 12px;font-size:12.5px;color:var(--text2);position:relative}
+.hist .hi:last-child{padding-bottom:0}
+.hist .hd{color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+.hist .hm{color:var(--muted)}
+.rowacts{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap}
+
+/* ---------- filters ---------- */
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;margin-bottom:16px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chip{font-size:12px;padding:4px 11px;border-radius:99px;border:1px solid var(--border2);
+  background:var(--surface);color:var(--text2);cursor:pointer;transition:.13s}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.count{font-size:12px;color:var(--text2);margin-bottom:12px}
+
+/* ---------- info store ---------- */
+.infogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.inf{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:13px 15px;box-shadow:var(--shadow);border-left:3px solid var(--accent)}
+.inf.c-소재{border-left-color:#0891B2}
+.inf.c-System{border-left-color:#7C3AED}
+.inf.c-운영{border-left-color:#D97706}
+.inf.c-인물{border-left-color:#DB2777}
+.inf.c-기술{border-left-color:#059669}
+.inf{position:relative}
+.inf .ih{display:flex;align-items:center;gap:7px;margin-bottom:7px;flex-wrap:wrap;padding-right:22px}
+.inf .del{position:absolute;top:9px;right:9px;border:none;background:none;color:var(--muted);
+  font-size:15px;line-height:1;padding:2px 5px;border-radius:5px;opacity:0;transition:.13s}
+.inf:hover .del{opacity:1}
+.inf .del:hover{color:var(--danger);background:var(--danger-soft)}
+.inf .it{font-weight:600;font-size:13.5px}
+.inf .ic{font-size:12.5px;color:var(--text2)}
+.inf .if{font-size:11px;color:var(--muted);margin-top:9px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tag{font-size:10.5px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--text2)}
+
+/* ---------- ingest ---------- */
+.ing{display:grid;grid-template-columns:1fr;gap:14px}
+.rev{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:13px 15px;margin-bottom:10px;box-shadow:var(--shadow)}
+.rev.ex{opacity:.5}
+.rev .rh{display:flex;gap:9px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.rev .rsrc{font-size:12px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);
+  border-radius:6px;padding:7px 10px;margin-bottom:11px;white-space:pre-wrap;line-height:1.5}
+.rg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px}
+.matchnote{font-size:11.5px;color:var(--ok);font-weight:600}
+
+/* ---------- misc ---------- */
+.empty{text-align:center;color:var(--muted);padding:44px 20px;font-size:13px;
+  background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius)}
+.note{background:var(--accent-soft);border:1px solid var(--border);border-radius:8px;
+  padding:10px 13px;font-size:12.5px;color:var(--text2);margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);
+  font-weight:600;padding:8px 10px;border-bottom:1px solid var(--border2);position:sticky;top:0;background:var(--surface)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:hover td{background:var(--surface2)}
+.scroll{max-height:600px;overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);
+  padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;
+  transition:.25s;z-index:99;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+.sechead{font-size:14px;font-weight:600;margin:24px 0 12px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo">📋</div>
+  <div>
+    <h1>과제관리 대시보드</h1>
+    <div class="sub">회의 Text → 과제 자동 분류 · 유사과제 진척 갱신 · 정보 저장소</div>
+  </div>
+  <div class="hspace"></div>
+  <div class="hbtns">
+    <button onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+    <button onclick="exportJSON()">⬇ 백업(JSON)</button>
+    <button onclick="document.getElementById('importFile').click()">⬆ 복원</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="active" data-p="dash">📊 대시보드</button>
+  <button data-p="ingest">📥 회의록 입력</button>
+  <button data-p="tasks">📁 과제 목록</button>
+  <button data-p="info">🗃️ 정보 저장소</button>
+  <button data-p="hist">🕒 전체 이력</button>
+</nav>
+
+<!-- ================= DASHBOARD ================= -->
+<section class="panel active" id="p-dash">
+  <div class="kpis" id="kpiBox"></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>상태 분포 <span class="n" id="stTot"></span></h3>
+      <div class="donut-row">
+        <div class="donut" id="donut"></div>
+        <div class="legend" id="stLegend"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>카테고리별 과제 <span class="n" id="catTot"></span></h3>
+      <div id="catBars"></div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>⏰ 마감 임박 / 초과 <span class="n" id="dueTot"></span></h3>
+      <div id="dueList"></div>
+    </div>
+    <div class="card">
+      <h3>🕒 최근 업데이트 <span class="n">최근 12건</span></h3>
+      <div id="recentList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= INGEST ================= -->
+<section class="panel" id="p-ingest">
+  <div class="note">
+    회의록 텍스트를 그대로 붙여넣으면 <b>날짜 헤더</b>(예: <code>2026. 08. 27 (팀장 현안회의)</code>)를 인식해 항목별로 나눈 뒤,
+    <b>실행이 필요한 항목은 과제</b>로, <b>단순 사실·수치·인물 정보는 정보 저장소</b>로 자동 분류합니다.
+    기존 과제와 유사하면 <b>신규 등록 대신 해당 과제의 진척 이력으로 갱신</b>하도록 미리 선택해 둡니다. 저장 전에 모두 수정할 수 있습니다.
+  </div>
+  <div class="ing">
+    <div>
+      <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.04em">회의록 텍스트</label>
+      <textarea id="rawText" rows="12" placeholder="2026. 08. 27 (팀장 현안회의)&#10; - 도전보상제 - 미래tech 에 대한 과제가 있나?&#10; - AI 관련 소재 구조 기반으로 library 구축&#10;   + Special NDA (BP IP로 막힘 - 우회방법을 찾자)"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="primary" onclick="analyze()">🔍 분석하기</button>
+      <button onclick="document.getElementById('rawText').value='';document.getElementById('reviewBox').innerHTML='';document.getElementById('reviewActs').style.display='none'">지우기</button>
+    </div>
+  </div>
+  <div id="reviewWrap">
+    <div class="sechead" id="reviewHead" style="display:none">검토 후 확정</div>
+    <div id="reviewBox"></div>
+    <div id="reviewActs" style="display:none;gap:8px;margin-top:6px" >
+      <button class="primary" onclick="commitReview()">✅ 확정 저장</button>
+      <button onclick="document.getElementById('reviewBox').innerHTML='';document.getElementById('reviewActs').style.display='none';document.getElementById('reviewHead').style.display='none'">취소</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TASKS ================= -->
+<section class="panel" id="p-tasks">
+  <div class="filters">
+    <div><label style="font-size:11px;color:var(--text2);font-weight:600">검색</label>
+      <input id="fq" placeholder="제목·목표·담당" oninput="renderTasks()"></div>
+    <div><label style="font-size:11px;color:var(--text2);font-weight:600">상태</label>
+      <select id="fst" onchange="renderTasks()"><option value="">전체</option><option>접수</option><option>진행중</option><option>완료</option><option>보류</option></select></div>
+    <div><label style="font-size:11px;color:var(--text2);font-weight:600">카테고리</label>
+      <select id="fcat" onchange="renderTasks()"></select></div>
+    <div><label style="font-size:11px;color:var(--text2);font-weight:600">정렬</label>
+      <select id="fsort" onchange="renderTasks()">
+        <option value="upd">최근 업데이트순</option><option value="due">납기 임박순</option>
+        <option value="prog">진척율 낮은순</option><option value="cat">카테고리순</option>
+      </select></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <button onclick="addTaskManual()">➕ 과제 직접 추가</button>
+    <button onclick="expandAll(true)">모두 펼치기</button>
+    <button onclick="expandAll(false)">모두 접기</button>
+  </div>
+  <div class="count" id="taskCount"></div>
+  <div id="taskList"></div>
+</section>
+
+<!-- ================= INFO ================= -->
+<section class="panel" id="p-info">
+  <div class="note">
+    과제로 분류할 수 없는 <b>단순 정보</b>가 자동으로 쌓이는 저장소입니다.
+    <b>소재 · System · 운영 · 인물 · 기술</b>로 분류되며, 회의록을 넣을 때마다 누적됩니다.
+  </div>
+  <div class="chips" id="infoChips"></div>
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:end">
+    <div style="flex:1;min-width:200px"><input id="fiq" placeholder="정보 검색 (내용·태그·회의명)" oninput="renderInfo()"></div>
+    <button onclick="addInfoManual()">➕ 정보 직접 추가</button>
+  </div>
+  <div class="count" id="infoCount"></div>
+  <div class="infogrid" id="infoList"></div>
+</section>
+
+<!-- ================= HISTORY ================= -->
+<section class="panel" id="p-hist">
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:end">
+    <div style="flex:1;min-width:200px"><input id="fhq" placeholder="이력 검색 (과제·회의·내용)" oninput="renderHist()"></div>
+  </div>
+  <div class="count" id="histCount"></div>
+  <div class="scroll"><table id="histTable">
+    <thead><tr><th style="width:92px">날짜</th><th style="width:150px">회의</th><th style="width:200px">과제</th><th>내용</th><th style="width:78px">상태</th><th style="width:60px">진척</th></tr></thead>
+    <tbody id="histBody"></tbody>
+  </table></div>
+</section>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   0. 상수
+   ========================================================= */
+const STATUS = ["접수","진행중","완료","보류"];
+const STATUS_HEX = {"접수":"#9CA3AF","진행중":"#2563EB","완료":"#059669","보류":"#D97706"};
+const TASK_CATS = ["소재개발","품질","R&D기술","설비/인프라","조직/인력","수급/SCM","AI/DX","환경","경영현안","미분류"];
+const INFO_CATS = ["소재","System","운영","인물","기술"];
+const LS_KEY = "taskops_v1";
+
+/* =========================================================
+   1. 시드 데이터 — 2026.08.12 ~ 08.27 회의록 분류 결과
+   ========================================================= */
+const SEED_TASKS = [
+ {t:"SDI Safety Bottle 대량 양산성 검증",g:"SDI가 연 18만병 규모 Safety Bottle을 대량 양산할 수 있는지 검증하고 가부를 확정한다.",c:"품질",o:"",d:"",s:"진행중",p:30,
+  h:[{date:"2026-08-12",m:"Safety Bottle",n:"SDI 대량 양산 가능 여부 확인 필요 (18만병/y 규모)"}]},
+ {t:"Safety Bottle 대상 소재별 연간 사용량 산정",g:"DJTS-0111, YCHS-9940 2개 소재의 연간 사용 바틀 수를 산정하고, 향후 소재 추가 시 대상을 count하여 검증 역산으로 이관 시점을 확보·통보한다.",c:"품질",o:"",d:"",s:"진행중",p:25,
+  h:[{date:"2026-08-12",m:"Safety Bottle",n:"2개 소재(DJTS-0111, YCHS-9940) 연간 사용 바틀수 산정. 향후 추가 시 대상 소재 count하여 이관 시점 확보 — 검증 역산하여 일정 통보 필요"}]},
+ {t:"YC/동진 VOC 기반 Safety Bottle 재점검",g:"Audit이 불가한 상황이므로 YC·동진 VOC를 반영해 재점검하고 결과 자료를 직접 통보한다.",c:"품질",o:"",d:"",s:"접수",p:10,
+  h:[{date:"2026-08-12",m:"Safety Bottle",n:"Audit 불가 → YC/동진 VOC 반영하여 재점검. 자료는 직접 통보"}]},
+ {t:"TEOS 10nm Filter M&T 선제 PCN 및 P&T 확장",g:"TEOS 10nm Filter를 M&T에 선제적으로 PCN 처리한 뒤 P&T로 확장 적용한다.",c:"소재개발",o:"",d:"",s:"진행중",p:30,
+  h:[{date:"2026-08-18",m:"WLP bi-weekly 업무보고",n:"M&T 선제 PCN 하고 P&T 확장하는 것으로 추진 방향 확정"}]},
+ {t:"WLP 소재 재고 Dashboard 구축",g:"WLP 소재의 재고 현황을 상시 확인할 수 있는 Dashboard를 기존 보고 체계에 추가한다.",c:"AI/DX",o:"",d:"",s:"접수",p:10,
+  h:[{date:"2026-08-18",m:"WLP bi-weekly 업무보고",n:"WLP 소재 재고 Dashboard 추가할 것"}]},
+ {t:"R&D 도전보상제 과제 선정",g:"R&D 도전보상제 대상 과제를 선정한다. KrF는 제외하고 SOM으로 선정하며, 미래 tech 영역 과제 포함 여부를 검토한다.",c:"경영현안",o:"",d:"",s:"진행중",p:50,
+  h:[{date:"2026-08-19",m:"KPI, OI Review",n:"R&D 도전 보상제 안건 제기"},
+     {date:"2026-08-20",m:"팀장미팅",n:"도전과제 KrF 제외 + SOM으로 선정"},
+     {date:"2026-08-27",m:"팀장 현안회의",n:"도전보상제 — 미래 tech에 대한 과제가 있는지 확인 필요"}]},
+ {t:"신입구성원 교육 담당 일정 변경",g:"신입구성원 교육 담당 일정을 오후 첫 타임으로 변경한다.",c:"조직/인력",o:"",d:"",s:"진행중",p:60,
+  h:[{date:"2026-08-19",m:"KPI, OI Review",n:"신입구성원 교육 담당 일정 변경 (오후 첫 타임)"}]},
+ {t:"부회장 1on1 질문·제안 준비",g:"'향후 하이닉스가 무엇을 해야 하나'에 대한 답변으로 소재 미래 AI 운영·기술·BP 협업 체계, Global 기업 도약 제안(기술적·문화적 관점), Trinity fab / Q-day / TEM 등 BP 협업 체계를 정리한다.",c:"경영현안",o:"",d:"2026-09-18",s:"진행중",p:30,
+  h:[{date:"2026-08-19",m:"KPI, OI Review",n:"09/18 부회장 1on1 — 소재 미래 AI 운영/기술/BP 협업 체계, Global 기업 도약 제안, Trinity fab·Q-day·TEM 등 BP 협업 체계 질문 준비"}]},
+ {t:"인테그리스 SMC+Qnity 미팅 자료 준비",g:"인테그리스 미팅을 SMC + Qnity 자료로 준비한다. 09/30(JSR 착공식) 또는 10/01(09시 Entegris Erica) 중 확정.",c:"경영현안",o:"",d:"2026-09-30",s:"접수",p:10,
+  h:[{date:"2026-08-19",m:"KPI, OI Review",n:"인테그리스 — SMC + Qnity 자료로 준비. 09/30(JSR 착공식) 또는 10/01(오전 09시 Entegris Erica)"}]},
+ {t:"SRI HF·CuMn 소스 다변화",g:"SRI HF 및 CuMn 소재의 공급 소스를 다변화한다.",c:"수급/SCM",o:"",d:"",s:"완료",p:100,
+  h:[{date:"2026-08-19",m:"품질 회의",n:"SRI HF, CuMn 다변화 완료"}]},
+ {t:"MLA 소재하자 메커니즘 구축",g:"e-book 유기화학 서적을 학습하여 반도체 소재 공정과 연계한 MLA 소재하자 메커니즘을 정립한다.",c:"소재개발",o:"",d:"",s:"진행중",p:20,
+  h:[{date:"2026-08-19",m:"품질 회의",n:"MLA(소재하자) → e-book 유기화학 책 학습 → 반도체 소재 공정과 연계하여 메커니즘 구축"}]},
+ {t:"C&C Portal 구축",g:"C&C Portal을 구축한다. (범위·목표 정의 필요)",c:"AI/DX",o:"",d:"",s:"접수",p:5,
+  h:[{date:"2026-08-19",m:"품질 회의",n:"C&C Portal 안건 제기 — 구체 범위 미정"}]},
+ {t:"AI Portal 구축",g:"AI Portal을 구축한다. AI 통합/분리 운영 방향과 연계 검토.",c:"AI/DX",o:"",d:"",s:"접수",p:5,
+  h:[{date:"2026-08-19",m:"품질 회의",n:"AI Portal 안건 제기. AI 통합/분리하여 진행하는 방향과 연계 필요"}]},
+ {t:"Q-day 포상·효과 측정 체계 개선",g:"포상(상장)은 grade에 맞게 부여하고 잘한 곳은 명확히 표현한다. 만족도 조사는 행사 만족도가 아니라 품질 mind set 변화와 실제 품질 개선 사례·효과를 조사해 반영한다.",c:"품질",o:"",d:"",s:"진행중",p:30,
+  h:[{date:"2026-08-19",m:"품질 회의 / Q-day",n:"포상(상장)은 grade에 맞게. 잘한 곳은 잘했음을 표현. 만족도 조사를 행사 만족도가 아닌 품질 mind set 변화와 품질 개선 여부로 전환"},
+     {date:"2026-08-24",m:"아침미팅",n:"만족도보다 실제 품질 개선된 사례들을 찾아 효과로 만들 것"}]},
+ {t:"융합 Engineer 정의 및 운용 방안 수립",g:"인력을 받은 만큼 융합 Engineer의 정의를 명확히 하고 운용 방안을 수립한다. P-2 요소기술 영역으로 가야 하며 1) 공정 융합(교육) 등 세부 항목을 정의한다.",c:"조직/인력",o:"",d:"",s:"진행중",p:25,
+  h:[{date:"2026-08-19",m:"품질 회의",n:"인력을 받았으면 융합 Eng'r의 정의 필요 → P-2 요소기술 영역으로 가야 함. 1) 공정 융합: 교육. 융합 Eng'r 운용 방안 수립 필요"}]},
+ {t:"R&D 공정담당 내 소재 파트 신설",g:"R&D 공정담당 내에 소재 파트를 생성하고 소재에서 파견하여 P-2부터 개발을 시작, Core로 연계해 Tech 완성도를 높인다.",c:"조직/인력",o:"정성훈 담당",d:"",s:"접수",p:15,
+  h:[{date:"2026-08-19",m:"품질 회의",n:"R&D 공정담당 내 소재 파트 생성 — 소재가 파견하여 P-2부터 개발 시작, Core 연계로 Tech 완성도 제고. C&C 조직 내 소재조직 신설 시 소재에서 파견 의향 (정성훈 담당)"}]},
+ {t:"수급 대응 TF 운영 체계 확정",g:"구매부문장 주관 weekly 운영 및 CEO 격월 보고 체계를 확정하고 참여 Level·주기를 정의한다. 양산총괄 지시에 따라 전사 OI 과제로 등록한다.",c:"수급/SCM",o:"구매부문장 주관",d:"",s:"진행중",p:40,
+  h:[{date:"2026-08-20",m:"통소위",n:"수급 대응 TF — 구매부문장님 주관 weekly → CEO 격월 보고. 참여 Level·주기 정의 필요 (양산총괄, M&T 부문장, GSM, 원가, 미전)"},
+     {date:"2026-08-20",m:"양산총괄 지시",n:"수급 대응 TF를 전사 OI 과제로 만들라는 지시 → 제조-Y1-구매-소재 미팅 Call 예정"}]},
+ {t:"삼성 V10 Dry Separation 전환 대응",g:"삼성이 V10에서 wet separation이 아닌 Dry로 방향을 수정함에 따라 자사 방향성을 검토하고 예의주시한다.",c:"소재개발",o:"",d:"",s:"진행중",p:20,
+  h:[{date:"2026-08-21",m:"7월 KPI, OI 리뷰",n:"삼성이 V10에서 wet separation이 아닌 Dry로 방향 수정 → 우리쪽 방향성 검토, 예의주시할 것"}]},
+ {t:"Indiana 출향 준비",g:"Indiana 출향 시점이 6개월 당겨져 '26년 12월(27년 1월 발령 예상)로 변경됨에 따라 인력·일정을 준비한다.",c:"조직/인력",o:"",d:"2026-12-31",s:"진행중",p:30,
+  h:[{date:"2026-08-21",m:"7월 KPI, OI 리뷰",n:"Indiana 출향 6개월 당김. '26년 12월 ('27년 1월 발령 예상)"},
+     {date:"2026-08-24",m:"아침미팅",n:"Indiana 출향 '26.12월 예정 재확인"}]},
+ {t:"구성원 AI 교육 체계 수립 (ABC 과정)",g:"구성원 AI 교육을 기초(ABC)부터 체계적으로 운영할 수 있도록 커리큘럼과 일정을 수립한다.",c:"조직/인력",o:"",d:"",s:"접수",p:10,
+  h:[{date:"2026-08-21",m:"7월 KPI, OI 리뷰",n:"구성원 AI 교육 ABC부터 교육하기"}]},
+ {t:"자재창고 실시간 온도 관리 체계 구축",g:"자재창고 온도가 실시간 타점으로 올라오도록 용인 + M17 + P&T에 반영하고, IPA_TAS 연동 및 이상 발생 시 절차서를 마련한다. 관리 주체는 소재이며 Y1 및 향후 FAB Plan에 반영한다.",c:"설비/인프라",o:"소재 (관리 주체)",d:"",s:"진행중",p:35,
+  h:[{date:"2026-08-21",m:"M&T-기반기술 협업회의",n:"자재창고 온도 실시간 타점이 올라올 수 있게 용인 + M17 + P&T 반영 검토할 것. 관리 주체는 소재가 되어야 함"},
+     {date:"2026-08-24",m:"아침미팅",n:"자재창고 관리주체 = 소재. 실시간 온도 IPA_TAS 연동, 이상발생 시 절차서, Y1 + 향후 FAB Plan 반영"}]},
+ {t:"AI 해커톤 추진",g:"AI 해커톤을 기획·운영한다.",c:"AI/DX",o:"양주형, 이정훈, 이광원",d:"",s:"진행중",p:30,
+  h:[{date:"2026-08-24",m:"아침미팅",n:"AI 해커톤 담당: 양주형, 이정훈+이광원"}]},
+ {t:"WLP 인력 계획 B사 반영",g:"WLP 인력 계획에 B사를 반영하고 숫자를 맞춘다.",c:"조직/인력",o:"",d:"",s:"접수",p:20,
+  h:[{date:"2026-08-24",m:"아침미팅",n:"인력 — B사 반영 (WLP), 숫자 맞추기"}]},
+ {t:"DtS term 정의 확인",g:"DtS-BCDU에서 1mJ 당 BCUD xx nm 기준일 때 DtS term이 얼마인지 확인·정의한다.",c:"R&D기술",o:"",d:"",s:"접수",p:10,
+  h:[{date:"2026-08-24",m:"소공협의체",n:"DtS-BCDU 1mJ 당 BCUD xx nm → DtS term이 얼마인가?"}]},
+ {t:"SC2M0 MOR new ver. PR 최적소재 확보",g:"'27.06 PX PV 시작에 대응하기 위해 SC2M0 MOR new version PR(최적소재)를 ASAP 확보한다.",c:"소재개발",o:"",d:"2027-06-01",s:"진행중",p:25,
+  h:[{date:"2026-08-24",m:"소공협의체",n:"'27.06 PX PV 시작 예정 → SC2M0 MOR new ver. PR (최적소재) ASAP 필요"}]},
+ {t:"Provisional MTS 확보용 평가 Platform 구축",g:"NAND의 integration 대응력 미흡, DRAM의 Platform 변곡점에 대응하기 위해 Provisional MTS 확보를 위한 평가 Platform을 구축한다.",c:"R&D기술",o:"",d:"",s:"접수",p:10,
+  h:[{date:"2026-08-25",m:"미기원 OI",n:"개발환경 Tech scheme 변화 (NAND: integration 대응력 미흡, DRAM: Platform 변곡점) → Provisional MTS 확보를 위한 평가 Platform 필요"}]},
+ {t:"Flexible lot 협의체 신설",g:"주관 TD와 공정 간 협의체(Flexible lot 협의체)를 신설하여 TD가 제안하고 공정이 대응하는 체계를 만든다.",c:"R&D기술",o:"",d:"",s:"접수",p:10,
+  h:[{date:"2026-08-25",m:"미기원 OI",n:"주관 TD와 공정 협의체 필요 — Flexible lot 협의체 (TD가 제안하고 공정이 대응)"}]},
+ {t:"공정 기술 Pool 대시보드 구축 (HTRS Sub table)",g:"HTRS Sub table 기반으로 공정 기술 Pool 대시보드를 구축하여 확보된 기술과 확보해야 할 기술을 가시화한다.",c:"AI/DX",o:"",d:"",s:"접수",p:15,
+  h:[{date:"2026-08-25",m:"미기원 OI",n:"공정 기술 Pool 대시보드 구축 (HTRS Sub table). 확보된 기술과 확보해야 할 기술을 dashboard로 제공하겠다"}]},
+ {t:"단위공정 기술의 Integration 묶음 과제 정의",g:"HTRS 기준 단위공정 기술은 개발 중이나 integration 관점이 부족하므로 이를 묶는 과제를 정의한다. SN미래기술협의체·NAND신뢰성협의체처럼 공통 목표를 명확히 하여 진행한다.",c:"R&D기술",o:"",d:"",s:"접수",p:10,
+  h:[{date:"2026-08-25",m:"미기원 OI",n:"단위공정(예: Etch) 자체 기술개발 → TD/PI 전달 방식. Integration 관점 부족 → 묶는 과제 필요. SN미래기술협의체, NAND 신뢰성 협의체처럼 공통 목표 명확화"}]},
+ {t:"Tech TF 요소기술 적용 기준 수립",g:"Tech TF의 요소기술 적용 기준을 수립한다. 핵심(Critical) 요소기술 개발은 평균 1년 이상 소요되며, Shift left 추진에는 another Vehicle이 필요하다. P-2(HTRS) + P-1(9M) = 약 1년.",c:"R&D기술",o:"",d:"",s:"진행중",p:30,
+  h:[{date:"2026-08-25",m:"미기원 OI",n:"요소기술 경쟁력 강화 — Tech TF 요소기술 기준 수립, P-1 activity와 산출물 정의, PLM 연동 점검안. 핵심요소기술(Critical) 개발 평균 1년 이상 소요. Shift left 추진은 another Vehicle 필요"}]},
+ {t:"요소기술 개발 Activity 및 산출물·CDP 정의",g:"요소기술 개발 Activity와 산출물을 정의하고 요소기술 CDP를 정의한다. 요소기술 CDP ← P-1(9M) 연계, PLM 연동 점검안 포함.",c:"R&D기술",o:"",d:"",s:"진행중",p:30,
+  h:[{date:"2026-08-25",m:"미기원 OI",n:"요소기술 개발 Activity 및 산출물 정의 — 요소기술 CDP 정의 (요소기술 CDP ← P-1 9M)"}]},
+ {t:"DRAM 요소기술 도출 및 하반기 시점 정의",g:"DRAM PO TF 직개발 요소기술을 검토하고 AR, 2D POC, 3D DRAM 요소기술을 도출·개발하며 하반기 시점을 정의한다.",c:"R&D기술",o:"",d:"",s:"진행중",p:25,
+  h:[{date:"2026-08-25",m:"미기원 OI",n:"DRAM PO TF 직개발 요소기술 검토중. AR, 2D POC, 3D DRAM 요소기술 도출 및 개발 중 → 하반기 시점 정의 필요"}]},
+ {t:"N+4 이후 핵심 요소기술 점검 및 P-2 연계 실행전략 구체화",g:"N+4 이후 DRAM/NAND 핵심 요소기술을 점검하고 공정 내 P-2 개발 체계와 연계하여 실행전략을 구체화한다.",c:"R&D기술",o:"",d:"",s:"접수",p:10,
+  h:[{date:"2026-08-25",m:"미기원 OI",n:"N+4 이후 DRAM/NAND 핵심 요소기술 점검하고 공정 내 P-2 개발 체계와 연계하여 실행전략 구체화 예정"}]},
+ {t:"Core 기술 명확화 및 Module별 개발기간 관리 방안",g:"14개월 내 개발이 완료되지 않는 뼈대기술의 결정 변화는 Tech의 근간을 흔들므로 Core 기술을 명확히 한다. Platform/Vehicle이 없는 상태의 개발 방안과 Core 기술 Module별 상이한 개발기간의 관리 방안을 수립한다. (NAND는 명확, DRAM은 난이도 높음)",c:"R&D기술",o:"",d:"",s:"진행중",p:20,
+  h:[{date:"2026-08-25",m:"미기원 OI (총평)",n:"TV design 시점에 요소기술 의사결정이 가능하도록 준비. ①14개월 내 미완료 뼈대기술의 결정 변화는 Tech 근간을 흔듦 → Core 기술 명확화 ②Platform/Vehicle 부재 시 개발 방안, Module별 상이한 개발기간 관리 방안. HTRS 기반 Core 기술 인지 — NAND 명확, DRAM 어려움"}]},
+ {t:"MLR 소재 Delamination Lifting margin 검증",g:"MLR 소재 개발 중 PED >30min에서 peeling이 발생, Dev CPN → CPN+PGMEA time split으로 최적 time 설정을 완료했다. Lifting margin 검증을 명확히 수행한다.",c:"소재개발",o:"",d:"",s:"진행중",p:60,
+  h:[{date:"2026-08-25",m:"WLP 주간보고",n:"MLR 소재 개발 Delamination — PED(>30min) peeling 발생 → Dev CPN → CPN+PGMEA time split으로 최적 time 설정 완료. Lifting margin 검증을 명확히 할 것"}]},
+ {t:"SP7000 유효기간 재설정 검토",g:"SP7000 유효기간은 6month이나 in-line 검증 시 4month부터 RR이 변동하므로 유효기간 재설정을 검토한다.",c:"품질",o:"",d:"",s:"진행중",p:30,
+  h:[{date:"2026-08-25",m:"WLP 주간보고",n:"SP7000 유효기간 6month이나 in-line 검증 시 4month부터 RR 변동"}]},
+ {t:"INLSC38 장비 비용 처리 방안 확정",g:"INLSC38 장비 비용을 매월 처리(세법 기준)하고 감정평가 법인을 활용하는 방안을 확정한다.",c:"설비/인프라",o:"정율 TL",d:"",s:"진행중",p:30,
+  h:[{date:"2026-08-25",m:"장비지원",n:"INLSC38 장비 관련. 비용 처리: 매월로 처리 (세법), 감정평가 법인. 비용 처리 정율이 TL"}]},
+ {t:"T.FAB 3D DRAM 대응 장비 검토",g:"'28년 이후 3D DRAM 구조 대응을 위한 SiGe Epi / Dry etch / Dry CLN 장비를 검토한다.",c:"설비/인프라",o:"",d:"",s:"접수",p:10,
+  h:[{date:"2026-08-26",m:"T.FAB Bi-weekly 회의",n:"'28년 이후 3D DRAM 구조 대응 장비 검토 — SiGe Epi / Dry etch / Dry CLN"}]},
+ {t:"T.FAB 도급 SoW 작성",g:"T.FAB 도급 SoW(Scope of Work)를 작성·확정한다. '27.05 Open / '27.03 사무실 입주 일정에 맞춘다.",c:"설비/인프라",o:"",d:"2027-03-01",s:"접수",p:15,
+  h:[{date:"2026-08-26",m:"T.FAB Bi-weekly 회의",n:"도급 SoW (Scope of Work) 작성 필요. '27.05 Open / 03월 사무실 입주"}]},
+ {t:"냉매·Recycle Plastic 환경 과제 추진 (P&T)",g:"냉매 및 Recycle Plastic 관련 환경 과제를 P&T로 추진한다.",c:"환경",o:"정기모 TL",d:"",s:"접수",p:15,
+  h:[{date:"2026-08-26",m:"AI 환경연구소",n:"냉매 / Recycle Plastic → P&T"}]},
+ {t:"환경개선 단기/중장기 과제 체계화",g:"환경개선 항목을 단기/중장기 과제로 구분해 체계화한다. SK하이닉스 내부에서는 탄관위를 통해 Right 부서 팀장을 모아 재논의하고, 멤버사에 중장기 개발 주제를 제시한다.",c:"환경",o:"",d:"",s:"진행중",p:20,
+  h:[{date:"2026-08-26",m:"AI 환경연구소",n:"환경개선 관련 단기/중장기 과제로 구분. SK하이닉스 내부 — 탄관위 통해 Right 부서 팀장 모여 재논의. 요청사항: 멤버사에 중장기로 개발할만한 주제를 제시할 것"}]},
+ {t:"AI 소재 구조 기반 Library 구축",g:"AI 관련 소재 구조를 기반으로 Library를 구축한다.",c:"AI/DX",o:"",d:"",s:"진행중",p:15,
+  h:[{date:"2026-08-27",m:"팀장 현안회의",n:"AI 관련 소재 구조 기반으로 library 구축"}]},
+ {t:"Special NDA BP IP 우회 방안 마련",g:"Special NDA가 BP IP로 막혀 있어 우회 방법을 찾는다.",c:"경영현안",o:"",d:"",s:"접수",p:10,
+  h:[{date:"2026-08-27",m:"팀장 현안회의",n:"Special NDA (BP IP로 막힘) — 우회방법을 찾자"}]},
+ {t:"AI 구성원 동기부여 방안 수립",g:"AI 구성원 VOC상 동기부여가 떨어진다는 문제를 KPI가 아닌 다른 방식으로 해결할 방안을 수립한다.",c:"조직/인력",o:"",d:"",s:"접수",p:10,
+  h:[{date:"2026-08-27",m:"팀장 현안회의",n:"AI 구성원 VOC — 동기부여가 떨어진다. KPI가 아니다"}]},
+ {t:"Web review 진행",g:"Web review를 진행한다. (범위·대상 정의 필요)",c:"경영현안",o:"",d:"",s:"접수",p:5,
+  h:[{date:"2026-08-19",m:"KPI, OI Review",n:"Web review 안건 제기 — 구체 범위 미정"}]}
+];
+
+const SEED_INFO = [
+ {c:"인물",t:"IMEC 담당",x:"IMEC 담당: 박유정, 오경희, 서진우",d:"2026-08-19",m:"KPI, OI Review",g:["IMEC","담당배정"]},
+ {c:"인물",t:"정성훈 담당 — 소재조직 파견 의향",x:"C&C 조직 내 소재조직을 만들면 소재에서 파견 가겠다. 수현팀장 P2.",d:"2026-08-19",m:"품질 회의",g:["C&C","P2","조직"]},
+ {c:"인물",t:"AI 해커톤 참여자",x:"AI 해커톤: 양주형, 이정훈 + 이광원",d:"2026-08-24",m:"아침미팅",g:["AI","해커톤"]},
+ {c:"인물",t:"AI 환경연구소 정기모 TL",x:"AI 환경연구소 관련 정기모 TL",d:"2026-08-26",m:"AI 환경연구소",g:["환경","TL"]},
+ {c:"인물",t:"INLSC38 비용처리 담당",x:"비용 처리 정율이 TL",d:"2026-08-25",m:"장비지원",g:["INLSC38","비용"]},
+ {c:"인물",t:"수급 대응 TF 참여 조직",x:"양산총괄, M&T 부문장, GSM, 원가, 미전",d:"2026-08-20",m:"통소위",g:["수급TF","참여Level"]},
+ {c:"System",t:"M&T와 P&T 조직 구조 차이",x:"차이점을 명확히 하자. M&T는 팀이 세분화되어 있다. P&T는 WLP 별도 Logic.",d:"2026-08-19",m:"품질 회의",g:["M&T","P&T","WLP","조직"]},
+ {c:"System",t:"AI 통합/분리 운영 방향",x:"AI를 통합 / 분리하여 진행",d:"2026-08-19",m:"품질 회의",g:["AI","운영방향"]},
+ {c:"System",t:"P-2와 Tech 연결성 이슈 (Q1)",x:"P-2와 Tech와의 연결성을 어떻게 가져갈 것이냐? HTRS가 있는데 TD는 무엇을 어떻게 정확하게 준비할 수 있을 것인가에 대한 정의가 부재하다.",d:"2026-08-25",m:"미기원 OI",g:["P-2","HTRS","TD"]},
+ {c:"System",t:"HTRS 기준 단위공정 개발의 한계 (Q2)",x:"HTRS 기준으로 단위공정의 기술은 개발하고 있으나 integration 관점에서 부족하다. 이를 묶는 과제가 필요하다.",d:"2026-08-25",m:"미기원 OI",g:["HTRS","integration","단위공정"]},
+ {c:"System",t:"개발환경 Tech scheme 변화",x:"NAND는 integration 대응력 미흡, DRAM은 Platform 변곡점 상황.",d:"2026-08-25",m:"미기원 OI",g:["NAND","DRAM","Tech scheme"]},
+ {c:"System",t:"INLSC38 장비 (내용 미완)",x:"INLSC38 장비가 — 원문이 미완성 문장으로 끝나 내용 확인 필요.",d:"2026-08-25",m:"장비지원",g:["INLSC38","확인필요"]},
+ {c:"운영",t:"부문장 KPI 달성 결과",x:"부문장 KPI 전체 경영계획 모두 달성, 80점대 중반.",d:"2026-08-21",m:"7월 KPI, OI 리뷰",g:["KPI","실적"]},
+ {c:"운영",t:"PIQ 미기원 R&R",x:"PIQ 미기원 — 제조기술 R&R, 제조는 back up만 진행, Tech에서 지정.",d:"2026-08-24",m:"소공협의체",g:["PIQ","R&R","제조기술"]},
+ {c:"운영",t:"R&D 공정 개발 편중",x:"N+2 tech에 개발이 몰림 (가우시안 분포).",d:"2026-08-25",m:"미기원 OI",g:["N+2","개발분포"]},
+ {c:"운영",t:"NAND Pharos(N+4) 진행 현황",x:"NAND Pharos (N+4) '27.02 P-1 Start. 현재 요소기술 도출 14건 및 발의 완료.",d:"2026-08-25",m:"미기원 OI",g:["NAND","Pharos","N+4","P-1"]},
+ {c:"운영",t:"요소개발 완료 목표 시점",x:"요소개발 완료는 P2에서 TV DB out 전 완료 목표 (14개월).",d:"2026-08-25",m:"미기원 OI",g:["요소기술","P2","TV DB"]},
+ {c:"운영",t:"미기원 OI 총평",x:"TV design 시점에 요소기술에 대한 의사결정을 할 수 있게 준비한다. NAND는 가능, DRAM은 PO/P 원인분석을 lookback 해야 한다.",d:"2026-08-25",m:"미기원 OI",g:["총평","TV design","DRAM","NAND"]},
+ {c:"운영",t:"P-2 추진 관점 (Q3)",x:"P-2가 중장기적 연속성 있게 가는 것이 목적인가, Tech 사전점검 단계가 아닌가? → 관련한 모든 항목을 협의체라는 관점에서 merge하여 추진하려는 것이다.",d:"2026-08-25",m:"미기원 OI",g:["P-2","협의체"]},
+ {c:"운영",t:"T.FAB 오픈 일정",x:"'27.05 Open / '27.03월 사무실 입주.",d:"2026-08-26",m:"T.FAB Bi-weekly 회의",g:["T.FAB","일정"]},
+ {c:"운영",t:"메시지 방향성 (Master / Keyword)",x:"새롭게 무엇을 정의했고, 어떤 것을 잘하고 어떤 것이 뒤쳐져 있는지, 이를 기반으로 우리가 더욱 더 해가야 할 것을 명확히 하자.",d:"2026-08-19",m:"품질 회의",g:["Master","Keyword","메시지"]},
+ {c:"소재",t:"Moly BP 가격 협상 동향",x:"Moly 전체 BP를 모아 놓고 가격 down에 대한 이야기를 함. Merck와 Air Liquide 불만.",d:"2026-08-21",m:"7월 KPI, OI 리뷰",g:["Moly","Merck","Air Liquide","가격"]},
+ {c:"소재",t:"삼성 V10 Separation 방향 변경",x:"삼성이 V10에서 wet separation이 아닌 Dry로 방향을 수정함.",d:"2026-08-21",m:"7월 KPI, OI 리뷰",g:["삼성","V10","Dry","wet separation"]},
+ {c:"소재",t:"High NA L/S 한계 해상도",x:"C123 기준 High NA L/S 한계 해상도 — Horizontal 16nm / Vertical L/S 18nm.",d:"2026-08-24",m:"소공협의체",g:["High NA","해상도","C123"]},
+ {c:"소재",t:"MLR PED Peeling 데이터",x:"PED (>30min)에서 peeling 발생. Dev CPN → CPN+PGMEA time split으로 최적 time 설정 완료.",d:"2026-08-25",m:"WLP 주간보고",g:["MLR","PED","PGMEA","peeling"]},
+ {c:"소재",t:"SP7000 RR 변동 특성",x:"SP7000 유효기간은 6month이나 in-line 검증 시 4month부터 RR 변동.",d:"2026-08-25",m:"WLP 주간보고",g:["SP7000","RR","유효기간"]},
+ {c:"소재",t:"Abrasive 함량 수준",x:"Abrasive는 Slurry 당 거의 5~10 wt% 수준.",d:"2026-08-27",m:"팀장 현안회의",g:["Abrasive","Slurry","wt%"]},
+ {c:"기술",t:"DtS-BCDU 기준",x:"DtS-BCDU 1mJ 당 BCUD xx nm — DtS term 산정 기준.",d:"2026-08-24",m:"소공협의체",g:["DtS","BCDU"]},
+ {c:"기술",t:"요소기술 개발 소요기간",x:"핵심요소기술(Critical 기술) 개발은 평균 1년 이상 소요. P-2(HTRS) + P-1(9M) 약 1년.",d:"2026-08-25",m:"미기원 OI",g:["요소기술","개발기간","P-1","P-2"]}
+];
+
+/* =========================================================
+   2. 상태 & 저장
+   ========================================================= */
+let S = {tasks:[],info:[],log:[]};
+let REVIEW = [];
+let INFO_FILTER = "";
+
+function uid(){return Math.random().toString(36).slice(2,10)}
+function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+
+function seed(){
+  S.tasks = SEED_TASKS.map(x=>({
+    id:uid(), title:x.t, goal:x.g, category:x.c, owner:x.o, deadline:x.d,
+    status:x.s, progress:x.p, created:x.h[0].date, updated:x.h[x.h.length-1].date,
+    history:x.h.map(h=>({date:h.date,meeting:h.m,note:h.n,status:x.s,progress:x.p}))
+  }));
+  S.info = SEED_INFO.map(x=>({id:uid(),category:x.c,title:x.t,content:x.x,date:x.d,meeting:x.m,tags:x.g}));
+}
+function save(){try{localStorage.setItem(LS_KEY,JSON.stringify(S))}catch(e){toast("⚠ 브라우저 저장 실패 — 백업(JSON) 사용 권장")}}
+function load(){
+  try{const r=localStorage.getItem(LS_KEY);if(r){S=JSON.parse(r);return true}}catch(e){}
+  return false;
+}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");
+  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2400)}
+
+/* =========================================================
+   3. 날짜 / D-day
+   ========================================================= */
+function parseDeadline(s){
+  if(!s)return null;
+  s=String(s).trim();
+  let m=s.match(/^(20\d{2})-(\d{1,2})-(\d{1,2})$/);
+  if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{2})[.\-](\d{1,2})월?$/);           // 26.12월
+  if(m)return new Date(2000+ +m[1],+m[2],0);
+  m=s.match(/^'?(\d{2})[.\-](\d{1,2})$/);             // '27.06
+  if(m)return new Date(2000+ +m[1],+m[2],0);
+  m=s.match(/^(\d{1,2})[\/\-](\d{1,2})$/);            // 09/30
+  if(m)return new Date(new Date().getFullYear(),+m[1]-1,+m[2]);
+  return null;
+}
+function dday(s){
+  const d=parseDeadline(s); if(!d)return null;
+  const t=new Date(); t.setHours(0,0,0,0); d.setHours(0,0,0,0);
+  const n=Math.round((d-t)/86400000);
+  if(n<0)  return {n,label:"D+"+Math.abs(n),cls:"b-over"};
+  if(n===0)return {n,label:"D-Day",cls:"b-over"};
+  if(n<=14)return {n,label:"D-"+n,cls:"b-soon"};
+  return {n,label:"D-"+n,cls:"b-far"};
+}
+
+/* =========================================================
+   4. 텍스트 파서 — 과제 / 정보 자동 분류
+   ========================================================= */
+const DATE_RE = /^\s*(20\d{2})\s*[.\-\/]\s*(\d{1,2})\s*[.\-\/]\s*(\d{1,2})\s*\.?\s*(?:[(（]([^)）]*)[)）])?\s*$/;
+
+// 실행/조치를 요구하는 표현 (과제 신호)
+const ACT_RE = /(할\s*것|하기로|하자|해라|해야|필요|추진|검토|구축|확보|반영|개선|수립|정의|요청|통보|점검|만들|찾자|제안|도출|대응|준비|신설|생성|변경|전환|적용|산정|조사|연동|명확히|의사결정|예정|진행할|운용\s*방안|방안|TF|과제|지시|착수|시작|완료|ASAP|미팅\s*Call)/;
+// 사실 서술 표현 (정보 신호) — 실행 지시가 없으면 정보로 분류
+const FACT_RE = /(수준|달성|불만|현황|분포|명단|참석|이다|입니다|임\.?$|함\.?$|있다|없다|이며|상황|특성|담당[:：])/;
+// 카테고리 키워드 (가중치 기반 — 값이 클수록 우선)
+const CAT_TASK = [
+  [/(Dashboard|대시보드|Portal|library|라이브러리|해커톤|DX|디지털|AI)/i,"AI/DX",3],
+  [/(환경|냉매|Recycle|탄소|탄관위|Plastic)/i,"환경",3],
+  [/(요소기술|HTRS|P-1|P-2|TD\b|integration|CDP|MTS|Platform|Vehicle|DtS|N\+\d|DRAM|NAND|단위공정|협의체|Tech)/i,"R&D기술",2],
+  [/(장비|창고|FAB|설비|SoW|도급|입주|Epi|Etch|CLN|온도|인프라|비용\s*처리)/i,"설비/인프라",2],
+  [/(품질|Q-?day|VOC|Audit|하자|불량|검증|유효기간|Bottle)/i,"품질",2],
+  [/(수급|공급|구매|다변화|재고|SCM|BP\s*가격)/i,"수급/SCM",2],
+  [/(인력|교육|출향|조직|파견|융합\s*Eng|채용|동기부여|팀장|담당)/i,"조직/인력",2],
+  [/(KPI|OI\b|보상|부회장|경영|NDA|1on1|리뷰|포상)/i,"경영현안",2],
+  [/(소재|PR\b|Slurry|Precursor|TEOS|MLR|MLA|HF\b|CuMn|Moly|Filter|SP7000|SC2M0|etchant|wt%|화학|separation)/i,"소재개발",1]
+];
+const CAT_INFO = [
+  // 인물: "이름+직급" 또는 "이름, 이름" 나열 형태만 인정 (직급 단어 단독은 제외)
+  [/([가-힣]{2,3}\s*(TL\b|팀장|담당자|부문장|책임|수석|위원))|([가-힣]{3}\s*[,、+]\s*[가-힣]{3})|(담당[:：]\s*[가-힣]{2,3})/,"인물"],
+  [/(소재|PR\b|Slurry|Precursor|TEOS|MLR|HF|CuMn|Moly|SP7000|Abrasive|wt%|nm|해상도|peeling|PGMEA|separation)/i,"소재"],
+  [/(Portal|Dashboard|System|Platform|HTRS|PLM|DB|Tech\s*scheme|Logic|AI\b|장비|scheme|구조)/i,"System"],
+  [/(KPI|R&R|조직|일정|Open|입주|보고|회의|협의체|참여|분포|총평|목표|예산|비용)/i,"운영"]
+];
+function guessTaskCat(s){
+  let best="미분류",score=0;
+  for(const[re,c,w]of CAT_TASK){
+    const hits=(s.match(new RegExp(re.source,"gi"))||[]).length;
+    if(hits){const sc=hits*w; if(sc>score){score=sc;best=c}}
+  }
+  return best;
+}
+function guessInfoCat(s){for(const[re,c]of CAT_INFO)if(re.test(s))return c;return"기술"}
+
+function extractOwner(s){
+  const m=s.match(/([가-힣]{2,3})\s*(TL|팀장|담당|부문장)/);
+  if(m)return m[0].trim();
+  const names=s.match(/[가-힣]{3}(?=\s*[,、]|\s*\+)/g);
+  if(names&&names.length>=2)return names.join(", ");
+  return "";
+}
+function extractDeadline(s){
+  const Y=new Date().getFullYear();
+  let m=s.match(/'?(\d{2})[.\-](\d{1,2})\s*월/);      if(m)return "20"+m[1]+"-"+String(+m[2]).padStart(2,"0")+"-28";
+  m=s.match(/\((\d{1,2})\/(\d{1,2})\)/);              if(m)return Y+"-"+String(+m[1]).padStart(2,"0")+"-"+String(+m[2]).padStart(2,"0");
+  m=s.match(/(?:^|\s)(\d{1,2})\/(\d{1,2})(?:\s|$)/);  if(m)return Y+"-"+String(+m[1]).padStart(2,"0")+"-"+String(+m[2]).padStart(2,"0");
+  m=s.match(/'(\d{2})\.(\d{1,2})/);                   if(m)return "20"+m[1]+"-"+String(+m[2]).padStart(2,"0")+"-01";
+  m=s.match(/(?:^|[^0-9a-zA-Z])(\d{1,2})\s*월(?!\s*[Rr])/); // "10월 오픈 예정" — month 앞에 연도 없을 때 당해년도
+  if(m&&+m[1]>=1&&+m[1]<=12)return Y+"-"+String(+m[1]).padStart(2,"0")+"-28";
+  return "";
+}
+function guessStatus(s){
+  const done=/완료(?!\s*(목표|필요|할|하|되)) /.test(s+" ")||/완료(?![가-힣])/.test(s);
+  const wip =/(진행\s*중|추진\s*중|검토\s*중|개발\s*중|착수|시작|예정|중이)/.test(s);
+  if(/(보류|홀드|중단|재논의)/.test(s))return{s:"보류",p:10};
+  if(done&&wip)return{s:"진행중",p:60};   // "PCN 완료. P&T 확장 검토 중" → 아직 진행중
+  if(done)return{s:"완료",p:100};
+  if(wip)return{s:"진행중",p:40};
+  return{s:"접수",p:0};
+}
+function makeTitle(s){
+  let t=s.replace(/^[\s\-–—•*+>]+/,"").replace(/\s+/g," ").trim();
+  t=t.split(/\s*(?:-->|→|→)\s*/)[0];
+  t=t.replace(/[.。]\s*$/,"");
+  if(t.length>44)t=t.slice(0,44)+"…";
+  return t;
+}
+
+// 문자열 정규화 후 bigram Dice 유사도
+function norm(s){return String(s).toLowerCase().replace(/[^가-힣a-z0-9]/g,"")}
+function bigrams(s){const a=[];for(let i=0;i<s.length-1;i++)a.push(s.slice(i,i+2));return a}
+function dice(a,b){
+  a=norm(a);b=norm(b);
+  if(!a||!b)return 0;
+  if(a===b)return 1;
+  const A=bigrams(a),B=bigrams(b);
+  if(!A.length||!B.length)return 0;
+  const map={};A.forEach(g=>map[g]=(map[g]||0)+1);
+  let hit=0;B.forEach(g=>{if(map[g]>0){map[g]--;hit++}});
+  return 2*hit/(A.length+B.length);
+}
+// 고유 식별자성 토큰 (TEOS, SP7000, Q-day, WLP ...) — 양쪽에 공통 등장하면 매칭 신뢰도 가산
+function keyTokens(s){
+  return new Set((String(s).match(/[A-Za-z][A-Za-z0-9.\-]{2,}/g)||[])
+    .map(x=>x.toLowerCase().replace(/[.\-]+$/,"")));
+}
+function bestMatch(text){
+  let best=null,score=0;
+  const kt=keyTokens(text);
+  S.tasks.forEach(t=>{
+    let sc=Math.max(dice(text,t.title), dice(text,t.title+" "+t.goal)*0.92);
+    // 공통 고유 토큰이 있고 기본 유사도가 최소치를 넘으면 매칭 후보로 승격
+    const shared=[...keyTokens(t.title+" "+t.goal)].filter(x=>kt.has(x));
+    if(shared.length&&sc>=0.18)sc=Math.max(sc,0.45+0.05*Math.min(shared.length,3));
+    if(sc>score){score=sc;best=t}
+  });
+  return score>=0.34?{task:best,score:Math.min(score,1)}:null;
+}
+
+function parseMeetingText(raw){
+  const lines=raw.split(/\r?\n/);
+  const out=[]; let curDate=todayISO(), curMeet="";
+  let buf=null;
+  const push=()=>{if(buf&&buf.text.trim().length>=4)out.push(buf);buf=null};
+
+  for(let ln of lines){
+    const t=ln.trim();
+    if(!t){continue}
+    const dm=t.match(DATE_RE);
+    if(dm){
+      push();
+      curDate=dm[1]+"-"+String(+dm[2]).padStart(2,"0")+"-"+String(+dm[3]).padStart(2,"0");
+      curMeet=(dm[4]||"").trim();
+      continue;
+    }
+    // 이어지는 상세 (--> , → , + , 들여쓰기)
+    const isCont=/^(-->|→|\+|→)/.test(t) || (/^\s{2,}/.test(ln) && buf);
+    if(isCont && buf){
+      buf.text += " " + t.replace(/^(-->|→|\+|→)\s*/,"");
+      continue;
+    }
+    push();
+    buf={date:curDate, meeting:curMeet, text:t.replace(/^[\-–—•*]\s*/,"")};
+  }
+  push();
+  return out;
+}
+
+function classify(items){
+  return items.map(it=>{
+    const s=it.text;
+    const isQuestion=/[?？]\s*$/.test(s);
+    const actScore=(s.match(new RegExp(ACT_RE.source,"g"))||[]).length;
+    const factScore=(s.match(new RegExp(FACT_RE.source,"g"))||[]).length;
+    // 인물 나열 / 단순 수치는 정보로
+    const nameOnly=/^[^:：]{0,14}[:：]?\s*[가-힣]{3}(\s*[,+、]\s*[가-힣]{3})+\s*$/.test(s);
+    let kind;
+    if(nameOnly) kind="info";                       // 인물 나열
+    else if(isQuestion && actScore===0) kind="info";
+    else if(actScore>factScore) kind="task";        // 실행 신호가 사실 서술보다 강할 때만 과제
+    else kind="info";                               // 동점·사실 우세 → 정보 (안전한 기본값)
+
+    if(kind==="task"){
+      const g=guessStatus(s);
+      const m=bestMatch(s);
+      return {kind:"task", src:it, title:makeTitle(s), goal:s, category:guessTaskCat(s),
+              owner:extractOwner(s), deadline:extractDeadline(s), status:g.s, progress:g.p,
+              note:s, match:m, include:true};
+    }
+    return {kind:"info", src:it, title:makeTitle(s), content:s, category:guessInfoCat(s),
+            tags:(s.match(/[A-Za-z][A-Za-z0-9.\-]{2,}/g)||[]).slice(0,4), include:true};
+  });
+}
+
+/* =========================================================
+   5. 렌더 — 대시보드
+   ========================================================= */
+function renderDash(){
+  const T=S.tasks;
+  const cnt=s=>T.filter(t=>t.status===s).length;
+  const open=T.filter(t=>t.status!=="완료");
+  const overdue=open.filter(t=>{const d=dday(t.deadline);return d&&d.n<0}).length;
+  const soon=open.filter(t=>{const d=dday(t.deadline);return d&&d.n>=0&&d.n<=14}).length;
+  const avg=T.length?Math.round(T.reduce((a,t)=>a+(+t.progress||0),0)/T.length):0;
+
+  document.getElementById("kpiBox").innerHTML=[
+    ["전체 과제",T.length,"var(--text)",S.info.length+"건 정보 별도 보관"],
+    ["진행중",cnt("진행중"),"var(--accent)","접수 "+cnt("접수")+" · 보류 "+cnt("보류")],
+    ["완료",cnt("완료"),"var(--ok)",T.length?Math.round(cnt("완료")/T.length*100)+"% 완료율":""],
+    ["마감 임박",soon,"var(--warn)","14일 이내"],
+    ["납기 초과",overdue,"var(--danger)","즉시 조치"],
+    ["평균 진척율",avg+"%","var(--text)","전체 과제 기준"]
+  ].map(k=>`<div class="kpi"><div class="l">${k[0]}</div><div class="v" style="color:${k[2]}">${k[1]}</div><div class="d">${k[3]}</div></div>`).join("");
+
+  // donut
+  const data=STATUS.map(s=>({s,v:cnt(s)}));
+  const tot=data.reduce((a,d)=>a+d.v,0)||1;
+  const R=52,C=2*Math.PI*R;let off=0;
+  const arcs=data.filter(d=>d.v>0).map(d=>{
+    const len=d.v/tot*C, el=`<circle r="${R}" cx="70" cy="70" fill="none" stroke="${STATUS_HEX[d.s]}"
+      stroke-width="17" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}"
+      transform="rotate(-90 70 70)"></circle>`;off+=len;return el}).join("");
+  document.getElementById("donut").innerHTML=
+    `<svg width="140" height="140" viewBox="0 0 140 140">${arcs}
+     <text x="70" y="66" text-anchor="middle" font-size="24" font-weight="700" fill="var(--text)">${T.length}</text>
+     <text x="70" y="84" text-anchor="middle" font-size="10" fill="var(--muted)">TOTAL</text></svg>`;
+  document.getElementById("stLegend").innerHTML=data.map(d=>
+    `<div><span class="dot" style="background:${STATUS_HEX[d.s]}"></span>${d.s}
+     <span class="cnt">${d.v}<span style="color:var(--muted);font-weight:400"> · ${Math.round(d.v/tot*100)}%</span></span></div>`).join("");
+  document.getElementById("stTot").textContent=T.length+"건";
+
+  // category bars
+  const cm={};T.forEach(t=>{const c=t.category||"미분류";cm[c]=cm[c]||{n:0,done:0};cm[c].n++;if(t.status==="완료")cm[c].done++});
+  const arr=Object.entries(cm).sort((a,b)=>b[1].n-a[1].n);
+  const mx=Math.max(...arr.map(a=>a[1].n),1);
+  document.getElementById("catBars").innerHTML=arr.map(([c,v])=>
+    `<div class="bar"><div class="t"><b>${c}</b><span>${v.n}건 · 완료 ${v.done}</span></div>
+     <div class="track"><div class="fill" style="width:${v.n/mx*100}%"></div></div></div>`).join("")||`<div class="empty">데이터 없음</div>`;
+  document.getElementById("catTot").textContent=arr.length+"개 분류";
+
+  // due
+  const due=open.filter(t=>dday(t.deadline)).sort((a,b)=>dday(a.deadline).n-dday(b.deadline).n).slice(0,8);
+  document.getElementById("dueList").innerHTML=due.length?due.map(t=>{
+    const d=dday(t.deadline);
+    return `<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
+      <span class="badge b-${t.status}">${t.status}</span>
+      <span style="flex:1;min-width:150px;font-weight:500">${esc(t.title)}</span>
+      <span style="font-size:12px;color:var(--text2)">${t.deadline}</span>
+      <span class="badge b-dday ${d.cls}">${d.label}</span></div>`}).join(""):
+    `<div class="empty">납기가 지정된 미완료 과제가 없습니다.<br><span style="font-size:12px">과제 목록에서 납기를 입력하면 여기에 표시됩니다.</span></div>`;
+  document.getElementById("dueTot").textContent=due.length+"건";
+
+  // recent
+  const rec=[];S.tasks.forEach(t=>(t.history||[]).forEach(h=>rec.push({...h,title:t.title})));
+  rec.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  document.getElementById("recentList").innerHTML=rec.slice(0,12).map(h=>
+    `<div class="hi" style="border-left:2px solid var(--border2);padding:3px 0 9px 12px;font-size:12.5px;color:var(--text2)">
+      <span class="hd" style="color:var(--accent);font-weight:600">${h.date}</span>
+      <span class="hm" style="color:var(--muted)"> [${esc(h.meeting||"-")}]</span>
+      <b style="color:var(--text)"> ${esc(h.title)}</b><br>${esc(h.note||"")}</div>`).join("")||`<div class="empty">이력 없음</div>`;
+}
+
+/* =========================================================
+   6. 렌더 — 과제 목록
+   ========================================================= */
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+function renderTasks(){
+  const q=document.getElementById("fq").value.trim().toLowerCase();
+  const st=document.getElementById("fst").value;
+  const ct=document.getElementById("fcat").value;
+  const sort=document.getElementById("fsort").value;
+
+  let L=S.tasks.filter(t=>
+    (!st||t.status===st) && (!ct||t.category===ct) &&
+    (!q||(t.title+t.goal+t.owner+t.category).toLowerCase().includes(q)));
+
+  L.sort((a,b)=>{
+    if(sort==="upd")return (b.updated||"").localeCompare(a.updated||"");
+    if(sort==="due"){const x=dday(a.deadline),y=dday(b.deadline);
+      if(!x&&!y)return 0;if(!x)return 1;if(!y)return -1;return x.n-y.n}
+    if(sort==="prog")return (a.progress||0)-(b.progress||0);
+    return (a.category||"").localeCompare(b.category||"");
+  });
+
+  document.getElementById("taskCount").textContent=`${L.length} / ${S.tasks.length}건 표시`;
+  document.getElementById("taskList").innerHTML=L.map(t=>{
+    const d=dday(t.deadline);
+    return `<div class="trow" id="tr-${t.id}">
+      <div class="thead" onclick="document.getElementById('tr-${t.id}').classList.toggle('open')">
+        <span class="badge b-${t.status}">${t.status}</span>
+        <span class="tt">${esc(t.title)}</span>
+        <span class="meta">
+          <span class="badge b-cat">${esc(t.category)}</span>
+          ${t.owner?`<span>👤 ${esc(t.owner)}</span>`:""}
+          ${t.deadline?`<span>📅 ${esc(t.deadline)}</span>`:""}
+          ${d?`<span class="badge b-dday ${d.cls}">${d.label}</span>`:""}
+          <span class="pminibar"><i style="width:${t.progress||0}%"></i></span>
+          <span style="font-variant-numeric:tabular-nums;min-width:34px">${t.progress||0}%</span>
+        </span>
+      </div>
+      <div class="tbody">
+        <div class="goal"><b style="font-size:11px;color:var(--text2)">목표</b><br>${esc(t.goal)}</div>
+        <div class="fields">
+          <div class="f"><label>상태</label><select onchange="upd('${t.id}','status',this.value)">
+            ${STATUS.map(s=>`<option ${s===t.status?"selected":""}>${s}</option>`).join("")}</select></div>
+          <div class="f"><label>진척율 %</label><input type="number" min="0" max="100" value="${t.progress||0}" onchange="upd('${t.id}','progress',this.value)"></div>
+          <div class="f"><label>담당</label><input value="${esc(t.owner)}" onchange="upd('${t.id}','owner',this.value)"></div>
+          <div class="f"><label>납기 (YYYY-MM-DD)</label><input value="${esc(t.deadline)}" placeholder="2026-09-30" onchange="upd('${t.id}','deadline',this.value)"></div>
+          <div class="f"><label>카테고리</label><select onchange="upd('${t.id}','category',this.value)">
+            ${TASK_CATS.map(c=>`<option ${c===t.category?"selected":""}>${c}</option>`).join("")}</select></div>
+        </div>
+        <div class="hist"><label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.04em">진척 이력 ${(t.history||[]).length}건</label>
+          <div style="margin-top:8px">${(t.history||[]).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")).map(h=>
+            `<div class="hi"><span class="hd">${h.date}</span> <span class="hm">[${esc(h.meeting||"-")}]</span><br>${esc(h.note)}
+             <span class="hm"> → ${h.status||""} ${h.progress!=null?h.progress+"%":""}</span></div>`).join("")}</div>
+        </div>
+        <div class="rowacts">
+          <button onclick="addProgress('${t.id}')">➕ 진척 이력 추가</button>
+          <button class="danger" onclick="delTask('${t.id}')">🗑 삭제</button>
+        </div>
+      </div></div>`}).join("")||`<div class="empty">조건에 맞는 과제가 없습니다.</div>`;
+}
+function upd(id,k,v){
+  const t=S.tasks.find(x=>x.id===id);if(!t)return;
+  t[k]=(k==="progress")?Math.max(0,Math.min(100,+v||0)):v;
+  if(k==="status"&&v==="완료"&&(+t.progress||0)<100)t.progress=100;
+  t.updated=todayISO();save();renderAll();toast("수정됨");
+}
+function addProgress(id){
+  const t=S.tasks.find(x=>x.id===id);if(!t)return;
+  const note=prompt("진척 내용을 입력하세요:");if(note==null||!note.trim())return;
+  const meet=prompt("회의/출처 (선택):","")||"수동 입력";
+  t.history.push({date:todayISO(),meeting:meet,note:note.trim(),status:t.status,progress:t.progress});
+  t.updated=todayISO();save();renderAll();toast("이력 추가됨");
+}
+function delTask(id){
+  const t=S.tasks.find(x=>x.id===id);
+  if(!confirm(`"${t?t.title:""}" 과제를 삭제할까요? 이력도 함께 삭제됩니다.`))return;
+  S.tasks=S.tasks.filter(x=>x.id!==id);save();renderAll();toast("삭제됨");
+}
+function addTaskManual(){
+  const title=prompt("과제 제목:");if(!title||!title.trim())return;
+  S.tasks.push({id:uid(),title:title.trim(),goal:prompt("목표:")||"",category:"미분류",owner:prompt("담당:")||"",
+    deadline:prompt("납기 (YYYY-MM-DD, 없으면 비움):")||"",status:"접수",progress:0,
+    created:todayISO(),updated:todayISO(),
+    history:[{date:todayISO(),meeting:"수동 등록",note:"과제 신규 등록",status:"접수",progress:0}]});
+  save();renderAll();toast("과제 추가됨");
+}
+function expandAll(o){document.querySelectorAll(".trow").forEach(e=>e.classList.toggle("open",o))}
+
+/* =========================================================
+   7. 렌더 — 정보 저장소
+   ========================================================= */
+function renderInfo(){
+  const q=(document.getElementById("fiq").value||"").trim().toLowerCase();
+  const counts={};INFO_CATS.forEach(c=>counts[c]=S.info.filter(i=>i.category===c).length);
+  document.getElementById("infoChips").innerHTML=
+    `<span class="chip ${INFO_FILTER===""?"on":""}" onclick="setInfoFilter('')">전체 ${S.info.length}</span>`+
+    INFO_CATS.map(c=>`<span class="chip ${INFO_FILTER===c?"on":""}" onclick="setInfoFilter('${c}')">${c} ${counts[c]||0}</span>`).join("");
+
+  let L=S.info.filter(i=>(!INFO_FILTER||i.category===INFO_FILTER)&&
+    (!q||(i.title+i.content+(i.tags||[]).join("")+i.meeting).toLowerCase().includes(q)));
+  L.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  document.getElementById("infoCount").textContent=`${L.length} / ${S.info.length}건 표시`;
+  document.getElementById("infoList").innerHTML=L.map(i=>
+    `<div class="inf c-${i.category}">
+      <button class="del" title="삭제" onclick="delInfo('${i.id}')">×</button>
+      <div class="ih"><span class="badge b-cat">${i.category}</span><span class="it">${esc(i.title)}</span></div>
+      <div class="ic">${esc(i.content)}</div>
+      <div class="if"><span>📅 ${i.date}</span><span>·</span><span>${esc(i.meeting||"-")}</span>
+        ${(i.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
+    </div>`).join("")||`<div class="empty" style="grid-column:1/-1">해당 정보가 없습니다.</div>`;
+}
+function setInfoFilter(c){INFO_FILTER=c;renderInfo()}
+function delInfo(id){S.info=S.info.filter(x=>x.id!==id);save();renderAll();toast("삭제됨")}
+function addInfoManual(){
+  const title=prompt("정보 제목:");if(!title||!title.trim())return;
+  const content=prompt("내용:")||"";
+  let c=prompt("분류 ("+INFO_CATS.join(" / ")+"):","기술");
+  if(!INFO_CATS.includes(c))c=guessInfoCat(title+" "+content);
+  S.info.push({id:uid(),category:c,title:title.trim(),content,date:todayISO(),meeting:"수동 등록",tags:[]});
+  save();renderAll();toast("정보 추가됨");
+}
+
+/* =========================================================
+   8. 렌더 — 전체 이력
+   ========================================================= */
+function renderHist(){
+  const q=(document.getElementById("fhq").value||"").trim().toLowerCase();
+  const rows=[];
+  S.tasks.forEach(t=>(t.history||[]).forEach(h=>rows.push({...h,title:t.title,cat:t.category})));
+  rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const L=rows.filter(r=>!q||(r.title+r.meeting+r.note).toLowerCase().includes(q));
+  document.getElementById("histCount").textContent=`${L.length} / ${rows.length}건`;
+  document.getElementById("histBody").innerHTML=L.map(r=>
+    `<tr><td style="font-variant-numeric:tabular-nums;color:var(--accent);font-weight:600">${r.date}</td>
+     <td style="color:var(--text2)">${esc(r.meeting||"-")}</td>
+     <td style="font-weight:500">${esc(r.title)}</td>
+     <td style="color:var(--text2)">${esc(r.note)}</td>
+     <td><span class="badge b-${r.status||"접수"}">${r.status||"-"}</span></td>
+     <td style="font-variant-numeric:tabular-nums">${r.progress!=null?r.progress+"%":"-"}</td></tr>`).join("")||
+    `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">이력 없음</td></tr>`;
+}
+
+/* =========================================================
+   9. 회의록 분석 → 검토 UI
+   ========================================================= */
+function analyze(){
+  const raw=document.getElementById("rawText").value;
+  if(!raw.trim()){toast("회의록 텍스트를 입력하세요");return}
+  const items=parseMeetingText(raw);
+  if(!items.length){toast("추출된 항목이 없습니다");return}
+  REVIEW=classify(items);
+  renderReview();
+  const nt=REVIEW.filter(r=>r.kind==="task").length, ni=REVIEW.length-nt;
+  const nm=REVIEW.filter(r=>r.kind==="task"&&r.match).length;
+  toast(`${REVIEW.length}개 추출 — 과제 ${nt} (기존 매칭 ${nm}) · 정보 ${ni}`);
+}
+function renderReview(){
+  document.getElementById("reviewHead").style.display="block";
+  document.getElementById("reviewActs").style.display="flex";
+  document.getElementById("reviewBox").innerHTML=REVIEW.map((r,i)=>{
+    const opts=`<option value="">🆕 신규 과제로 등록</option>`+
+      S.tasks.map(t=>`<option value="${t.id}" ${r.match&&r.match.task.id===t.id?"selected":""}>🔗 ${esc(t.title)}</option>`).join("");
+    if(r.kind==="task"){
+      return `<div class="rev" id="rv-${i}">
+        <div class="rh">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px"><input type="checkbox" style="width:auto" ${r.include?"checked":""} onchange="rv(${i},'include',this.checked)"> 포함</label>
+          <select style="width:auto" onchange="rv(${i},'kind',this.value)"><option value="task" selected>📌 과제</option><option value="info">🗃️ 정보</option></select>
+          <span style="font-size:12px;color:var(--muted)">${r.src.date} · ${esc(r.src.meeting||"-")}</span>
+          ${r.match?`<span class="matchnote">🔗 유사 과제 매칭 ${(r.match.score*100).toFixed(0)}%</span>`:""}
+        </div>
+        <div class="rsrc">${esc(r.src.text)}</div>
+        <div class="rg">
+          <div><label style="font-size:11px;color:var(--text2)">저장 방식</label><select onchange="rv(${i},'targetId',this.value)">${opts}</select></div>
+          <div><label style="font-size:11px;color:var(--text2)">제목</label><input value="${esc(r.title)}" onchange="rv(${i},'title',this.value)"></div>
+          <div><label style="font-size:11px;color:var(--text2)">카테고리</label><select onchange="rv(${i},'category',this.value)">${TASK_CATS.map(c=>`<option ${c===r.category?"selected":""}>${c}</option>`).join("")}</select></div>
+          <div><label style="font-size:11px;color:var(--text2)">담당</label><input value="${esc(r.owner)}" onchange="rv(${i},'owner',this.value)"></div>
+          <div><label style="font-size:11px;color:var(--text2)">납기</label><input value="${esc(r.deadline)}" placeholder="YYYY-MM-DD" onchange="rv(${i},'deadline',this.value)"></div>
+          <div><label style="font-size:11px;color:var(--text2)">상태</label><select onchange="rv(${i},'status',this.value)">${STATUS.map(s=>`<option ${s===r.status?"selected":""}>${s}</option>`).join("")}</select></div>
+          <div><label style="font-size:11px;color:var(--text2)">진척율 %</label><input type="number" min="0" max="100" value="${r.progress}" onchange="rv(${i},'progress',this.value)"></div>
+        </div></div>`;
+    }
+    return `<div class="rev" id="rv-${i}">
+      <div class="rh">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px"><input type="checkbox" style="width:auto" ${r.include?"checked":""} onchange="rv(${i},'include',this.checked)"> 포함</label>
+        <select style="width:auto" onchange="rv(${i},'kind',this.value)"><option value="task">📌 과제</option><option value="info" selected>🗃️ 정보</option></select>
+        <span style="font-size:12px;color:var(--muted)">${r.src.date} · ${esc(r.src.meeting||"-")}</span>
+      </div>
+      <div class="rsrc">${esc(r.src.text)}</div>
+      <div class="rg">
+        <div><label style="font-size:11px;color:var(--text2)">분류</label><select onchange="rv(${i},'category',this.value)">${INFO_CATS.map(c=>`<option ${c===r.category?"selected":""}>${c}</option>`).join("")}</select></div>
+        <div><label style="font-size:11px;color:var(--text2)">제목</label><input value="${esc(r.title)}" onchange="rv(${i},'title',this.value)"></div>
+      </div></div>`;
+  }).join("");
+}
+function rv(i,k,v){
+  if(k==="progress")v=Math.max(0,Math.min(100,+v||0));
+  REVIEW[i][k]=v;
+  if(k==="kind"){
+    if(v==="task"){Object.assign(REVIEW[i],{title:REVIEW[i].title,goal:REVIEW[i].src.text,category:guessTaskCat(REVIEW[i].src.text),
+      owner:extractOwner(REVIEW[i].src.text),deadline:extractDeadline(REVIEW[i].src.text),
+      status:guessStatus(REVIEW[i].src.text).s,progress:guessStatus(REVIEW[i].src.text).p,
+      note:REVIEW[i].src.text,match:bestMatch(REVIEW[i].src.text)});}
+    else{Object.assign(REVIEW[i],{content:REVIEW[i].src.text,category:guessInfoCat(REVIEW[i].src.text),tags:[]});}
+    renderReview();
+  }
+}
+function commitReview(){
+  let nT=0,uT=0,nI=0;
+  REVIEW.forEach(r=>{
+    if(!r.include)return;
+    if(r.kind==="task"){
+      const entry={date:r.src.date,meeting:r.src.meeting||"수동 입력",note:r.note||r.src.text,status:r.status,progress:+r.progress||0};
+      const tid=r.targetId!==undefined?r.targetId:(r.match?r.match.task.id:"");
+      const tgt=tid?S.tasks.find(t=>t.id===tid):null;
+      if(tgt){
+        tgt.status=r.status;tgt.progress=+r.progress||0;
+        if(r.owner)tgt.owner=r.owner;
+        if(r.deadline)tgt.deadline=r.deadline;
+        tgt.history.push(entry);tgt.updated=r.src.date>tgt.updated?r.src.date:todayISO();uT++;
+      }else{
+        S.tasks.push({id:uid(),title:r.title,goal:r.goal||r.src.text,category:r.category,owner:r.owner,
+          deadline:r.deadline,status:r.status,progress:+r.progress||0,
+          created:r.src.date,updated:r.src.date,history:[entry]});nT++;
+      }
+    }else{
+      S.info.push({id:uid(),category:r.category,title:r.title,content:r.content||r.src.text,
+        date:r.src.date,meeting:r.src.meeting||"수동 입력",tags:r.tags||[]});nI++;
+    }
+  });
+  save();
+  document.getElementById("reviewBox").innerHTML="";
+  document.getElementById("reviewActs").style.display="none";
+  document.getElementById("reviewHead").style.display="none";
+  document.getElementById("rawText").value="";
+  REVIEW=[];
+  renderAll();
+  toast(`저장 완료 — 신규 과제 ${nT} · 진척 갱신 ${uT} · 정보 ${nI}`);
+  switchTab("dash");
+}
+
+/* =========================================================
+   10. 백업 / 복원 / 테마 / 탭
+   ========================================================= */
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="과제관리_"+todayISO()+".json";
+  a.click();URL.revokeObjectURL(a.href);
+  toast("백업 파일을 내려받았습니다");
+}
+function importJSON(e){
+  const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{try{const d=JSON.parse(rd.result);
+    if(!d.tasks)throw 0;
+    if(!confirm("현재 데이터를 덮어씁니다. 계속할까요?"))return;
+    S=d;save();renderAll();toast("복원 완료")}catch(x){toast("⚠ 올바른 백업 파일이 아닙니다")}};
+  rd.readAsText(f);e.target.value="";
+}
+function toggleTheme(){
+  const d=document.documentElement.getAttribute("data-theme")==="dark";
+  document.documentElement.setAttribute("data-theme",d?"light":"dark");
+  document.getElementById("themeBtn").textContent=d?"🌙 Dark":"☀️ Light";
+  try{localStorage.setItem("taskops_theme",d?"light":"dark")}catch(e){}
+  renderDash();
+}
+function switchTab(p){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("active",b.dataset.p===p));
+  document.querySelectorAll(".panel").forEach(s=>s.classList.toggle("active",s.id==="p-"+p));
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.p));
+
+function renderAll(){
+  const sel=document.getElementById("fcat");
+  const cur=sel.value;
+  sel.innerHTML=`<option value="">전체</option>`+[...new Set(S.tasks.map(t=>t.category))].sort().map(c=>`<option ${c===cur?"selected":""}>${c}</option>`).join("");
+  renderDash();renderTasks();renderInfo();renderHist();
+}
+
+/* ---------- init ---------- */
+(function init(){
+  try{const th=localStorage.getItem("taskops_theme");
+    if(th==="dark"){document.documentElement.setAttribute("data-theme","dark");document.getElementById("themeBtn").textContent="☀️ Light"}}catch(e){}
+  if(!load()){seed();save()}
+  if(!S.info)S.info=[];
+  if(!S.tasks)S.tasks=[];
+  renderAll();
+})();
+</script>
+</body>
+</html>
