@@ -129,6 +129,49 @@ nav.tabs button.active{color:var(--accent);border-bottom-color:var(--accent);fon
 .hist .hm{color:var(--muted)}
 .rowacts{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap}
 
+/* ---------- 목록형 테이블 ---------- */
+.tblwrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow-x:auto}
+table.tasktbl{width:100%;min-width:1080px;border-collapse:collapse;font-size:13px}
+table.tasktbl th{position:sticky;top:0;z-index:2;background:var(--surface2);border-bottom:1px solid var(--border2);
+  font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);font-weight:600;padding:9px 8px;text-align:left}
+table.tasktbl td{padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+table.tasktbl tr.tr-main:hover td{background:var(--surface2)}
+table.tasktbl tr.tr-main.on td{background:var(--accent-soft)}
+table.tasktbl td.num{text-align:center;color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
+table.tasktbl .ttl{font-weight:600;cursor:pointer;display:block;line-height:1.4}
+table.tasktbl .ttl:hover{color:var(--accent)}
+table.tasktbl .muted{color:var(--muted)}
+input.cell,select.cell{padding:4px 6px;font-size:12.5px;border-radius:6px;border:1px solid transparent;
+  background:transparent;width:100%}
+input.cell:hover,select.cell:hover{border-color:var(--border2);background:var(--surface)}
+input.cell:focus,select.cell:focus{border-color:var(--accent);background:var(--surface)}
+input.cell.miss{background:var(--warn-soft);border-color:var(--border)}
+html[data-theme="dark"] input.cell.miss{background:var(--warn-soft)}
+select.cell.b-접수{color:var(--text2)} select.cell.b-진행중{color:var(--accent);font-weight:600}
+select.cell.b-완료{color:var(--ok);font-weight:600} select.cell.b-보류{color:var(--warn);font-weight:600}
+.progcell{display:flex;align-items:center;gap:6px}
+.progcell .pnum{width:52px;text-align:right;font-variant-numeric:tabular-nums}
+tr.tr-detail td{background:var(--surface2);padding:6px 16px 16px}
+button.sug{margin-top:4px;font-size:11px;padding:2px 8px;border-radius:99px;
+  border:1px dashed var(--border2);background:transparent;color:var(--text2);width:100%}
+button.sug:hover{border-style:solid;border-color:var(--accent);color:var(--accent)}
+
+/* ---------- 정보 목록형 ---------- */
+table.inftbl{width:100%;min-width:820px;border-collapse:collapse;font-size:13px}
+table.inftbl th{position:sticky;top:0;z-index:2;background:var(--surface2);border-bottom:1px solid var(--border2);
+  font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);font-weight:600;padding:9px 10px;text-align:left}
+table.inftbl td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+table.inftbl tr:hover td{background:var(--surface2)}
+table.inftbl .ictl{font-weight:600}
+.catpill{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.cat-소재{color:#0E7490;background:#ECFEFF} .cat-System{color:#6D28D9;background:#F5F3FF}
+.cat-운영{color:#B45309;background:#FFFBEB} .cat-인물{color:#BE185D;background:#FDF2F8}
+.cat-기술{color:#047857;background:#ECFDF5}
+html[data-theme="dark"] .cat-소재{color:#67E8F9;background:#0B2E36} html[data-theme="dark"] .cat-System{color:#C4B5FD;background:#241B3D}
+html[data-theme="dark"] .cat-운영{color:#FCD34D;background:#2E2412}
+html[data-theme="dark"] .cat-인물{color:#F9A8D4;background:#341726} html[data-theme="dark"] .cat-기술{color:#6EE7B7;background:#0E2A21}
+
 /* ---------- filters ---------- */
 .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;margin-bottom:16px}
@@ -282,12 +325,17 @@ tr:hover td{background:var(--surface2)}
       <select id="fsort" onchange="renderTasks()">
         <option value="upd">최근 업데이트순</option><option value="due">납기 임박순</option>
         <option value="prog">진척율 낮은순</option><option value="cat">카테고리순</option>
+        <option value="miss">미입력(담당·납기) 우선</option>
       </select></div>
+  </div>
+  <div class="note" style="margin-bottom:12px">
+    <b>담당 · 납기 · 진척율은 직접 입력</b>합니다. 표의 칸을 클릭해 바로 타이핑하면 즉시 저장됩니다
+    (<span style="background:var(--warn-soft);padding:1px 6px;border-radius:4px">노란 칸</span>이 미입력).
+    과제명을 클릭하면 목표와 진척 이력이 열립니다.
   </div>
   <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
     <button onclick="addTaskManual()">➕ 과제 직접 추가</button>
-    <button onclick="expandAll(true)">모두 펼치기</button>
-    <button onclick="expandAll(false)">모두 접기</button>
+    <button onclick="exportCSV()">⬇ 목록 CSV</button>
   </div>
   <div class="count" id="taskCount"></div>
   <div id="taskList"></div>
@@ -337,101 +385,101 @@ const LS_KEY = "taskops_v1";
    1. 시드 데이터 — 2026.08.12 ~ 08.27 회의록 분류 결과
    ========================================================= */
 const SEED_TASKS = [
- {t:"SDI Safety Bottle 대량 양산성 검증",g:"SDI가 연 18만병 규모 Safety Bottle을 대량 양산할 수 있는지 검증하고 가부를 확정한다.",c:"품질",o:"",d:"",s:"진행중",p:30,
+ {t:"SDI Safety Bottle 대량 양산성 검증",g:"SDI가 연 18만병 규모 Safety Bottle을 대량 양산할 수 있는지 검증하고 가부를 확정한다.",c:"품질",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-12",m:"Safety Bottle",n:"SDI 대량 양산 가능 여부 확인 필요 (18만병/y 규모)"}]},
- {t:"Safety Bottle 대상 소재별 연간 사용량 산정",g:"DJTS-0111, YCHS-9940 2개 소재의 연간 사용 바틀 수를 산정하고, 향후 소재 추가 시 대상을 count하여 검증 역산으로 이관 시점을 확보·통보한다.",c:"품질",o:"",d:"",s:"진행중",p:25,
+ {t:"Safety Bottle 대상 소재별 연간 사용량 산정",g:"DJTS-0111, YCHS-9940 2개 소재의 연간 사용 바틀 수를 산정하고, 향후 소재 추가 시 대상을 count하여 검증 역산으로 이관 시점을 확보·통보한다.",c:"품질",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-12",m:"Safety Bottle",n:"2개 소재(DJTS-0111, YCHS-9940) 연간 사용 바틀수 산정. 향후 추가 시 대상 소재 count하여 이관 시점 확보 — 검증 역산하여 일정 통보 필요"}]},
- {t:"YC/동진 VOC 기반 Safety Bottle 재점검",g:"Audit이 불가한 상황이므로 YC·동진 VOC를 반영해 재점검하고 결과 자료를 직접 통보한다.",c:"품질",o:"",d:"",s:"접수",p:10,
+ {t:"YC/동진 VOC 기반 Safety Bottle 재점검",g:"Audit이 불가한 상황이므로 YC·동진 VOC를 반영해 재점검하고 결과 자료를 직접 통보한다.",c:"품질",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-12",m:"Safety Bottle",n:"Audit 불가 → YC/동진 VOC 반영하여 재점검. 자료는 직접 통보"}]},
- {t:"TEOS 10nm Filter M&T 선제 PCN 및 P&T 확장",g:"TEOS 10nm Filter를 M&T에 선제적으로 PCN 처리한 뒤 P&T로 확장 적용한다.",c:"소재개발",o:"",d:"",s:"진행중",p:30,
+ {t:"TEOS 10nm Filter M&T 선제 PCN 및 P&T 확장",g:"TEOS 10nm Filter를 M&T에 선제적으로 PCN 처리한 뒤 P&T로 확장 적용한다.",c:"소재개발",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-18",m:"WLP bi-weekly 업무보고",n:"M&T 선제 PCN 하고 P&T 확장하는 것으로 추진 방향 확정"}]},
- {t:"WLP 소재 재고 Dashboard 구축",g:"WLP 소재의 재고 현황을 상시 확인할 수 있는 Dashboard를 기존 보고 체계에 추가한다.",c:"AI/DX",o:"",d:"",s:"접수",p:10,
+ {t:"WLP 소재 재고 Dashboard 구축",g:"WLP 소재의 재고 현황을 상시 확인할 수 있는 Dashboard를 기존 보고 체계에 추가한다.",c:"AI/DX",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-18",m:"WLP bi-weekly 업무보고",n:"WLP 소재 재고 Dashboard 추가할 것"}]},
- {t:"R&D 도전보상제 과제 선정",g:"R&D 도전보상제 대상 과제를 선정한다. KrF는 제외하고 SOM으로 선정하며, 미래 tech 영역 과제 포함 여부를 검토한다.",c:"경영현안",o:"",d:"",s:"진행중",p:50,
+ {t:"R&D 도전보상제 과제 선정",g:"R&D 도전보상제 대상 과제를 선정한다. KrF는 제외하고 SOM으로 선정하며, 미래 tech 영역 과제 포함 여부를 검토한다.",c:"경영현안",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-19",m:"KPI, OI Review",n:"R&D 도전 보상제 안건 제기"},
      {date:"2026-08-20",m:"팀장미팅",n:"도전과제 KrF 제외 + SOM으로 선정"},
      {date:"2026-08-27",m:"팀장 현안회의",n:"도전보상제 — 미래 tech에 대한 과제가 있는지 확인 필요"}]},
- {t:"신입구성원 교육 담당 일정 변경",g:"신입구성원 교육 담당 일정을 오후 첫 타임으로 변경한다.",c:"조직/인력",o:"",d:"",s:"진행중",p:60,
+ {t:"신입구성원 교육 담당 일정 변경",g:"신입구성원 교육 담당 일정을 오후 첫 타임으로 변경한다.",c:"조직/인력",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-19",m:"KPI, OI Review",n:"신입구성원 교육 담당 일정 변경 (오후 첫 타임)"}]},
- {t:"부회장 1on1 질문·제안 준비",g:"'향후 하이닉스가 무엇을 해야 하나'에 대한 답변으로 소재 미래 AI 운영·기술·BP 협업 체계, Global 기업 도약 제안(기술적·문화적 관점), Trinity fab / Q-day / TEM 등 BP 협업 체계를 정리한다.",c:"경영현안",o:"",d:"2026-09-18",s:"진행중",p:30,
+ {t:"부회장 1on1 질문·제안 준비",g:"'향후 하이닉스가 무엇을 해야 하나'에 대한 답변으로 소재 미래 AI 운영·기술·BP 협업 체계, Global 기업 도약 제안(기술적·문화적 관점), Trinity fab / Q-day / TEM 등 BP 협업 체계를 정리한다.",c:"경영현안",o:"",d:"2026-09-18",s:"진행중",p:0,
   h:[{date:"2026-08-19",m:"KPI, OI Review",n:"09/18 부회장 1on1 — 소재 미래 AI 운영/기술/BP 협업 체계, Global 기업 도약 제안, Trinity fab·Q-day·TEM 등 BP 협업 체계 질문 준비"}]},
- {t:"인테그리스 SMC+Qnity 미팅 자료 준비",g:"인테그리스 미팅을 SMC + Qnity 자료로 준비한다. 09/30(JSR 착공식) 또는 10/01(09시 Entegris Erica) 중 확정.",c:"경영현안",o:"",d:"2026-09-30",s:"접수",p:10,
+ {t:"인테그리스 SMC+Qnity 미팅 자료 준비",g:"인테그리스 미팅을 SMC + Qnity 자료로 준비한다. 09/30(JSR 착공식) 또는 10/01(09시 Entegris Erica) 중 확정.",c:"경영현안",o:"",d:"2026-09-30",s:"접수",p:0,
   h:[{date:"2026-08-19",m:"KPI, OI Review",n:"인테그리스 — SMC + Qnity 자료로 준비. 09/30(JSR 착공식) 또는 10/01(오전 09시 Entegris Erica)"}]},
  {t:"SRI HF·CuMn 소스 다변화",g:"SRI HF 및 CuMn 소재의 공급 소스를 다변화한다.",c:"수급/SCM",o:"",d:"",s:"완료",p:100,
   h:[{date:"2026-08-19",m:"품질 회의",n:"SRI HF, CuMn 다변화 완료"}]},
- {t:"MLA 소재하자 메커니즘 구축",g:"e-book 유기화학 서적을 학습하여 반도체 소재 공정과 연계한 MLA 소재하자 메커니즘을 정립한다.",c:"소재개발",o:"",d:"",s:"진행중",p:20,
+ {t:"MLA 소재하자 메커니즘 구축",g:"e-book 유기화학 서적을 학습하여 반도체 소재 공정과 연계한 MLA 소재하자 메커니즘을 정립한다.",c:"소재개발",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-19",m:"품질 회의",n:"MLA(소재하자) → e-book 유기화학 책 학습 → 반도체 소재 공정과 연계하여 메커니즘 구축"}]},
- {t:"C&C Portal 구축",g:"C&C Portal을 구축한다. (범위·목표 정의 필요)",c:"AI/DX",o:"",d:"",s:"접수",p:5,
+ {t:"C&C Portal 구축",g:"C&C Portal을 구축한다. (범위·목표 정의 필요)",c:"AI/DX",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-19",m:"품질 회의",n:"C&C Portal 안건 제기 — 구체 범위 미정"}]},
- {t:"AI Portal 구축",g:"AI Portal을 구축한다. AI 통합/분리 운영 방향과 연계 검토.",c:"AI/DX",o:"",d:"",s:"접수",p:5,
+ {t:"AI Portal 구축",g:"AI Portal을 구축한다. AI 통합/분리 운영 방향과 연계 검토.",c:"AI/DX",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-19",m:"품질 회의",n:"AI Portal 안건 제기. AI 통합/분리하여 진행하는 방향과 연계 필요"}]},
- {t:"Q-day 포상·효과 측정 체계 개선",g:"포상(상장)은 grade에 맞게 부여하고 잘한 곳은 명확히 표현한다. 만족도 조사는 행사 만족도가 아니라 품질 mind set 변화와 실제 품질 개선 사례·효과를 조사해 반영한다.",c:"품질",o:"",d:"",s:"진행중",p:30,
+ {t:"Q-day 포상·효과 측정 체계 개선",g:"포상(상장)은 grade에 맞게 부여하고 잘한 곳은 명확히 표현한다. 만족도 조사는 행사 만족도가 아니라 품질 mind set 변화와 실제 품질 개선 사례·효과를 조사해 반영한다.",c:"품질",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-19",m:"품질 회의 / Q-day",n:"포상(상장)은 grade에 맞게. 잘한 곳은 잘했음을 표현. 만족도 조사를 행사 만족도가 아닌 품질 mind set 변화와 품질 개선 여부로 전환"},
      {date:"2026-08-24",m:"아침미팅",n:"만족도보다 실제 품질 개선된 사례들을 찾아 효과로 만들 것"}]},
- {t:"융합 Engineer 정의 및 운용 방안 수립",g:"인력을 받은 만큼 융합 Engineer의 정의를 명확히 하고 운용 방안을 수립한다. P-2 요소기술 영역으로 가야 하며 1) 공정 융합(교육) 등 세부 항목을 정의한다.",c:"조직/인력",o:"",d:"",s:"진행중",p:25,
+ {t:"융합 Engineer 정의 및 운용 방안 수립",g:"인력을 받은 만큼 융합 Engineer의 정의를 명확히 하고 운용 방안을 수립한다. P-2 요소기술 영역으로 가야 하며 1) 공정 융합(교육) 등 세부 항목을 정의한다.",c:"조직/인력",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-19",m:"품질 회의",n:"인력을 받았으면 융합 Eng'r의 정의 필요 → P-2 요소기술 영역으로 가야 함. 1) 공정 융합: 교육. 융합 Eng'r 운용 방안 수립 필요"}]},
- {t:"R&D 공정담당 내 소재 파트 신설",g:"R&D 공정담당 내에 소재 파트를 생성하고 소재에서 파견하여 P-2부터 개발을 시작, Core로 연계해 Tech 완성도를 높인다.",c:"조직/인력",o:"정성훈 담당",d:"",s:"접수",p:15,
+ {t:"R&D 공정담당 내 소재 파트 신설",g:"R&D 공정담당 내에 소재 파트를 생성하고 소재에서 파견하여 P-2부터 개발을 시작, Core로 연계해 Tech 완성도를 높인다.",c:"조직/인력",o:"정성훈 담당",d:"",s:"접수",p:0,
   h:[{date:"2026-08-19",m:"품질 회의",n:"R&D 공정담당 내 소재 파트 생성 — 소재가 파견하여 P-2부터 개발 시작, Core 연계로 Tech 완성도 제고. C&C 조직 내 소재조직 신설 시 소재에서 파견 의향 (정성훈 담당)"}]},
- {t:"수급 대응 TF 운영 체계 확정",g:"구매부문장 주관 weekly 운영 및 CEO 격월 보고 체계를 확정하고 참여 Level·주기를 정의한다. 양산총괄 지시에 따라 전사 OI 과제로 등록한다.",c:"수급/SCM",o:"구매부문장 주관",d:"",s:"진행중",p:40,
+ {t:"수급 대응 TF 운영 체계 확정",g:"구매부문장 주관 weekly 운영 및 CEO 격월 보고 체계를 확정하고 참여 Level·주기를 정의한다. 양산총괄 지시에 따라 전사 OI 과제로 등록한다.",c:"수급/SCM",o:"구매부문장 주관",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-20",m:"통소위",n:"수급 대응 TF — 구매부문장님 주관 weekly → CEO 격월 보고. 참여 Level·주기 정의 필요 (양산총괄, M&T 부문장, GSM, 원가, 미전)"},
      {date:"2026-08-20",m:"양산총괄 지시",n:"수급 대응 TF를 전사 OI 과제로 만들라는 지시 → 제조-Y1-구매-소재 미팅 Call 예정"}]},
- {t:"삼성 V10 Dry Separation 전환 대응",g:"삼성이 V10에서 wet separation이 아닌 Dry로 방향을 수정함에 따라 자사 방향성을 검토하고 예의주시한다.",c:"소재개발",o:"",d:"",s:"진행중",p:20,
+ {t:"삼성 V10 Dry Separation 전환 대응",g:"삼성이 V10에서 wet separation이 아닌 Dry로 방향을 수정함에 따라 자사 방향성을 검토하고 예의주시한다.",c:"소재개발",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-21",m:"7월 KPI, OI 리뷰",n:"삼성이 V10에서 wet separation이 아닌 Dry로 방향 수정 → 우리쪽 방향성 검토, 예의주시할 것"}]},
- {t:"Indiana 출향 준비",g:"Indiana 출향 시점이 6개월 당겨져 '26년 12월(27년 1월 발령 예상)로 변경됨에 따라 인력·일정을 준비한다.",c:"조직/인력",o:"",d:"2026-12-31",s:"진행중",p:30,
+ {t:"Indiana 출향 준비",g:"Indiana 출향 시점이 6개월 당겨져 '26년 12월(27년 1월 발령 예상)로 변경됨에 따라 인력·일정을 준비한다.",c:"조직/인력",o:"",d:"2026-12-31",s:"진행중",p:0,
   h:[{date:"2026-08-21",m:"7월 KPI, OI 리뷰",n:"Indiana 출향 6개월 당김. '26년 12월 ('27년 1월 발령 예상)"},
      {date:"2026-08-24",m:"아침미팅",n:"Indiana 출향 '26.12월 예정 재확인"}]},
- {t:"구성원 AI 교육 체계 수립 (ABC 과정)",g:"구성원 AI 교육을 기초(ABC)부터 체계적으로 운영할 수 있도록 커리큘럼과 일정을 수립한다.",c:"조직/인력",o:"",d:"",s:"접수",p:10,
+ {t:"구성원 AI 교육 체계 수립 (ABC 과정)",g:"구성원 AI 교육을 기초(ABC)부터 체계적으로 운영할 수 있도록 커리큘럼과 일정을 수립한다.",c:"조직/인력",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-21",m:"7월 KPI, OI 리뷰",n:"구성원 AI 교육 ABC부터 교육하기"}]},
- {t:"자재창고 실시간 온도 관리 체계 구축",g:"자재창고 온도가 실시간 타점으로 올라오도록 용인 + M17 + P&T에 반영하고, IPA_TAS 연동 및 이상 발생 시 절차서를 마련한다. 관리 주체는 소재이며 Y1 및 향후 FAB Plan에 반영한다.",c:"설비/인프라",o:"소재 (관리 주체)",d:"",s:"진행중",p:35,
+ {t:"자재창고 실시간 온도 관리 체계 구축",g:"자재창고 온도가 실시간 타점으로 올라오도록 용인 + M17 + P&T에 반영하고, IPA_TAS 연동 및 이상 발생 시 절차서를 마련한다. 관리 주체는 소재이며 Y1 및 향후 FAB Plan에 반영한다.",c:"설비/인프라",o:"소재 (관리 주체)",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-21",m:"M&T-기반기술 협업회의",n:"자재창고 온도 실시간 타점이 올라올 수 있게 용인 + M17 + P&T 반영 검토할 것. 관리 주체는 소재가 되어야 함"},
      {date:"2026-08-24",m:"아침미팅",n:"자재창고 관리주체 = 소재. 실시간 온도 IPA_TAS 연동, 이상발생 시 절차서, Y1 + 향후 FAB Plan 반영"}]},
- {t:"AI 해커톤 추진",g:"AI 해커톤을 기획·운영한다.",c:"AI/DX",o:"양주형, 이정훈, 이광원",d:"",s:"진행중",p:30,
+ {t:"AI 해커톤 추진",g:"AI 해커톤을 기획·운영한다.",c:"AI/DX",o:"양주형, 이정훈, 이광원",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-24",m:"아침미팅",n:"AI 해커톤 담당: 양주형, 이정훈+이광원"}]},
- {t:"WLP 인력 계획 B사 반영",g:"WLP 인력 계획에 B사를 반영하고 숫자를 맞춘다.",c:"조직/인력",o:"",d:"",s:"접수",p:20,
+ {t:"WLP 인력 계획 B사 반영",g:"WLP 인력 계획에 B사를 반영하고 숫자를 맞춘다.",c:"조직/인력",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-24",m:"아침미팅",n:"인력 — B사 반영 (WLP), 숫자 맞추기"}]},
- {t:"DtS term 정의 확인",g:"DtS-BCDU에서 1mJ 당 BCUD xx nm 기준일 때 DtS term이 얼마인지 확인·정의한다.",c:"R&D기술",o:"",d:"",s:"접수",p:10,
+ {t:"DtS term 정의 확인",g:"DtS-BCDU에서 1mJ 당 BCUD xx nm 기준일 때 DtS term이 얼마인지 확인·정의한다.",c:"R&D기술",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-24",m:"소공협의체",n:"DtS-BCDU 1mJ 당 BCUD xx nm → DtS term이 얼마인가?"}]},
- {t:"SC2M0 MOR new ver. PR 최적소재 확보",g:"'27.06 PX PV 시작에 대응하기 위해 SC2M0 MOR new version PR(최적소재)를 ASAP 확보한다.",c:"소재개발",o:"",d:"2027-06-01",s:"진행중",p:25,
+ {t:"SC2M0 MOR new ver. PR 최적소재 확보",g:"'27.06 PX PV 시작에 대응하기 위해 SC2M0 MOR new version PR(최적소재)를 ASAP 확보한다.",c:"소재개발",o:"",d:"2027-06-01",s:"진행중",p:0,
   h:[{date:"2026-08-24",m:"소공협의체",n:"'27.06 PX PV 시작 예정 → SC2M0 MOR new ver. PR (최적소재) ASAP 필요"}]},
- {t:"Provisional MTS 확보용 평가 Platform 구축",g:"NAND의 integration 대응력 미흡, DRAM의 Platform 변곡점에 대응하기 위해 Provisional MTS 확보를 위한 평가 Platform을 구축한다.",c:"R&D기술",o:"",d:"",s:"접수",p:10,
+ {t:"Provisional MTS 확보용 평가 Platform 구축",g:"NAND의 integration 대응력 미흡, DRAM의 Platform 변곡점에 대응하기 위해 Provisional MTS 확보를 위한 평가 Platform을 구축한다.",c:"R&D기술",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-25",m:"미기원 OI",n:"개발환경 Tech scheme 변화 (NAND: integration 대응력 미흡, DRAM: Platform 변곡점) → Provisional MTS 확보를 위한 평가 Platform 필요"}]},
- {t:"Flexible lot 협의체 신설",g:"주관 TD와 공정 간 협의체(Flexible lot 협의체)를 신설하여 TD가 제안하고 공정이 대응하는 체계를 만든다.",c:"R&D기술",o:"",d:"",s:"접수",p:10,
+ {t:"Flexible lot 협의체 신설",g:"주관 TD와 공정 간 협의체(Flexible lot 협의체)를 신설하여 TD가 제안하고 공정이 대응하는 체계를 만든다.",c:"R&D기술",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-25",m:"미기원 OI",n:"주관 TD와 공정 협의체 필요 — Flexible lot 협의체 (TD가 제안하고 공정이 대응)"}]},
- {t:"공정 기술 Pool 대시보드 구축 (HTRS Sub table)",g:"HTRS Sub table 기반으로 공정 기술 Pool 대시보드를 구축하여 확보된 기술과 확보해야 할 기술을 가시화한다.",c:"AI/DX",o:"",d:"",s:"접수",p:15,
+ {t:"공정 기술 Pool 대시보드 구축 (HTRS Sub table)",g:"HTRS Sub table 기반으로 공정 기술 Pool 대시보드를 구축하여 확보된 기술과 확보해야 할 기술을 가시화한다.",c:"AI/DX",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-25",m:"미기원 OI",n:"공정 기술 Pool 대시보드 구축 (HTRS Sub table). 확보된 기술과 확보해야 할 기술을 dashboard로 제공하겠다"}]},
- {t:"단위공정 기술의 Integration 묶음 과제 정의",g:"HTRS 기준 단위공정 기술은 개발 중이나 integration 관점이 부족하므로 이를 묶는 과제를 정의한다. SN미래기술협의체·NAND신뢰성협의체처럼 공통 목표를 명확히 하여 진행한다.",c:"R&D기술",o:"",d:"",s:"접수",p:10,
+ {t:"단위공정 기술의 Integration 묶음 과제 정의",g:"HTRS 기준 단위공정 기술은 개발 중이나 integration 관점이 부족하므로 이를 묶는 과제를 정의한다. SN미래기술협의체·NAND신뢰성협의체처럼 공통 목표를 명확히 하여 진행한다.",c:"R&D기술",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-25",m:"미기원 OI",n:"단위공정(예: Etch) 자체 기술개발 → TD/PI 전달 방식. Integration 관점 부족 → 묶는 과제 필요. SN미래기술협의체, NAND 신뢰성 협의체처럼 공통 목표 명확화"}]},
- {t:"Tech TF 요소기술 적용 기준 수립",g:"Tech TF의 요소기술 적용 기준을 수립한다. 핵심(Critical) 요소기술 개발은 평균 1년 이상 소요되며, Shift left 추진에는 another Vehicle이 필요하다. P-2(HTRS) + P-1(9M) = 약 1년.",c:"R&D기술",o:"",d:"",s:"진행중",p:30,
+ {t:"Tech TF 요소기술 적용 기준 수립",g:"Tech TF의 요소기술 적용 기준을 수립한다. 핵심(Critical) 요소기술 개발은 평균 1년 이상 소요되며, Shift left 추진에는 another Vehicle이 필요하다. P-2(HTRS) + P-1(9M) = 약 1년.",c:"R&D기술",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-25",m:"미기원 OI",n:"요소기술 경쟁력 강화 — Tech TF 요소기술 기준 수립, P-1 activity와 산출물 정의, PLM 연동 점검안. 핵심요소기술(Critical) 개발 평균 1년 이상 소요. Shift left 추진은 another Vehicle 필요"}]},
- {t:"요소기술 개발 Activity 및 산출물·CDP 정의",g:"요소기술 개발 Activity와 산출물을 정의하고 요소기술 CDP를 정의한다. 요소기술 CDP ← P-1(9M) 연계, PLM 연동 점검안 포함.",c:"R&D기술",o:"",d:"",s:"진행중",p:30,
+ {t:"요소기술 개발 Activity 및 산출물·CDP 정의",g:"요소기술 개발 Activity와 산출물을 정의하고 요소기술 CDP를 정의한다. 요소기술 CDP ← P-1(9M) 연계, PLM 연동 점검안 포함.",c:"R&D기술",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-25",m:"미기원 OI",n:"요소기술 개발 Activity 및 산출물 정의 — 요소기술 CDP 정의 (요소기술 CDP ← P-1 9M)"}]},
- {t:"DRAM 요소기술 도출 및 하반기 시점 정의",g:"DRAM PO TF 직개발 요소기술을 검토하고 AR, 2D POC, 3D DRAM 요소기술을 도출·개발하며 하반기 시점을 정의한다.",c:"R&D기술",o:"",d:"",s:"진행중",p:25,
+ {t:"DRAM 요소기술 도출 및 하반기 시점 정의",g:"DRAM PO TF 직개발 요소기술을 검토하고 AR, 2D POC, 3D DRAM 요소기술을 도출·개발하며 하반기 시점을 정의한다.",c:"R&D기술",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-25",m:"미기원 OI",n:"DRAM PO TF 직개발 요소기술 검토중. AR, 2D POC, 3D DRAM 요소기술 도출 및 개발 중 → 하반기 시점 정의 필요"}]},
- {t:"N+4 이후 핵심 요소기술 점검 및 P-2 연계 실행전략 구체화",g:"N+4 이후 DRAM/NAND 핵심 요소기술을 점검하고 공정 내 P-2 개발 체계와 연계하여 실행전략을 구체화한다.",c:"R&D기술",o:"",d:"",s:"접수",p:10,
+ {t:"N+4 이후 핵심 요소기술 점검 및 P-2 연계 실행전략 구체화",g:"N+4 이후 DRAM/NAND 핵심 요소기술을 점검하고 공정 내 P-2 개발 체계와 연계하여 실행전략을 구체화한다.",c:"R&D기술",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-25",m:"미기원 OI",n:"N+4 이후 DRAM/NAND 핵심 요소기술 점검하고 공정 내 P-2 개발 체계와 연계하여 실행전략 구체화 예정"}]},
- {t:"Core 기술 명확화 및 Module별 개발기간 관리 방안",g:"14개월 내 개발이 완료되지 않는 뼈대기술의 결정 변화는 Tech의 근간을 흔들므로 Core 기술을 명확히 한다. Platform/Vehicle이 없는 상태의 개발 방안과 Core 기술 Module별 상이한 개발기간의 관리 방안을 수립한다. (NAND는 명확, DRAM은 난이도 높음)",c:"R&D기술",o:"",d:"",s:"진행중",p:20,
+ {t:"Core 기술 명확화 및 Module별 개발기간 관리 방안",g:"14개월 내 개발이 완료되지 않는 뼈대기술의 결정 변화는 Tech의 근간을 흔들므로 Core 기술을 명확히 한다. Platform/Vehicle이 없는 상태의 개발 방안과 Core 기술 Module별 상이한 개발기간의 관리 방안을 수립한다. (NAND는 명확, DRAM은 난이도 높음)",c:"R&D기술",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-25",m:"미기원 OI (총평)",n:"TV design 시점에 요소기술 의사결정이 가능하도록 준비. ①14개월 내 미완료 뼈대기술의 결정 변화는 Tech 근간을 흔듦 → Core 기술 명확화 ②Platform/Vehicle 부재 시 개발 방안, Module별 상이한 개발기간 관리 방안. HTRS 기반 Core 기술 인지 — NAND 명확, DRAM 어려움"}]},
- {t:"MLR 소재 Delamination Lifting margin 검증",g:"MLR 소재 개발 중 PED >30min에서 peeling이 발생, Dev CPN → CPN+PGMEA time split으로 최적 time 설정을 완료했다. Lifting margin 검증을 명확히 수행한다.",c:"소재개발",o:"",d:"",s:"진행중",p:60,
+ {t:"MLR 소재 Delamination Lifting margin 검증",g:"MLR 소재 개발 중 PED >30min에서 peeling이 발생, Dev CPN → CPN+PGMEA time split으로 최적 time 설정을 완료했다. Lifting margin 검증을 명확히 수행한다.",c:"소재개발",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-25",m:"WLP 주간보고",n:"MLR 소재 개발 Delamination — PED(>30min) peeling 발생 → Dev CPN → CPN+PGMEA time split으로 최적 time 설정 완료. Lifting margin 검증을 명확히 할 것"}]},
- {t:"SP7000 유효기간 재설정 검토",g:"SP7000 유효기간은 6month이나 in-line 검증 시 4month부터 RR이 변동하므로 유효기간 재설정을 검토한다.",c:"품질",o:"",d:"",s:"진행중",p:30,
-  h:[{date:"2026-08-25",m:"WLP 주간보고",n:"SP7000 유효기간 6month이나 in-line 검증 시 4month부터 RR 변동"}]},
- {t:"INLSC38 장비 비용 처리 방안 확정",g:"INLSC38 장비 비용을 매월 처리(세법 기준)하고 감정평가 법인을 활용하는 방안을 확정한다.",c:"설비/인프라",o:"정율 TL",d:"",s:"진행중",p:30,
+ {t:"SP7000 유효기간 재설정 검토",g:"SP7000 유효기간은 6month이나 in-line 검증 시 4month부터 RR이 변동하므로 유효기간 재설정을 검토한다. [측정 근거] 유효기간 6month / in-line 검증 4month 시점부터 RR 변동 확인.",c:"품질",o:"",d:"",s:"진행중",p:0,
+  h:[{date:"2026-08-25",m:"WLP 주간보고",n:"SP7000 유효기간 6month이나 in-line 검증 시 4month부터 RR 변동 — 측정 사실과 조치를 본 과제로 통합 관리"}]},
+ {t:"INLSC38 장비 비용 처리 방안 확정",g:"INLSC38(BP 장비지원 관련 모델 No.) 장비 비용을 매월 처리(세법 기준)하고 감정평가 법인을 활용하는 방안을 확정한다.",c:"설비/인프라",o:"정율 TL",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-25",m:"장비지원",n:"INLSC38 장비 관련. 비용 처리: 매월로 처리 (세법), 감정평가 법인. 비용 처리 정율이 TL"}]},
- {t:"T.FAB 3D DRAM 대응 장비 검토",g:"'28년 이후 3D DRAM 구조 대응을 위한 SiGe Epi / Dry etch / Dry CLN 장비를 검토한다.",c:"설비/인프라",o:"",d:"",s:"접수",p:10,
+ {t:"T.FAB 3D DRAM 대응 장비 검토",g:"'28년 이후 3D DRAM 구조 대응을 위한 SiGe Epi / Dry etch / Dry CLN 장비를 검토한다.",c:"설비/인프라",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-26",m:"T.FAB Bi-weekly 회의",n:"'28년 이후 3D DRAM 구조 대응 장비 검토 — SiGe Epi / Dry etch / Dry CLN"}]},
- {t:"T.FAB 도급 SoW 작성",g:"T.FAB 도급 SoW(Scope of Work)를 작성·확정한다. '27.05 Open / '27.03 사무실 입주 일정에 맞춘다.",c:"설비/인프라",o:"",d:"2027-03-01",s:"접수",p:15,
+ {t:"T.FAB 도급 SoW 작성",g:"T.FAB 도급 SoW(Scope of Work)를 작성·확정한다. '27.05 Open / '27.03 사무실 입주 일정에 맞춘다.",c:"설비/인프라",o:"",d:"2027-03-01",s:"접수",p:0,
   h:[{date:"2026-08-26",m:"T.FAB Bi-weekly 회의",n:"도급 SoW (Scope of Work) 작성 필요. '27.05 Open / 03월 사무실 입주"}]},
- {t:"냉매·Recycle Plastic 환경 과제 추진 (P&T)",g:"냉매 및 Recycle Plastic 관련 환경 과제를 P&T로 추진한다.",c:"환경",o:"정기모 TL",d:"",s:"접수",p:15,
+ {t:"냉매·Recycle Plastic 환경 과제 추진 (P&T)",g:"냉매 및 Recycle Plastic 관련 환경 과제를 P&T로 추진한다.",c:"환경",o:"정기모 TL",d:"",s:"접수",p:0,
   h:[{date:"2026-08-26",m:"AI 환경연구소",n:"냉매 / Recycle Plastic → P&T"}]},
- {t:"환경개선 단기/중장기 과제 체계화",g:"환경개선 항목을 단기/중장기 과제로 구분해 체계화한다. SK하이닉스 내부에서는 탄관위를 통해 Right 부서 팀장을 모아 재논의하고, 멤버사에 중장기 개발 주제를 제시한다.",c:"환경",o:"",d:"",s:"진행중",p:20,
+ {t:"환경개선 단기/중장기 과제 체계화",g:"환경개선 항목을 단기/중장기 과제로 구분해 체계화한다. SK하이닉스 내부에서는 탄관위를 통해 Right 부서 팀장을 모아 재논의하고, 멤버사에 중장기 개발 주제를 제시한다.",c:"환경",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-26",m:"AI 환경연구소",n:"환경개선 관련 단기/중장기 과제로 구분. SK하이닉스 내부 — 탄관위 통해 Right 부서 팀장 모여 재논의. 요청사항: 멤버사에 중장기로 개발할만한 주제를 제시할 것"}]},
- {t:"AI 소재 구조 기반 Library 구축",g:"AI 관련 소재 구조를 기반으로 Library를 구축한다.",c:"AI/DX",o:"",d:"",s:"진행중",p:15,
+ {t:"AI 소재 구조 기반 Library 구축",g:"AI 관련 소재 구조를 기반으로 Library를 구축한다.",c:"AI/DX",o:"",d:"",s:"진행중",p:0,
   h:[{date:"2026-08-27",m:"팀장 현안회의",n:"AI 관련 소재 구조 기반으로 library 구축"}]},
- {t:"Special NDA BP IP 우회 방안 마련",g:"Special NDA가 BP IP로 막혀 있어 우회 방법을 찾는다.",c:"경영현안",o:"",d:"",s:"접수",p:10,
+ {t:"Special NDA BP IP 우회 방안 마련",g:"Special NDA가 BP IP로 막혀 있어 우회 방법을 찾는다.",c:"경영현안",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-27",m:"팀장 현안회의",n:"Special NDA (BP IP로 막힘) — 우회방법을 찾자"}]},
- {t:"AI 구성원 동기부여 방안 수립",g:"AI 구성원 VOC상 동기부여가 떨어진다는 문제를 KPI가 아닌 다른 방식으로 해결할 방안을 수립한다.",c:"조직/인력",o:"",d:"",s:"접수",p:10,
+ {t:"AI 구성원 동기부여 방안 수립",g:"AI 구성원 VOC상 동기부여가 떨어진다는 문제를 KPI가 아닌 다른 방식으로 해결할 방안을 수립한다.",c:"조직/인력",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-27",m:"팀장 현안회의",n:"AI 구성원 VOC — 동기부여가 떨어진다. KPI가 아니다"}]},
- {t:"Web review 진행",g:"Web review를 진행한다. (범위·대상 정의 필요)",c:"경영현안",o:"",d:"",s:"접수",p:5,
+ {t:"Web review 진행",g:"Web review를 진행한다. (범위·대상 정의 필요)",c:"경영현안",o:"",d:"",s:"접수",p:0,
   h:[{date:"2026-08-19",m:"KPI, OI Review",n:"Web review 안건 제기 — 구체 범위 미정"}]}
 ];
 
@@ -447,7 +495,7 @@ const SEED_INFO = [
  {c:"System",t:"P-2와 Tech 연결성 이슈 (Q1)",x:"P-2와 Tech와의 연결성을 어떻게 가져갈 것이냐? HTRS가 있는데 TD는 무엇을 어떻게 정확하게 준비할 수 있을 것인가에 대한 정의가 부재하다.",d:"2026-08-25",m:"미기원 OI",g:["P-2","HTRS","TD"]},
  {c:"System",t:"HTRS 기준 단위공정 개발의 한계 (Q2)",x:"HTRS 기준으로 단위공정의 기술은 개발하고 있으나 integration 관점에서 부족하다. 이를 묶는 과제가 필요하다.",d:"2026-08-25",m:"미기원 OI",g:["HTRS","integration","단위공정"]},
  {c:"System",t:"개발환경 Tech scheme 변화",x:"NAND는 integration 대응력 미흡, DRAM은 Platform 변곡점 상황.",d:"2026-08-25",m:"미기원 OI",g:["NAND","DRAM","Tech scheme"]},
- {c:"System",t:"INLSC38 장비 (내용 미완)",x:"INLSC38 장비가 — 원문이 미완성 문장으로 끝나 내용 확인 필요.",d:"2026-08-25",m:"장비지원",g:["INLSC38","확인필요"]},
+ {c:"System",t:"INLSC38 — BP 장비지원 모델 No.",x:"INLSC38은 BP 장비지원 관련 장비 모델 No.",d:"2026-08-25",m:"장비지원",g:["INLSC38","BP장비지원","모델No"]},
  {c:"운영",t:"부문장 KPI 달성 결과",x:"부문장 KPI 전체 경영계획 모두 달성, 80점대 중반.",d:"2026-08-21",m:"7월 KPI, OI 리뷰",g:["KPI","실적"]},
  {c:"운영",t:"PIQ 미기원 R&R",x:"PIQ 미기원 — 제조기술 R&R, 제조는 back up만 진행, Tech에서 지정.",d:"2026-08-24",m:"소공협의체",g:["PIQ","R&R","제조기술"]},
  {c:"운영",t:"R&D 공정 개발 편중",x:"N+2 tech에 개발이 몰림 (가우시안 분포).",d:"2026-08-25",m:"미기원 OI",g:["N+2","개발분포"]},
@@ -461,7 +509,6 @@ const SEED_INFO = [
  {c:"소재",t:"삼성 V10 Separation 방향 변경",x:"삼성이 V10에서 wet separation이 아닌 Dry로 방향을 수정함.",d:"2026-08-21",m:"7월 KPI, OI 리뷰",g:["삼성","V10","Dry","wet separation"]},
  {c:"소재",t:"High NA L/S 한계 해상도",x:"C123 기준 High NA L/S 한계 해상도 — Horizontal 16nm / Vertical L/S 18nm.",d:"2026-08-24",m:"소공협의체",g:["High NA","해상도","C123"]},
  {c:"소재",t:"MLR PED Peeling 데이터",x:"PED (>30min)에서 peeling 발생. Dev CPN → CPN+PGMEA time split으로 최적 time 설정 완료.",d:"2026-08-25",m:"WLP 주간보고",g:["MLR","PED","PGMEA","peeling"]},
- {c:"소재",t:"SP7000 RR 변동 특성",x:"SP7000 유효기간은 6month이나 in-line 검증 시 4month부터 RR 변동.",d:"2026-08-25",m:"WLP 주간보고",g:["SP7000","RR","유효기간"]},
  {c:"소재",t:"Abrasive 함량 수준",x:"Abrasive는 Slurry 당 거의 5~10 wt% 수준.",d:"2026-08-27",m:"팀장 현안회의",g:["Abrasive","Slurry","wt%"]},
  {c:"기술",t:"DtS-BCDU 기준",x:"DtS-BCDU 1mJ 당 BCUD xx nm — DtS term 산정 기준.",d:"2026-08-24",m:"소공협의체",g:["DtS","BCDU"]},
  {c:"기술",t:"요소기술 개발 소요기간",x:"핵심요소기술(Critical 기술) 개발은 평균 1년 이상 소요. P-2(HTRS) + P-1(9M) 약 1년.",d:"2026-08-25",m:"미기원 OI",g:["요소기술","개발기간","P-1","P-2"]}
@@ -536,7 +583,7 @@ const CAT_TASK = [
   [/(장비|창고|FAB|설비|SoW|도급|입주|Epi|Etch|CLN|온도|인프라|비용\s*처리)/i,"설비/인프라",2],
   [/(품질|Q-?day|VOC|Audit|하자|불량|검증|유효기간|Bottle)/i,"품질",2],
   [/(수급|공급|구매|다변화|재고|SCM|BP\s*가격)/i,"수급/SCM",2],
-  [/(인력|교육|출향|조직|파견|융합\s*Eng|채용|동기부여|팀장|담당)/i,"조직/인력",2],
+  [/(인력|교육|출향|조직|파견|융합\s*Eng|채용|동기부여|인사)/i,"조직/인력",2],
   [/(KPI|OI\b|보상|부회장|경영|NDA|1on1|리뷰|포상)/i,"경영현안",2],
   [/(소재|PR\b|Slurry|Precursor|TEOS|MLR|MLA|HF\b|CuMn|Moly|Filter|SP7000|SC2M0|etchant|wt%|화학|separation)/i,"소재개발",1]
 ];
@@ -568,7 +615,8 @@ function extractDeadline(s){
   const Y=new Date().getFullYear();
   let m=s.match(/'?(\d{2})[.\-](\d{1,2})\s*월/);      if(m)return "20"+m[1]+"-"+String(+m[2]).padStart(2,"0")+"-28";
   m=s.match(/\((\d{1,2})\/(\d{1,2})\)/);              if(m)return Y+"-"+String(+m[1]).padStart(2,"0")+"-"+String(+m[2]).padStart(2,"0");
-  m=s.match(/(?:^|\s)(\d{1,2})\/(\d{1,2})(?:\s|$)/);  if(m)return Y+"-"+String(+m[1]).padStart(2,"0")+"-"+String(+m[2]).padStart(2,"0");
+  m=s.match(/(?:^|[^0-9])(\d{1,2})\/(\d{1,2})(?![0-9])/); // "(10/15 까지)", "09/30" 등
+  if(m&&+m[1]>=1&&+m[1]<=12&&+m[2]>=1&&+m[2]<=31)return Y+"-"+String(+m[1]).padStart(2,"0")+"-"+String(+m[2]).padStart(2,"0");
   m=s.match(/'(\d{2})\.(\d{1,2})/);                   if(m)return "20"+m[1]+"-"+String(+m[2]).padStart(2,"0")+"-01";
   m=s.match(/(?:^|[^0-9a-zA-Z])(\d{1,2})\s*월(?!\s*[Rr])/); // "10월 오픈 예정" — month 앞에 연도 없을 때 당해년도
   if(m&&+m[1]>=1&&+m[1]<=12)return Y+"-"+String(+m[1]).padStart(2,"0")+"-28";
@@ -665,12 +713,18 @@ function classify(items){
     else if(actScore>factScore) kind="task";        // 실행 신호가 사실 서술보다 강할 때만 과제
     else kind="info";                               // 동점·사실 우세 → 정보 (안전한 기본값)
 
+    const m=bestMatch(s);
+    // [중복 통합] 정보로 분류됐어도 기존 과제와 동일 주제면 별도 정보가 아니라
+    // 해당 과제의 진척 이력으로 등록한다 (측정 사실 + 조치 = 한 과제).
+    if(kind==="info" && m) kind="task";
+
     if(kind==="task"){
-      const g=guessStatus(s);
-      const m=bestMatch(s);
+      // 납기·담당·진척율은 자동 입력하지 않는다 (수동 입력 원칙).
+      // 텍스트에서 발견한 값은 '제안'으로만 제시하고, 클릭해야 반영된다.
       return {kind:"task", src:it, title:makeTitle(s), goal:s, category:guessTaskCat(s),
-              owner:extractOwner(s), deadline:extractDeadline(s), status:g.s, progress:g.p,
-              note:s, match:m, include:true};
+              owner:"", deadline:"", status:guessStatus(s).s, progress:0,
+              sugOwner:extractOwner(s), sugDeadline:extractDeadline(s),
+              note:s, match:m, mergedFromInfo:(m&&factScore>=actScore), include:true};
     }
     return {kind:"info", src:it, title:makeTitle(s), content:s, category:guessInfoCat(s),
             tags:(s.match(/[A-Za-z][A-Za-z0-9.\-]{2,}/g)||[]).slice(0,4), include:true};
@@ -750,67 +804,100 @@ function renderDash(){
    ========================================================= */
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 
-function renderTasks(){
+let OPEN_ROW=null;
+
+function filteredTasks(){
   const q=document.getElementById("fq").value.trim().toLowerCase();
   const st=document.getElementById("fst").value;
   const ct=document.getElementById("fcat").value;
   const sort=document.getElementById("fsort").value;
-
   let L=S.tasks.filter(t=>
     (!st||t.status===st) && (!ct||t.category===ct) &&
     (!q||(t.title+t.goal+t.owner+t.category).toLowerCase().includes(q)));
-
   L.sort((a,b)=>{
     if(sort==="upd")return (b.updated||"").localeCompare(a.updated||"");
     if(sort==="due"){const x=dday(a.deadline),y=dday(b.deadline);
       if(!x&&!y)return 0;if(!x)return 1;if(!y)return -1;return x.n-y.n}
     if(sort==="prog")return (a.progress||0)-(b.progress||0);
+    if(sort==="miss"){const mA=(a.owner?0:1)+(a.deadline?0:1),mB=(b.owner?0:1)+(b.deadline?0:1);return mB-mA}
     return (a.category||"").localeCompare(b.category||"");
   });
+  return L;
+}
 
-  document.getElementById("taskCount").textContent=`${L.length} / ${S.tasks.length}건 표시`;
-  document.getElementById("taskList").innerHTML=L.map(t=>{
-    const d=dday(t.deadline);
-    return `<div class="trow" id="tr-${t.id}">
-      <div class="thead" onclick="document.getElementById('tr-${t.id}').classList.toggle('open')">
-        <span class="badge b-${t.status}">${t.status}</span>
-        <span class="tt">${esc(t.title)}</span>
-        <span class="meta">
-          <span class="badge b-cat">${esc(t.category)}</span>
-          ${t.owner?`<span>👤 ${esc(t.owner)}</span>`:""}
-          ${t.deadline?`<span>📅 ${esc(t.deadline)}</span>`:""}
-          ${d?`<span class="badge b-dday ${d.cls}">${d.label}</span>`:""}
-          <span class="pminibar"><i style="width:${t.progress||0}%"></i></span>
-          <span style="font-variant-numeric:tabular-nums;min-width:34px">${t.progress||0}%</span>
-        </span>
-      </div>
-      <div class="tbody">
+function renderTasks(){
+  const L=filteredTasks();
+  const noOwner=S.tasks.filter(t=>!t.owner).length, noDue=S.tasks.filter(t=>!t.deadline).length;
+  document.getElementById("taskCount").innerHTML=
+    `${L.length} / ${S.tasks.length}건 표시 &nbsp;·&nbsp; <span style="color:var(--warn)">담당 미입력 ${noOwner}</span>
+     &nbsp;·&nbsp; <span style="color:var(--warn)">납기 미입력 ${noDue}</span>`;
+
+  document.getElementById("taskList").innerHTML=`
+  <div class="tblwrap"><table class="tasktbl">
+    <thead><tr>
+      <th style="width:38px">#</th>
+      <th style="width:86px">상태</th>
+      <th style="width:auto">과제명</th>
+      <th style="width:104px">카테고리</th>
+      <th style="width:130px">담당</th>
+      <th style="width:142px">납기</th>
+      <th style="width:66px">D-day</th>
+      <th style="width:126px">진척율</th>
+      <th style="width:46px">이력</th>
+      <th style="width:64px"></th>
+    </tr></thead>
+    <tbody>${L.map((t,idx)=>{
+      const d=dday(t.deadline);
+      const isOpen=OPEN_ROW===t.id;
+      return `<tr class="tr-main ${isOpen?"on":""}">
+        <td class="num">${idx+1}</td>
+        <td><select class="cell b-${t.status}" onchange="upd('${t.id}','status',this.value)">
+          ${STATUS.map(s=>`<option ${s===t.status?"selected":""}>${s}</option>`).join("")}</select></td>
+        <td><span class="ttl" onclick="toggleRow('${t.id}')" title="클릭하면 목표·이력이 열립니다">${esc(t.title)}</span></td>
+        <td><select class="cell" onchange="upd('${t.id}','category',this.value)">
+          ${TASK_CATS.map(c=>`<option ${c===t.category?"selected":""}>${c}</option>`).join("")}</select></td>
+        <td><input class="cell ${t.owner?"":"miss"}" value="${esc(t.owner)}" placeholder="미입력"
+             onchange="upd('${t.id}','owner',this.value)"></td>
+        <td><input class="cell ${t.deadline?"":"miss"}" ${t.deadline?'type="date"':'type="text" placeholder="미입력"'}
+             value="${esc(t.deadline)}"
+             onfocus="this.type='date'" onblur="if(!this.value)this.type='text'"
+             onchange="upd('${t.id}','deadline',this.value)"></td>
+        <td>${d?`<span class="badge b-dday ${d.cls}">${d.label}</span>`:`<span class="muted">–</span>`}</td>
+        <td><div class="progcell">
+          <input class="cell pnum" type="number" min="0" max="100" step="5"
+                 value="${t.progress||0}" onchange="upd('${t.id}','progress',this.value)">
+          <span class="pminibar"><i style="width:${t.progress||0}%"></i></span></div></td>
+        <td class="num">${(t.history||[]).length}</td>
+        <td style="text-align:right">
+          <button class="ghost" title="상세" onclick="toggleRow('${t.id}')">${isOpen?"▲":"▼"}</button></td>
+      </tr>
+      ${isOpen?`<tr class="tr-detail"><td colspan="10">
         <div class="goal"><b style="font-size:11px;color:var(--text2)">목표</b><br>${esc(t.goal)}</div>
-        <div class="fields">
-          <div class="f"><label>상태</label><select onchange="upd('${t.id}','status',this.value)">
-            ${STATUS.map(s=>`<option ${s===t.status?"selected":""}>${s}</option>`).join("")}</select></div>
-          <div class="f"><label>진척율 %</label><input type="number" min="0" max="100" value="${t.progress||0}" onchange="upd('${t.id}','progress',this.value)"></div>
-          <div class="f"><label>담당</label><input value="${esc(t.owner)}" onchange="upd('${t.id}','owner',this.value)"></div>
-          <div class="f"><label>납기 (YYYY-MM-DD)</label><input value="${esc(t.deadline)}" placeholder="2026-09-30" onchange="upd('${t.id}','deadline',this.value)"></div>
-          <div class="f"><label>카테고리</label><select onchange="upd('${t.id}','category',this.value)">
-            ${TASK_CATS.map(c=>`<option ${c===t.category?"selected":""}>${c}</option>`).join("")}</select></div>
-        </div>
         <div class="hist"><label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.04em">진척 이력 ${(t.history||[]).length}건</label>
           <div style="margin-top:8px">${(t.history||[]).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")).map(h=>
-            `<div class="hi"><span class="hd">${h.date}</span> <span class="hm">[${esc(h.meeting||"-")}]</span><br>${esc(h.note)}
-             <span class="hm"> → ${h.status||""} ${h.progress!=null?h.progress+"%":""}</span></div>`).join("")}</div>
+            `<div class="hi"><span class="hd">${h.date}</span> <span class="hm">[${esc(h.meeting||"-")}]</span><br>${esc(h.note)}</div>`).join("")}</div>
         </div>
         <div class="rowacts">
           <button onclick="addProgress('${t.id}')">➕ 진척 이력 추가</button>
-          <button class="danger" onclick="delTask('${t.id}')">🗑 삭제</button>
-        </div>
-      </div></div>`}).join("")||`<div class="empty">조건에 맞는 과제가 없습니다.</div>`;
+          <button class="danger" onclick="delTask('${t.id}')">🗑 과제 삭제</button>
+        </div></td></tr>`:""}`}).join("")}</tbody>
+  </table></div>`;
+  if(!L.length)document.getElementById("taskList").innerHTML=`<div class="empty">조건에 맞는 과제가 없습니다.</div>`;
 }
+function toggleRow(id){OPEN_ROW=(OPEN_ROW===id)?null:id;renderTasks()}
 function upd(id,k,v){
   const t=S.tasks.find(x=>x.id===id);if(!t)return;
   t[k]=(k==="progress")?Math.max(0,Math.min(100,+v||0)):v;
   if(k==="status"&&v==="완료"&&(+t.progress||0)<100)t.progress=100;
-  t.updated=todayISO();save();renderAll();toast("수정됨");
+  t.updated=todayISO();save();
+  // 편집 중 스크롤 위치 보존 (45행 표에서 셀을 연속 입력할 때 화면이 튀지 않도록)
+  const wrap=document.querySelector("#taskList .tblwrap");
+  const sx=wrap?wrap.scrollLeft:0, sy=window.scrollY;
+  renderAll();
+  const w2=document.querySelector("#taskList .tblwrap");
+  if(w2)w2.scrollLeft=sx;
+  window.scrollTo(0,sy);
+  toast({owner:"담당",deadline:"납기",progress:"진척율",status:"상태",category:"카테고리"}[k]+" 저장됨");
 }
 function addProgress(id){
   const t=S.tasks.find(x=>x.id===id);if(!t)return;
@@ -832,7 +919,19 @@ function addTaskManual(){
     history:[{date:todayISO(),meeting:"수동 등록",note:"과제 신규 등록",status:"접수",progress:0}]});
   save();renderAll();toast("과제 추가됨");
 }
-function expandAll(o){document.querySelectorAll(".trow").forEach(e=>e.classList.toggle("open",o))}
+function exportCSV(){
+  const rows=[["No","상태","과제명","카테고리","담당","납기","D-day","진척율(%)","이력수","목표"]];
+  filteredTasks().forEach((t,i)=>{
+    const d=dday(t.deadline);
+    rows.push([i+1,t.status,t.title,t.category,t.owner||"",t.deadline||"",d?d.label:"",t.progress||0,
+               (t.history||[]).length,(t.goal||"").replace(/\s+/g," ")]);
+  });
+  const csv="﻿"+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download="과제목록_"+todayISO()+".csv";a.click();URL.revokeObjectURL(a.href);
+  toast("CSV를 내려받았습니다");
+}
 
 /* =========================================================
    7. 렌더 — 정보 저장소
@@ -846,16 +945,23 @@ function renderInfo(){
 
   let L=S.info.filter(i=>(!INFO_FILTER||i.category===INFO_FILTER)&&
     (!q||(i.title+i.content+(i.tags||[]).join("")+i.meeting).toLowerCase().includes(q)));
-  L.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  L.sort((a,b)=>(b.date||"").localeCompare(a.date||"")|| a.category.localeCompare(b.category));
   document.getElementById("infoCount").textContent=`${L.length} / ${S.info.length}건 표시`;
-  document.getElementById("infoList").innerHTML=L.map(i=>
-    `<div class="inf c-${i.category}">
-      <button class="del" title="삭제" onclick="delInfo('${i.id}')">×</button>
-      <div class="ih"><span class="badge b-cat">${i.category}</span><span class="it">${esc(i.title)}</span></div>
-      <div class="ic">${esc(i.content)}</div>
-      <div class="if"><span>📅 ${i.date}</span><span>·</span><span>${esc(i.meeting||"-")}</span>
-        ${(i.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
-    </div>`).join("")||`<div class="empty" style="grid-column:1/-1">해당 정보가 없습니다.</div>`;
+  document.getElementById("infoList").innerHTML=L.length?`
+   <div class="tblwrap"><table class="inftbl">
+     <thead><tr><th style="width:38px">#</th><th style="width:74px">분류</th><th style="width:210px">제목</th>
+       <th>내용</th><th style="width:96px">날짜</th><th style="width:150px">회의</th><th style="width:40px"></th></tr></thead>
+     <tbody>${L.map((i,idx)=>`<tr>
+       <td style="text-align:center;color:var(--muted);font-size:12px">${idx+1}</td>
+       <td><span class="catpill cat-${i.category}">${i.category}</span></td>
+       <td class="ictl">${esc(i.title)}</td>
+       <td style="color:var(--text2)">${esc(i.content)}
+         ${(i.tags||[]).length?`<div style="margin-top:5px">${(i.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join(" ")}</div>`:""}</td>
+       <td style="color:var(--accent);font-variant-numeric:tabular-nums;font-size:12px">${i.date}</td>
+       <td style="color:var(--muted);font-size:12px">${esc(i.meeting||"-")}</td>
+       <td style="text-align:right"><button class="ghost" title="삭제" onclick="delInfo('${i.id}')">×</button></td>
+     </tr>`).join("")}</tbody></table></div>`
+   :`<div class="empty">해당 정보가 없습니다.</div>`;
 }
 function setInfoFilter(c){INFO_FILTER=c;renderInfo()}
 function delInfo(id){S.info=S.info.filter(x=>x.id!==id);save();renderAll();toast("삭제됨")}
@@ -914,17 +1020,22 @@ function renderReview(){
           <label style="display:flex;align-items:center;gap:5px;font-size:12px"><input type="checkbox" style="width:auto" ${r.include?"checked":""} onchange="rv(${i},'include',this.checked)"> 포함</label>
           <select style="width:auto" onchange="rv(${i},'kind',this.value)"><option value="task" selected>📌 과제</option><option value="info">🗃️ 정보</option></select>
           <span style="font-size:12px;color:var(--muted)">${r.src.date} · ${esc(r.src.meeting||"-")}</span>
-          ${r.match?`<span class="matchnote">🔗 유사 과제 매칭 ${(r.match.score*100).toFixed(0)}%</span>`:""}
+          ${r.match?`<span class="matchnote">🔗 유사 과제 매칭 ${(r.match.score*100).toFixed(0)}%${r.mergedFromInfo?" · 중복 통합":""}</span>`:""}
         </div>
         <div class="rsrc">${esc(r.src.text)}</div>
         <div class="rg">
           <div><label style="font-size:11px;color:var(--text2)">저장 방식</label><select onchange="rv(${i},'targetId',this.value)">${opts}</select></div>
           <div><label style="font-size:11px;color:var(--text2)">제목</label><input value="${esc(r.title)}" onchange="rv(${i},'title',this.value)"></div>
           <div><label style="font-size:11px;color:var(--text2)">카테고리</label><select onchange="rv(${i},'category',this.value)">${TASK_CATS.map(c=>`<option ${c===r.category?"selected":""}>${c}</option>`).join("")}</select></div>
-          <div><label style="font-size:11px;color:var(--text2)">담당</label><input value="${esc(r.owner)}" onchange="rv(${i},'owner',this.value)"></div>
-          <div><label style="font-size:11px;color:var(--text2)">납기</label><input value="${esc(r.deadline)}" placeholder="YYYY-MM-DD" onchange="rv(${i},'deadline',this.value)"></div>
           <div><label style="font-size:11px;color:var(--text2)">상태</label><select onchange="rv(${i},'status',this.value)">${STATUS.map(s=>`<option ${s===r.status?"selected":""}>${s}</option>`).join("")}</select></div>
-          <div><label style="font-size:11px;color:var(--text2)">진척율 %</label><input type="number" min="0" max="100" value="${r.progress}" onchange="rv(${i},'progress',this.value)"></div>
+          <div><label style="font-size:11px;color:var(--text2)">담당 <span style="font-weight:400;text-transform:none">(직접 입력)</span></label>
+            <input id="rvo-${i}" value="${esc(r.owner)}" placeholder="미입력" onchange="rv(${i},'owner',this.value)">
+            ${r.sugOwner?`<button class="sug" onclick="applySug(${i},'owner','${esc(r.sugOwner)}')">제안: ${esc(r.sugOwner)}</button>`:""}</div>
+          <div><label style="font-size:11px;color:var(--text2)">납기 <span style="font-weight:400;text-transform:none">(직접 입력)</span></label>
+            <input id="rvd-${i}" type="date" value="${esc(r.deadline)}" onchange="rv(${i},'deadline',this.value)">
+            ${r.sugDeadline?`<button class="sug" onclick="applySug(${i},'deadline','${esc(r.sugDeadline)}')">제안: ${esc(r.sugDeadline)}</button>`:""}</div>
+          <div><label style="font-size:11px;color:var(--text2)">진척율 % <span style="font-weight:400;text-transform:none">(직접 입력)</span></label>
+            <input id="rvp-${i}" type="number" min="0" max="100" value="${r.progress}" onchange="rv(${i},'progress',this.value)"></div>
         </div></div>`;
     }
     return `<div class="rev" id="rv-${i}">
@@ -940,14 +1051,21 @@ function renderReview(){
       </div></div>`;
   }).join("");
 }
+function applySug(i,k,v){
+  REVIEW[i][k]=v;
+  const el=document.getElementById((k==="owner"?"rvo-":"rvd-")+i);
+  if(el)el.value=v;
+  toast(( k==="owner"?"담당":"납기")+" 반영: "+v);
+}
 function rv(i,k,v){
   if(k==="progress")v=Math.max(0,Math.min(100,+v||0));
   REVIEW[i][k]=v;
   if(k==="kind"){
-    if(v==="task"){Object.assign(REVIEW[i],{title:REVIEW[i].title,goal:REVIEW[i].src.text,category:guessTaskCat(REVIEW[i].src.text),
-      owner:extractOwner(REVIEW[i].src.text),deadline:extractDeadline(REVIEW[i].src.text),
-      status:guessStatus(REVIEW[i].src.text).s,progress:guessStatus(REVIEW[i].src.text).p,
-      note:REVIEW[i].src.text,match:bestMatch(REVIEW[i].src.text)});}
+    if(v==="task"){const s=REVIEW[i].src.text;
+      Object.assign(REVIEW[i],{goal:s,category:guessTaskCat(s),
+      owner:"",deadline:"",status:guessStatus(s).s,progress:0,
+      sugOwner:extractOwner(s),sugDeadline:extractDeadline(s),
+      note:s,match:bestMatch(s)});}
     else{Object.assign(REVIEW[i],{content:REVIEW[i].src.text,category:guessInfoCat(REVIEW[i].src.text),tags:[]});}
     renderReview();
   }
