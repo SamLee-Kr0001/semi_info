@@ -1,0 +1,1353 @@
+{
+  "tasks": [
+    {
+      "id": "T001",
+      "title": "SDI Safety Bottle 대량 양산성 검증",
+      "goal": "SDI가 연 18만병 규모 Safety Bottle을 대량 양산할 수 있는지 검증하고 가부를 확정한다.",
+      "category": "품질",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-12",
+      "updated": "2026-08-12",
+      "history": [
+        {
+          "date": "2026-08-12",
+          "meeting": "Safety Bottle",
+          "note": "SDI 대량 양산 가능 여부 확인 필요 (18만병/y 규모)",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T002",
+      "title": "Safety Bottle 대상 소재별 연간 사용량 산정",
+      "goal": "DJTS-0111, YCHS-9940 2개 소재의 연간 사용 바틀 수를 산정하고, 향후 소재 추가 시 대상을 count하여 검증 역산으로 이관 시점을 확보·통보한다.",
+      "category": "품질",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-12",
+      "updated": "2026-08-12",
+      "history": [
+        {
+          "date": "2026-08-12",
+          "meeting": "Safety Bottle",
+          "note": "2개 소재(DJTS-0111, YCHS-9940) 연간 사용 바틀수 산정. 향후 추가 시 대상 소재 count하여 이관 시점 확보 — 검증 역산하여 일정 통보 필요",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T003",
+      "title": "YC/동진 VOC 기반 Safety Bottle 재점검",
+      "goal": "Audit이 불가한 상황이므로 YC·동진 VOC를 반영해 재점검하고 결과 자료를 직접 통보한다.",
+      "category": "품질",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-12",
+      "updated": "2026-08-12",
+      "history": [
+        {
+          "date": "2026-08-12",
+          "meeting": "Safety Bottle",
+          "note": "Audit 불가 → YC/동진 VOC 반영하여 재점검. 자료는 직접 통보",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T004",
+      "title": "TEOS 10nm Filter M&T 선제 PCN 및 P&T 확장",
+      "goal": "TEOS 10nm Filter를 M&T에 선제적으로 PCN 처리한 뒤 P&T로 확장 적용한다.",
+      "category": "소재개발",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-18",
+      "updated": "2026-08-18",
+      "history": [
+        {
+          "date": "2026-08-18",
+          "meeting": "WLP bi-weekly 업무보고",
+          "note": "M&T 선제 PCN 하고 P&T 확장하는 것으로 추진 방향 확정",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T005",
+      "title": "WLP 소재 재고 Dashboard 구축",
+      "goal": "WLP 소재의 재고 현황을 상시 확인할 수 있는 Dashboard를 기존 보고 체계에 추가한다.",
+      "category": "AI/DX",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-18",
+      "updated": "2026-08-18",
+      "history": [
+        {
+          "date": "2026-08-18",
+          "meeting": "WLP bi-weekly 업무보고",
+          "note": "WLP 소재 재고 Dashboard 추가할 것",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T006",
+      "title": "R&D 도전보상제 과제 선정",
+      "goal": "R&D 도전보상제 대상 과제를 선정한다. KrF는 제외하고 SOM으로 선정하며, 미래 tech 영역 과제 포함 여부를 검토한다.",
+      "category": "경영현안",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-19",
+      "updated": "2026-08-27",
+      "history": [
+        {
+          "date": "2026-08-19",
+          "meeting": "KPI, OI Review",
+          "note": "R&D 도전 보상제 안건 제기",
+          "status": "진행중",
+          "progress": 0
+        },
+        {
+          "date": "2026-08-20",
+          "meeting": "팀장미팅",
+          "note": "도전과제 KrF 제외 + SOM으로 선정",
+          "status": "진행중",
+          "progress": 0
+        },
+        {
+          "date": "2026-08-27",
+          "meeting": "팀장 현안회의",
+          "note": "도전보상제 — 미래 tech에 대한 과제가 있는지 확인 필요",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T007",
+      "title": "신입구성원 교육 담당 일정 변경",
+      "goal": "신입구성원 교육 담당 일정을 오후 첫 타임으로 변경한다.",
+      "category": "조직/인력",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-19",
+      "updated": "2026-08-19",
+      "history": [
+        {
+          "date": "2026-08-19",
+          "meeting": "KPI, OI Review",
+          "note": "신입구성원 교육 담당 일정 변경 (오후 첫 타임)",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T008",
+      "title": "부회장 1on1 질문·제안 준비",
+      "goal": "'향후 하이닉스가 무엇을 해야 하나'에 대한 답변으로 소재 미래 AI 운영·기술·BP 협업 체계, Global 기업 도약 제안(기술적·문화적 관점), Trinity fab / Q-day / TEM 등 BP 협업 체계를 정리한다.",
+      "category": "경영현안",
+      "owner": "",
+      "deadline": "2026-09-18",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-19",
+      "updated": "2026-08-19",
+      "history": [
+        {
+          "date": "2026-08-19",
+          "meeting": "KPI, OI Review",
+          "note": "09/18 부회장 1on1 — 소재 미래 AI 운영/기술/BP 협업 체계, Global 기업 도약 제안, Trinity fab·Q-day·TEM 등 BP 협업 체계 질문 준비",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T009",
+      "title": "인테그리스 SMC+Qnity 미팅 자료 준비",
+      "goal": "인테그리스 미팅을 SMC + Qnity 자료로 준비한다. 09/30(JSR 착공식) 또는 10/01(09시 Entegris Erica) 중 확정.",
+      "category": "경영현안",
+      "owner": "",
+      "deadline": "2026-09-30",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-19",
+      "updated": "2026-08-19",
+      "history": [
+        {
+          "date": "2026-08-19",
+          "meeting": "KPI, OI Review",
+          "note": "인테그리스 — SMC + Qnity 자료로 준비. 09/30(JSR 착공식) 또는 10/01(오전 09시 Entegris Erica)",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T010",
+      "title": "SRI HF·CuMn 소스 다변화",
+      "goal": "SRI HF 및 CuMn 소재의 공급 소스를 다변화한다.",
+      "category": "수급/SCM",
+      "owner": "",
+      "deadline": "",
+      "status": "완료",
+      "progress": 100,
+      "created": "2026-08-19",
+      "updated": "2026-08-19",
+      "history": [
+        {
+          "date": "2026-08-19",
+          "meeting": "품질 회의",
+          "note": "SRI HF, CuMn 다변화 완료",
+          "status": "완료",
+          "progress": 100
+        }
+      ]
+    },
+    {
+      "id": "T011",
+      "title": "MLA 소재하자 메커니즘 구축",
+      "goal": "e-book 유기화학 서적을 학습하여 반도체 소재 공정과 연계한 MLA 소재하자 메커니즘을 정립한다.",
+      "category": "소재개발",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-19",
+      "updated": "2026-08-19",
+      "history": [
+        {
+          "date": "2026-08-19",
+          "meeting": "품질 회의",
+          "note": "MLA(소재하자) → e-book 유기화학 책 학습 → 반도체 소재 공정과 연계하여 메커니즘 구축",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T012",
+      "title": "C&C Portal 구축",
+      "goal": "C&C Portal을 구축한다. (범위·목표 정의 필요)",
+      "category": "AI/DX",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-19",
+      "updated": "2026-08-19",
+      "history": [
+        {
+          "date": "2026-08-19",
+          "meeting": "품질 회의",
+          "note": "C&C Portal 안건 제기 — 구체 범위 미정",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T013",
+      "title": "AI Portal 구축",
+      "goal": "AI Portal을 구축한다. AI 통합/분리 운영 방향과 연계 검토.",
+      "category": "AI/DX",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-19",
+      "updated": "2026-08-19",
+      "history": [
+        {
+          "date": "2026-08-19",
+          "meeting": "품질 회의",
+          "note": "AI Portal 안건 제기. AI 통합/분리하여 진행하는 방향과 연계 필요",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T014",
+      "title": "Q-day 포상·효과 측정 체계 개선",
+      "goal": "포상(상장)은 grade에 맞게 부여하고 잘한 곳은 명확히 표현한다. 만족도 조사는 행사 만족도가 아니라 품질 mind set 변화와 실제 품질 개선 사례·효과를 조사해 반영한다.",
+      "category": "품질",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-19",
+      "updated": "2026-08-24",
+      "history": [
+        {
+          "date": "2026-08-19",
+          "meeting": "품질 회의 / Q-day",
+          "note": "포상(상장)은 grade에 맞게. 잘한 곳은 잘했음을 표현. 만족도 조사를 행사 만족도가 아닌 품질 mind set 변화와 품질 개선 여부로 전환",
+          "status": "진행중",
+          "progress": 0
+        },
+        {
+          "date": "2026-08-24",
+          "meeting": "아침미팅",
+          "note": "만족도보다 실제 품질 개선된 사례들을 찾아 효과로 만들 것",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T015",
+      "title": "융합 Engineer 정의 및 운용 방안 수립",
+      "goal": "인력을 받은 만큼 융합 Engineer의 정의를 명확히 하고 운용 방안을 수립한다. P-2 요소기술 영역으로 가야 하며 1) 공정 융합(교육) 등 세부 항목을 정의한다.",
+      "category": "조직/인력",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-19",
+      "updated": "2026-08-19",
+      "history": [
+        {
+          "date": "2026-08-19",
+          "meeting": "품질 회의",
+          "note": "인력을 받았으면 융합 Eng'r의 정의 필요 → P-2 요소기술 영역으로 가야 함. 1) 공정 융합: 교육. 융합 Eng'r 운용 방안 수립 필요",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T016",
+      "title": "R&D 공정담당 내 소재 파트 신설",
+      "goal": "R&D 공정담당 내에 소재 파트를 생성하고 소재에서 파견하여 P-2부터 개발을 시작, Core로 연계해 Tech 완성도를 높인다.",
+      "category": "조직/인력",
+      "owner": "정성훈 담당",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-19",
+      "updated": "2026-08-19",
+      "history": [
+        {
+          "date": "2026-08-19",
+          "meeting": "품질 회의",
+          "note": "R&D 공정담당 내 소재 파트 생성 — 소재가 파견하여 P-2부터 개발 시작, Core 연계로 Tech 완성도 제고. C&C 조직 내 소재조직 신설 시 소재에서 파견 의향 (정성훈 담당)",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T017",
+      "title": "수급 대응 TF 운영 체계 확정",
+      "goal": "구매부문장 주관 weekly 운영 및 CEO 격월 보고 체계를 확정하고 참여 Level·주기를 정의한다. 양산총괄 지시에 따라 전사 OI 과제로 등록한다.",
+      "category": "수급/SCM",
+      "owner": "구매부문장 주관",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "history": [
+        {
+          "date": "2026-08-20",
+          "meeting": "통소위",
+          "note": "수급 대응 TF — 구매부문장님 주관 weekly → CEO 격월 보고. 참여 Level·주기 정의 필요 (양산총괄, M&T 부문장, GSM, 원가, 미전)",
+          "status": "진행중",
+          "progress": 0
+        },
+        {
+          "date": "2026-08-20",
+          "meeting": "양산총괄 지시",
+          "note": "수급 대응 TF를 전사 OI 과제로 만들라는 지시 → 제조-Y1-구매-소재 미팅 Call 예정",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T018",
+      "title": "삼성 V10 Dry Separation 전환 대응",
+      "goal": "삼성이 V10에서 wet separation이 아닌 Dry로 방향을 수정함에 따라 자사 방향성을 검토하고 예의주시한다.",
+      "category": "소재개발",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-21",
+      "updated": "2026-08-21",
+      "history": [
+        {
+          "date": "2026-08-21",
+          "meeting": "7월 KPI, OI 리뷰",
+          "note": "삼성이 V10에서 wet separation이 아닌 Dry로 방향 수정 → 우리쪽 방향성 검토, 예의주시할 것",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T019",
+      "title": "Indiana 출향 준비",
+      "goal": "Indiana 출향 시점이 6개월 당겨져 '26년 12월(27년 1월 발령 예상)로 변경됨에 따라 인력·일정을 준비한다.",
+      "category": "조직/인력",
+      "owner": "",
+      "deadline": "2026-12-31",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-21",
+      "updated": "2026-08-24",
+      "history": [
+        {
+          "date": "2026-08-21",
+          "meeting": "7월 KPI, OI 리뷰",
+          "note": "Indiana 출향 6개월 당김. '26년 12월 ('27년 1월 발령 예상)",
+          "status": "진행중",
+          "progress": 0
+        },
+        {
+          "date": "2026-08-24",
+          "meeting": "아침미팅",
+          "note": "Indiana 출향 '26.12월 예정 재확인",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T020",
+      "title": "구성원 AI 교육 체계 수립 (ABC 과정)",
+      "goal": "구성원 AI 교육을 기초(ABC)부터 체계적으로 운영할 수 있도록 커리큘럼과 일정을 수립한다.",
+      "category": "조직/인력",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-21",
+      "updated": "2026-08-21",
+      "history": [
+        {
+          "date": "2026-08-21",
+          "meeting": "7월 KPI, OI 리뷰",
+          "note": "구성원 AI 교육 ABC부터 교육하기",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T021",
+      "title": "자재창고 실시간 온도 관리 체계 구축",
+      "goal": "자재창고 온도가 실시간 타점으로 올라오도록 용인 + M17 + P&T에 반영하고, IPA_TAS 연동 및 이상 발생 시 절차서를 마련한다. 관리 주체는 소재이며 Y1 및 향후 FAB Plan에 반영한다.",
+      "category": "설비/인프라",
+      "owner": "소재 (관리 주체)",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-21",
+      "updated": "2026-08-24",
+      "history": [
+        {
+          "date": "2026-08-21",
+          "meeting": "M&T-기반기술 협업회의",
+          "note": "자재창고 온도 실시간 타점이 올라올 수 있게 용인 + M17 + P&T 반영 검토할 것. 관리 주체는 소재가 되어야 함",
+          "status": "진행중",
+          "progress": 0
+        },
+        {
+          "date": "2026-08-24",
+          "meeting": "아침미팅",
+          "note": "자재창고 관리주체 = 소재. 실시간 온도 IPA_TAS 연동, 이상발생 시 절차서, Y1 + 향후 FAB Plan 반영",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T022",
+      "title": "AI 해커톤 추진",
+      "goal": "AI 해커톤을 기획·운영한다.",
+      "category": "AI/DX",
+      "owner": "양주형, 이정훈, 이광원",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-24",
+      "updated": "2026-08-24",
+      "history": [
+        {
+          "date": "2026-08-24",
+          "meeting": "아침미팅",
+          "note": "AI 해커톤 담당: 양주형, 이정훈+이광원",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T023",
+      "title": "WLP 인력 계획 B사 반영",
+      "goal": "WLP 인력 계획에 B사를 반영하고 숫자를 맞춘다.",
+      "category": "조직/인력",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-24",
+      "updated": "2026-08-24",
+      "history": [
+        {
+          "date": "2026-08-24",
+          "meeting": "아침미팅",
+          "note": "인력 — B사 반영 (WLP), 숫자 맞추기",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T024",
+      "title": "DtS term 정의 확인",
+      "goal": "DtS-BCDU에서 1mJ 당 BCUD xx nm 기준일 때 DtS term이 얼마인지 확인·정의한다.",
+      "category": "R&D기술",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-24",
+      "updated": "2026-08-24",
+      "history": [
+        {
+          "date": "2026-08-24",
+          "meeting": "소공협의체",
+          "note": "DtS-BCDU 1mJ 당 BCUD xx nm → DtS term이 얼마인가?",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T025",
+      "title": "SC2M0 MOR new ver. PR 최적소재 확보",
+      "goal": "'27.06 PX PV 시작에 대응하기 위해 SC2M0 MOR new version PR(최적소재)를 ASAP 확보한다.",
+      "category": "소재개발",
+      "owner": "",
+      "deadline": "2027-06-01",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-24",
+      "updated": "2026-08-24",
+      "history": [
+        {
+          "date": "2026-08-24",
+          "meeting": "소공협의체",
+          "note": "'27.06 PX PV 시작 예정 → SC2M0 MOR new ver. PR (최적소재) ASAP 필요",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T026",
+      "title": "Provisional MTS 확보용 평가 Platform 구축",
+      "goal": "NAND의 integration 대응력 미흡, DRAM의 Platform 변곡점에 대응하기 위해 Provisional MTS 확보를 위한 평가 Platform을 구축한다.",
+      "category": "R&D기술",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "history": [
+        {
+          "date": "2026-08-25",
+          "meeting": "미기원 OI",
+          "note": "개발환경 Tech scheme 변화 (NAND: integration 대응력 미흡, DRAM: Platform 변곡점) → Provisional MTS 확보를 위한 평가 Platform 필요",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T027",
+      "title": "Flexible lot 협의체 신설",
+      "goal": "주관 TD와 공정 간 협의체(Flexible lot 협의체)를 신설하여 TD가 제안하고 공정이 대응하는 체계를 만든다.",
+      "category": "R&D기술",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "history": [
+        {
+          "date": "2026-08-25",
+          "meeting": "미기원 OI",
+          "note": "주관 TD와 공정 협의체 필요 — Flexible lot 협의체 (TD가 제안하고 공정이 대응)",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T028",
+      "title": "공정 기술 Pool 대시보드 구축 (HTRS Sub table)",
+      "goal": "HTRS Sub table 기반으로 공정 기술 Pool 대시보드를 구축하여 확보된 기술과 확보해야 할 기술을 가시화한다.",
+      "category": "AI/DX",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "history": [
+        {
+          "date": "2026-08-25",
+          "meeting": "미기원 OI",
+          "note": "공정 기술 Pool 대시보드 구축 (HTRS Sub table). 확보된 기술과 확보해야 할 기술을 dashboard로 제공하겠다",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T029",
+      "title": "단위공정 기술의 Integration 묶음 과제 정의",
+      "goal": "HTRS 기준 단위공정 기술은 개발 중이나 integration 관점이 부족하므로 이를 묶는 과제를 정의한다. SN미래기술협의체·NAND신뢰성협의체처럼 공통 목표를 명확히 하여 진행한다.",
+      "category": "R&D기술",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "history": [
+        {
+          "date": "2026-08-25",
+          "meeting": "미기원 OI",
+          "note": "단위공정(예: Etch) 자체 기술개발 → TD/PI 전달 방식. Integration 관점 부족 → 묶는 과제 필요. SN미래기술협의체, NAND 신뢰성 협의체처럼 공통 목표 명확화",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T030",
+      "title": "Tech TF 요소기술 적용 기준 수립",
+      "goal": "Tech TF의 요소기술 적용 기준을 수립한다. 핵심(Critical) 요소기술 개발은 평균 1년 이상 소요되며, Shift left 추진에는 another Vehicle이 필요하다. P-2(HTRS) + P-1(9M) = 약 1년.",
+      "category": "R&D기술",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "history": [
+        {
+          "date": "2026-08-25",
+          "meeting": "미기원 OI",
+          "note": "요소기술 경쟁력 강화 — Tech TF 요소기술 기준 수립, P-1 activity와 산출물 정의, PLM 연동 점검안. 핵심요소기술(Critical) 개발 평균 1년 이상 소요. Shift left 추진은 another Vehicle 필요",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T031",
+      "title": "요소기술 개발 Activity 및 산출물·CDP 정의",
+      "goal": "요소기술 개발 Activity와 산출물을 정의하고 요소기술 CDP를 정의한다. 요소기술 CDP ← P-1(9M) 연계, PLM 연동 점검안 포함.",
+      "category": "R&D기술",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "history": [
+        {
+          "date": "2026-08-25",
+          "meeting": "미기원 OI",
+          "note": "요소기술 개발 Activity 및 산출물 정의 — 요소기술 CDP 정의 (요소기술 CDP ← P-1 9M)",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T032",
+      "title": "DRAM 요소기술 도출 및 하반기 시점 정의",
+      "goal": "DRAM PO TF 직개발 요소기술을 검토하고 AR, 2D POC, 3D DRAM 요소기술을 도출·개발하며 하반기 시점을 정의한다.",
+      "category": "R&D기술",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "history": [
+        {
+          "date": "2026-08-25",
+          "meeting": "미기원 OI",
+          "note": "DRAM PO TF 직개발 요소기술 검토중. AR, 2D POC, 3D DRAM 요소기술 도출 및 개발 중 → 하반기 시점 정의 필요",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T033",
+      "title": "N+4 이후 핵심 요소기술 점검 및 P-2 연계 실행전략 구체화",
+      "goal": "N+4 이후 DRAM/NAND 핵심 요소기술을 점검하고 공정 내 P-2 개발 체계와 연계하여 실행전략을 구체화한다.",
+      "category": "R&D기술",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "history": [
+        {
+          "date": "2026-08-25",
+          "meeting": "미기원 OI",
+          "note": "N+4 이후 DRAM/NAND 핵심 요소기술 점검하고 공정 내 P-2 개발 체계와 연계하여 실행전략 구체화 예정",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T034",
+      "title": "Core 기술 명확화 및 Module별 개발기간 관리 방안",
+      "goal": "14개월 내 개발이 완료되지 않는 뼈대기술의 결정 변화는 Tech의 근간을 흔들므로 Core 기술을 명확히 한다. Platform/Vehicle이 없는 상태의 개발 방안과 Core 기술 Module별 상이한 개발기간의 관리 방안을 수립한다. (NAND는 명확, DRAM은 난이도 높음)",
+      "category": "R&D기술",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "history": [
+        {
+          "date": "2026-08-25",
+          "meeting": "미기원 OI (총평)",
+          "note": "TV design 시점에 요소기술 의사결정이 가능하도록 준비. ①14개월 내 미완료 뼈대기술의 결정 변화는 Tech 근간을 흔듦 → Core 기술 명확화 ②Platform/Vehicle 부재 시 개발 방안, Module별 상이한 개발기간 관리 방안. HTRS 기반 Core 기술 인지 — NAND 명확, DRAM 어려움",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T035",
+      "title": "MLR 소재 Delamination Lifting margin 검증",
+      "goal": "MLR 소재 개발 중 PED >30min에서 peeling이 발생, Dev CPN → CPN+PGMEA time split으로 최적 time 설정을 완료했다. Lifting margin 검증을 명확히 수행한다.",
+      "category": "소재개발",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "history": [
+        {
+          "date": "2026-08-25",
+          "meeting": "WLP 주간보고",
+          "note": "MLR 소재 개발 Delamination — PED(>30min) peeling 발생 → Dev CPN → CPN+PGMEA time split으로 최적 time 설정 완료. Lifting margin 검증을 명확히 할 것",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T036",
+      "title": "SP7000 유효기간 재설정 검토",
+      "goal": "SP7000 유효기간은 6month이나 in-line 검증 시 4month부터 RR이 변동하므로 유효기간 재설정을 검토한다. [측정 근거] 유효기간 6month / in-line 검증 4month 시점부터 RR 변동 확인.",
+      "category": "품질",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "history": [
+        {
+          "date": "2026-08-25",
+          "meeting": "WLP 주간보고",
+          "note": "SP7000 유효기간 6month이나 in-line 검증 시 4month부터 RR 변동 — 측정 사실과 조치를 본 과제로 통합 관리",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T037",
+      "title": "INLSC38 장비 비용 처리 방안 확정",
+      "goal": "INLSC38(BP 장비지원 관련 모델 No.) 장비 비용을 매월 처리(세법 기준)하고 감정평가 법인을 활용하는 방안을 확정한다.",
+      "category": "설비/인프라",
+      "owner": "정율 TL",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "history": [
+        {
+          "date": "2026-08-25",
+          "meeting": "장비지원",
+          "note": "INLSC38 장비 관련. 비용 처리: 매월로 처리 (세법), 감정평가 법인. 비용 처리 정율이 TL",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T038",
+      "title": "T.FAB 3D DRAM 대응 장비 검토",
+      "goal": "'28년 이후 3D DRAM 구조 대응을 위한 SiGe Epi / Dry etch / Dry CLN 장비를 검토한다.",
+      "category": "설비/인프라",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-26",
+      "updated": "2026-08-26",
+      "history": [
+        {
+          "date": "2026-08-26",
+          "meeting": "T.FAB Bi-weekly 회의",
+          "note": "'28년 이후 3D DRAM 구조 대응 장비 검토 — SiGe Epi / Dry etch / Dry CLN",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T039",
+      "title": "T.FAB 도급 SoW 작성",
+      "goal": "T.FAB 도급 SoW(Scope of Work)를 작성·확정한다. '27.05 Open / '27.03 사무실 입주 일정에 맞춘다.",
+      "category": "설비/인프라",
+      "owner": "",
+      "deadline": "2027-03-01",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-26",
+      "updated": "2026-08-26",
+      "history": [
+        {
+          "date": "2026-08-26",
+          "meeting": "T.FAB Bi-weekly 회의",
+          "note": "도급 SoW (Scope of Work) 작성 필요. '27.05 Open / 03월 사무실 입주",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T040",
+      "title": "냉매·Recycle Plastic 환경 과제 추진 (P&T)",
+      "goal": "냉매 및 Recycle Plastic 관련 환경 과제를 P&T로 추진한다.",
+      "category": "환경",
+      "owner": "정기모 TL",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-26",
+      "updated": "2026-08-26",
+      "history": [
+        {
+          "date": "2026-08-26",
+          "meeting": "AI 환경연구소",
+          "note": "냉매 / Recycle Plastic → P&T",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T041",
+      "title": "환경개선 단기/중장기 과제 체계화",
+      "goal": "환경개선 항목을 단기/중장기 과제로 구분해 체계화한다. SK하이닉스 내부에서는 탄관위를 통해 Right 부서 팀장을 모아 재논의하고, 멤버사에 중장기 개발 주제를 제시한다.",
+      "category": "환경",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-26",
+      "updated": "2026-08-26",
+      "history": [
+        {
+          "date": "2026-08-26",
+          "meeting": "AI 환경연구소",
+          "note": "환경개선 관련 단기/중장기 과제로 구분. SK하이닉스 내부 — 탄관위 통해 Right 부서 팀장 모여 재논의. 요청사항: 멤버사에 중장기로 개발할만한 주제를 제시할 것",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T042",
+      "title": "AI 소재 구조 기반 Library 구축",
+      "goal": "AI 관련 소재 구조를 기반으로 Library를 구축한다.",
+      "category": "AI/DX",
+      "owner": "",
+      "deadline": "",
+      "status": "진행중",
+      "progress": 0,
+      "created": "2026-08-27",
+      "updated": "2026-08-27",
+      "history": [
+        {
+          "date": "2026-08-27",
+          "meeting": "팀장 현안회의",
+          "note": "AI 관련 소재 구조 기반으로 library 구축",
+          "status": "진행중",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T043",
+      "title": "Special NDA BP IP 우회 방안 마련",
+      "goal": "Special NDA가 BP IP로 막혀 있어 우회 방법을 찾는다.",
+      "category": "경영현안",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-27",
+      "updated": "2026-08-27",
+      "history": [
+        {
+          "date": "2026-08-27",
+          "meeting": "팀장 현안회의",
+          "note": "Special NDA (BP IP로 막힘) — 우회방법을 찾자",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T044",
+      "title": "AI 구성원 동기부여 방안 수립",
+      "goal": "AI 구성원 VOC상 동기부여가 떨어진다는 문제를 KPI가 아닌 다른 방식으로 해결할 방안을 수립한다.",
+      "category": "조직/인력",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-27",
+      "updated": "2026-08-27",
+      "history": [
+        {
+          "date": "2026-08-27",
+          "meeting": "팀장 현안회의",
+          "note": "AI 구성원 VOC — 동기부여가 떨어진다. KPI가 아니다",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    },
+    {
+      "id": "T045",
+      "title": "Web review 진행",
+      "goal": "Web review를 진행한다. (범위·대상 정의 필요)",
+      "category": "경영현안",
+      "owner": "",
+      "deadline": "",
+      "status": "접수",
+      "progress": 0,
+      "created": "2026-08-19",
+      "updated": "2026-08-19",
+      "history": [
+        {
+          "date": "2026-08-19",
+          "meeting": "KPI, OI Review",
+          "note": "Web review 안건 제기 — 구체 범위 미정",
+          "status": "접수",
+          "progress": 0
+        }
+      ]
+    }
+  ],
+  "info": [
+    {
+      "id": "I001",
+      "category": "인물",
+      "title": "IMEC 담당",
+      "content": "IMEC 담당: 박유정, 오경희, 서진우",
+      "date": "2026-08-19",
+      "meeting": "KPI, OI Review",
+      "tags": [
+        "IMEC",
+        "담당배정"
+      ]
+    },
+    {
+      "id": "I002",
+      "category": "인물",
+      "title": "정성훈 담당 — 소재조직 파견 의향",
+      "content": "C&C 조직 내 소재조직을 만들면 소재에서 파견 가겠다. 수현팀장 P2.",
+      "date": "2026-08-19",
+      "meeting": "품질 회의",
+      "tags": [
+        "C&C",
+        "P2",
+        "조직"
+      ]
+    },
+    {
+      "id": "I003",
+      "category": "인물",
+      "title": "AI 해커톤 참여자",
+      "content": "AI 해커톤: 양주형, 이정훈 + 이광원",
+      "date": "2026-08-24",
+      "meeting": "아침미팅",
+      "tags": [
+        "AI",
+        "해커톤"
+      ]
+    },
+    {
+      "id": "I004",
+      "category": "인물",
+      "title": "AI 환경연구소 정기모 TL",
+      "content": "AI 환경연구소 관련 정기모 TL",
+      "date": "2026-08-26",
+      "meeting": "AI 환경연구소",
+      "tags": [
+        "환경",
+        "TL"
+      ]
+    },
+    {
+      "id": "I005",
+      "category": "인물",
+      "title": "INLSC38 비용처리 담당",
+      "content": "비용 처리 정율이 TL",
+      "date": "2026-08-25",
+      "meeting": "장비지원",
+      "tags": [
+        "INLSC38",
+        "비용"
+      ]
+    },
+    {
+      "id": "I006",
+      "category": "인물",
+      "title": "수급 대응 TF 참여 조직",
+      "content": "양산총괄, M&T 부문장, GSM, 원가, 미전",
+      "date": "2026-08-20",
+      "meeting": "통소위",
+      "tags": [
+        "수급TF",
+        "참여Level"
+      ]
+    },
+    {
+      "id": "I007",
+      "category": "System",
+      "title": "M&T와 P&T 조직 구조 차이",
+      "content": "차이점을 명확히 하자. M&T는 팀이 세분화되어 있다. P&T는 WLP 별도 Logic.",
+      "date": "2026-08-19",
+      "meeting": "품질 회의",
+      "tags": [
+        "M&T",
+        "P&T",
+        "WLP",
+        "조직"
+      ]
+    },
+    {
+      "id": "I008",
+      "category": "System",
+      "title": "AI 통합/분리 운영 방향",
+      "content": "AI를 통합 / 분리하여 진행",
+      "date": "2026-08-19",
+      "meeting": "품질 회의",
+      "tags": [
+        "AI",
+        "운영방향"
+      ]
+    },
+    {
+      "id": "I009",
+      "category": "System",
+      "title": "P-2와 Tech 연결성 이슈 (Q1)",
+      "content": "P-2와 Tech와의 연결성을 어떻게 가져갈 것이냐? HTRS가 있는데 TD는 무엇을 어떻게 정확하게 준비할 수 있을 것인가에 대한 정의가 부재하다.",
+      "date": "2026-08-25",
+      "meeting": "미기원 OI",
+      "tags": [
+        "P-2",
+        "HTRS",
+        "TD"
+      ]
+    },
+    {
+      "id": "I010",
+      "category": "System",
+      "title": "HTRS 기준 단위공정 개발의 한계 (Q2)",
+      "content": "HTRS 기준으로 단위공정의 기술은 개발하고 있으나 integration 관점에서 부족하다. 이를 묶는 과제가 필요하다.",
+      "date": "2026-08-25",
+      "meeting": "미기원 OI",
+      "tags": [
+        "HTRS",
+        "integration",
+        "단위공정"
+      ]
+    },
+    {
+      "id": "I011",
+      "category": "System",
+      "title": "개발환경 Tech scheme 변화",
+      "content": "NAND는 integration 대응력 미흡, DRAM은 Platform 변곡점 상황.",
+      "date": "2026-08-25",
+      "meeting": "미기원 OI",
+      "tags": [
+        "NAND",
+        "DRAM",
+        "Tech scheme"
+      ]
+    },
+    {
+      "id": "I012",
+      "category": "System",
+      "title": "INLSC38 — BP 장비지원 모델 No.",
+      "content": "INLSC38은 BP 장비지원 관련 장비 모델 No.",
+      "date": "2026-08-25",
+      "meeting": "장비지원",
+      "tags": [
+        "INLSC38",
+        "BP장비지원",
+        "모델No"
+      ]
+    },
+    {
+      "id": "I013",
+      "category": "운영",
+      "title": "부문장 KPI 달성 결과",
+      "content": "부문장 KPI 전체 경영계획 모두 달성, 80점대 중반.",
+      "date": "2026-08-21",
+      "meeting": "7월 KPI, OI 리뷰",
+      "tags": [
+        "KPI",
+        "실적"
+      ]
+    },
+    {
+      "id": "I014",
+      "category": "운영",
+      "title": "PIQ 미기원 R&R",
+      "content": "PIQ 미기원 — 제조기술 R&R, 제조는 back up만 진행, Tech에서 지정.",
+      "date": "2026-08-24",
+      "meeting": "소공협의체",
+      "tags": [
+        "PIQ",
+        "R&R",
+        "제조기술"
+      ]
+    },
+    {
+      "id": "I015",
+      "category": "운영",
+      "title": "R&D 공정 개발 편중",
+      "content": "N+2 tech에 개발이 몰림 (가우시안 분포).",
+      "date": "2026-08-25",
+      "meeting": "미기원 OI",
+      "tags": [
+        "N+2",
+        "개발분포"
+      ]
+    },
+    {
+      "id": "I016",
+      "category": "운영",
+      "title": "NAND Pharos(N+4) 진행 현황",
+      "content": "NAND Pharos (N+4) '27.02 P-1 Start. 현재 요소기술 도출 14건 및 발의 완료.",
+      "date": "2026-08-25",
+      "meeting": "미기원 OI",
+      "tags": [
+        "NAND",
+        "Pharos",
+        "N+4",
+        "P-1"
+      ]
+    },
+    {
+      "id": "I017",
+      "category": "운영",
+      "title": "요소개발 완료 목표 시점",
+      "content": "요소개발 완료는 P2에서 TV DB out 전 완료 목표 (14개월).",
+      "date": "2026-08-25",
+      "meeting": "미기원 OI",
+      "tags": [
+        "요소기술",
+        "P2",
+        "TV DB"
+      ]
+    },
+    {
+      "id": "I018",
+      "category": "운영",
+      "title": "미기원 OI 총평",
+      "content": "TV design 시점에 요소기술에 대한 의사결정을 할 수 있게 준비한다. NAND는 가능, DRAM은 PO/P 원인분석을 lookback 해야 한다.",
+      "date": "2026-08-25",
+      "meeting": "미기원 OI",
+      "tags": [
+        "총평",
+        "TV design",
+        "DRAM",
+        "NAND"
+      ]
+    },
+    {
+      "id": "I019",
+      "category": "운영",
+      "title": "P-2 추진 관점 (Q3)",
+      "content": "P-2가 중장기적 연속성 있게 가는 것이 목적인가, Tech 사전점검 단계가 아닌가? → 관련한 모든 항목을 협의체라는 관점에서 merge하여 추진하려는 것이다.",
+      "date": "2026-08-25",
+      "meeting": "미기원 OI",
+      "tags": [
+        "P-2",
+        "협의체"
+      ]
+    },
+    {
+      "id": "I020",
+      "category": "운영",
+      "title": "T.FAB 오픈 일정",
+      "content": "'27.05 Open / '27.03월 사무실 입주.",
+      "date": "2026-08-26",
+      "meeting": "T.FAB Bi-weekly 회의",
+      "tags": [
+        "T.FAB",
+        "일정"
+      ]
+    },
+    {
+      "id": "I021",
+      "category": "운영",
+      "title": "메시지 방향성 (Master / Keyword)",
+      "content": "새롭게 무엇을 정의했고, 어떤 것을 잘하고 어떤 것이 뒤쳐져 있는지, 이를 기반으로 우리가 더욱 더 해가야 할 것을 명확히 하자.",
+      "date": "2026-08-19",
+      "meeting": "품질 회의",
+      "tags": [
+        "Master",
+        "Keyword",
+        "메시지"
+      ]
+    },
+    {
+      "id": "I022",
+      "category": "소재",
+      "title": "Moly BP 가격 협상 동향",
+      "content": "Moly 전체 BP를 모아 놓고 가격 down에 대한 이야기를 함. Merck와 Air Liquide 불만.",
+      "date": "2026-08-21",
+      "meeting": "7월 KPI, OI 리뷰",
+      "tags": [
+        "Moly",
+        "Merck",
+        "Air Liquide",
+        "가격"
+      ]
+    },
+    {
+      "id": "I023",
+      "category": "소재",
+      "title": "삼성 V10 Separation 방향 변경",
+      "content": "삼성이 V10에서 wet separation이 아닌 Dry로 방향을 수정함.",
+      "date": "2026-08-21",
+      "meeting": "7월 KPI, OI 리뷰",
+      "tags": [
+        "삼성",
+        "V10",
+        "Dry",
+        "wet separation"
+      ]
+    },
+    {
+      "id": "I024",
+      "category": "소재",
+      "title": "High NA L/S 한계 해상도",
+      "content": "C123 기준 High NA L/S 한계 해상도 — Horizontal 16nm / Vertical L/S 18nm.",
+      "date": "2026-08-24",
+      "meeting": "소공협의체",
+      "tags": [
+        "High NA",
+        "해상도",
+        "C123"
+      ]
+    },
+    {
+      "id": "I025",
+      "category": "소재",
+      "title": "MLR PED Peeling 데이터",
+      "content": "PED (>30min)에서 peeling 발생. Dev CPN → CPN+PGMEA time split으로 최적 time 설정 완료.",
+      "date": "2026-08-25",
+      "meeting": "WLP 주간보고",
+      "tags": [
+        "MLR",
+        "PED",
+        "PGMEA",
+        "peeling"
+      ]
+    },
+    {
+      "id": "I026",
+      "category": "소재",
+      "title": "Abrasive 함량 수준",
+      "content": "Abrasive는 Slurry 당 거의 5~10 wt% 수준.",
+      "date": "2026-08-27",
+      "meeting": "팀장 현안회의",
+      "tags": [
+        "Abrasive",
+        "Slurry",
+        "wt%"
+      ]
+    },
+    {
+      "id": "I027",
+      "category": "기술",
+      "title": "DtS-BCDU 기준",
+      "content": "DtS-BCDU 1mJ 당 BCUD xx nm — DtS term 산정 기준.",
+      "date": "2026-08-24",
+      "meeting": "소공협의체",
+      "tags": [
+        "DtS",
+        "BCDU"
+      ]
+    },
+    {
+      "id": "I028",
+      "category": "기술",
+      "title": "요소기술 개발 소요기간",
+      "content": "핵심요소기술(Critical 기술) 개발은 평균 1년 이상 소요. P-2(HTRS) + P-1(9M) 약 1년.",
+      "date": "2026-08-25",
+      "meeting": "미기원 OI",
+      "tags": [
+        "요소기술",
+        "개발기간",
+        "P-1",
+        "P-2"
+      ]
+    }
+  ]
+}
