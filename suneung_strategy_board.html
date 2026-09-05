@@ -1,0 +1,780 @@
+<title>9월 모평 전략 보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#F7F5F0; --surface:#FFFFFF; --surface-2:#EFEDE6; --surface-3:#E5E2D9;
+  --ink:#1C1E1D; --ink-2:#4C514D; --ink-3:#868A82;
+  --rule:#DAD6CB; --rule-2:#C6C1B4;
+  --accent:#0F5C57; --accent-2:#0B7F72; --accent-soft:#DDEBE8;
+  --safe:#2E7D4F; --safe-bg:#E2F0E7;
+  --fit:#1F6FB2; --fit-bg:#DFEBF6;
+  --reach:#B0740D; --reach-bg:#F6EBD6;
+  --far:#A84134; --far-bg:#F5E1DE;
+  --shadow:0 1px 2px rgba(28,30,29,.06),0 4px 14px rgba(28,30,29,.05);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#14171A; --surface:#1C2023; --surface-2:#242A2D; --surface-3:#2E3438;
+    --ink:#E9E8E2; --ink-2:#B3B8B3; --ink-3:#7F8580;
+    --rule:#323A3D; --rule-2:#414A4E;
+    --accent:#54C3B2; --accent-2:#6FD6C4; --accent-soft:#12302C;
+    --safe:#63C088; --safe-bg:#152A1E;
+    --fit:#6BADE4; --fit-bg:#122536;
+    --reach:#DFA645; --reach-bg:#312512;
+    --far:#E4796B; --far-bg:#331B18;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14171A; --surface:#1C2023; --surface-2:#242A2D; --surface-3:#2E3438;
+  --ink:#E9E8E2; --ink-2:#B3B8B3; --ink-3:#7F8580;
+  --rule:#323A3D; --rule-2:#414A4E;
+  --accent:#54C3B2; --accent-2:#6FD6C4; --accent-soft:#12302C;
+  --safe:#63C088; --safe-bg:#152A1E;
+  --fit:#6BADE4; --fit-bg:#122536;
+  --reach:#DFA645; --reach-bg:#312512;
+  --far:#E4796B; --far-bg:#331B18;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  font-weight:400; line-height:1.6; margin:0;
+  -webkit-font-smoothing:antialiased;
+}
+.num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:"Nanum Myeongjo",serif;font-weight:800;text-wrap:balance;margin:0;letter-spacing:-.01em}
+.wrap{max-width:1220px;margin:0 auto;padding:0 20px}
+
+/* ---------- masthead ---------- */
+.masthead{background:var(--surface);border-bottom:1px solid var(--rule)}
+.masthead .wrap{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 28px;padding-top:26px;padding-bottom:20px}
+.mh-title h1{font-size:29px;line-height:1.25}
+.mh-title p{margin:5px 0 0;color:var(--ink-3);font-size:12.5px;letter-spacing:.02em}
+.mh-spacer{flex:1}
+.stamp{
+  border:1.5px solid var(--accent);color:var(--accent);border-radius:3px;
+  padding:7px 12px;font-size:11px;font-weight:600;letter-spacing:.09em;
+  line-height:1.35;text-align:center;background:var(--accent-soft)
+}
+.stamp b{display:block;font-size:17px;letter-spacing:0;font-family:"IBM Plex Mono",monospace}
+
+/* ---------- control deck ---------- */
+.deck{background:var(--surface-2);border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:40}
+.deck .wrap{padding-top:16px;padding-bottom:16px}
+.deck-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:18px 26px}
+@media(max-width:900px){.deck-grid{grid-template-columns:1fr}}
+
+.lbl{font-size:10.5px;font-weight:600;letter-spacing:.13em;color:var(--ink-3);text-transform:uppercase;margin-bottom:8px;display:block}
+
+.scores{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+@media(max-width:640px){.scores{grid-template-columns:repeat(3,1fr)}}
+.sc{background:var(--surface);border:1px solid var(--rule);border-radius:5px;padding:7px 8px 8px;position:relative}
+.sc .sc-n{font-size:11.5px;font-weight:600;color:var(--ink-2);margin-bottom:5px;display:flex;justify-content:space-between;align-items:baseline;gap:4px}
+.sc .sc-n em{font-style:normal;color:var(--ink-3);font-size:9.5px;letter-spacing:.04em}
+.sc-row{display:flex;gap:5px;align-items:center}
+.sc input{
+  width:100%;min-width:0;background:var(--paper);border:1px solid var(--rule);border-radius:4px;
+  padding:5px 6px;font-size:14px;color:var(--ink);text-align:center;
+  font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-weight:500
+}
+.sc .gr{
+  flex:0 0 40px;text-align:center;border-radius:4px;padding:5px 0;font-size:14px;font-weight:600;
+  font-family:"IBM Plex Mono",monospace;background:var(--surface-3);border:1px solid var(--rule-2);color:var(--ink)
+}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+.side-block{display:flex;flex-direction:column;gap:12px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:5px;overflow:hidden}
+.readout div{background:var(--surface);padding:7px 6px;text-align:center}
+.readout span{display:block;font-size:9.5px;color:var(--ink-3);letter-spacing:.05em;margin-bottom:2px}
+.readout b{font-size:16px;font-family:"IBM Plex Mono",monospace;font-weight:600}
+
+.scen{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  border:1px solid var(--rule-2);background:var(--surface);color:var(--ink-2);
+  border-radius:20px;padding:5px 11px;font-size:11.5px;font-weight:500;cursor:pointer;
+  font-family:inherit;transition:background .13s,border-color .13s,color .13s
+}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+:root[data-theme="dark"] .chip[aria-pressed="true"],
+:root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#0E1416}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .chip[aria-pressed="true"]{color:#fff}}
+
+.filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:14px;padding-top:13px;border-top:1px dashed var(--rule-2)}
+.filters select{
+  background:var(--surface);border:1px solid var(--rule-2);border-radius:4px;color:var(--ink);
+  padding:5px 8px;font-size:11.5px;font-family:inherit
+}
+.f-sep{width:1px;height:18px;background:var(--rule-2);margin:0 3px}
+
+/* ---------- results ---------- */
+main{padding:26px 0 70px}
+.tabs{display:flex;gap:2px;border-bottom:2px solid var(--rule);margin-bottom:20px}
+.tab{
+  background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;
+  padding:9px 15px;font-size:14px;font-weight:600;color:var(--ink-3);cursor:pointer;font-family:inherit
+}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tab b{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:12px;opacity:.75;margin-left:5px}
+
+.tally{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
+.tally i{
+  font-style:normal;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:3px;
+  display:inline-flex;align-items:baseline;gap:6px
+}
+.tally i u{text-decoration:none;font-family:"IBM Plex Mono",monospace;font-size:13px}
+.t-safe{background:var(--safe-bg);color:var(--safe)}
+.t-fit{background:var(--fit-bg);color:var(--fit)}
+.t-reach{background:var(--reach-bg);color:var(--reach)}
+.t-far{background:var(--far-bg);color:var(--far)}
+
+.group-head{
+  display:flex;align-items:baseline;gap:10px;margin:26px 0 9px;
+  padding-bottom:6px;border-bottom:1px solid var(--rule)
+}
+.group-head:first-of-type{margin-top:0}
+.group-head h3{font-size:17px}
+.group-head p{margin:0;font-size:11.5px;color:var(--ink-3);flex:1}
+
+.row{
+  display:grid;grid-template-columns:14px minmax(150px,1.5fr) minmax(0,2.1fr) minmax(0,1.5fr) 92px 40px;
+  gap:0 14px;align-items:center;
+  background:var(--surface);border:1px solid var(--rule);border-left:none;border-radius:0 5px 5px 0;
+  margin-bottom:5px;box-shadow:var(--shadow);overflow:hidden
+}
+@media(max-width:860px){
+  .row{grid-template-columns:10px 1fr 44px;gap:0 12px;padding-bottom:10px}
+  .row .r-mid,.row .r-why,.row .r-meta{grid-column:2/4;padding-left:0}
+}
+.stripe{align-self:stretch;width:100%}
+.s-safe{background:var(--safe)} .s-fit{background:var(--fit)} .s-reach{background:var(--reach)} .s-far{background:var(--far)}
+
+.r-uni{padding:11px 0}
+.r-uni h4{margin:0;font-family:"Nanum Myeongjo",serif;font-size:16px;font-weight:700;line-height:1.3}
+.r-uni p{margin:2px 0 0;font-size:11px;color:var(--ink-3);letter-spacing:.02em}
+.r-mid{padding:11px 0;font-size:12.5px;color:var(--ink-2)}
+.r-mid strong{color:var(--ink);font-weight:600}
+.r-why{padding:11px 0;font-size:12px;line-height:1.5}
+.r-why .ok{color:var(--safe);font-weight:500}
+.r-why .need{color:var(--reach)}
+.r-why .need b,.r-why .ok b{font-family:"IBM Plex Mono",monospace;font-weight:600}
+.r-meta{padding:11px 0;text-align:right}
+.verdict{
+  display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;
+  padding:3px 9px;border-radius:3px;white-space:nowrap
+}
+.v-safe{background:var(--safe-bg);color:var(--safe)} .v-fit{background:var(--fit-bg);color:var(--fit)}
+.v-reach{background:var(--reach-bg);color:var(--reach)} .v-far{background:var(--far-bg);color:var(--far)}
+.r-meta small{display:block;margin-top:4px;font-size:10.5px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+.pickbtn{
+  width:28px;height:28px;border-radius:50%;border:1.5px solid var(--rule-2);background:var(--surface);
+  color:var(--ink-3);font-size:15px;line-height:1;cursor:pointer;margin-right:11px;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;transition:.13s
+}
+.pickbtn:hover{border-color:var(--accent);color:var(--accent)}
+.pickbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+:root[data-theme="dark"] .pickbtn[aria-pressed="true"]{color:#0E1416}
+.opened{animation:flash 1.4s ease-out}
+@keyframes flash{0%{background:var(--reach-bg)}100%{background:var(--surface)}}
+@media(prefers-reduced-motion:reduce){.opened{animation:none}*{transition:none!important}}
+.newtag{font-size:9.5px;font-weight:700;color:var(--reach);background:var(--reach-bg);padding:1px 5px;border-radius:2px;margin-left:6px;letter-spacing:.05em;vertical-align:1px}
+
+.empty{padding:34px;text-align:center;color:var(--ink-3);font-size:13px;background:var(--surface);border:1px dashed var(--rule-2);border-radius:6px}
+
+/* ---------- cart ---------- */
+.cart{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:16px 18px;margin-bottom:22px;box-shadow:var(--shadow)}
+.cart-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:12px}
+.cart-head h2{font-size:16px}
+.cart-head .cnt{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-3)}
+.cart-head .over{color:var(--far);font-weight:600}
+.cart ol{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.cart li{display:flex;gap:9px;align-items:center;font-size:12.5px;padding:5px 0;border-bottom:1px dotted var(--rule)}
+.cart li:last-child{border-bottom:none}
+.cart li .n{font-family:"IBM Plex Mono",monospace;color:var(--ink-3);font-size:11px;flex:0 0 20px}
+.cart li .nm{font-weight:600}
+.cart li .dt{color:var(--ink-3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cart li select{background:var(--paper);border:1px solid var(--rule-2);border-radius:3px;color:var(--ink);font-size:11px;padding:2px 4px;font-family:inherit}
+.cart li button{background:none;border:none;color:var(--ink-3);cursor:pointer;font-size:15px;padding:0 3px;font-family:inherit}
+.cart li button:hover{color:var(--far)}
+.cart .none{color:var(--ink-3);font-size:12.5px;font-style:italic}
+
+/* ---------- notes ---------- */
+.notes{margin-top:30px;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:16px 18px}
+.notes h3{font-size:15px;margin-bottom:9px}
+.notes textarea{
+  width:100%;min-height:88px;background:var(--paper);border:1px solid var(--rule);border-radius:4px;
+  padding:9px 10px;font-family:inherit;font-size:13px;color:var(--ink);line-height:1.6;resize:vertical
+}
+.savebar{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:11.5px;color:var(--ink-3)}
+.savebar button{
+  background:var(--accent);color:var(--paper);border:none;border-radius:4px;padding:7px 15px;
+  font-size:12px;font-weight:600;cursor:pointer;font-family:inherit
+}
+:root[data-theme="dark"] .savebar button{color:#0E1416}
+.savebar button:disabled{opacity:.5;cursor:default}
+
+details.method{margin-top:26px;border-top:1px solid var(--rule);padding-top:14px}
+details.method summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ink-2);list-style:none}
+details.method summary::-webkit-details-marker{display:none}
+details.method summary::before{content:"▸ ";color:var(--accent)}
+details.method[open] summary::before{content:"▾ "}
+.method-body{font-size:12px;color:var(--ink-2);line-height:1.75;margin-top:12px}
+.method-body h4{font-family:inherit;font-size:12px;font-weight:700;color:var(--ink);margin:14px 0 4px}
+.method-body table{border-collapse:collapse;width:100%;margin-top:6px;font-size:11.5px}
+.method-body th,.method-body td{border:1px solid var(--rule);padding:4px 7px;text-align:center;font-family:"IBM Plex Mono",monospace}
+.method-body th{background:var(--surface-2);font-family:inherit;font-weight:600}
+.method-body td:first-child,.method-body th:first-child{text-align:left;font-family:inherit}
+.scroll-x{overflow-x:auto}
+.caution{background:var(--reach-bg);border-left:3px solid var(--reach);padding:10px 13px;border-radius:0 4px 4px 0;font-size:12px;color:var(--ink-2);margin:14px 0}
+.caution b{color:var(--reach)}
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="mh-title">
+      <h1>9월 모평 전략 보드</h1>
+      <p>수시 논술 · 정시 지원선 동시 판정 &nbsp;·&nbsp; 인문 / 사회 / 상경 계열</p>
+    </div>
+    <div class="mh-spacer"></div>
+    <div class="stamp">국영수탐 평균<b id="stampAvg">5.40</b>등급</div>
+    <div class="stamp">수능최저 판정<b id="stampMin">1개 3</b>충족</div>
+  </div>
+</header>
+
+<section class="deck">
+  <div class="wrap">
+    <div class="deck-grid">
+      <div>
+        <span class="lbl">9월 모의고사 성적 — 원점수를 고치면 등급이 다시 계산됩니다</span>
+        <div class="scores" id="scores"></div>
+      </div>
+      <div class="side-block">
+        <div>
+          <span class="lbl">환산 지표</span>
+          <div class="readout">
+            <div><span>국영수</span><b class="num" id="roKem">4.67</b></div>
+            <div><span>국영수탐</span><b class="num" id="roAll">5.40</b></div>
+            <div><span>국영수 총점</span><b class="num" id="roSum3">158</b></div>
+            <div><span>국영수탐 총점</span><b class="num" id="roSum4">193</b></div>
+          </div>
+        </div>
+        <div>
+          <span class="lbl">가정 시나리오 — 수능까지 올린다면</span>
+          <div class="scen" id="scen"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filters">
+      <select id="fRegion"><option value="">지역 전체</option></select>
+      <select id="fField"><option value="">계열 전체</option></select>
+      <select id="fVerdict"><option value="">판정 전체</option><option value="safe">안정</option><option value="fit">적정</option><option value="reach">도전</option><option value="far">상향</option></select>
+      <div class="f-sep"></div>
+      <select id="fMin"><option value="">최저 조건 전체</option><option value="has">수능최저 있는 곳만</option><option value="none">수능최저 없는 곳만</option></select>
+      <select id="fType"><option value="">설립 전체</option><option value="국공립">국공립</option><option value="사립">사립</option></select>
+      <div class="f-sep"></div>
+      <select id="fSort"><option value="verdict">판정 순</option><option value="line">합격선 순</option><option value="name">대학명 순</option></select>
+    </div>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="cart">
+    <div class="cart-head">
+      <h2>최종 후보</h2>
+      <span class="cnt">수시 <b id="cSusi">0</b>/6</span>
+      <span class="cnt">정시 <b id="cJeong">0</b>/3 <em style="font-style:normal;color:var(--ink-3)">(가·나·다군 각 1)</em></span>
+    </div>
+    <ol id="cartList"><li class="none">아래 목록에서 ＋ 를 눌러 담으세요. 수시는 6장, 정시는 군별 1장씩 3장이 상한입니다.</li></ol>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="susi">수시 — 논술전형<b id="nSusi"></b></button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="jeongsi">정시 — 수능 위주<b id="nJeong"></b></button>
+  </div>
+
+  <div class="tally" id="tally"></div>
+  <div id="results"></div>
+
+  <div class="notes">
+    <h3>내일 정리한 것</h3>
+    <textarea id="memo" placeholder="아이와 이야기하며 정한 것, 확인이 필요한 것을 적어두세요. 예) 상명대는 수능 전 시험이라 9월 말까지 논술 기출 3회 풀어보기 / 가천대 학과는 미디어커뮤니케이션 우선."></textarea>
+    <div class="savebar">
+      <button id="saveBtn">저장</button>
+      <span id="saveMsg">성적·후보·메모가 함께 저장됩니다.</span>
+    </div>
+  </div>
+
+  <details class="method">
+    <summary>판정 기준과 데이터 출처 — 반드시 읽고 쓰세요</summary>
+    <div class="method-body">
+      <div class="caution">
+        <b>이 보드의 한계.</b> 대학별 정시 합격선(평균등급)은 공개 입결과 통상적인 서열을 근거로 한 <b>추정 구간</b>이며, 대학이 발표한 확정 수치가 아닙니다. 실제 지원 전에는 각 대학 입학처의 <b>수시·정시 모집요강</b>과 <b>어디가(adiga)</b> 공시 입결, 진학사·유웨이 모의지원으로 반드시 대조하세요. 반면 <b>수능최저 기준</b>은 2027학년도 발표 내용을 반영했고, 확인되지 않은 항목은 &ldquo;요강 확인 필요&rdquo;로 표시했습니다.
+      </div>
+
+      <h4>수시 논술 판정</h4>
+      국·수·영·탐(1과목) 등급으로 대학별 수능최저 충족 여부를 계산합니다. <b>충족</b>이면 남는 변수는 논술 실력과 경쟁률뿐이므로 안정·적정으로, <b>1개 등급만 모자라면</b> 도전, <b>2개 등급 이상</b> 모자라면 상향으로 표시합니다. 도전·상향에는 <b>어느 과목을 몇 등급, 원점수 몇 점까지</b> 올려야 열리는지 함께 적었습니다.
+
+      <h4>정시 판정</h4>
+      국·영·수·탐1·탐2 5과목 단순 평균등급을 대학별 추정 합격선과 비교합니다.
+      <table><tr><th>격차 (대학선 − 내 평균)</th><th>판정</th><th>뜻</th></tr>
+      <tr><td>+0.7 이상</td><td>안정</td><td>여유 있게 통과하는 구간</td></tr>
+      <tr><td>+0.2 ~ +0.7</td><td>적정</td><td>합격선 위, 경쟁률에 따라 갈림</td></tr>
+      <tr><td>−0.4 ~ +0.2</td><td>도전</td><td>성적을 올려야 안정권 진입</td></tr>
+      <tr><td>−0.4 미만</td><td>상향</td><td>큰 폭 상승이 전제</td></tr></table>
+
+      <h4>원점수 → 등급 변환에 쓴 추정 등급컷</h4>
+      <div class="scroll-x"><table id="cutTable"></table></div>
+      최근 모의고사·수능의 통상적인 등급컷을 기준으로 삼은 <b>추정치</b>입니다. 실제 9월 모평 성적표의 등급이 다르면 원점수를 그대로 두고 표시 등급을 참고하지 말고, 성적표 등급을 기준으로 읽으세요.
+
+      <h4>수능최저 기준 출처</h4>
+      가천대(국·수·영·탐 중 1개 영역 3등급 이내), 삼육대 논술우수자(1개 영역 3등급 이내, 탐구 1과목 인정), 국민대(모집단위별 1개 3등급 또는 2개합 6), 한국외대 글로벌(2027학년도 2개합 6으로 강화), 홍익대 세종(최저 유지·인문 논술 44명 신설)은 2027학년도 발표 기준입니다. 서경대·상명대·신한대·강남대·수원대·을지대·한신대·한국공학대는 논술 수능최저를 적용하지 않습니다.
+    </div>
+  </details>
+</main>
+
+<script>
+/* ============ 성적 모델 ============ */
+const SUBJ=[
+  {k:"kor", n:"국어", max:100, cuts:[85,78,70,64,50,38,26,15]},
+  {k:"math",n:"수학", max:100, cuts:[80,72,62,50,38,24,16,10]},
+  {k:"eng", n:"영어", max:100, cuts:[90,80,70,60,50,40,30,20], abs:true},
+  {k:"tam1",n:"생활과윤리", short:"생윤", max:50, cuts:[45,41,37,32,26,19,13,8]},
+  {k:"tam2",n:"사회문화", short:"사문", max:50, cuts:[45,41,37,32,26,19,13,8]},
+  {k:"hist",n:"한국사", max:50, cuts:[40,35,30,25,20,15,10,5], abs:true, excl:true}
+];
+const DEF={kor:59,math:30,eng:70,tam1:22,tam2:13,hist:26};
+function gradeOf(s,raw){for(let i=0;i<8;i++){if(raw>=s.cuts[i])return i+1;}return 9;}
+function scoreFor(s,g){return g<=1?s.cuts[0]:s.cuts[g-1];}
+
+let raws={...DEF}, bump={kor:0,math:0,eng:0,tam1:0,tam2:0};
+
+function baseGrades(){const o={};SUBJ.forEach(s=>o[s.k]=gradeOf(s,raws[s.k]));return o;}
+function effGrades(){const b=baseGrades();const o={...b};
+  ["kor","math","eng","tam1","tam2"].forEach(k=>{o[k]=Math.max(1,b[k]-(bump[k]||0));});return o;}
+function avg5(g){return (g.kor+g.eng+g.math+g.tam1+g.tam2)/5;}
+function avg3(g){return (g.kor+g.eng+g.math)/3;}
+function minPool(g){return {kor:g.kor,math:g.math,eng:g.eng,tam:Math.min(g.tam1,g.tam2)};}
+
+/* ============ 수능최저 규칙 ============ */
+// kind: none | best(1개 영역 n등급 이내) | sum(상위 c개 합 m 이내) | unknown
+function meets(rule,g){
+  if(rule.kind==="none")return true;
+  if(rule.kind==="unknown")return null;
+  const p=minPool(g), arr=[p.kor,p.math,p.eng,p.tam].sort((a,b)=>a-b);
+  if(rule.kind==="best")return arr[0]<=rule.max;
+  if(rule.kind==="sum")return arr.slice(0,rule.c).reduce((a,b)=>a+b,0)<=rule.max;
+  return null;
+}
+const POOLK=["kor","math","eng","tam1"];
+const POOLN={kor:"국어",math:"수학",eng:"영어",tam1:"생윤"};
+// 최저 미충족 시: 총 등급 상승폭이 가장 작은 조합 찾기
+function planForRule(rule,g){
+  if(rule.kind==="none"||rule.kind==="unknown")return null;
+  let best=null;
+  for(let a=0;a<=3;a++)for(let b=0;b<=3;b++)for(let c=0;c<=3;c++)for(let d=0;d<=3;d++){
+    const t=a+b+c+d; if(t===0||t>4)continue;
+    if(best&&t>best.total)continue;
+    const t2={...g,kor:Math.max(1,g.kor-a),math:Math.max(1,g.math-b),eng:Math.max(1,g.eng-c),tam1:Math.max(1,g.tam1-d)};
+    if(!meets(rule,t2))continue;
+    const steps=[];let cost=0;
+    [["kor",a],["math",b],["eng",c],["tam1",d]].forEach(([k,v])=>{
+      if(!v)return;const s=SUBJ.find(x=>x.k===k);
+      const from=g[k],to=Math.max(1,g[k]-v),need=scoreFor(s,to);
+      cost+=need-raws[k];
+      steps.push({k,name:POOLN[k],from,to,cur:raws[k],need,diff:need-raws[k]});
+    });
+    if(!best||t<best.total||(t===best.total&&cost<best.cost))best={total:t,cost,steps};
+  }
+  return best;
+}
+// 정시: 목표 평균등급까지 — 등급이 낮은(나쁜) 과목부터 1등급씩
+function planForAvg(target,g){
+  const order=["tam2","tam1","math","kor","eng"];
+  const cur={...g};const steps={};let guard=0;
+  while(avg5(cur)>target&&guard++<25){
+    let pick=null;
+    for(const k of order){if(cur[k]>2&&(steps[k]||0)<3){pick=k;break;}}
+    if(!pick)break;
+    cur[pick]--;steps[pick]=(steps[pick]||0)+1;
+  }
+  const out=[];
+  Object.keys(steps).forEach(k=>{
+    const s=SUBJ.find(x=>x.k===k),to=cur[k],need=scoreFor(s,to);
+    out.push({k,name:s.short||s.n,from:g[k],to,cur:raws[k],need,diff:need-raws[k]});
+  });
+  return {steps:out,reached:avg5(cur),ok:avg5(cur)<=target+0.001};
+}
+
+/* ============ 대학 데이터 ============ */
+// 수시 — 논술전형 (2027학년도 기준). rule = 수능최저
+const SUSI=[
+ {u:"가천대",c:"글로벌(성남)",r:"경기·인천",t:"사립",f:["인문","사회","상경","미디어"],
+  d:"미디어커뮤니케이션 · 경영 · 사회복지 · 한국어문 등",
+  rule:{kind:"best",max:3,txt:"국·수·영·탐 중 1개 영역 3등급 이내"},
+  seats:"약 1,036명 (2027 +32)", comp:"2025 43.5:1", when:"수능 후",
+  note:"논술 규모 전국 최대. 국어 8문항 + 수학 5문항 약술형."},
+ {u:"삼육대",c:"서울 노원",r:"서울",t:"사립",f:["인문","사회","상경"],
+  d:"경영 · 사회복지 · 상담심리 · 영미어문 등",
+  rule:{kind:"best",max:3,txt:"국·영·수·탐 중 1개 영역 3등급 이내 (탐구 1과목 인정)"},
+  seats:"148명 → 2027 272명 (+124)", comp:"2025 학과별 편차 큼", when:"수능 후",
+  note:"2027 최대 증원 대학. 인원이 늘어 경쟁률 하락 여지."},
+ {u:"국민대",c:"서울 성북",r:"서울",t:"사립",f:["인문","사회","상경"],
+  d:"경영 · 행정 · 언론정보 · 한국어문 등",
+  rule:{kind:"sum",c:2,max:6,txt:"모집단위별 1개 3등급 또는 2개합 6"},
+  seats:"2027 −24명", comp:"모집단위별 상이", when:"수능 후",
+  note:"모집단위마다 기준이 달라 요강 확인 필수. 1개 3등급 단위면 현 성적으로 충족."},
+ {u:"홍익대",c:"세종",r:"충청",t:"사립",f:["인문","상경"],
+  d:"2027 인문계열 논술 44명 신설",
+  rule:{kind:"unknown",txt:"수능최저 유지 — 세부 기준 요강 확인 필요"},
+  seats:"2027 신설 44명", comp:"신설 (전년 데이터 없음)", when:"수능 후",
+  note:"신설 첫해라 경쟁률·출제 방향 미확정. 출제 유형 미공개."},
+ {u:"한국외대",c:"글로벌(용인)",r:"경기·인천",t:"사립",f:["인문","사회"],
+  d:"어문 · 사회과학 계열",
+  rule:{kind:"sum",c:2,max:6,txt:"2개 영역 등급 합 6 이내 (2027 강화)"},
+  seats:"2027 −16명", comp:"—", when:"수능 후",
+  note:"2027학년도에 1개 3등급 → 2개합 6으로 강화됨."},
+ {u:"상명대",c:"서울",r:"서울",t:"사립",f:["인문","사회","상경","미디어"],
+  d:"경영 · 행정 · 문헌정보 · 국어교육 등",
+  rule:{kind:"none",txt:"수능최저 없음"},
+  seats:"약 85명", comp:"—", when:"수능 전",
+  note:"수능 전 시험이라 수능 후 대학보다 경쟁률이 낮은 편."},
+ {u:"서경대",c:"서울 정릉",r:"서울",t:"사립",f:["인문","사회","상경"],
+  d:"경영 · 금융정보 · 국제비즈니스어학 등",
+  rule:{kind:"none",txt:"수능최저 없음"},
+  seats:"173명 (2026, −43)", comp:"—", when:"수능 전",
+  note:"수능 전 시험. 모집인원은 줄어드는 추세."},
+ {u:"을지대",c:"성남",r:"경기·인천",t:"사립",f:["사회","상경"],
+  d:"의료경영 · 사회복지 등 (보건 계열 강세)",
+  rule:{kind:"none",txt:"수능최저 없음"},
+  seats:"251명 (2026 +32)", comp:"—", when:"수능 전",
+  note:"수능 전 시험. 간호·보건은 경쟁률이 크게 높음."},
+ {u:"수원대",c:"화성",r:"경기·인천",t:"사립",f:["인문","사회","상경"],
+  d:"경영 · 법행정 · 미디어커뮤니케이션 등",
+  rule:{kind:"none",txt:"수능최저 없음"},
+  seats:"450명 (2027 −18)", comp:"—", when:"수능 후",
+  note:"모집 규모가 커서 합격 문이 넓은 편."},
+ {u:"강남대",c:"용인",r:"경기·인천",t:"사립",f:["인문","사회","상경"],
+  d:"경영 · 사회복지 · 공공인재 등",
+  rule:{kind:"none",txt:"수능최저 없음"},
+  seats:"359명 (2027 −50)", comp:"—", when:"수능 후",
+  note:"사회복지 계열 전통 강세."},
+ {u:"한신대",c:"오산",r:"경기·인천",t:"사립",f:["인문","사회","상경"],
+  d:"경영 · 사회복지 · 심리아동 등",
+  rule:{kind:"none",txt:"수능최저 없음"},
+  seats:"약 237명", comp:"—", when:"수능 후", note:"—"},
+ {u:"신한대",c:"의정부",r:"경기·인천",t:"사립",f:["사회","상경"],
+  d:"글로벌통상 · 사회복지 · 공공행정 등",
+  rule:{kind:"none",txt:"수능최저 없음"},
+  seats:"107명 → 2027 +85명", comp:"—", when:"수능 후",
+  note:"2027 대폭 증원. 인원 증가로 문턱이 낮아질 가능성."}
+];
+
+// 정시 — line: 추정 합격선(국영수탐 5과목 평균등급, 70%컷 근사)
+const JEONG=[
+ {u:"홍익대",c:"세종",r:"충청",t:"사립",f:"상경·인문",d:"상경계열 · 인문계열",line:4.3,note:"지방캠이지만 인지도 높아 경쟁 있음"},
+ {u:"고려대",c:"세종",r:"충청",t:"사립",f:"인문·사회",d:"공공사회 · 경상 · 문화콘텐츠",line:4.3,note:"지방캠 중 최상단 라인"},
+ {u:"단국대",c:"천안",r:"충청",t:"사립",f:"인문·사회",d:"경영 · 행정 · 커뮤니케이션",line:4.7,note:"—"},
+ {u:"가천대",c:"글로벌",r:"경기·인천",t:"사립",f:"인문·사회",d:"미디어커뮤니케이션 · 경영",line:3.8,note:"수도권 선호로 라인 높음"},
+ {u:"상명대",c:"서울",r:"서울",t:"사립",f:"인문·사회",d:"경영 · 행정 · 문헌정보",line:4.1,note:"—"},
+ {u:"한성대",c:"서울",r:"서울",t:"사립",f:"인문·사회",d:"사회과학 · 상상력인재학부",line:4.2,note:"—"},
+ {u:"서경대",c:"서울",r:"서울",t:"사립",f:"상경·인문",d:"경영 · 국제비즈니스어학",line:4.4,note:"—"},
+ {u:"삼육대",c:"서울",r:"서울",t:"사립",f:"인문·사회",d:"경영 · 상담심리 · 사회복지",line:4.6,note:"—"},
+ {u:"부경대",c:"부산",r:"영남",t:"국공립",f:"인문·상경",d:"경영 · 국제통상 · 신문방송",line:4.7,note:"국공립 등록금 이점"},
+ {u:"공주대",c:"공주",r:"충청",t:"국공립",f:"인문·사범",d:"인문사회 · 사범계열",line:4.7,note:"사범대 강세, 사범은 라인 더 높음"},
+ {u:"한밭대",c:"대전",r:"충청",t:"국공립",f:"상경",d:"경영회계 · 융합경영",line:4.6,note:"—"},
+ {u:"영남대",c:"경산",r:"영남",t:"사립",f:"인문·상경",d:"경영 · 행정 · 심리",line:4.9,note:"영남권 사립 상단"},
+ {u:"창원대",c:"창원",r:"영남",t:"국공립",f:"인문·사회",d:"경영 · 행정 · 국제관계",line:5.1,note:"—"},
+ {u:"한국해양대",c:"부산",r:"영남",t:"국공립",f:"상경",d:"해운경영 · 국제무역경제",line:5.1,note:"—"},
+ {u:"순천향대",c:"아산",r:"충청",t:"사립",f:"인문·사회",d:"경영 · 사회복지 · 미디어",line:5.1,note:"—"},
+ {u:"계명대",c:"대구",r:"영남",t:"사립",f:"인문·상경",d:"경영 · 관광 · 사회복지",line:5.1,note:"—"},
+ {u:"건국대",c:"글로컬(충주)",r:"충청",t:"사립",f:"인문·상경",d:"경영 · 국제무역",line:5.0,note:"지방캠"},
+ {u:"동국대",c:"WISE(경주)",r:"영남",t:"사립",f:"인문·사회",d:"경영 · 행정 · 경찰행정",line:5.0,note:"지방캠"},
+ {u:"강릉원주대",c:"강릉",r:"강원",t:"국공립",f:"인문·사회",d:"경영 · 국제통상",line:5.3,note:"—"},
+ {u:"조선대",c:"광주",r:"호남",t:"사립",f:"인문·사회",d:"경영 · 행정복지 · 신문방송",line:5.3,note:"—"},
+ {u:"원광대",c:"익산",r:"호남",t:"사립",f:"인문·사회",d:"경영 · 행정 · 복지보건",line:5.3,note:"—"},
+ {u:"한남대",c:"대전",r:"충청",t:"사립",f:"인문·상경",d:"경영 · 행정 · 사회복지",line:5.5,note:"—"},
+ {u:"수원대",c:"화성",r:"경기·인천",t:"사립",f:"인문·사회",d:"경영 · 법행정 · 미디어",line:5.3,note:"수도권"},
+ {u:"한신대",c:"오산",r:"경기·인천",t:"사립",f:"인문·사회",d:"경영 · 사회복지 · 심리아동",line:5.3,note:"수도권"},
+ {u:"용인대",c:"용인",r:"경기·인천",t:"사립",f:"인문·사회",d:"경영 · 경찰행정",line:5.5,note:"수도권"},
+ {u:"강남대",c:"용인",r:"경기·인천",t:"사립",f:"인문·사회",d:"경영 · 사회복지 · 공공인재",line:5.5,note:"수도권"},
+ {u:"성결대",c:"안양",r:"경기·인천",t:"사립",f:"인문·사회",d:"경영 · 사회복지 · 유아교육",line:5.6,note:"수도권"},
+ {u:"서울신학대",c:"부천",r:"경기·인천",t:"사립",f:"인문·사회",d:"사회복지 · 유아교육 · 경영",line:5.6,note:"수도권"},
+ {u:"대진대",c:"포천",r:"경기·인천",t:"사립",f:"인문·사회",d:"경영 · 행정 · 아동학",line:5.7,note:"수도권"},
+ {u:"군산대",c:"군산",r:"호남",t:"국공립",f:"인문·상경",d:"경영 · 무역 · 사회복지",line:5.5,note:"국공립"},
+ {u:"목포대",c:"무안",r:"호남",t:"국공립",f:"인문·사회",d:"경영 · 행정 · 사회복지",line:5.6,note:"국공립"},
+ {u:"국립안동대",c:"안동",r:"영남",t:"국공립",f:"인문·사회",d:"경영 · 행정 · 사학",line:5.5,note:"국공립"},
+ {u:"국립순천대",c:"순천",r:"호남",t:"국공립",f:"인문·사회",d:"경영 · 사회복지 · 문헌정보",line:5.5,note:"국공립"},
+ {u:"경성대",c:"부산",r:"영남",t:"사립",f:"인문·사회",d:"경영 · 사회복지 · 미디어",line:5.7,note:"—"},
+ {u:"동의대",c:"부산",r:"영남",t:"사립",f:"인문·사회",d:"경영 · 행정 · 유아교육",line:5.7,note:"—"},
+ {u:"대구대",c:"경산",r:"영남",t:"사립",f:"인문·사회",d:"경영 · 사회복지 · 특수교육",line:5.7,note:"사회복지·특수교육 전통 강세"},
+ {u:"청주대",c:"청주",r:"충청",t:"사립",f:"인문·사회",d:"경영 · 행정 · 광고홍보",line:5.8,note:"—"},
+ {u:"남서울대",c:"천안",r:"충청",t:"사립",f:"인문·사회",d:"경영 · 아동복지 · 국제개발",line:5.8,note:"—"},
+ {u:"가톨릭관동대",c:"강릉",r:"강원",t:"사립",f:"인문·사회",d:"경영 · 사회복지 · 광고홍보",line:5.9,note:"—"},
+ {u:"신한대",c:"의정부",r:"경기·인천",t:"사립",f:"인문·사회",d:"글로벌통상 · 사회복지 · 공공행정",line:5.9,note:"수도권"},
+ {u:"배재대",c:"대전",r:"충청",t:"사립",f:"인문·사회",d:"경영 · 행정 · 미디어콘텐츠",line:6.0,note:"—"},
+ {u:"백석대",c:"천안",r:"충청",t:"사립",f:"인문·사회",d:"경영 · 사회복지 · 상담",line:6.0,note:"—"},
+ {u:"평택대",c:"평택",r:"경기·인천",t:"사립",f:"인문·사회",d:"경영 · 사회복지 · 아동청소년",line:6.1,note:"수도권"},
+ {u:"협성대",c:"화성",r:"경기·인천",t:"사립",f:"인문·사회",d:"경영 · 사회복지 · 아동보육",line:6.1,note:"수도권"},
+ {u:"안양대",c:"안양",r:"경기·인천",t:"사립",f:"인문·사회",d:"경영 · 행정 · 문예창작",line:6.1,note:"수도권"},
+ {u:"선문대",c:"아산",r:"충청",t:"사립",f:"인문·사회",d:"경영 · 법·경찰 · 상담산업",line:6.2,note:"—"},
+ {u:"세명대",c:"제천",r:"충청",t:"사립",f:"인문·사회",d:"경영 · 사회복지 · 미디어",line:6.2,note:"—"},
+ {u:"상지대",c:"원주",r:"강원",t:"사립",f:"인문·사회",d:"경영 · 사회복지 · 미디어",line:6.2,note:"—"}
+];
+
+/* ============ 판정 ============ */
+const V={safe:{n:"안정",c:"safe",o:0},fit:{n:"적정",c:"fit",o:1},reach:{n:"도전",c:"reach",o:2},far:{n:"상향",c:"far",o:3}};
+function verdictJeong(line,a){const gap=line-a;
+  if(gap>=0.7)return"safe"; if(gap>=0.2)return"fit"; if(gap>=-0.4)return"reach"; return"far";}
+function verdictSusi(ok,plan){
+  if(ok===true)return"fit"; if(ok===null)return"reach";
+  if(plan&&plan.total===1)return"reach"; return"far";}
+
+/* ============ 렌더 ============ */
+let tab="susi", picks={susi:[],jeong:[]}, gunMap={}, openedIds=new Set(), prevOpen=null;
+
+function buildScores(){
+  document.getElementById("scores").innerHTML=SUBJ.map(s=>`
+    <div class="sc">
+      <div class="sc-n"><span>${s.n}</span><em>/${s.max}</em></div>
+      <div class="sc-row">
+        <input type="number" id="in_${s.k}" min="0" max="${s.max}" value="${raws[s.k]}" aria-label="${s.n} 원점수">
+        <div class="gr" id="gr_${s.k}">–</div>
+      </div>
+    </div>`).join("");
+  SUBJ.forEach(s=>{
+    document.getElementById("in_"+s.k).addEventListener("input",e=>{
+      let v=parseInt(e.target.value,10); if(isNaN(v))v=0;
+      raws[s.k]=Math.max(0,Math.min(s.max,v)); render();
+    });
+  });
+}
+function buildScen(){
+  const items=[["kor","국어"],["tam2","사문"],["tam1","생윤"],["math","수학"],["eng","영어"]];
+  document.getElementById("scen").innerHTML=items.map(([k,n])=>
+    `<button class="chip" data-b="${k}" aria-pressed="false">${n} +1등급</button>`).join("")+
+    `<button class="chip" data-reset="1">되돌리기</button>`;
+  document.getElementById("scen").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b)return;
+    if(b.dataset.reset){bump={kor:0,math:0,eng:0,tam1:0,tam2:0};
+      document.querySelectorAll("#scen .chip[data-b]").forEach(x=>x.setAttribute("aria-pressed","false"));}
+    else{const k=b.dataset.b, on=b.getAttribute("aria-pressed")==="true";
+      bump[k]=on?0:1; b.setAttribute("aria-pressed",on?"false":"true");}
+    render(true);
+  });
+}
+function buildFilters(){
+  const regions=[...new Set([...SUSI.map(x=>x.r),...JEONG.map(x=>x.r)])];
+  document.getElementById("fRegion").innerHTML=`<option value="">지역 전체</option>`+regions.map(r=>`<option>${r}</option>`).join("");
+  const fields=["인문","사회","상경","미디어","사범"];
+  document.getElementById("fField").innerHTML=`<option value="">계열 전체</option>`+fields.map(f=>`<option>${f}</option>`).join("");
+  ["fRegion","fField","fVerdict","fMin","fType","fSort"].forEach(id=>
+    document.getElementById(id).addEventListener("change",()=>render()));
+  document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{
+    tab=t.dataset.tab;
+    document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===t?"true":"false"));
+    render();
+  }));
+}
+function buildCutTable(){
+  let h="<tr><th>과목</th>"+[1,2,3,4,5,6,7,8].map(i=>`<th>${i}등급</th>`).join("")+"</tr>";
+  SUBJ.forEach(s=>{h+=`<tr><td>${s.n}${s.abs?" (절대)":""}</td>`+s.cuts.map(c=>`<td>${c}</td>`).join("")+"</tr>";});
+  document.getElementById("cutTable").innerHTML=h;
+}
+
+function stepTxt(st){return `${st.name} <b>${st.from}→${st.to}등급</b>(${st.cur}→${st.need}점, ${st.diff>0?"+":""}${st.diff})`;}
+
+function rowsSusi(g){
+  return SUSI.map(x=>{
+    const ok=meets(x.rule,g), plan=ok===true?null:planForRule(x.rule,g);
+    const v=verdictSusi(ok,plan);
+    let why;
+    if(ok===true) why=`<span class="ok">✓ 현재 성적으로 수능최저 충족</span>`;
+    else if(ok===null) why=`<span class="need">기준 미공개 — 요강 확인 후 판단</span>`;
+    else if(plan) why=`<span class="need">${plan.steps.map(stepTxt).join(" + ")} 이면 충족</span>`;
+    else why=`<span class="need">현 성적대에서 충족이 어려움</span>`;
+    return {id:"S:"+x.u+x.c, kind:"susi", v, sortKey:V[v].o, name:x.u, sub:x.c,
+      r:x.r, t:x.t, f:x.f, hasMin:x.rule.kind!=="none",
+      mid:`<strong>${x.d}</strong><br>${x.rule.txt}`,
+      why, meta:x.comp, meta2:`${x.when} · ${x.seats}`, note:x.note, line:V[v].o};
+  });
+}
+function rowsJeong(g){
+  const a=avg5(g);
+  return JEONG.map(x=>{
+    const v=verdictJeong(x.line,a), gap=(x.line-a);
+    let why;
+    if(v==="safe"||v==="fit"){
+      why=`<span class="ok">내 평균 <b>${a.toFixed(2)}</b> · 추정 합격선 <b>${x.line.toFixed(1)}</b> (여유 ${gap.toFixed(2)}등급)</span>`;
+    }else{
+      const target=x.line-0.2, p=planForAvg(target,g);
+      why=p.steps.length
+        ? `<span class="need">평균 <b>${a.toFixed(2)}→${target.toFixed(2)}</b> 필요 · ${p.steps.map(stepTxt).join(" + ")}</span>`
+        : `<span class="need">평균 <b>${a.toFixed(2)}→${target.toFixed(2)}</b> 필요 (5과목 전반 상승 필요)</span>`;
+    }
+    const fmap={"인문":["인문"],"사회":["사회"],"상경":["상경"],"미디어":["미디어"],"사범":["사범"]};
+    const fields=Object.keys(fmap).filter(k=>x.f.includes(k)||x.d.includes(k));
+    return {id:"J:"+x.u+x.c, kind:"jeong", v, sortKey:V[v].o, name:x.u, sub:x.c,
+      r:x.r, t:x.t, f:fields.length?fields:["인문"], hasMin:false,
+      mid:`<strong>${x.d}</strong><br>${x.f} 계열`,
+      why, meta:`선 ${x.line.toFixed(1)}`, meta2:x.note==="—"?"":x.note, note:x.note, line:x.line};
+  });
+}
+
+function render(scenChanged){
+  const g=effGrades(), b=baseGrades();
+  SUBJ.forEach(s=>{
+    const el=document.getElementById("gr_"+s.k); if(!el)return;
+    const shown=(["kor","math","eng","tam1","tam2"].includes(s.k))?g[s.k]:b[s.k];
+    el.textContent=shown; el.style.color=(shown!==b[s.k])?"var(--reach)":"var(--ink)";
+  });
+  document.getElementById("roKem").textContent=avg3(g).toFixed(2);
+  document.getElementById("roAll").textContent=avg5(g).toFixed(2);
+  document.getElementById("roSum3").textContent=raws.kor+raws.eng+raws.math;
+  document.getElementById("roSum4").textContent=raws.kor+raws.eng+raws.math+raws.tam1+raws.tam2;
+  document.getElementById("stampAvg").textContent=avg5(g).toFixed(2);
+  const p=minPool(g), sorted=[p.kor,p.math,p.eng,p.tam].sort((a,b)=>a-b);
+  document.getElementById("stampMin").textContent=`1개 ${sorted[0]} · 2개합 ${sorted[0]+sorted[1]}`;
+
+  let list=(tab==="susi")?rowsSusi(g):rowsJeong(g);
+
+  // 시나리오로 새로 열린 항목 표시
+  const openNow=new Set(list.filter(x=>x.v==="safe"||x.v==="fit").map(x=>x.id));
+  if(scenChanged&&prevOpen){openedIds=new Set([...openNow].filter(i=>!prevOpen.has(i)));}
+  else if(!scenChanged){openedIds=new Set();}
+  prevOpen=openNow;
+
+  const fr=document.getElementById("fRegion").value, ff=document.getElementById("fField").value,
+        fv=document.getElementById("fVerdict").value, fm=document.getElementById("fMin").value,
+        ft=document.getElementById("fType").value, fs=document.getElementById("fSort").value;
+  let shown=list.filter(x=>
+    (!fr||x.r===fr)&&(!ff||x.f.includes(ff))&&(!fv||x.v===fv)&&(!ft||x.t===ft)&&
+    (!fm||(fm==="has"?x.hasMin:!x.hasMin)));
+
+  document.getElementById("nSusi").textContent=rowsSusi(g).length;
+  document.getElementById("nJeong").textContent=rowsJeong(g).length;
+
+  const cnt={safe:0,fit:0,reach:0,far:0}; list.forEach(x=>cnt[x.v]++);
+  document.getElementById("tally").innerHTML=
+    ["safe","fit","reach","far"].map(k=>`<i class="t-${k}">${V[k].n}<u>${cnt[k]}</u></i>`).join("");
+
+  if(fs==="line")shown.sort((a,b)=>a.line-b.line||a.name.localeCompare(b.name,"ko"));
+  else if(fs==="name")shown.sort((a,b)=>a.name.localeCompare(b.name,"ko"));
+  else shown.sort((a,b)=>a.sortKey-b.sortKey||a.line-b.line||a.name.localeCompare(b.name,"ko"));
+
+  const box=document.getElementById("results");
+  if(!shown.length){box.innerHTML=`<div class="empty">조건에 맞는 대학이 없습니다. 위 필터를 넓혀 보세요.</div>`;return;}
+
+  let html="";
+  if(fs==="verdict"){
+    ["safe","fit","reach","far"].forEach(k=>{
+      const grp=shown.filter(x=>x.v===k); if(!grp.length)return;
+      const cap={safe:"지금 성적으로 여유 있게 통과하는 구간",
+                 fit:"지금 성적이 합격선 위 — 경쟁률·논술 실력이 변수",
+                 reach:"한 과목만 올리면 열리는 구간 — 남은 기간의 목표",
+                 far:"큰 폭 상승이 전제 — 참고용으로만"}[k];
+      html+=`<div class="group-head"><h3 style="color:var(--${k==="safe"?"safe":k==="fit"?"fit":k==="reach"?"reach":"far"})">${V[k].n}</h3><p>${cap}</p><p style="flex:0" class="num">${grp.length}곳</p></div>`;
+      html+=grp.map(rowHTML).join("");
+    });
+  } else html=shown.map(rowHTML).join("");
+  box.innerHTML=html;
+  box.querySelectorAll(".pickbtn").forEach(btn=>btn.addEventListener("click",()=>togglePick(btn.dataset.id)));
+  renderCart();
+}
+
+function rowHTML(x){
+  const picked=picks[x.kind==="susi"?"susi":"jeong"].some(p=>p.id===x.id);
+  return `<div class="row ${openedIds.has(x.id)?"opened":""}">
+    <div class="stripe s-${x.v}"></div>
+    <div class="r-uni"><h4>${x.name}${openedIds.has(x.id)?'<span class="newtag">새로 열림</span>':""}</h4><p>${x.sub} · ${x.r} · ${x.t}</p></div>
+    <div class="r-mid">${x.mid}</div>
+    <div class="r-why">${x.why}</div>
+    <div class="r-meta"><span class="verdict v-${x.v}">${V[x.v].n}</span><small>${x.meta}</small></div>
+    <button class="pickbtn" data-id="${x.id}" aria-pressed="${picked}" aria-label="${x.name} 후보 담기">${picked?"✓":"＋"}</button>
+  </div>`;
+}
+
+function findRow(id){
+  const g=effGrades();
+  return [...rowsSusi(g),...rowsJeong(g)].find(x=>x.id===id);
+}
+function togglePick(id){
+  const x=findRow(id); if(!x)return;
+  const key=x.kind==="susi"?"susi":"jeong", arr=picks[key];
+  const i=arr.findIndex(p=>p.id===id);
+  if(i>=0)arr.splice(i,1);
+  else{
+    const cap=key==="susi"?6:3;
+    if(arr.length>=cap){alert(key==="susi"?"수시는 6장까지만 지원할 수 있습니다. 하나를 빼고 담으세요.":"정시는 가·나·다군 각 1장, 총 3장까지입니다.");return;}
+    arr.push({id,name:x.name,sub:x.sub,mid:x.mid.replace(/<[^>]+>/g," ").trim(),v:x.v});
+  }
+  render();
+}
+function renderCart(){
+  document.getElementById("cSusi").textContent=picks.susi.length;
+  document.getElementById("cJeong").textContent=picks.jeong.length;
+  const all=[...picks.susi.map(p=>({...p,k:"수시"})),...picks.jeong.map(p=>({...p,k:"정시"}))];
+  const el=document.getElementById("cartList");
+  if(!all.length){el.innerHTML=`<li class="none">아래 목록에서 ＋ 를 눌러 담으세요. 수시는 6장, 정시는 군별 1장씩 3장이 상한입니다.</li>`;return;}
+  el.innerHTML=all.map((p,i)=>`<li>
+    <span class="n">${p.k==="수시"?"수시":"정시"}</span>
+    <span class="verdict v-${p.v}" style="font-size:10px;padding:2px 6px">${V[p.v].n}</span>
+    <span class="nm">${p.name}</span>
+    <span class="dt">${p.sub} · ${p.mid.slice(0,42)}</span>
+    ${p.k==="정시"?`<select data-gun="${p.id}">
+      <option value="">군 미정</option><option ${gunMap[p.id]==="가"?"selected":""}>가</option>
+      <option ${gunMap[p.id]==="나"?"selected":""}>나</option><option ${gunMap[p.id]==="다"?"selected":""}>다</option></select>`:""}
+    <button data-del="${p.id}" aria-label="빼기">×</button></li>`).join("");
+  el.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",()=>togglePick(b.dataset.del)));
+  el.querySelectorAll("[data-gun]").forEach(s=>s.addEventListener("change",()=>{gunMap[s.dataset.gun]=s.value;}));
+}
+
+/* ============ 저장 ============ */
+let store=null;
+const KEY="suneung-board-v1";
+function snapshot(){return{raws,bump,picks,gunMap,memo:document.getElementById("memo").value,updatedAt:Date.now()};}
+function apply(d){
+  if(!d)return;
+  if(d.raws)raws={...DEF,...d.raws};
+  if(d.bump)bump={kor:0,math:0,eng:0,tam1:0,tam2:0,...d.bump};
+  if(d.picks)picks={susi:d.picks.susi||[],jeong:d.picks.jeong||[]};
+  if(d.gunMap)gunMap=d.gunMap;
+  if(typeof d.memo==="string")document.getElementById("memo").value=d.memo;
+  SUBJ.forEach(s=>{const el=document.getElementById("in_"+s.k);if(el)el.value=raws[s.k];});
+  Object.keys(bump).forEach(k=>{const b=document.querySelector(`#scen .chip[data-b="${k}"]`);if(b)b.setAttribute("aria-pressed",bump[k]?"true":"false");});
+}
+async function initStore(){
+  const msg=document.getElementById("saveMsg");
+  try{
+    if(window.claude&&claude.use){
+      const db=await claude.use("db");
+      if(db){
+        store=db;
+        const doc=db.doc("board/state");
+        const cur=await doc.get();
+        if(cur&&cur.data){apply(cur.data);render();}
+        msg.textContent="저장하면 두 분 모두의 기기에서 같은 내용이 보입니다.";
+        return;
+      }
+    }
+  }catch(e){}
+  try{const raw=localStorage.getItem(KEY); if(raw){apply(JSON.parse(raw));render();}}catch(e){}
+  msg.textContent="이 브라우저에 저장됩니다.";
+}
+document.getElementById("saveBtn").addEventListener("click",async()=>{
+  const btn=document.getElementById("saveBtn"), msg=document.getElementById("saveMsg");
+  btn.disabled=true; const data=snapshot();
+  try{
+    if(store){await store.doc("board/state").set(data); msg.textContent="저장했습니다 · "+new Date().toLocaleTimeString("ko-KR");}
+    else{localStorage.setItem(KEY,JSON.stringify(data)); msg.textContent="이 브라우저에 저장했습니다 · "+new Date().toLocaleTimeString("ko-KR");}
+  }catch(e){msg.textContent="저장하지 못했습니다. 다시 눌러 보세요.";}
+  btn.disabled=false;
+});
+
+buildScores(); buildScen(); buildFilters(); buildCutTable(); render(); initStore();
+</script>
