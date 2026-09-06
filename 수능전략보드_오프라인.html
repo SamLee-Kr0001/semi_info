@@ -185,6 +185,13 @@ main{padding:24px 0 70px}
 .btn{background:var(--accent);color:#fff;border:none;border-radius:4px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
 :root[data-theme="dark"] .btn{color:#0E1416}
 .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--rule-2);border-radius:5px;overflow:hidden}
+.seg button{background:var(--surface);border:none;border-right:1px solid var(--rule-2);color:var(--ink-3);
+  padding:6px 11px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.seg button:last-child{border-right:none}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+:root[data-theme="dark"] .seg button[aria-pressed="true"]{color:#0E1416}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{color:#0E1416}}
 .btn:disabled{opacity:.45;cursor:default}
 .cart ol{margin:0;padding:0;list-style:none;display:grid;gap:3px}
 .cart li{display:flex;gap:9px;align-items:center;font-size:12.5px;padding:5px 0;border-bottom:1px dotted var(--rule)}
@@ -388,6 +395,11 @@ details.method[open] summary::before{content:"▾ "}
       <span class="cnt">수시 <b id="cSusi">0</b>/6</span>
       <span class="cnt">정시 <b id="cJeong">0</b>/3</span>
       <span class="grow"></span>
+      <div class="seg" id="segMode" role="group" aria-label="출력 범위">
+        <button data-mode="now" aria-pressed="false">현재 성적</button>
+        <button data-mode="goal" aria-pressed="false">목표 성적</button>
+        <button data-mode="both" aria-pressed="true">비교</button>
+      </div>
       <button class="btn" id="printBtn">출력하기</button>
       <button class="btn ghost" id="dlBtn">HTML로 저장</button>
     </div>
@@ -761,7 +773,9 @@ function rowsSusi(g){
   return SUSI.map(x=>{
     const ok=meets(x.rule,g), plan=ok===true?null:planForRule(x.rule,g), v=verdictSusi(ok,plan);
     let why,whyPlain;
-    if(ok===true){why=`<span class="ok">✓ 현재 성적으로 수능최저 충족</span>`;whyPlain="현재 성적으로 수능최저 충족";}
+    if(ok===true){const p=minPool(g),s=[p.kor,p.math,p.eng,p.tam].sort((a,b)=>a-b);
+      why=`<span class="ok">✓ 현재 성적으로 수능최저 충족</span>`;
+      whyPlain=`수능최저 충족 — 최상위 1개 ${s[0]}등급 · 2개합 ${s[0]+s[1]}`;}
     else if(ok===null){why=`<span class="need">기준 미공개 — 요강 확인 후 판단</span>`;whyPlain="기준 미공개 — 요강 확인 필요";}
     else if(plan){why=`<span class="need">${plan.steps.map(stepTxt).join(" + ")} 이면 충족</span>`;
       whyPlain=plan.steps.map(stepPlain).join(" + ")+" 이면 충족";}
@@ -1182,50 +1196,104 @@ document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeUni();});
 
 /* ============ 출력물 ============ */
-function reportHTML(){
-  const g=effGrades(),b=baseGrades(),rows=allRows();
+function gradesWith(bmp){
+  const b=baseGrades(),o={...b};
+  ["kor","math","eng","tam1","tam2"].forEach(k=>o[k]=Math.max(1,b[k]-(bmp[k]||0)));
+  return o;
+}
+/* 목표안에 쓸 상승폭: 사용자가 시나리오를 켰으면 그것, 아니면 권장 경로(가장 싼 세 과목) */
+function goalBump(){
+  const own=Object.values(bump).some(v=>v>0);
+  return own?{...bump}:{kor:1,math:0,eng:0,tam1:1,tam2:1};
+}
+function bumpTxt(bmp){
+  const n={kor:"국어",math:"수학",eng:"영어",tam1:"생윤",tam2:"사문"};
+  const parts=Object.keys(n).filter(k=>bmp[k]>0).map(k=>`${n[k]} +${bmp[k]}등급`);
+  return parts.length?parts.join(" · "):"상승 없음";
+}
+
+function reportHTML(mode){
+  mode=mode||"both";
+  const b=baseGrades(), gb=goalBump(), gGoal=gradesWith(gb);
+  const rowsNow=[...rowsSusi(b),...rowsJeong(b),...rowsGyo()];
+  const rowsGoal=[...rowsSusi(gGoal),...rowsJeong(gGoal),...rowsGyo()];
+  const rows=rowsNow;
+  const own=Object.values(bump).some(v=>v>0);
   const today=new Date().toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric"});
-  const scoreRows=SUBJ.map(s=>`<tr><td>${s.n}</td><td class="n">${raws[s.k]} / ${s.max}</td>
-    <td class="n">${b[s.k]}등급</td><td class="n">${s.k==="hist"?"—":(g[s.k]!==b[s.k]?g[s.k]+"등급 (가정)":"—")}</td></tr>`).join("");
-  const R=id=>rows.find(r=>r.id===id);
-  const nonsul=picks.susi.map(p=>R(p.id)).filter(x=>x&&x.kind==="susi");
-  const gyoPicks=picks.susi.map(p=>R(p.id)).filter(x=>x&&x.kind==="gyo");
-  const rowNonsul=x=>`<tr><td>${esc(x.name)} ${esc(x.sub)}</td><td>${esc(x.ns)}</td>
+  const scoreRows=SUBJ.map(s=>{
+    const chg=s.k!=="hist"&&gGoal[s.k]!==b[s.k];
+    return `<tr><td>${s.n}</td><td class="n">${raws[s.k]} / ${s.max}</td>
+    <td class="n">${b[s.k]}등급</td>
+    <td class="n">${chg?`<b style="color:#B0740D">${gGoal[s.k]}등급 (${scoreFor(s,gGoal[s.k])}점)</b>`:"—"}</td></tr>`;}).join("");
+
+  const findIn=(set,id)=>set.find(r=>r.id===id);
+  const rowNonsul=(x,g)=>`<tr><td>${esc(x.name)} ${esc(x.sub)}</td><td>${esc(x.ns)}</td>
       <td>${esc(x.ruleTxt)}</td><td class="${x.v==="fit"||x.v==="safe"?"ok":"warn"}">${x.v==="fit"||x.v==="safe"?"충족":"미충족"}</td>
       <td class="n">${esc(x.seats)}</td>
       <td class="n">${esc(x.sched?x.sched.app:"")}</td><td class="n">${esc(x.sched?x.sched.exam:"")}</td>
       <td><span class="v v-${x.v}">${V[x.v].n}</span></td></tr>
-      <tr><td colspan="8" class="sub2">현재 성적 기준: ${esc(x.whyPlain)}</td></tr>`;
+      <tr><td colspan="8" class="sub2">${esc(x.whyPlain)}</td></tr>`;
   const rowGyo=x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.sub)}</td><td>${esc(x.bp.jh)} (${x.bp.type})</td>
       <td class="n">${x.bp.seats}명</td><td class="n">${x.bp.comp.toFixed(2)}:1</td>
       <td class="n">${x.bp.cut.toFixed(2)}</td><td class="n">${naesin.toFixed(2)}</td>
       <td><span class="v v-${x.v}">${V[x.v].n}</span></td></tr>`;
-  const rowJeong=p=>{const x=R(p.id);if(!x)return"";
-    return `<tr><td>${esc(x.name)} ${esc(x.sub)}</td><td class="n">${gunMap[p.id]||"미정"}</td>
+  const rowJeong=(x,g)=>`<tr><td>${esc(x.name)} ${esc(x.sub)}</td><td class="n">${gunMap[x.id]||"미정"}</td>
       <td class="n">${x.line.toFixed(1)}등급</td><td class="n">${avg5(g).toFixed(2)}등급</td>
       <td class="n">${(x.line-avg5(g)).toFixed(2)}</td><td><span class="v v-${x.v}">${V[x.v].n}</span></td></tr>
-      <tr><td colspan="6" class="sub2">현재 성적 기준: ${esc(x.whyPlain)}</td></tr>`;};
+      <tr><td colspan="6" class="sub2">${esc(x.whyPlain)}</td></tr>`;
+
+  function block(set,g,tag){
+    const ns=picks.susi.map(p=>findIn(set,p.id)).filter(x=>x&&x.kind==="susi");
+    const gy=picks.susi.map(p=>findIn(set,p.id)).filter(x=>x&&x.kind==="gyo");
+    const je=picks.jeong.map(p=>findIn(set,p.id)).filter(Boolean);
+    return `
+<h3 class="sub3">수시 · 논술전형 <span>${ns.length}곳</span></h3>
+${ns.length?`<table><tr><th>대학</th><th>논술 종류</th><th>수능최저</th><th>충족</th><th>논술 모집</th><th>원서접수</th><th>논술고사</th><th>판정</th></tr>
+${ns.map(x=>rowNonsul(x,g)).join("")}</table>`:`<p class="muted">선택 없음</p>`}
+<h3 class="sub3">수시 · 학생부교과/종합 <span>${gy.length}곳 · 내신 ${naesin.toFixed(2)}등급 기준</span></h3>
+${gy.length?`<table><tr><th>대학</th><th>모집단위</th><th>전형</th><th>모집인원</th><th>경쟁률</th><th>70%컷</th><th>내 내신</th><th>판정</th></tr>
+${gy.map(rowGyo).join("")}</table>
+<p class="muted" style="font-size:11px">내신은 수능 등급과 무관하므로 두 안에서 판정이 같습니다.</p>`:`<p class="muted">선택 없음</p>`}
+<h3 class="sub3">정시 <span>${je.length}곳 · 국영수탐 평균 ${avg5(g).toFixed(2)}등급</span></h3>
+${je.length?`<table><tr><th>대학</th><th>군</th><th>추정 합격선</th><th>내 평균</th><th>격차</th><th>판정</th></tr>
+${je.map(x=>rowJeong(x,g)).join("")}</table>`:`<p class="muted">선택 없음</p>`}`;
+  }
+
+  // 목표안에서 새로 열리는 곳
+  const opened=rowsGoal.filter(x=>{
+    if(x.kind==="gyo")return false;
+    if(!(x.v==="safe"||x.v==="fit"))return false;
+    const n=findIn(rowsNow,x.id); return n&&(n.v==="reach"||n.v==="far");
+  });
+  const openedRows=opened.map(x=>{
+    const n=findIn(rowsNow,x.id);
+    return `<tr><td>${esc(x.name)} ${esc(x.sub)}</td><td>${x.kind==="susi"?"논술 "+esc(x.ns):"정시"}</td>
+      <td><span class="v v-${n.v}">${V[n.v].n}</span> → <span class="v v-${x.v}">${V[x.v].n}</span></td>
+      <td>${esc(x.whyPlain)}</td></tr>`;}).join("")
+    ||`<tr><td colspan="4" class="muted">이 상승폭으로 새로 열리는 곳이 없습니다. 상승폭을 키워 보세요.</td></tr>`;
+
   const strip=s=>s.replace(/<span class="hot">/g,"<b>").replace(/<\/span>/g,"</b>").replace(/<span class="red">/g,"<b>");
-  const goals=rows.filter(x=>(x.v==="reach"||x.v==="far")&&picks.susi.concat(picks.jeong).some(p=>p.id===x.id))
+  const goals=rowsNow.filter(x=>(x.v==="reach"||x.v==="far")&&picks.susi.concat(picks.jeong).some(p=>p.id===x.id))
     .map(x=>`<tr><td>${esc(x.name)} ${esc(x.sub)}</td><td>${esc(x.whyPlain)}</td></tr>`).join("")
     ||`<tr><td colspan="2" class="muted">최종 후보 중 도전·상향 항목이 없습니다.</td></tr>`;
-  const poolRow=v=>rows.filter(x=>x.v===v&&x.kind!=="gyo").map(x=>
+  const poolRow=v=>rowsNow.filter(x=>x.v===v&&x.kind!=="gyo").map(x=>
     `<tr><td>${esc(x.name)} ${esc(x.sub)}</td><td>${x.kind==="susi"?"논술 "+esc(x.ns):"정시"}</td>
      <td>${esc(x.r)}</td><td>${esc(x.whyPlain)}</td></tr>`).join("");
-  const gyoPool=rows.filter(x=>x.kind==="gyo"&&(x.v==="safe"||x.v==="fit"))
+  const gyoPool=rowsNow.filter(x=>x.kind==="gyo"&&(x.v==="safe"||x.v==="fit"))
     .sort((a,b)=>a.bp.comp-b.bp.comp).slice(0,30)
     .map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.sub)}</td><td>${esc(x.bp.jh)} (${x.bp.type})</td>
       <td class="n">${x.bp.seats}명</td><td class="n">${x.bp.comp.toFixed(2)}:1</td>
       <td class="n">${x.bp.cut.toFixed(2)}</td><td><span class="v v-${x.v}">${V[x.v].n}</span></td></tr>`).join("");
-  const warnList=a=>a.map(s=>`<li>${s.replace(/<b class="hot">/g,"<b>")}</li>`).join("");
   const memo=(document.getElementById("memo").value||"").trim();
-  const susiPicked=picks.susi.map(p=>rows.find(r=>r.id===p.id)).filter(Boolean);
-  const cal=susiPicked.map(x=>`<tr><td><input type="checkbox"></td><td class="n">${esc(x.sched?x.sched.exam:"")}</td>
+  const susiPicked=picks.susi.map(p=>findIn(rowsNow,p.id)).filter(Boolean);
+  const cal=susiPicked.filter(x=>x.kind==="susi").map(x=>`<tr><td><input type="checkbox"></td><td class="n">${esc(x.sched?x.sched.exam:"")}</td>
     <td>${esc(x.name)} ${esc(x.sub)} 논술고사</td><td>${x.sched&&x.sched.examV?"":"날짜 확인 필요"}</td></tr>`).join("");
+  const modeName={now:"현재 성적 확정안",goal:"목표 성적 달성안",both:"현재 성적 · 목표 성적 비교"}[mode];
+  const g=b; // 주의사항·전략 섹션은 현재 성적 기준
 
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>지원 전략 정리표 — ${today}</title><style>
+<title>지원 전략 정리표 (${modeName}) — ${today}</title><style>
 *{box-sizing:border-box}
 body{font-family:"Apple SD Gothic Neo","Malgun Gothic","Nanum Gothic",system-ui,sans-serif;
  color:#1c1e1d;background:#fff;margin:0;padding:30px 26px 60px;line-height:1.62;font-size:13px}
@@ -1239,6 +1307,19 @@ th{background:#efede6;font-weight:600;white-space:nowrap}
 td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
 td.ok{color:#2E7D4F;font-weight:600}
 td.warn{color:#A84134;font-weight:600}
+.part{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;margin:24px 0 10px;padding:11px 15px;border-radius:6px;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid}
+.part span{font-size:20px;font-weight:800;line-height:1;width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:#fff;flex:0 0 30px}
+.part b{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.part em{font-style:normal;font-size:11.5px;flex:1 1 100%;line-height:1.6;margin-top:2px}
+.part u{text-decoration:underline;font-weight:700}
+.part-a{background:#e7eef5;border:2px solid #1F6FB2;color:#14456e}
+.part-a span{background:#1F6FB2}
+.part-b{background:#f7ecd9;border:2px solid #B0740D;color:#6d4708}
+.part-b span{background:#B0740D}
+h3.sub3{font-size:13px;margin:14px 0 3px;font-weight:700}
+h3.sub3 span{font-weight:400;color:#8a8e86;font-size:11.5px}
 .muted{color:#8a8e86}
 td.sub2{background:#faf9f6;color:#5a5f58;font-size:11px;padding-left:12px}
 .v{font-size:11px;font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap}
@@ -1307,32 +1388,35 @@ ul{margin:6px 0 14px;padding-left:20px}li{margin-bottom:7px}
   .slab .big{font-size:21px}.three b{font-size:17px}.manifesto p{font-size:17px}}
 </style></head><body><div class="sheet">
 <h1>지원 전략 정리표</h1>
-<div class="meta">2027학년도 수시·정시 · 인문/사회/상경 계열 · 작성 ${today}
+<div class="meta">${modeName} · 2027학년도 수시·정시 · 인문/사회/상경 계열 · 작성 ${today}
  &nbsp;|&nbsp; 수시 원서접수 2026.9.7~9.11 · 수능 2026.11.19(목)</div>
 
 <h2>1. 성적 기준</h2>
-<table><tr><th>과목</th><th>원점수</th><th>현재 등급</th><th>가정 시나리오</th></tr>${scoreRows}</table>
-<table><tr><th>국영수 평균</th><th>국영수탐 평균</th><th>국영수 총점</th><th>국영수탐 총점</th><th>최저 판정</th></tr>
-<tr><td class="n">${avg3(g).toFixed(2)}등급</td><td class="n">${avg5(g).toFixed(2)}등급</td>
-<td class="n">${raws.kor+raws.eng+raws.math}점</td><td class="n">${raws.kor+raws.eng+raws.math+raws.tam1+raws.tam2}점</td>
-<td class="n">1개 ${[g.kor,g.math,g.eng,Math.min(g.tam1,g.tam2)].sort((a,b)=>a-b)[0]}등급 · 2개합 ${[g.kor,g.math,g.eng,Math.min(g.tam1,g.tam2)].sort((a,b)=>a-b).slice(0,2).reduce((a,b)=>a+b,0)}</td></tr></table>
+<table><tr><th>과목</th><th>원점수</th><th>현재 등급 (A안)</th><th>목표 등급 (B안)</th></tr>${scoreRows}</table>
+<table><tr><th></th><th>국영수 평균</th><th>국영수탐 평균</th><th>최저 판정</th><th>국영수 총점</th><th>국영수탐 총점</th></tr>
+<tr><td><b>A. 현재</b></td><td class="n">${avg3(b).toFixed(2)}등급</td><td class="n">${avg5(b).toFixed(2)}등급</td>
+<td class="n">1개 ${[b.kor,b.math,b.eng,Math.min(b.tam1,b.tam2)].sort((x,y)=>x-y)[0]} · 2개합 ${[b.kor,b.math,b.eng,Math.min(b.tam1,b.tam2)].sort((x,y)=>x-y).slice(0,2).reduce((x,y)=>x+y,0)}</td>
+<td class="n">${raws.kor+raws.eng+raws.math}점</td><td class="n">${raws.kor+raws.eng+raws.math+raws.tam1+raws.tam2}점</td></tr>
+<tr><td><b>B. 목표</b></td><td class="n">${avg3(gGoal).toFixed(2)}등급</td><td class="n">${avg5(gGoal).toFixed(2)}등급</td>
+<td class="n">1개 ${[gGoal.kor,gGoal.math,gGoal.eng,Math.min(gGoal.tam1,gGoal.tam2)].sort((x,y)=>x-y)[0]} · 2개합 ${[gGoal.kor,gGoal.math,gGoal.eng,Math.min(gGoal.tam1,gGoal.tam2)].sort((x,y)=>x-y).slice(0,2).reduce((x,y)=>x+y,0)}</td>
+<td class="n" colspan="2">${bumpTxt(gb)}${own?"":" (권장 경로)"}</td></tr></table>
 
-<h2>2. 최종 선택 — 수시 (${picks.susi.length}/6)</h2>
-<h3 style="font-size:13px;margin:12px 0 2px">논술전형</h3>
-${nonsul.length?`<table><tr><th>대학</th><th>논술 종류</th><th>수능최저</th><th>충족</th><th>논술 모집</th><th>원서접수</th><th>논술고사</th><th>판정</th></tr>
-${nonsul.map(rowNonsul).join("")}</table>`:`<p class="muted">선택 없음</p>`}
-<h3 style="font-size:13px;margin:14px 0 2px">학생부교과 · 학생부종합 <span style="font-weight:400;color:#8a8e86">(내신 ${naesin.toFixed(2)}등급 기준 · 2026학년도 실적)</span></h3>
-${gyoPicks.length?`<table><tr><th>대학</th><th>모집단위</th><th>전형</th><th>모집인원</th><th>경쟁률</th><th>70%컷</th><th>내 내신</th><th>판정</th></tr>
-${gyoPicks.map(rowGyo).join("")}</table>`:`<p class="muted">선택 없음</p>`}
+${mode!=="goal"?`
+<div class="part part-a"><span>A</span><b>현재 성적 확정안</b><em>9월 모의고사 성적이 수능까지 그대로일 때. 지금 이 표만으로 원서를 넣어도 되는지 판단하세요.</em></div>
+${block(rowsNow,b,"A")}
+`:""}
 
-<h2>3. 최종 선택 — 정시 (${picks.jeong.length}/3)</h2>
-${picks.jeong.length?`<table><tr><th>대학</th><th>군</th><th>추정 합격선</th><th>내 평균</th><th>격차</th><th>판정</th></tr>
-${picks.jeong.map(rowJeong).join("")}</table>`:`<p class="muted">아직 선택하지 않았습니다.</p>`}
+${mode!=="now"?`
+<div class="part part-b"><span>B</span><b>목표 성적 달성안</b><em>${esc(bumpTxt(gb))}${own?" — 위 시나리오를 적용했을 때":" — 가장 적은 노력으로 가능한 권장 경로를 적용했을 때"}. 이건 <u>가정</u>입니다. 수능 결과가 이에 못 미치면 A안이 실제 결과입니다.</em></div>
+${block(rowsGoal,gGoal,"B")}
+<h3 class="sub3">B안에서 새로 열리는 곳 <span>${opened.length}곳</span></h3>
+<table><tr><th>대학</th><th>구분</th><th>판정 변화</th><th>근거</th></tr>${openedRows}</table>
+`:""}
 
-<h2>4. 도전 목표 — 무엇을 어디까지 올려야 하나</h2>
+<h2>2. 도전 목표 — 무엇을 어디까지 올려야 하나</h2>
 <table><tr><th>대학</th><th>필요한 상승폭</th></tr>${goals}</table>
 
-<h2>5. 절대 잊지 말 것</h2>
+<h2>3. 절대 잊지 말 것</h2>
 <div class="slab">
   <div class="kick">이 종이에서 세 줄만 기억한다면</div>
   <div class="three">
@@ -1367,7 +1451,7 @@ ${picks.jeong.map(rowJeong).join("")}</table>`:`<p class="muted">아직 선택�
 <li><span class="shout">홍익대(세종) 인문 논술은 기출이 없다</span>2027학년도 신설이고 출제 유형도 공개되지 않았다. 준비 가능한 카드인지부터 판단하라.</li>
 </ol></div>
 
-<h2>6. 남은 ${daysLeft()}일</h2>
+<h2>4. 남은 ${daysLeft()}일</h2>
 <div class="slab">
   <div class="kick">D − ${daysLeft()} · 수능 2026년 11월 19일 목요일 오전 8시 40분</div>
   <p class="big">${daysLeft()}일이 70년을 정한다는 말은<br><em>과장이 아니라 산수입니다.</em></p>
@@ -1430,7 +1514,7 @@ ${picks.jeong.map(rowJeong).join("")}</table>`:`<p class="muted">아직 선택�
 ${daysLeft()}일은 인생을 바꾸기엔 짧지만,<br>등급을 바꾸기엔 <em>충분하고도 남는다.</em></p></div>
 <div class="sign">지금 이 순간에도 누군가는 사회문화 기출을 풀고 있다.</div>
 
-<h2>7. 일정 체크리스트</h2>
+<h2>5. 일정 체크리스트</h2>
 <table><tr><th style="width:34px">☐</th><th style="width:110px">날짜</th><th>할 일</th><th style="width:130px">비고</th></tr>
 <tr><td><input type="checkbox"></td><td class="n">~9.6(일)</td><td>지원 대학·학과 최종 확정, 각 입학처에서 마감 <b>시각</b> 확인</td><td></td></tr>
 <tr><td><input type="checkbox"></td><td class="n">9.7(월)~9.11(금)</td><td>수시 원서접수 (대학마다 시작일·마감시각 다름)</td><td>6회 제한</td></tr>
@@ -1440,7 +1524,7 @@ ${cal}
 <tr><td><input type="checkbox"></td><td class="n">12월 중</td><td>수시 합격자 발표 · 합격 시 정시 지원 불가</td><td>확인 필요</td></tr>
 <tr><td><input type="checkbox"></td><td class="n">12월 말</td><td>정시 원서접수 (가·나·다군 각 1회)</td><td>확인 필요</td></tr></table>
 
-<h2>8. 검토한 후보군 전체</h2>
+<h2>6. 검토한 후보군 전체</h2>
 <h3 style="font-size:13px;margin:14px 0 2px">안정</h3>
 <table><tr><th>대학</th><th>구분</th><th>지역</th><th>근거</th></tr>${poolRow("safe")||'<tr><td colspan="4" class="muted">해당 없음</td></tr>'}</table>
 <h3 style="font-size:13px;margin:14px 0 2px">적정</h3>
@@ -1454,7 +1538,7 @@ ${cal}
 ${gyoPool||'<tr><td colspan="7" class="muted">해당 없음 — 내신 등급을 확인해 주세요.</td></tr>'}</table>
 <p class="muted" style="font-size:11px">전체 목록은 보드의 [수시 — 교과·종합] 탭에서 지역·계열 필터로 보세요.</p>
 
-${memo?`<h2>9. 우리가 정한 것</h2><div class="note">${esc(memo).replace(/\n/g,"<br>")}</div>`:""}
+${memo?`<h2>7. 우리가 정한 것</h2><div class="note">${esc(memo).replace(/\n/g,"<br>")}</div>`:""}
 
 <div class="note"><b>확인하고 쓰세요.</b> 정시 추정 합격선과 학과별 모집인원·경쟁률은 공개 자료를 근거로 한 추정치이며 대학 발표 수치가 아닙니다. 수능최저·논술 종류·원서접수 기간·확인된 논술고사일(을지대 10.16, 상명대 10.30, 서경대 11.1, 삼육대 11.23, 가천대 11.29)은 2027학년도 발표 내용입니다. 그 외 "확인 필요"로 표시된 날짜는 각 대학 입학처 모집요강에서 반드시 대조하세요.<br><br>
 <b>모집인원·경쟁률·내신 70%컷</b>은 대입정보포털 '어디가'의 <b>2026학년도 대학별 공개 입시결과</b>(학생부교과·학생부종합 일반전형, 최종등록자 학생부 환산등급 70%컷)를 그대로 옮긴 실측값입니다. 논술전형과 정시의 경쟁률은 이 자료에 포함되지 않으므로, 같은 대학·학과의 규모와 인기를 가늠하는 참고치로만 쓰세요.</div>
@@ -1462,8 +1546,14 @@ ${memo?`<h2>9. 우리가 정한 것</h2><div class="note">${esc(memo).replace(/\
 </div></body></html>`;
 }
 
+let exportMode="both";
+document.getElementById("segMode").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-mode]"); if(!b)return;
+  exportMode=b.dataset.mode;
+  document.querySelectorAll("#segMode button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+});
 function openReport(){
-  const html=reportHTML();
+  const html=reportHTML(exportMode);
   let w=null;
   try{w=window.open("","_blank");}catch(e){w=null;}
   if(w&&w.document){w.document.open();w.document.write(html);w.document.close();return;}
@@ -1478,7 +1568,9 @@ document.getElementById("ovPrint").addEventListener("click",()=>{
   try{f.contentWindow.focus();f.contentWindow.print();}catch(e){alert("인쇄를 시작하지 못했습니다. HTML로 저장한 뒤 브라우저에서 여세요.");}
 });
 async function download(){
-  const html=reportHTML(), name=`지원전략_${new Date().toISOString().slice(0,10)}.html`;
+  const html=reportHTML(exportMode);
+  const tag={now:"현재성적",goal:"목표성적",both:"비교"}[exportMode];
+  const name=`지원전략_${tag}_${new Date().toISOString().slice(0,10)}.html`;
   let dl=null;
   try{if(window.claude&&claude.use)dl=await claude.use("downloads");}catch(e){}
   if(dl){
