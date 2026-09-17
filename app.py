@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import base64
+import markdown as md
 import requests
 import urllib3
 from urllib.parse import quote, urlparse
@@ -26,7 +27,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ==========================================
 # 0. 페이지 설정
 # ==========================================
-st.set_page_config(layout="wide", page_title="Semi-Insight Hub", page_icon="💠")
+st.set_page_config(layout="wide", page_title="Semi-Insight Terminal", page_icon="🖥️")
 
 DAILY_REPORT = "Daily Report"
 KEYWORD_FILE = 'keywords.json'
@@ -45,46 +46,46 @@ api_key = ""
 if "dark_mode" not in st.session_state:
     st.session_state.dark_mode = False
 
-# ── 테마별 토큰 (hex 고정값, CSS 변수 미사용) ──────────
+# ── 테마별 토큰 (금융/리서치 터미널 팔레트, hex 고정값) ──────────
 def get_theme():
     if st.session_state.dark_mode:
         return {
-            "bg":           "#0F0F11",
-            "surface":      "#1C1C1F",
-            "surface2":     "#232327",
-            "border":       "#2A2A2F",
-            "border2":      "#36363D",
-            "text":         "#FAFAFA",
-            "text2":        "#A1A1AA",
-            "muted":        "#52525B",
-            "accent":       "#3B82F6",
-            "accent_soft":  "#1e2d3d",
-            "badge_bg":     "#064E3B",
-            "badge_fg":     "#6EE7B7",
-            "shadow":       "0 4px 20px rgba(0,0,0,0.4)",
+            "bg":           "#080B0A",
+            "surface":      "#0F1412",
+            "surface2":     "#141A17",
+            "border":       "#1E2723",
+            "border2":      "#2C3833",
+            "text":         "#DCEFE4",
+            "text2":        "#7C9A8B",
+            "muted":        "#4B5F56",
+            "accent":       "#2BE28A",
+            "accent_soft":  "#0B2318",
+            "badge_bg":     "#0B2318",
+            "badge_fg":     "#2BE28A",
+            "shadow":       "none",
         }
     else:
         return {
-            "bg":           "#F7F7F5",
+            "bg":           "#F1F0EA",
             "surface":      "#FFFFFF",
-            "surface2":     "#F9F9F7",
-            "border":       "#E4E4E0",
-            "border2":      "#D0D0CA",
-            "text":         "#18181B",
-            "text2":        "#71717A",
-            "muted":        "#A1A1AA",
-            "accent":       "#2563EB",
-            "accent_soft":  "#EFF6FF",
-            "badge_bg":     "#D1FAE5",
-            "badge_fg":     "#065F46",
-            "shadow":       "0 4px 16px rgba(0,0,0,0.07)",
+            "surface2":     "#F7F6F1",
+            "border":       "#D9D6C9",
+            "border2":      "#C4C0AF",
+            "text":         "#121815",
+            "text2":        "#5B6B62",
+            "muted":        "#8B9089",
+            "accent":       "#0E8F5D",
+            "accent_soft":  "#E6F4EC",
+            "badge_bg":     "#E6F4EC",
+            "badge_fg":     "#0E8F5D",
+            "shadow":       "none",
         }
 
 T = get_theme()
 
 # ── CSS 주입 ─────────────────────────────────────────────────
 # {{ }} 이스케이프 없이 .format()으로 hex 값 주입 → 파싱 오류 원천 차단
-_FONT = '<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">'
+_FONT = '<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">'
 
 _CSS = """
 <style>
@@ -93,50 +94,101 @@ html, body, [class*="css"], .stApp,
 [data-testid="stHeader"],
 [data-testid="stSidebar"],
 .block-container {
-    font-family: 'DM Sans', sans-serif !important;
+    font-family: 'JetBrains Mono', monospace !important;
 }
 .stApp, [data-testid="stAppViewContainer"] { background-color: BG !important; }
-.block-container { background-color: BG !important; padding-top: 28px !important; padding-bottom: 48px !important; }
+.block-container { background-color: BG !important; padding-top: 20px !important; padding-bottom: 48px !important; max-width: 1100px !important; }
 section[data-testid="stSidebar"] > div:first-child { background-color: SURFACE !important; border-right: 1px solid BORDER !important; }
 .stMarkdown, .stMarkdown p, .stMarkdown li, .stRadio label, .stCheckbox label, p, span, div, li { color: TEXT !important; }
-label[data-testid="stWidgetLabel"] { color: TEXT2 !important; font-size: 13px !important; }
+label[data-testid="stWidgetLabel"] { color: TEXT2 !important; font-size: 11px !important; text-transform: uppercase; letter-spacing: 0.06em; }
 div.stButton > button {
-    font-family: 'DM Sans', sans-serif !important; font-size: 13px !important;
-    font-weight: 500 !important; border-radius: 7px !important; padding: 5px 14px !important;
-    border: 1px solid BORDER2 !important; background-color: SURFACE2 !important;
-    color: TEXT !important; transition: all 0.15s ease !important; box-shadow: none !important;
+    font-family: 'JetBrains Mono', monospace !important; font-size: 12px !important;
+    font-weight: 600 !important; letter-spacing: 0.04em; text-transform: uppercase;
+    border-radius: 2px !important; padding: 6px 14px !important;
+    border: 1px solid BORDER2 !important; background-color: transparent !important;
+    color: TEXT2 !important; transition: all 0.12s ease !important; box-shadow: none !important;
 }
 div.stButton > button:hover { border-color: ACCENT !important; color: ACCENT !important; background-color: ACCENT_SOFT !important; }
-div.stButton > button[kind="primary"] { background-color: ACCENT !important; color: #ffffff !important; border-color: ACCENT !important; }
-div.stButton > button[kind="primary"]:hover { opacity: 0.88 !important; }
+div.stButton > button[kind="primary"] { background-color: ACCENT !important; color: BG !important; border-color: ACCENT !important; font-weight: 700 !important; }
+div.stButton > button[kind="primary"]:hover { opacity: 0.85 !important; }
 .stTextInput input, .stTextArea textarea {
-    font-family: 'DM Sans', sans-serif !important; font-size: 13px !important;
-    background-color: SURFACE !important; color: TEXT !important;
-    border: 1px solid BORDER2 !important; border-radius: 7px !important;
+    font-family: 'JetBrains Mono', monospace !important; font-size: 13px !important;
+    background-color: SURFACE2 !important; color: TEXT !important;
+    border: 1px solid BORDER2 !important; border-radius: 2px !important; caret-color: ACCENT;
 }
-.stTextInput input:focus, .stTextArea textarea:focus { border-color: ACCENT !important; }
-[data-testid="stExpander"] { background-color: SURFACE !important; border: 1px solid BORDER !important; border-radius: 9px !important; overflow: hidden; }
-[data-testid="stExpander"] summary { font-size: 13px !important; font-weight: 500 !important; color: TEXT2 !important; background-color: SURFACE !important; }
-[data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"] { background-color: SURFACE !important; border: 1px solid BORDER !important; border-radius: 10px !important; }
-[data-testid="stAlert"] { background-color: SURFACE2 !important; border: 1px solid BORDER !important; border-radius: 8px !important; font-size: 13px !important; color: TEXT !important; }
-::-webkit-scrollbar { width: 5px; }
+.stTextInput input:focus, .stTextArea textarea:focus { border-color: ACCENT !important; box-shadow: 0 0 0 1px ACCENT !important; }
+[data-testid="stExpander"] { background-color: SURFACE !important; border: 1px solid BORDER !important; border-radius: 2px !important; overflow: hidden; }
+[data-testid="stExpander"] summary { font-size: 12px !important; font-weight: 500 !important; color: TEXT2 !important; background-color: SURFACE !important; }
+[data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"] { background-color: SURFACE !important; border: 1px solid BORDER !important; border-radius: 2px !important; }
+[data-testid="stAlert"] { background-color: SURFACE2 !important; border: 1px solid BORDER2 !important; border-left: 3px solid ACCENT !important; border-radius: 2px !important; font-size: 13px !important; color: TEXT !important; }
+[data-testid="stToggle"] label div[data-checked="true"] { background-color: ACCENT !important; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: BORDER2; border-radius: 999px; }
+::-webkit-scrollbar-thumb { background: BORDER2; border-radius: 0; }
+/* ── 로고 / 프롬프트 ─────────────────────────────────── */
 .si-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid BORDER; }
-.si-logo-mark { width: 30px; height: 30px; background: ACCENT; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
-.si-logo-text { font-size: 14px; font-weight: 600; letter-spacing: -0.02em; color: TEXT !important; }
-.si-logo-sub  { font-size: 10px; color: MUTED !important; letter-spacing: 0.06em; text-transform: uppercase; }
-.si-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: BADGE_BG; color: BADGE_FG !important; }
-.si-banner { display: flex; align-items: center; gap: 10px; background: ACCENT_SOFT; border: 1px solid BORDER; border-radius: 8px; padding: 11px 15px; font-size: 13px; color: ACCENT !important; margin-bottom: 20px; font-weight: 500; }
-.si-page-title { font-size: 21px; font-weight: 600; letter-spacing: -0.03em; color: TEXT; margin: 0 0 16px 0; padding-bottom: 16px; border-bottom: 1px solid BORDER; }
-.si-report-card { background: SURFACE; border: 1px solid BORDER; border-radius: 12px; padding: 36px 40px; line-height: 1.85; font-size: 15px; color: TEXT; box-shadow: SHADOW; margin-bottom: 20px; }
-.si-report-card h2 { font-size: 15px; font-weight: 600; color: TEXT; margin: 24px 0 8px; padding-bottom: 8px; border-bottom: 1px solid BORDER; }
-.si-report-card h3 { font-size: 13px; font-weight: 600; color: TEXT2; margin: 16px 0 5px; }
+.si-logo-mark {
+    width: 30px; height: 30px; background: ACCENT; color: BG; border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; flex-shrink: 0;
+}
+.si-logo-text { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; color: TEXT !important; text-transform: uppercase; }
+.si-logo-sub  { font-size: 9px; color: MUTED !important; letter-spacing: 0.1em; text-transform: uppercase; }
+.si-cursor { color: ACCENT; animation: si-blink 1.1s step-start infinite; }
+@keyframes si-blink { 50% { opacity: 0; } }
+/* ── 상태 배지 ───────────────────────────────────────── */
+.si-badge {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px 3px 6px;
+    border-radius: 2px; border: 1px solid BORDER2; background: BADGE_BG; color: BADGE_FG !important;
+}
+.si-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; animation: si-pulse 1.6s ease-in-out infinite; }
+@keyframes si-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+/* ── 시스템 배너 ─────────────────────────────────────── */
+.si-banner {
+    display: flex; align-items: baseline; gap: 10px; background: SURFACE2; border: 1px solid BORDER;
+    border-left: 3px solid ACCENT; border-radius: 2px; padding: 10px 15px; font-size: 12px;
+    color: TEXT2 !important; margin-bottom: 18px;
+}
+.si-banner-tag { color: ACCENT !important; font-weight: 700; letter-spacing: 0.08em; flex-shrink: 0; }
+/* ── 페이지 타이틀 (프롬프트 라인) ───────────────────── */
+.si-page-title {
+    font-size: 18px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase;
+    color: TEXT; margin: 0 0 18px 0; padding-bottom: 14px; border-bottom: 2px solid ACCENT;
+}
+.si-prompt { color: ACCENT !important; margin-right: 8px; }
+/* ── 라벨 / 섹션 태그 ─────────────────────────────────── */
+.si-label {
+    font-size: 11px; font-weight: 700; color: TEXT2 !important; letter-spacing: 0.1em;
+    text-transform: uppercase; padding-left: 10px; border-left: 3px solid ACCENT;
+    margin: 22px 0 12px 0;
+}
+/* ── 리포트 카드 ─────────────────────────────────────── */
+.si-report-card {
+    background: SURFACE; border: 1px solid BORDER; border-radius: 3px;
+    padding: 28px 30px; line-height: 1.8; font-size: 14.5px; font-family: 'IBM Plex Sans', sans-serif;
+    color: TEXT; box-shadow: SHADOW; margin-bottom: 16px;
+}
+.si-report-card h2 {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: ACCENT;
+    letter-spacing: 0.03em; margin: 26px 0 10px; padding: 6px 0 6px 10px; border-left: 3px solid ACCENT;
+    background: ACCENT_SOFT;
+}
+.si-report-card h2:first-child { margin-top: 0; }
+.si-report-card h3 { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: TEXT2; margin: 16px 0 6px; }
 .si-report-card p  { margin: 0 0 12px; }
-.si-report-card a  { color: ACCENT !important; font-weight: 600; text-decoration: underline; }
-.si-archive-ref { display: flex; align-items: flex-start; gap: 7px; padding: 5px 0; border-bottom: 1px solid BORDER; font-size: 13px; color: TEXT2 !important; }
+.si-report-card a  { color: ACCENT !important; font-weight: 700; text-decoration: none; border-bottom: 1px dotted ACCENT; }
+/* ── 아카이브 참고 기사 ───────────────────────────────── */
+.si-archive-ref {
+    display: flex; align-items: baseline; gap: 8px; padding: 6px 0; border-bottom: 1px solid BORDER;
+    font-size: 12.5px; color: TEXT2 !important; font-family: 'JetBrains Mono', monospace;
+}
 .si-archive-ref:hover { color: ACCENT !important; }
+.si-archive-ref:hover .si-ref-title { color: ACCENT !important; }
 .si-archive-ref:last-child { border-bottom: none; }
+.si-ref-chevron { color: ACCENT !important; flex-shrink: 0; }
+.si-ref-source { color: MUTED !important; flex-shrink: 0; }
+.si-ref-title { color: TEXT !important; font-family: 'IBM Plex Sans', sans-serif; }
 a  { text-decoration: none; }
 hr { border-color: BORDER !important; margin: 12px 0 !important; }
 </style>
@@ -144,6 +196,10 @@ hr { border-color: BORDER !important; margin: 12px 0 !important; }
 
 def _inject_css(t):
     css = _CSS
+    # [수정] BADGE_BG/BADGE_FG는 "BG" 치환보다 먼저 처리해야 함 - "BG"를 먼저
+    # 치환하면 "BADGE_BG"의 접미사가 깨져서 뒤의 BADGE_BG 규칙이 매칭되지 않음
+    css = css.replace("BADGE_BG",    t["badge_bg"])
+    css = css.replace("BADGE_FG",    t["badge_fg"])
     css = css.replace("BG",          t["bg"])
     css = css.replace("SURFACE2",    t["surface2"])
     css = css.replace("SURFACE",     t["surface"])
@@ -154,8 +210,6 @@ def _inject_css(t):
     css = css.replace("ACCENT_SOFT", t["accent_soft"])
     css = css.replace("ACCENT",      t["accent"])
     css = css.replace("MUTED",       t["muted"])
-    css = css.replace("BADGE_BG",    t["badge_bg"])
-    css = css.replace("BADGE_FG",    t["badge_fg"])
     css = css.replace("SHADOW",      t["shadow"])
     st.markdown(_FONT + css, unsafe_allow_html=True)
 
@@ -497,10 +551,10 @@ with st.sidebar:
     # 로고
     st.markdown(f"""
     <div class="si-logo">
-        <div class="si-logo-mark">💠</div>
+        <div class="si-logo-mark">$</div>
         <div>
-            <div class="si-logo-text">Semi-Insight Hub</div>
-            <div class="si-logo-sub">Semiconductor Intelligence</div>
+            <div class="si-logo-text">Semi-Insight<span class="si-cursor">_</span></div>
+            <div class="si-logo-sub">Semiconductor Intel Terminal</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -524,13 +578,15 @@ with st.sidebar:
 
     if "GITHUB_TOKEN" in st.secrets:
         st.markdown(
-            "<div style='margin-top:10px'><span class='si-badge'>✓ GitHub Sync On</span></div>",
+            "<div style='margin-top:10px'><span class='si-badge'>"
+            "<span class='si-dot'></span>GitHub Sync</span></div>",
             unsafe_allow_html=True
         )
 
 # ── 메인 콘텐츠 (Daily Report) ──────────────────────────────
 st.markdown(
-    f"<div class='si-page-title'>{DAILY_REPORT}</div>",
+    f"<div class='si-page-title'>"
+    f"<span class='si-prompt'>$</span>DAILY_REPORT<span class='si-cursor'>_</span></div>",
     unsafe_allow_html=True
 )
 
@@ -545,7 +601,8 @@ target_date_str = target_date.strftime('%Y-%m-%d')
 # ── 배너 ───────────────────────────────────────────────
 st.markdown(
     "<div class='si-banner'>"
-    "⏱️ 매일 06:00 KST GitHub Actions가 자동으로 리포트를 생성합니다. "
+    "<span class='si-banner-tag'>[SYSTEM]</span>"
+    "매일 06:00 KST GitHub Actions가 자동으로 리포트를 생성합니다. "
     "아래 버튼으로 수동 생성도 가능합니다."
     "</div>",
     unsafe_allow_html=True
@@ -555,8 +612,8 @@ st.markdown(
 col_date, col_refresh = st.columns([4, 1])
 with col_date:
     st.markdown(
-        f"<div style='font-size:12px; color:{T['muted']}; padding-top:6px;'>"
-        f"Report Date &nbsp;·&nbsp; <b style='color:{T['text2']}'>{target_date}</b></div>",
+        f"<div style='font-size:12px; color:{T['muted']}; padding-top:6px; text-transform:uppercase; letter-spacing:0.05em;'>"
+        f"DATE &nbsp;·&nbsp; <b style='color:{T['accent']}'>{target_date}</b></div>",
         unsafe_allow_html=True
     )
 with col_refresh:
@@ -616,10 +673,11 @@ else:
     # 자동 또는 수동으로 생성된 리포트 존재
     auto_tag = ""
     if today_report.get("auto_generated"):
-        auto_tag = " &nbsp;<span style='font-size:10px;background:#D1FAE5;color:#065F46;padding:2px 7px;border-radius:999px;font-weight:600;'>AUTO</span>"
+        auto_tag = f" &nbsp;<span class='si-badge'>AUTO</span>"
     st.markdown(
         f"<div style='display:flex;align-items:center;gap:12px;margin-bottom:12px;'>"
-        f"<span style='color:#16a34a;font-size:13px;font-weight:600;'>✅ 리포트 생성 완료</span>"
+        f"<span style='color:{T['accent']};font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;'>"
+        f"● 리포트 생성 완료</span>"
         f"{auto_tag}</div>",
         unsafe_allow_html=True
     )
@@ -643,36 +701,31 @@ else:
 
 # ── 아카이브 ───────────────────────────────────────────
 if history:
-    st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
-    st.markdown(
-        f"<div style='font-size:14px; font-weight:600; color:{T['text2']}; "
-        f"margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid {T['border']};'>"
-        "🗂️ 리포트 아카이브</div>",
-        unsafe_allow_html=True
-    )
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='si-label'>REPORT_ARCHIVE</div>", unsafe_allow_html=True)
     for entry in history:
         is_today = (entry['date'] == target_date_str)
         with st.expander(
-            f"{'🔥 ' if is_today else ''}{entry['date']} Daily Report",
+            f"{'● ' if is_today else '  '}{entry['date']} · DAILY_REPORT",
             expanded=is_today
         ):
+            # [수정] "##" 등 마크다운을 Streamlit 렌더러에 맡기면 div로 감싼 raw HTML
+            # 블록 처리 방식과 충돌해 헤더가 스타일 없이 그대로 텍스트로 노출됨.
+            # Python에서 먼저 완전한 HTML로 변환한 뒤 삽입한다.
+            report_html = md.markdown(entry['report'])
             st.markdown(
-                f"<div class='si-report-card'>{entry['report']}</div>",
+                f"<div class='si-report-card'>{report_html}</div>",
                 unsafe_allow_html=True
             )
-            st.markdown(
-                f"<div style='font-size:12px; font-weight:600; color:{T['muted']}; "
-                f"letter-spacing:0.05em; text-transform:uppercase; margin:16px 0 8px;'>"
-                "참고 기사</div>",
-                unsafe_allow_html=True
-            )
+            st.markdown("<div class='si-label' style='margin-top:18px;'>REFERENCES</div>", unsafe_allow_html=True)
             for item in entry.get('articles', []):
                 safe_link = sanitize_url(item.get('Link', '#'))
                 clean_title = re.sub(r'<[^>]+>', '', item.get('Title', ''))
-                accent = T['accent']
+                source = re.sub(r'<[^>]+>', '', item.get('Source', ''))
                 st.markdown(
                     f"<a href='{safe_link}' target='_blank' class='si-archive-ref'>"
-                    f"<span style='color:{accent};flex-shrink:0'>↗</span>"
-                    f"<span>{clean_title}</span></a>",
+                    f"<span class='si-ref-chevron'>&gt;</span>"
+                    f"<span class='si-ref-source'>[{source}]</span>"
+                    f"<span class='si-ref-title'>{clean_title}</span></a>",
                     unsafe_allow_html=True
                 )
