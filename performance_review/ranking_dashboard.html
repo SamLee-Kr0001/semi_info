@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>구성원 고과 순위 대시보드</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --surface-2:      #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-perf:    #2a78d6;  /* 성과 */
+    --series-cap:     #eb6834;  /* 역량 */
+    --series-peer:    #1baf7a;  /* 동료평가 */
+    --seq-100:        #cde2fb;
+    --seq-700:        #0d366b;
+    --good:           #0ca30c;
+    --chip-bg:        #f0efec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --surface-2:      #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-perf:    #3987e5;
+      --series-cap:     #d95926;
+      --series-peer:    #199e70;
+      --seq-100:        #184f95;
+      --seq-700:        #cde2fb;
+      --good:           #0ca30c;
+      --chip-bg:        #2c2c2a;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --surface-2:      #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-perf:    #3987e5;
+    --series-cap:     #d95926;
+    --series-peer:    #199e70;
+    --seq-100:        #184f95;
+    --seq-700:        #cde2fb;
+    --good:           #0ca30c;
+    --chip-bg:        #2c2c2a;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+    background: var(--surface-2);
+    color: var(--text-primary);
+    padding: 16px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 4px 0 2px; }
+  .subtitle { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 12px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  button {
+    font-family: inherit;
+    font-size: 13px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--chip-bg);
+    color: var(--text-primary);
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  button.primary { background: var(--series-perf); color: #fff; border-color: transparent; }
+  button:hover { filter: brightness(1.05); }
+  textarea {
+    width: 100%;
+    min-height: 90px;
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    resize: vertical;
+  }
+  input[type="file"] { font-size: 13px; color: var(--text-secondary); }
+  .hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.6; }
+  .status { font-size: 12px; margin-top: 8px; min-height: 16px; }
+  .status.ok { color: var(--good); }
+  .status.err { color: var(--series-cap); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--gridline); }
+  th {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em;
+    color: var(--text-muted); font-weight: 600; cursor: pointer; user-select: none;
+  }
+  th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr:hover { background: var(--surface-2); }
+  .rank-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 999px;
+    background: var(--chip-bg); color: var(--text-primary);
+    font-weight: 700; font-size: 12px;
+  }
+  .rank-badge.top { background: var(--series-perf); color: #fff; }
+
+  .bar-track {
+    position: relative; height: 10px; border-radius: 999px;
+    background: var(--gridline); overflow: hidden; min-width: 90px;
+  }
+  .bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; font-size: 12px; color: var(--text-secondary); }
+  .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+
+  .bars { display: flex; flex-direction: column; gap: 14px; }
+  .bar-row { display: grid; grid-template-columns: 110px 1fr 60px; align-items: center; gap: 10px; }
+  .bar-row .name { font-size: 13px; }
+  .bar-row .name .part { display: block; font-size: 11px; color: var(--text-muted); }
+  .stack { display: flex; height: 18px; border-radius: 5px; overflow: hidden; background: var(--gridline); }
+  .stack > div { height: 100%; }
+  .stack .gap { width: 2px; background: var(--surface-1); flex: 0 0 2px; }
+  .score-val { text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 20;
+    background: var(--text-primary); color: var(--surface-1);
+    font-size: 12px; padding: 6px 10px; border-radius: 6px;
+    transform: translate(-50%, -120%); white-space: nowrap;
+    opacity: 0; transition: opacity 0.1s;
+  }
+  .tooltip.show { opacity: 1; }
+  .empty-state { color: var(--text-muted); font-size: 13px; padding: 20px 4px; text-align: center; }
+
+  @media (max-width: 560px) {
+    .bar-row { grid-template-columns: 84px 1fr 50px; }
+    th, td { padding: 6px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>구성원 고과 순위 대시보드</h1>
+  <div class="subtitle">완전 오프라인 · 외부 네트워크 연결 없이 이 파일 하나로 동작합니다. &quot;성과_고과_시스템.xlsx&quot;의 &apos;계산_순위표&apos; 시트를 CSV로 저장하거나 표를 복사해 아래에 붙여넣으세요.</div>
+
+  <div class="card">
+    <h2>1. 데이터 불러오기</h2>
+    <div class="row">
+      <input type="file" id="fileInput" accept=".csv,text/csv,text/plain">
+      <button class="primary" id="sampleBtn" type="button">예시 데이터로 미리보기</button>
+      <button id="clearBtn" type="button">초기화</button>
+    </div>
+    <div class="hint">또는 Excel에서 &apos;계산_순위표&apos; 표 범위를 복사(Ctrl+C)한 뒤 아래에 붙여넣고 &quot;붙여넣은 데이터 적용&quot;을 누르세요.</div>
+    <textarea id="pasteArea" placeholder="이름,파트,성과환산점수(100),역량환산점수(100),동료환산점수(100),최종점수,순위&#10;홍길동,개발파트,...&#10;(Excel에서 표를 복사해 그대로 붙여넣으면 됩니다)"></textarea>
+    <div class="row" style="margin-top:8px;">
+      <button id="applyPasteBtn" type="button">붙여넣은 데이터 적용</button>
+    </div>
+    <div class="status" id="statusMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>2. 순위표</h2>
+    <div id="tableWrap"><div class="empty-state">아직 불러온 데이터가 없습니다. 위에서 CSV 파일을 선택하거나 예시 데이터를 눌러보세요.</div></div>
+  </div>
+
+  <div class="card">
+    <h2>3. 최종점수 비교</h2>
+    <div id="rankChart"><div class="empty-state">데이터를 불러오면 그래프가 표시됩니다.</div></div>
+  </div>
+
+  <div class="card">
+    <h2>4. 성과 · 역량 · 동료평가 기여도 breakdown</h2>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--series-perf)"></span>성과(60%)</span>
+      <span><span class="dot" style="background:var(--series-cap)"></span>역량(20%)</span>
+      <span><span class="dot" style="background:var(--series-peer)"></span>동료평가(20%)</span>
+    </div>
+    <div id="breakdownChart"><div class="empty-state">데이터를 불러오면 그래프가 표시됩니다.</div></div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var state = { rows: [] };
+  var $ = function (id) { return document.getElementById(id); };
+  var tooltip = $("tooltip");
+
+  var SAMPLE_CSV = [
+    "이름,파트,기여도,성과도,팀장_성과정성,성과환산점수(100),SKHU학점,mySuni학점,AI자가점수,팀장_역량정성,역량환산점수(100),추천받은횟수,동료환산점수(100),최종점수,순위",
+    "김영희,개발파트,9,9,5,94.0,8,6,7,4,73.0,1,25.0,76.0,1",
+    "홍길동,개발파트,8,7,4,77.0,6,4,8,4,68.0,3,75.0,74.8,2",
+    "박민수,기획파트,6,7,4,71.0,5,5,9,5,77.0,1,25.0,63.0,3",
+    "이철수,기획파트,7,6,3,63.0,4,2,6,3,48.0,3,75.0,62.4,4"
+  ].join("\n");
+
+  function setStatus(msg, ok) {
+    var el = $("statusMsg");
+    el.textContent = msg;
+    el.className = "status" + (ok === true ? " ok" : ok === false ? " err" : "");
+  }
+
+  // ---------- CSV parsing (RFC4180-ish) ----------
+  function parseCSV(text) {
+    text = text.replace(/^﻿/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    var rows = [];
+    var row = [];
+    var field = "";
+    var inQuotes = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; }
+          else { inQuotes = false; }
+        } else { field += c; }
+      } else {
+        if (c === '"') { inQuotes = true; }
+        else if (c === ",") { row.push(field); field = ""; }
+        else if (c === "\t") { row.push(field); field = ""; }
+        else if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
+        else { field += c; }
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (v) { return String(v).trim() !== ""; }); });
+  }
+
+  function findCol(headers, matcher) {
+    for (var i = 0; i < headers.length; i++) {
+      if (matcher(headers[i])) return i;
+    }
+    return -1;
+  }
+
+  function toNumber(v) {
+    if (v == null) return NaN;
+    var n = parseFloat(String(v).replace(/,/g, "").trim());
+    return n;
+  }
+
+  function rowsFromCSV(text) {
+    var table = parseCSV(text);
+    if (table.length < 2) throw new Error("표 형식을 인식할 수 없습니다. 헤더 행과 데이터 행이 필요합니다.");
+    var headers = table[0].map(function (h) { return String(h).trim(); });
+
+    var iName = findCol(headers, function (h) { return h.indexOf("이름") !== -1; });
+    var iPart = findCol(headers, function (h) { return h.indexOf("파트") !== -1; });
+    var iPerf = findCol(headers, function (h) { return h.indexOf("성과환산") !== -1; });
+    var iCap  = findCol(headers, function (h) { return h.indexOf("역량환산") !== -1; });
+    var iPeer = findCol(headers, function (h) { return h.indexOf("동료환산") !== -1; });
+    var iFinal = findCol(headers, function (h) { return h === "최종점수" || h.indexOf("최종점수") !== -1; });
+    var iRank = findCol(headers, function (h) { return h === "순위"; });
+
+    if (iName === -1 || iFinal === -1) {
+      throw new Error("필수 컬럼(이름, 최종점수)을 찾을 수 없습니다. '계산_순위표' 시트의 헤더 행을 포함해 붙여넣었는지 확인하세요.");
+    }
+
+    var out = [];
+    for (var r = 1; r < table.length; r++) {
+      var row = table[r];
+      var name = (row[iName] || "").trim();
+      if (!name || name === "이름") continue;
+      var finalScore = toNumber(row[iFinal]);
+      if (isNaN(finalScore)) continue;
+      out.push({
+        name: name,
+        part: iPart !== -1 ? (row[iPart] || "").trim() : "",
+        perf: iPerf !== -1 ? toNumber(row[iPerf]) : null,
+        cap: iCap !== -1 ? toNumber(row[iCap]) : null,
+        peer: iPeer !== -1 ? toNumber(row[iPeer]) : null,
+        final: finalScore,
+        rank: iRank !== -1 ? toNumber(row[iRank]) : null
+      });
+    }
+    if (!out.length) throw new Error("불러올 수 있는 데이터 행이 없습니다.");
+
+    out.sort(function (a, b) { return b.final - a.final; });
+    out.forEach(function (d, idx) { if (d.rank == null || isNaN(d.rank)) d.rank = idx + 1; });
+    out.sort(function (a, b) { return a.rank - b.rank; });
+    return out;
+  }
+
+  // ---------- rendering ----------
+  function escapeHTML(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function fmt(n, digits) {
+    if (n == null || isNaN(n)) return "-";
+    return n.toFixed(digits == null ? 1 : digits);
+  }
+
+  function showTooltip(e, text) {
+    tooltip.textContent = text;
+    tooltip.style.left = e.clientX + "px";
+    tooltip.style.top = e.clientY + "px";
+    tooltip.classList.add("show");
+  }
+  function hideTooltip() { tooltip.classList.remove("show"); }
+
+  function renderTable(rows) {
+    var maxFinal = Math.max.apply(null, rows.map(function (r) { return r.final; }));
+    var html = '<table><thead><tr>' +
+      '<th style="width:34px;">순위</th><th>이름</th><th>파트</th>' +
+      '<th class="num">성과</th><th class="num">역량</th><th class="num">동료</th>' +
+      '<th class="num">최종점수</th><th style="width:120px;">분포</th>' +
+      '</tr></thead><tbody>';
+    rows.forEach(function (r) {
+      var pct = maxFinal > 0 ? (r.final / maxFinal * 100) : 0;
+      html += '<tr>' +
+        '<td><span class="rank-badge' + (r.rank === 1 ? ' top' : '') + '">' + escapeHTML(r.rank) + '</span></td>' +
+        '<td>' + escapeHTML(r.name) + '</td>' +
+        '<td>' + escapeHTML(r.part) + '</td>' +
+        '<td class="num">' + fmt(r.perf) + '</td>' +
+        '<td class="num">' + fmt(r.cap) + '</td>' +
+        '<td class="num">' + fmt(r.peer) + '</td>' +
+        '<td class="num">' + fmt(r.final) + '</td>' +
+        '<td><div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:var(--series-perf);"></div></div></td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    $("tableWrap").innerHTML = html;
+  }
+
+  function renderRankChart(rows) {
+    var maxFinal = Math.max.apply(null, rows.map(function (r) { return r.final; })) || 1;
+    var color = "var(--series-perf)";
+    var html = '<div class="bars">';
+    rows.forEach(function (r) {
+      var pct = (r.final / maxFinal * 100).toFixed(1);
+      html += '<div class="bar-row">' +
+        '<div class="name">' + escapeHTML(r.name) + '<span class="part">' + escapeHTML(r.part) + '</span></div>' +
+        '<div class="bar-track" style="height:16px;" data-tip="' + escapeHTML(r.name) + ' · 최종점수 ' + fmt(r.final) + '점 · ' + r.rank + '위">' +
+          '<div class="bar-fill" style="width:' + pct + '%;background:' + color + ';height:16px;"></div>' +
+        '</div>' +
+        '<div class="score-val">' + fmt(r.final) + '</div>' +
+        '</div>';
+    });
+    html += '</div>';
+    $("rankChart").innerHTML = html;
+    attachBarTooltips("#rankChart .bar-track");
+  }
+
+  function renderBreakdownChart(rows) {
+    // weighted contribution to final score: perf*0.6, cap*0.2, peer*0.2 (matches workbook default weights)
+    var html = '<div class="bars">';
+    rows.forEach(function (r) {
+      var perfC = (r.perf == null ? 0 : r.perf) * 0.6;
+      var capC = (r.cap == null ? 0 : r.cap) * 0.2;
+      var peerC = (r.peer == null ? 0 : r.peer) * 0.2;
+      var total = perfC + capC + peerC || 1;
+      var wPerf = (perfC / total * 100).toFixed(2);
+      var wCap = (capC / total * 100).toFixed(2);
+      var wPeer = (peerC / total * 100).toFixed(2);
+      html += '<div class="bar-row">' +
+        '<div class="name">' + escapeHTML(r.name) + '<span class="part">' + escapeHTML(r.part) + '</span></div>' +
+        '<div class="stack">' +
+          '<div style="width:' + wPerf + '%;background:var(--series-perf);" data-tip="성과 기여분 ' + fmt(perfC) + '점"></div>' +
+          '<div class="gap"></div>' +
+          '<div style="width:' + wCap + '%;background:var(--series-cap);" data-tip="역량 기여분 ' + fmt(capC) + '점"></div>' +
+          '<div class="gap"></div>' +
+          '<div style="width:' + wPeer + '%;background:var(--series-peer);" data-tip="동료평가 기여분 ' + fmt(peerC) + '점"></div>' +
+        '</div>' +
+        '<div class="score-val">' + fmt(perfC + capC + peerC) + '</div>' +
+        '</div>';
+    });
+    html += '</div>';
+    $("breakdownChart").innerHTML = html;
+    attachBarTooltips("#breakdownChart .stack > div[data-tip]");
+    attachBarTooltips("#breakdownChart .bar-row .bar-track");
+  }
+
+  function attachBarTooltips(selector) {
+    document.querySelectorAll(selector).forEach(function (el) {
+      el.addEventListener("mousemove", function (e) {
+        var tip = el.getAttribute("data-tip");
+        if (tip) showTooltip(e, tip);
+      });
+      el.addEventListener("mouseleave", hideTooltip);
+    });
+  }
+
+  function renderAll(rows) {
+    state.rows = rows;
+    renderTable(rows);
+    renderRankChart(rows);
+    renderBreakdownChart(rows);
+  }
+
+  // ---------- sortable table header ----------
+  document.addEventListener("click", function (e) {
+    var th = e.target.closest && e.target.closest("#tableWrap th");
+    // header sorting omitted for simplicity/robustness of vanilla build
+  });
+
+  // ---------- data loading ----------
+  function loadFromText(text, sourceLabel) {
+    try {
+      var rows = rowsFromCSV(text);
+      renderAll(rows);
+      setStatus((sourceLabel || "데이터") + "를 불러왔습니다 (" + rows.length + "명).", true);
+    } catch (err) {
+      setStatus("오류: " + err.message, false);
+    }
+  }
+
+  function decodeArrayBuffer(buf) {
+    var utf8 = new TextDecoder("utf-8").decode(buf);
+    if (utf8.indexOf("�") === -1) return utf8;
+    try {
+      return new TextDecoder("euc-kr").decode(buf);
+    } catch (e) {
+      return utf8;
+    }
+  }
+
+  $("fileInput").addEventListener("change", function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var text = decodeArrayBuffer(new Uint8Array(reader.result));
+      loadFromText(text, "'" + file.name + "'");
+    };
+    reader.onerror = function () { setStatus("파일을 읽는 중 오류가 발생했습니다.", false); };
+    reader.readAsArrayBuffer(file);
+  });
+
+  $("applyPasteBtn").addEventListener("click", function () {
+    var text = $("pasteArea").value;
+    if (!text.trim()) { setStatus("붙여넣은 데이터가 없습니다.", false); return; }
+    loadFromText(text, "붙여넣은 데이터");
+  });
+
+  $("sampleBtn").addEventListener("click", function () {
+    $("pasteArea").value = SAMPLE_CSV;
+    loadFromText(SAMPLE_CSV, "예시 데이터");
+  });
+
+  $("clearBtn").addEventListener("click", function () {
+    state.rows = [];
+    $("pasteArea").value = "";
+    $("fileInput").value = "";
+    $("tableWrap").innerHTML = '<div class="empty-state">아직 불러온 데이터가 없습니다. 위에서 CSV 파일을 선택하거나 예시 데이터를 눌러보세요.</div>';
+    $("rankChart").innerHTML = '<div class="empty-state">데이터를 불러오면 그래프가 표시됩니다.</div>';
+    $("breakdownChart").innerHTML = '<div class="empty-state">데이터를 불러오면 그래프가 표시됩니다.</div>';
+    setStatus("");
+  });
+})();
+</script>
+</body>
+</html>
