@@ -96,6 +96,13 @@ html, body, [class*="css"], .stApp,
 .block-container {
     font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
 }
+/* [수정] 위 전역 규칙이 Streamlit 내장 아이콘(Material Symbols 리거처 폰트)의
+   font-family까지 덮어써서 "expand_more"/"keyboard_arrow_down" 같은 리터럴
+   텍스트가 아이콘 대신 노출되고 라벨과 겹치는 문제 → 아이콘 요소만 원래 폰트로 복원 */
+[data-testid="stIconMaterial"] {
+    font-family: 'Material Symbols Rounded' !important;
+    font-size: 18px !important;
+}
 .stApp, [data-testid="stAppViewContainer"] { background-color: BG !important; }
 .block-container { background-color: BG !important; padding-top: 24px !important; padding-bottom: 64px !important; max-width: 900px !important; }
 [data-testid="stHeader"] { background-color: transparent !important; }
@@ -124,7 +131,7 @@ button[data-testid="stPopoverButton"] {
     border-radius: 999px !important; padding: 9px 20px !important;
     border: 1px solid BORDER2 !important; background-color: SURFACE !important;
     color: TEXT !important; transition: transform 0.15s ease, background-color 0.15s ease !important;
-    box-shadow: none !important;
+    box-shadow: none !important; white-space: nowrap !important;
 }
 button[data-testid="stPopoverButton"]:hover { background-color: SURFACE2 !important; border-color: ACCENT !important; }
 button[data-testid="stPopoverButton"]:active { transform: scale(0.97) !important; }
@@ -189,7 +196,11 @@ button[data-testid="stPopoverButton"]:active { transform: scale(0.97) !important
 .si-hero-meta b { color: ACCENT !important; font-weight: 600; }
 /* ── 섹션 라벨 ───────────────────────────────────────── */
 .si-label { font-size: 13px; font-weight: 600; color: TEXT !important; letter-spacing: -0.01em; margin: 32px 0 14px 2px; }
-/* ── 리포트 카드 ─────────────────────────────────────── */
+.si-month-label {
+    font-size: 12px; font-weight: 700; color: MUTED !important; letter-spacing: 0.06em;
+    text-transform: uppercase; margin: 26px 2px 10px;
+}
+/* ── 리포트 카드 (구조 파싱 실패 시 폴백) ──────────────── */
 .si-report-card {
     line-height: 1.75; font-size: 16px; font-family: 'Inter', sans-serif;
     color: TEXT; padding: 4px 2px 8px;
@@ -206,6 +217,31 @@ button[data-testid="stPopoverButton"]:active { transform: scale(0.97) !important
     transition: opacity 0.15s ease;
 }
 .si-report-card a:hover { text-decoration: underline; opacity: 0.85; }
+/* ── 리포트 4단 섹션 카드 ──────────────────────────────── */
+.si-section { margin-bottom: 14px; }
+.si-section:last-child { margin-bottom: 0; }
+.si-section-head {
+    display: flex; align-items: center; gap: 12px; padding: 16px 2px 12px;
+    border-bottom: 1px solid BORDER2;
+}
+.si-section-num {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+    background: ACCENT_SOFT; color: ACCENT !important; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+}
+.si-section-title { font-size: 17px; font-weight: 600; color: TEXT !important; letter-spacing: -0.015em; }
+.si-section-body {
+    line-height: 1.75; font-size: 15.5px; font-family: 'Inter', sans-serif;
+    color: TEXT2; padding: 16px 2px 4px 38px;
+}
+.si-section-body h3 { font-size: 15.5px; font-weight: 600; color: TEXT !important; margin: 16px 0 6px; }
+.si-section-body h3:first-child { margin-top: 0; }
+.si-section-body p { margin: 0 0 14px; color: TEXT2; }
+.si-section-body a {
+    color: ACCENT !important; font-weight: 600; text-decoration: none;
+    transition: opacity 0.15s ease;
+}
+.si-section-body a:hover { text-decoration: underline; opacity: 0.85; }
 /* ── 참고 기사 리스트 ────────────────────────────────── */
 .si-archive-ref {
     display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin: 0 -12px;
@@ -452,6 +488,23 @@ def sanitize_url(url_str):
         pass
     return "#"
 
+def split_report_sections(report_html):
+    """[추가] 리포트 HTML을 h2(##) 기준 4단으로 분리 → 단별 카드 렌더링에 사용.
+    h2가 하나도 없으면 빈 리스트를 반환해 호출부가 폴백 렌더링으로 전환하게 한다."""
+    soup = BeautifulSoup(report_html, 'html.parser')
+    sections = []
+    current = None
+    for el in list(soup.contents):
+        if getattr(el, 'name', None) == 'h2':
+            if current is not None:
+                sections.append(current)
+            current = {'title': el.decode_contents(), 'body': []}
+        elif current is not None:
+            current['body'].append(str(el))
+    if current is not None:
+        sections.append(current)
+    return sections
+
 def inject_links_to_report(report_text, news_data):
     def replace_match(match):
         try:
@@ -581,7 +634,7 @@ if not hasattr(st, "popover"):
     st.popover = st.expander
 
 # ── 상단 바: 로고 + 다크모드 + API Key 팝오버 + GitHub 상태 ──
-top_l, top_r1, top_r2, top_r3 = st.columns([5, 1, 1.4, 1.6])
+top_l, top_r1, top_r2, top_r3 = st.columns([4.4, 1, 1.9, 1.6])
 with top_l:
     st.markdown(
         "<div class='si-topbar'><div class='si-brand'>"
@@ -701,10 +754,17 @@ else:
                 status_box.update(label="⚠️ 실패", state="error")
                 st.error(result)
 
-# ── 아카이브 ───────────────────────────────────────────
+# ── 아카이브 (월별 그룹핑) ───────────────────────────────
 if history:
     st.markdown("<div class='si-label'>지난 리포트</div>", unsafe_allow_html=True)
+    current_month = None
     for entry in history:
+        entry_month = entry['date'][:7]  # "YYYY-MM"
+        if entry_month != current_month:
+            current_month = entry_month
+            y, m = entry_month.split('-')
+            st.markdown(f"<div class='si-month-label'>{y}년 {int(m)}월</div>", unsafe_allow_html=True)
+
         is_today = (entry['date'] == target_date_str)
         badge = " 🟢 오늘" if is_today else ""
         with st.expander(f"{entry['date']}{badge}", expanded=is_today):
@@ -712,10 +772,25 @@ if history:
             # 블록 처리 방식과 충돌해 헤더가 스타일 없이 그대로 텍스트로 노출됨.
             # Python에서 먼저 완전한 HTML로 변환한 뒤 삽입한다.
             report_html = md.markdown(entry['report'])
-            st.markdown(
-                f"<div class='si-report-card'>{report_html}</div>",
-                unsafe_allow_html=True
-            )
+            sections = split_report_sections(report_html)
+            if sections:
+                for i, sec in enumerate(sections, start=1):
+                    body_html = ''.join(sec['body']).strip()
+                    st.markdown(
+                        f"<div class='si-section'>"
+                        f"<div class='si-section-head'>"
+                        f"<span class='si-section-num'>{i:02d}</span>"
+                        f"<span class='si-section-title'>{sec['title']}</span>"
+                        f"</div>"
+                        f"<div class='si-section-body'>{body_html}</div>"
+                        f"</div>",
+                        unsafe_allow_html=True
+                    )
+            else:
+                st.markdown(
+                    f"<div class='si-report-card'>{report_html}</div>",
+                    unsafe_allow_html=True
+                )
             st.markdown("<div class='si-label' style='font-size:12px; margin-top:8px;'>참고 기사</div>", unsafe_allow_html=True)
             for item in entry.get('articles', []):
                 safe_link = sanitize_url(item.get('Link', '#'))
