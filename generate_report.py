@@ -5,12 +5,12 @@ GitHub Actions에서 매일 06:00 KST (21:00 UTC)에 실행되는 독립 스크�
 Streamlit / session_state 완전 미사용.
 
 필요한 GitHub Secrets:
-  GEMINI_API_KEY  - Gemini API 키
+  NVIDIA_API_KEY  - NVIDIA NIM API 키
   GITHUB_TOKEN    - (Actions에서 자동 제공) repo read/write 권한
   REPO_NAME       - "username/repo-name" 형태의 저장소 이름
 
 실행 방법 (로컬 테스트):
-  GEMINI_API_KEY=... GITHUB_TOKEN=... REPO_NAME=user/repo python generate_report.py
+  NVIDIA_API_KEY=... GITHUB_TOKEN=... REPO_NAME=user/repo python generate_report.py
 """
 
 import base64
@@ -51,13 +51,13 @@ NEWS_DAYS     = 2           # 수집 기간 (일)
 NEWS_WINDOW_H = 18          # 수집 시간 윈도우 (시간): 전날 12:00 ~ 당일 06:00
 
 # ── 환경변수 로드 ────────────────────────────────────────────
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "")
 GITHUB_TOKEN   = os.environ.get("GITHUB_TOKEN", "")
 REPO_NAME      = os.environ.get("REPO_NAME", "")
 
 def _require_env():
     missing = [k for k, v in {
-        "GEMINI_API_KEY": GEMINI_API_KEY,
+        "NVIDIA_API_KEY": NVIDIA_API_KEY,
         "GITHUB_TOKEN":   GITHUB_TOKEN,
         "REPO_NAME":      REPO_NAME,
     }.items() if not v]
@@ -221,32 +221,10 @@ def fetch_news(keywords: list[str], target_date_str: str) -> list[dict]:
 
 
 # ════════════════════════════════════════════════════════════
-# 4. AI 리포트 생성
+# 4. AI 리포트 생성 (NVIDIA NIM, OpenAI 호환 API)
 # ════════════════════════════════════════════════════════════
-DEFAULT_MODEL = "gemini-2.0-flash"  # 매번 모델 목록을 조회하지 않고 바로 사용 (지연 시간 단축)
-
-
-def _get_best_model() -> str:
-    """사용 가능한 Gemini 모델 중 최선 선택 (DEFAULT_MODEL 실패 시에만 조회)"""
-    try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={GEMINI_API_KEY}"
-        res = requests.get(url, timeout=10)
-        if res.status_code == 200:
-            models = [
-                m["name"].replace("models/", "")
-                for m in res.json().get("models", [])
-                if "generateContent" in m.get("supportedGenerationMethods", [])
-                and "vision" not in m["name"]
-            ]
-            # 2.0-flash 우선, 그 다음 1.5-pro, 나머지 순
-            for prefix in ("gemini-2.0-flash", "gemini-2.5", "gemini-1.5-pro", "gemini-1.5-flash"):
-                found = next((m for m in models if m.startswith(prefix)), None)
-                if found:
-                    logger.info(f"선택된 모델: {found}")
-                    return found
-    except Exception as e:
-        logger.warning(f"모델 목록 조회 실패: {e}")
-    return DEFAULT_MODEL
+NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
+NVIDIA_MODEL   = "qwen/qwen2.5-72b-instruct"
 
 
 def generate_report(news_data: list[dict]) -> str:
@@ -279,47 +257,32 @@ def generate_report(news_data: list[dict]) -> str:
 시사점과 향후 관전 포인트를 결론부터 서술.
 """
 
-    headers = {"Content-Type": "application/json"}
-    body    = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}],
-        "generationConfig": {
-            "temperature": 0.4,
-            "maxOutputTokens": 2048,  # 무료 Gemini API 토큰 한도에 맞춘 보수적인 출력 예산
-            # gemini-2.5 계열은 기본적으로 "thinking" 토큰이 maxOutputTokens를 잠식해
-            # 실제 응답이 조기 절단될 수 있으므로 명시적으로 비활성화
-            "thinkingConfig": {"thinkingBudget": 0},
-        },
+    headers = {
+        "Authorization": f"Bearer {NVIDIA_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    body = {
+        "model": NVIDIA_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.4,
+        "max_tokens": 2048,
     }
 
-    def _call(model: str):
-        url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{model}:generateContent?key={GEMINI_API_KEY}"
-        )
-        return requests.post(url, headers=headers, json=body, timeout=120)
-
-    model = DEFAULT_MODEL
     retry_wait = 2
     for attempt in range(4):
         try:
-            resp = _call(model)
+            resp = requests.post(NVIDIA_API_URL, headers=headers, json=body, timeout=120)
             if resp.status_code == 200:
-                candidates = resp.json().get("candidates", [])
-                if candidates:
-                    text = candidates[0]["content"]["parts"][0]["text"]
+                choices = resp.json().get("choices", [])
+                if choices:
+                    text = choices[0]["message"]["content"]
                     if len(text) < 300 or "##" not in text:
                         # 응답이 비정상적으로 짧거나(조기 절단) 구조가 없으면 폐기하고 재시도
                         logger.warning(f"리포트가 비정상적으로 짧음 ({len(text)} chars) → 재시도")
                         continue
                     logger.info(f"리포트 생성 완료 ({len(text)} chars)")
                     return text
-                logger.warning("candidates 없음 → 재시도")
-            elif resp.status_code == 404 and model == DEFAULT_MODEL:
-                # 기본 모델 사용 불가 → 사용 가능한 모델로 교체 후 재시도
-                model = _get_best_model()
-                logger.warning(f"기본 모델 사용 불가 → {model}(으)로 전환")
-                continue
+                logger.warning("choices 없음 → 재시도")
             elif resp.status_code == 429:
                 logger.warning(f"Rate limit → {retry_wait}s 대기 후 재시도 (attempt {attempt+1})")
                 time.sleep(retry_wait)
@@ -404,3 +367,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
