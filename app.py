@@ -196,10 +196,14 @@ button[data-testid="stPopoverButton"]:active { transform: scale(0.97) !important
 .si-hero-meta b { color: ACCENT !important; font-weight: 600; }
 /* ── 섹션 라벨 ───────────────────────────────────────── */
 .si-label { font-size: 13px; font-weight: 600; color: TEXT !important; letter-spacing: -0.01em; margin: 32px 0 14px 2px; }
-.si-month-label {
-    font-size: 12px; font-weight: 700; color: MUTED !important; letter-spacing: 0.06em;
-    text-transform: uppercase; margin: 26px 2px 10px;
+/* ── 일별 토글 버튼 (월 expander 내부, 중첩 expander 대체) ──── */
+[class*="st-key-daybtn-"] div.stButton > button {
+    background-color: SURFACE !important; border: 1px solid BORDER2 !important; color: TEXT !important;
+    font-weight: 600 !important; font-size: 14.5px !important; letter-spacing: 0;
+    border-radius: 14px !important; padding: 12px 16px !important;
 }
+[class*="st-key-daybtn-"] div.stButton > button:hover { background-color: SURFACE2 !important; border-color: ACCENT !important; opacity: 1 !important; }
+[class*="st-key-daybtn-"] div.stButton > button:active { transform: scale(0.99) !important; }
 /* ── 리포트 카드 (구조 파싱 실패 시 폴백) ──────────────── */
 .si-report-card {
     line-height: 1.75; font-size: 16px; font-family: 'Inter', sans-serif;
@@ -754,51 +758,66 @@ else:
                 status_box.update(label="⚠️ 실패", state="error")
                 st.error(result)
 
-# ── 아카이브 (월별 그룹핑) ───────────────────────────────
+def render_day_report(entry):
+    # [수정] "##" 등 마크다운을 Streamlit 렌더러에 맡기면 div로 감싼 raw HTML
+    # 블록 처리 방식과 충돌해 헤더가 스타일 없이 그대로 텍스트로 노출됨.
+    # Python에서 먼저 완전한 HTML로 변환한 뒤 삽입한다.
+    report_html = md.markdown(entry['report'])
+    sections = split_report_sections(report_html)
+    if sections:
+        for i, sec in enumerate(sections, start=1):
+            body_html = ''.join(sec['body']).strip()
+            st.markdown(
+                f"<div class='si-section'>"
+                f"<div class='si-section-head'>"
+                f"<span class='si-section-num'>{i:02d}</span>"
+                f"<span class='si-section-title'>{sec['title']}</span>"
+                f"</div>"
+                f"<div class='si-section-body'>{body_html}</div>"
+                f"</div>",
+                unsafe_allow_html=True
+            )
+    else:
+        st.markdown(
+            f"<div class='si-report-card'>{report_html}</div>",
+            unsafe_allow_html=True
+        )
+    st.markdown("<div class='si-label' style='font-size:12px; margin-top:8px;'>참고 기사</div>", unsafe_allow_html=True)
+    for item in entry.get('articles', []):
+        safe_link = sanitize_url(item.get('Link', '#'))
+        clean_title = re.sub(r'<[^>]+>', '', item.get('Title', ''))
+        source = re.sub(r'<[^>]+>', '', item.get('Source', ''))
+        st.markdown(
+            f"<a href='{safe_link}' target='_blank' class='si-archive-ref'>"
+            f"<span class='si-ref-source'>{source}</span>"
+            f"<span class='si-ref-title'>{clean_title}</span></a>",
+            unsafe_allow_html=True
+        )
+
+# ── 아카이브 (월별 그룹핑, 기본 접힘 + 일별 클릭 펼침) ──────
+# [수정] Streamlit은 expander를 expander 안에 중첩할 수 없어 월 단위는
+# expander로, 일 단위는 session_state로 여닫는 토글 버튼으로 구현한다.
 if history:
     st.markdown("<div class='si-label'>지난 리포트</div>", unsafe_allow_html=True)
-    current_month = None
+    months = {}
     for entry in history:
-        entry_month = entry['date'][:7]  # "YYYY-MM"
-        if entry_month != current_month:
-            current_month = entry_month
-            y, m = entry_month.split('-')
-            st.markdown(f"<div class='si-month-label'>{y}년 {int(m)}월</div>", unsafe_allow_html=True)
+        months.setdefault(entry['date'][:7], []).append(entry)
 
-        is_today = (entry['date'] == target_date_str)
-        badge = " 🟢 오늘" if is_today else ""
-        with st.expander(f"{entry['date']}{badge}", expanded=is_today):
-            # [수정] "##" 등 마크다운을 Streamlit 렌더러에 맡기면 div로 감싼 raw HTML
-            # 블록 처리 방식과 충돌해 헤더가 스타일 없이 그대로 텍스트로 노출됨.
-            # Python에서 먼저 완전한 HTML로 변환한 뒤 삽입한다.
-            report_html = md.markdown(entry['report'])
-            sections = split_report_sections(report_html)
-            if sections:
-                for i, sec in enumerate(sections, start=1):
-                    body_html = ''.join(sec['body']).strip()
-                    st.markdown(
-                        f"<div class='si-section'>"
-                        f"<div class='si-section-head'>"
-                        f"<span class='si-section-num'>{i:02d}</span>"
-                        f"<span class='si-section-title'>{sec['title']}</span>"
-                        f"</div>"
-                        f"<div class='si-section-body'>{body_html}</div>"
-                        f"</div>",
-                        unsafe_allow_html=True
-                    )
-            else:
-                st.markdown(
-                    f"<div class='si-report-card'>{report_html}</div>",
-                    unsafe_allow_html=True
-                )
-            st.markdown("<div class='si-label' style='font-size:12px; margin-top:8px;'>참고 기사</div>", unsafe_allow_html=True)
-            for item in entry.get('articles', []):
-                safe_link = sanitize_url(item.get('Link', '#'))
-                clean_title = re.sub(r'<[^>]+>', '', item.get('Title', ''))
-                source = re.sub(r'<[^>]+>', '', item.get('Source', ''))
-                st.markdown(
-                    f"<a href='{safe_link}' target='_blank' class='si-archive-ref'>"
-                    f"<span class='si-ref-source'>{source}</span>"
-                    f"<span class='si-ref-title'>{clean_title}</span></a>",
-                    unsafe_allow_html=True
-                )
+    for month_key, entries in months.items():
+        y, m = month_key.split('-')
+        month_has_today = any(e['date'] == target_date_str for e in entries)
+        with st.expander(f"{y}년 {int(m)}월 · {len(entries)}건", expanded=month_has_today):
+            for entry in entries:
+                is_today = (entry['date'] == target_date_str)
+                state_key = f"day_open_{entry['date']}"
+                if state_key not in st.session_state:
+                    st.session_state[state_key] = is_today
+                opened = st.session_state[state_key]
+                badge = " 🟢 오늘" if is_today else ""
+                arrow = "▾" if opened else "▸"
+                if st.button(f"{arrow}  {entry['date']}{badge}",
+                             key=f"daybtn-{entry['date']}", use_container_width=True):
+                    st.session_state[state_key] = not opened
+                    st.rerun()
+                if opened:
+                    render_day_report(entry)
