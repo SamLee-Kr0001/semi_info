@@ -27,7 +27,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ==========================================
 # 0. 페이지 설정
 # ==========================================
-st.set_page_config(layout="wide", page_title="Semi-Insight Terminal", page_icon="🖥️")
+st.set_page_config(layout="wide", page_title="Semi Insight", page_icon="◆")
 
 DAILY_REPORT = "Daily Report"
 KEYWORD_FILE = 'keywords.json'
@@ -46,149 +46,179 @@ api_key = ""
 if "dark_mode" not in st.session_state:
     st.session_state.dark_mode = False
 
-# ── 테마별 토큰 (금융/리서치 터미널 팔레트, hex 고정값) ──────────
+# ── 테마별 토큰 (apple.md 색상 스펙 기반, hex 고정값) ──────────
 def get_theme():
     if st.session_state.dark_mode:
         return {
-            "bg":           "#080B0A",
-            "surface":      "#0F1412",
-            "surface2":     "#141A17",
-            "border":       "#1E2723",
-            "border2":      "#2C3833",
-            "text":         "#DCEFE4",
-            "text2":        "#7C9A8B",
-            "muted":        "#4B5F56",
-            "accent":       "#2BE28A",
-            "accent_soft":  "#0B2318",
-            "badge_bg":     "#0B2318",
-            "badge_fg":     "#2BE28A",
-            "shadow":       "none",
+            "bg":           "#000000",
+            "surface":      "#1D1D1F",
+            "surface2":     "#2A2A2C",
+            "border":       "#2C2C2E",
+            "border2":      "#3A3A3C",
+            "text":         "#FFFFFF",
+            "text2":        "#CCCCCC",
+            "muted":        "#8E8E93",
+            "accent":       "#2997FF",
+            "accent_soft":  "#12283B",
+            "badge_bg":     "#12283B",
+            "badge_fg":     "#2997FF",
+            "shadow":       "0 12px 32px rgba(0,0,0,0.6)",
         }
     else:
         return {
-            "bg":           "#F1F0EA",
+            "bg":           "#F5F5F7",
             "surface":      "#FFFFFF",
-            "surface2":     "#F7F6F1",
-            "border":       "#D9D6C9",
-            "border2":      "#C4C0AF",
-            "text":         "#121815",
-            "text2":        "#5B6B62",
-            "muted":        "#8B9089",
-            "accent":       "#0E8F5D",
-            "accent_soft":  "#E6F4EC",
-            "badge_bg":     "#E6F4EC",
-            "badge_fg":     "#0E8F5D",
-            "shadow":       "none",
+            "surface2":     "#FAFAFC",
+            "border":       "#F0F0F0",
+            "border2":      "#E0E0E0",
+            "text":         "#1D1D1F",
+            "text2":        "#333333",
+            "muted":        "#7A7A7A",
+            "accent":       "#0066CC",
+            "accent_soft":  "#EAF3FC",
+            "badge_bg":     "#EAF3FC",
+            "badge_fg":     "#0066CC",
+            "shadow":       "0 12px 32px rgba(0,0,0,0.10)",
         }
 
 T = get_theme()
 
 # ── CSS 주입 ─────────────────────────────────────────────────
 # {{ }} 이스케이프 없이 .format()으로 hex 값 주입 → 파싱 오류 원천 차단
-_FONT = '<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">'
+# 폰트: apple.md가 명시한 SF Pro 대체 서체(Inter)를 그대로 사용
+_FONT = '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">'
 
 _CSS = """
 <style>
 html, body, [class*="css"], .stApp,
 [data-testid="stAppViewContainer"],
 [data-testid="stHeader"],
-[data-testid="stSidebar"],
 .block-container {
-    font-family: 'JetBrains Mono', monospace !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
 }
 .stApp, [data-testid="stAppViewContainer"] { background-color: BG !important; }
-.block-container { background-color: BG !important; padding-top: 20px !important; padding-bottom: 48px !important; max-width: 1100px !important; }
-section[data-testid="stSidebar"] > div:first-child { background-color: SURFACE !important; border-right: 1px solid BORDER !important; }
+.block-container { background-color: BG !important; padding-top: 24px !important; padding-bottom: 64px !important; max-width: 900px !important; }
+[data-testid="stHeader"] { background-color: transparent !important; }
 .stMarkdown, .stMarkdown p, .stMarkdown li, .stRadio label, .stCheckbox label, p, span, div, li { color: TEXT !important; }
-label[data-testid="stWidgetLabel"] { color: TEXT2 !important; font-size: 11px !important; text-transform: uppercase; letter-spacing: 0.06em; }
+label[data-testid="stWidgetLabel"] { color: MUTED !important; font-size: 12px !important; font-weight: 400; }
+* { box-sizing: border-box; }
 div.stButton > button {
-    font-family: 'JetBrains Mono', monospace !important; font-size: 12px !important;
-    font-weight: 600 !important; letter-spacing: 0.04em; text-transform: uppercase;
-    border-radius: 2px !important; padding: 6px 14px !important;
+    font-family: 'Inter', sans-serif !important; font-size: 14px !important;
+    font-weight: 600 !important; letter-spacing: -0.01em;
+    border-radius: 999px !important; padding: 9px 20px !important;
     border: 1px solid BORDER2 !important; background-color: transparent !important;
-    color: TEXT2 !important; transition: all 0.12s ease !important; box-shadow: none !important;
+    color: ACCENT !important; transition: transform 0.15s ease, background-color 0.15s ease, opacity 0.15s ease !important;
+    box-shadow: none !important;
 }
-div.stButton > button:hover { border-color: ACCENT !important; color: ACCENT !important; background-color: ACCENT_SOFT !important; }
-div.stButton > button[kind="primary"] { background-color: ACCENT !important; color: BG !important; border-color: ACCENT !important; font-weight: 700 !important; }
-div.stButton > button[kind="primary"]:hover { opacity: 0.85 !important; }
+div.stButton > button:hover { background-color: ACCENT_SOFT !important; border-color: ACCENT !important; }
+div.stButton > button:active { transform: scale(0.96) !important; }
+div.stButton > button[kind="primary"] {
+    background-color: ACCENT !important; color: #FFFFFF !important; border-color: ACCENT !important;
+    font-weight: 600 !important; padding: 11px 26px !important;
+}
+div.stButton > button[kind="primary"]:hover { opacity: 0.88 !important; }
+div.stButton > button[kind="primary"]:active { transform: scale(0.96) !important; }
+div.stButton > button:disabled { opacity: 0.35 !important; transform: none !important; }
+button[data-testid="stPopoverButton"] {
+    font-family: 'Inter', sans-serif !important; font-size: 14px !important; font-weight: 600 !important;
+    border-radius: 999px !important; padding: 9px 20px !important;
+    border: 1px solid BORDER2 !important; background-color: SURFACE !important;
+    color: TEXT !important; transition: transform 0.15s ease, background-color 0.15s ease !important;
+    box-shadow: none !important;
+}
+button[data-testid="stPopoverButton"]:hover { background-color: SURFACE2 !important; border-color: ACCENT !important; }
+button[data-testid="stPopoverButton"]:active { transform: scale(0.97) !important; }
 .stTextInput input, .stTextArea textarea {
-    font-family: 'JetBrains Mono', monospace !important; font-size: 13px !important;
+    font-family: 'Inter', sans-serif !important; font-size: 15px !important;
     background-color: SURFACE2 !important; color: TEXT !important;
-    border: 1px solid BORDER2 !important; border-radius: 2px !important; caret-color: ACCENT;
+    border: 1px solid BORDER2 !important; border-radius: 999px !important; padding: 10px 18px !important;
+    caret-color: ACCENT; transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.stTextInput input:focus, .stTextArea textarea:focus { border-color: ACCENT !important; box-shadow: 0 0 0 1px ACCENT !important; }
-[data-testid="stExpander"] { background-color: SURFACE !important; border: 1px solid BORDER !important; border-radius: 2px !important; overflow: hidden; }
-[data-testid="stExpander"] summary { font-size: 12px !important; font-weight: 500 !important; color: TEXT2 !important; background-color: SURFACE !important; }
-[data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"] { background-color: SURFACE !important; border: 1px solid BORDER !important; border-radius: 2px !important; }
-[data-testid="stAlert"] { background-color: SURFACE2 !important; border: 1px solid BORDER2 !important; border-left: 3px solid ACCENT !important; border-radius: 2px !important; font-size: 13px !important; color: TEXT !important; }
-[data-testid="stToggle"] label div[data-checked="true"] { background-color: ACCENT !important; }
-::-webkit-scrollbar { width: 6px; height: 6px; }
+.stTextArea textarea { border-radius: 16px !important; }
+.stTextInput input:focus, .stTextArea textarea:focus { border-color: ACCENT !important; box-shadow: 0 0 0 3px ACCENT_SOFT !important; }
+[data-testid="stExpander"] {
+    background-color: SURFACE !important; border: 1px solid BORDER2 !important; border-radius: 18px !important;
+    overflow: hidden; transition: box-shadow 0.25s ease, transform 0.25s ease; margin-bottom: 10px;
+}
+[data-testid="stExpander"]:hover { box-shadow: SHADOW; transform: translateY(-2px); }
+[data-testid="stExpander"] summary {
+    font-size: 15px !important; font-weight: 600 !important; color: TEXT !important;
+    background-color: transparent !important; padding: 4px 2px !important;
+}
+[data-testid="stPopoverBody"], div[data-testid="stPopover"] > div {
+    border-radius: 18px !important; border: 1px solid BORDER2 !important; background-color: SURFACE !important;
+}
+[data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"] {
+    background-color: SURFACE !important; border: 1px solid BORDER2 !important; border-radius: 18px !important;
+}
+[data-testid="stAlert"] {
+    background-color: SURFACE2 !important; border: none !important; border-radius: 14px !important;
+    font-size: 14px !important; color: TEXT2 !important; padding: 12px 16px !important;
+}
+[data-testid="stCheckbox"] label:has(input:checked) > div:first-of-type { background-color: ACCENT !important; border-color: ACCENT !important; }
+[data-testid="stCheckbox"] label > div:first-of-type { transition: background-color 0.2s ease, border-color 0.2s ease; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: BORDER2; border-radius: 0; }
-/* ── 로고 / 프롬프트 ─────────────────────────────────── */
-.si-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid BORDER; }
-.si-logo-mark {
-    width: 30px; height: 30px; background: ACCENT; color: BG; border-radius: 2px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 15px; font-weight: 700; flex-shrink: 0;
+::-webkit-scrollbar-thumb { background: BORDER2; border-radius: 999px; }
+@keyframes si-fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* ── 상단 바 ─────────────────────────────────────────── */
+.si-topbar { display: flex; align-items: center; justify-content: space-between; padding: 4px 0 28px 0; }
+.si-brand { display: flex; align-items: center; gap: 9px; }
+.si-brand-mark {
+    width: 26px; height: 26px; border-radius: 8px; background: ACCENT; color: #FFFFFF;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0;
 }
-.si-logo-text { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; color: TEXT !important; text-transform: uppercase; }
-.si-logo-sub  { font-size: 9px; color: MUTED !important; letter-spacing: 0.1em; text-transform: uppercase; }
-.si-cursor { color: ACCENT; animation: si-blink 1.1s step-start infinite; }
-@keyframes si-blink { 50% { opacity: 0; } }
+.si-brand-text { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: TEXT !important; }
 /* ── 상태 배지 ───────────────────────────────────────── */
 .si-badge {
-    display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600;
-    letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px 3px 6px;
-    border-radius: 2px; border: 1px solid BORDER2; background: BADGE_BG; color: BADGE_FG !important;
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600;
+    letter-spacing: 0; padding: 5px 10px; border-radius: 999px; background: BADGE_BG; color: BADGE_FG !important;
 }
-.si-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; animation: si-pulse 1.6s ease-in-out infinite; }
-@keyframes si-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-/* ── 시스템 배너 ─────────────────────────────────────── */
-.si-banner {
-    display: flex; align-items: baseline; gap: 10px; background: SURFACE2; border: 1px solid BORDER;
-    border-left: 3px solid ACCENT; border-radius: 2px; padding: 10px 15px; font-size: 12px;
-    color: TEXT2 !important; margin-bottom: 18px;
+.si-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; animation: si-pulse 1.8s ease-in-out infinite; }
+@keyframes si-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+/* ── 히어로 ──────────────────────────────────────────── */
+.si-hero {
+    background: SURFACE; border: 1px solid BORDER2; border-radius: 24px;
+    padding: 56px 40px; text-align: center; margin-bottom: 20px;
+    animation: si-fade-up 0.5s ease both;
 }
-.si-banner-tag { color: ACCENT !important; font-weight: 700; letter-spacing: 0.08em; flex-shrink: 0; }
-/* ── 페이지 타이틀 (프롬프트 라인) ───────────────────── */
-.si-page-title {
-    font-size: 18px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase;
-    color: TEXT; margin: 0 0 18px 0; padding-bottom: 14px; border-bottom: 2px solid ACCENT;
-}
-.si-prompt { color: ACCENT !important; margin-right: 8px; }
-/* ── 라벨 / 섹션 태그 ─────────────────────────────────── */
-.si-label {
-    font-size: 11px; font-weight: 700; color: TEXT2 !important; letter-spacing: 0.1em;
-    text-transform: uppercase; padding-left: 10px; border-left: 3px solid ACCENT;
-    margin: 22px 0 12px 0;
-}
+.si-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: ACCENT !important; margin-bottom: 14px; }
+.si-hero-title { font-size: 40px; font-weight: 600; letter-spacing: -0.02em; color: TEXT !important; margin: 0 0 12px 0; line-height: 1.1; }
+.si-hero-tag { font-size: 17px; font-weight: 400; color: MUTED !important; margin: 0 0 28px 0; line-height: 1.5; }
+.si-hero-meta { font-size: 13px; color: MUTED !important; margin-top: 18px; }
+.si-hero-meta b { color: ACCENT !important; font-weight: 600; }
+/* ── 섹션 라벨 ───────────────────────────────────────── */
+.si-label { font-size: 13px; font-weight: 600; color: TEXT !important; letter-spacing: -0.01em; margin: 32px 0 14px 2px; }
 /* ── 리포트 카드 ─────────────────────────────────────── */
 .si-report-card {
-    background: SURFACE; border: 1px solid BORDER; border-radius: 3px;
-    padding: 28px 30px; line-height: 1.8; font-size: 14.5px; font-family: 'IBM Plex Sans', sans-serif;
-    color: TEXT; box-shadow: SHADOW; margin-bottom: 16px;
+    line-height: 1.75; font-size: 16px; font-family: 'Inter', sans-serif;
+    color: TEXT; padding: 4px 2px 8px;
 }
 .si-report-card h2 {
-    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: ACCENT;
-    letter-spacing: 0.03em; margin: 26px 0 10px; padding: 6px 0 6px 10px; border-left: 3px solid ACCENT;
-    background: ACCENT_SOFT;
+    font-size: 21px; font-weight: 600; color: TEXT; letter-spacing: -0.015em;
+    margin: 30px 0 12px; padding-bottom: 10px; border-bottom: 1px solid BORDER2;
 }
 .si-report-card h2:first-child { margin-top: 0; }
-.si-report-card h3 { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: TEXT2; margin: 16px 0 6px; }
-.si-report-card p  { margin: 0 0 12px; }
-.si-report-card a  { color: ACCENT !important; font-weight: 700; text-decoration: none; border-bottom: 1px dotted ACCENT; }
-/* ── 아카이브 참고 기사 ───────────────────────────────── */
-.si-archive-ref {
-    display: flex; align-items: baseline; gap: 8px; padding: 6px 0; border-bottom: 1px solid BORDER;
-    font-size: 12.5px; color: TEXT2 !important; font-family: 'JetBrains Mono', monospace;
+.si-report-card h3 { font-size: 16px; font-weight: 600; color: TEXT; margin: 18px 0 6px; }
+.si-report-card p  { margin: 0 0 14px; color: TEXT2; }
+.si-report-card a  {
+    color: ACCENT !important; font-weight: 600; text-decoration: none;
+    transition: opacity 0.15s ease;
 }
-.si-archive-ref:hover { color: ACCENT !important; }
+.si-report-card a:hover { text-decoration: underline; opacity: 0.85; }
+/* ── 참고 기사 리스트 ────────────────────────────────── */
+.si-archive-ref {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin: 0 -12px;
+    border-radius: 12px; font-size: 14px; color: TEXT !important;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.si-archive-ref:hover { background-color: SURFACE2; transform: translateX(2px); }
 .si-archive-ref:hover .si-ref-title { color: ACCENT !important; }
-.si-archive-ref:last-child { border-bottom: none; }
-.si-ref-chevron { color: ACCENT !important; flex-shrink: 0; }
-.si-ref-source { color: MUTED !important; flex-shrink: 0; }
-.si-ref-title { color: TEXT !important; font-family: 'IBM Plex Sans', sans-serif; }
+.si-ref-source {
+    flex-shrink: 0; font-size: 11px; font-weight: 600; color: MUTED !important;
+    background: SURFACE2; border-radius: 999px; padding: 3px 9px; white-space: nowrap;
+}
+.si-ref-title { color: TEXT !important; transition: color 0.15s ease; }
 a  { text-decoration: none; }
 hr { border-color: BORDER !important; margin: 12px 0 !important; }
 </style>
@@ -544,30 +574,29 @@ def render_keyword_manager():
                 st.rerun()
 
 # ==========================================
-# 5. 메인 앱 UI
+# 5. 메인 앱 UI (사이드바 없이 단일 컬럼)
 # ==========================================
-# ── 사이드바 ─────────────────────────────────────────────────
-with st.sidebar:
-    # 로고
-    st.markdown(f"""
-    <div class="si-logo">
-        <div class="si-logo-mark">$</div>
-        <div>
-            <div class="si-logo-text">Semi-Insight<span class="si-cursor">_</span></div>
-            <div class="si-logo-sub">Semiconductor Intel Terminal</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+# [수정] 구버전 Streamlit 호환 폴리필: st.popover가 없으면 st.expander로 대체
+if not hasattr(st, "popover"):
+    st.popover = st.expander
 
-    # 다크모드 토글 (Streamlit native → session_state 기반)
-    dark_toggled = st.toggle("🌙 Dark Mode", value=st.session_state.dark_mode)
+# ── 상단 바: 로고 + 다크모드 + API Key 팝오버 + GitHub 상태 ──
+top_l, top_r1, top_r2, top_r3 = st.columns([5, 1, 1.4, 1.6])
+with top_l:
+    st.markdown(
+        "<div class='si-topbar'><div class='si-brand'>"
+        "<div class='si-brand-mark'>◆</div>"
+        "<div class='si-brand-text'>Semi Insight</div>"
+        "</div></div>",
+        unsafe_allow_html=True
+    )
+with top_r1:
+    dark_toggled = st.toggle("🌙", value=st.session_state.dark_mode)
     if dark_toggled != st.session_state.dark_mode:
         st.session_state.dark_mode = dark_toggled
         st.rerun()
-
-    st.markdown("<hr>", unsafe_allow_html=True)
-
-    with st.expander("🔐 API Key"):
+with top_r2:
+    with st.popover("🔑 API Key", use_container_width=True):
         user_key = st.text_input("NVIDIA API Key", type="password",
                                   label_visibility="collapsed",
                                   placeholder="NVIDIA API Key를 입력하세요")
@@ -575,20 +604,13 @@ with st.sidebar:
             api_key = user_key
         elif "NVIDIA_API_KEY" in st.secrets:
             api_key = st.secrets["NVIDIA_API_KEY"]
-
+with top_r3:
     if "GITHUB_TOKEN" in st.secrets:
         st.markdown(
-            "<div style='margin-top:10px'><span class='si-badge'>"
-            "<span class='si-dot'></span>GitHub Sync</span></div>",
+            "<div style='text-align:right; padding-top:6px;'><span class='si-badge'>"
+            "<span class='si-dot'></span>Synced</span></div>",
             unsafe_allow_html=True
         )
-
-# ── 메인 콘텐츠 (Daily Report) ──────────────────────────────
-st.markdown(
-    f"<div class='si-page-title'>"
-    f"<span class='si-prompt'>$</span>DAILY_REPORT<span class='si-cursor'>_</span></div>",
-    unsafe_allow_html=True
-)
 
 # ── 날짜 계산 ──────────────────────────────────────────
 now_kst = datetime.now(timezone.utc) + timedelta(hours=9)
@@ -598,93 +620,73 @@ else:
     target_date = now_kst.date()
 target_date_str = target_date.strftime('%Y-%m-%d')
 
-# ── 배너 ───────────────────────────────────────────────
+history = st.session_state.daily_history
+today_report = next((h for h in history if h['date'] == target_date_str), None)
+
+# ── 히어로 ─────────────────────────────────────────────
+hero_meta = f"Report Date · <b>{target_date}</b>"
+if today_report:
+    hero_meta += "  ·  <b>✓ 생성 완료</b>" + (" · AUTO" if today_report.get("auto_generated") else "")
+else:
+    next_run_dt = target_date if now_kst.hour < 6 else (target_date + timedelta(days=1))
+    hero_meta += f"  ·  다음 자동 생성 <b>{next_run_dt} 06:00 KST</b>"
+
 st.markdown(
-    "<div class='si-banner'>"
-    "<span class='si-banner-tag'>[SYSTEM]</span>"
-    "매일 06:00 KST GitHub Actions가 자동으로 리포트를 생성합니다. "
-    "아래 버튼으로 수동 생성도 가능합니다."
+    "<div class='si-hero'>"
+    "<div class='si-eyebrow'>Semiconductor Intelligence</div>"
+    "<div class='si-hero-title'>Daily Report</div>"
+    "<p class='si-hero-tag'>매일 아침, 반도체 소재 산업의 핵심을 가장 먼저 확인하세요.</p>"
+    f"<div class='si-hero-meta'>{hero_meta}</div>"
     "</div>",
     unsafe_allow_html=True
 )
 
-# ── 날짜 표시 + GitHub 최신화 버튼 ────────────────────
-col_date, col_refresh = st.columns([4, 1])
-with col_date:
-    st.markdown(
-        f"<div style='font-size:12px; color:{T['muted']}; padding-top:6px; text-transform:uppercase; letter-spacing:0.05em;'>"
-        f"DATE &nbsp;·&nbsp; <b style='color:{T['accent']}'>{target_date}</b></div>",
-        unsafe_allow_html=True
-    )
+# ── 키워드 관리 + 새로고침 ─────────────────────────────
+col_kw, col_refresh = st.columns([5, 1])
+with col_kw:
+    with st.popover("⚙️ 키워드 관리"):
+        render_keyword_manager()
 with col_refresh:
-    if st.button("↻ 새로고침", use_container_width=True, key="reload_history"):
+    if st.button("🔄", use_container_width=True, key="reload_history"):
         # GitHub에서 최신 히스토리 강제 재로드
         st.session_state.daily_history = load_daily_history_from_source()
         st.rerun()
 
-# ── 키워드 관리 ────────────────────────────────────────
-with st.expander("⚙️ 키워드 관리", expanded=False):
-    render_keyword_manager()
-
-# ── 오늘 리포트 상태 확인 ──────────────────────────────
-history = st.session_state.daily_history
-today_report = next((h for h in history if h['date'] == target_date_str), None)
-
+# ── 리포트 생성 액션 ───────────────────────────────────
 if not today_report:
-    # GitHub Actions가 아직 실행 전이거나 실패한 경우
-    next_run_dt = target_date if now_kst.hour < 6 else (target_date + timedelta(days=1))
-    st.info(
-        f"📢 오늘({target_date_str}) 리포트가 아직 없습니다. "
-        f"다음 자동 생성: **{next_run_dt} 06:00 KST**"
-    )
+    if not api_key:
+        st.info("리포트를 생성하려면 우측 상단에서 NVIDIA API Key를 먼저 입력해주세요.")
 
-    # 수동 생성 버튼
-    if st.button("🚀 지금 바로 리포트 생성", type="primary", disabled=not bool(api_key)):
-        if not api_key:
-            st.warning("API Key를 먼저 입력해주세요.")
+    if st.button("리포트 생성하기", type="primary", disabled=not bool(api_key)):
+        status_box = st.status("리포트 생성 중...", expanded=True)
+        end_dt   = datetime.combine(target_date, dt_time(6, 0))
+        start_dt = end_dt - timedelta(hours=18)
+        daily_kws = st.session_state.keywords[DAILY_REPORT]
+
+        status_box.write(f"📡 뉴스 수집 중 ({NEWS_LIMIT}건)...")
+        # fetch_news 내부에서 시간필터 결과가 부족하면 재크롤링 없이 자동 폴백 처리
+        news_items = fetch_news(
+            daily_kws, days=2, limit=NEWS_LIMIT,
+            strict_time=True, start_dt=start_dt, end_dt=end_dt
+        )
+
+        if not news_items:
+            status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
         else:
-            status_box = st.status("🚀 리포트 생성 중...", expanded=True)
-            end_dt   = datetime.combine(target_date, dt_time(6, 0))
-            start_dt = end_dt - timedelta(hours=18)
-            daily_kws = st.session_state.keywords[DAILY_REPORT]
-
-            status_box.write(f"📡 뉴스 수집 중 ({NEWS_LIMIT}건)...")
-            # fetch_news 내부에서 시간필터 결과가 부족하면 재크롤링 없이 자동 폴백 처리
-            news_items = fetch_news(
-                daily_kws, days=2, limit=NEWS_LIMIT,
-                strict_time=True, start_dt=start_dt, end_dt=end_dt
-            )
-
-            if not news_items:
-                status_box.update(label="❌ 수집된 뉴스가 없습니다.", state="error")
+            status_box.write(f"🧠 AI 심층 분석 중... ({len(news_items)}건)")
+            success, result = generate_report_with_citations(api_key, news_items)
+            if success:
+                save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
+                status_box.write("💾 GitHub에 저장 중...")
+                save_daily_history(save_data)
+                status_box.update(label="🎉 완료!", state="complete")
+                st.rerun()
             else:
-                status_box.write(f"🧠 AI 심층 분석 중... ({len(news_items)}건)")
-                success, result = generate_report_with_citations(api_key, news_items)
-                if success:
-                    save_data = {'date': target_date_str, 'report': result, 'articles': news_items}
-                    status_box.write("💾 GitHub에 저장 중...")
-                    save_daily_history(save_data)
-                    status_box.update(label="🎉 완료!", state="complete")
-                    st.rerun()
-                else:
-                    status_box.update(label="⚠️ AI 분석 실패", state="error")
-                    st.error(result)
+                status_box.update(label="⚠️ AI 분석 실패", state="error")
+                st.error(result)
 else:
-    # 자동 또는 수동으로 생성된 리포트 존재
-    auto_tag = ""
-    if today_report.get("auto_generated"):
-        auto_tag = f" &nbsp;<span class='si-badge'>AUTO</span>"
-    st.markdown(
-        f"<div style='display:flex;align-items:center;gap:12px;margin-bottom:12px;'>"
-        f"<span style='color:{T['accent']};font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;'>"
-        f"● 리포트 생성 완료</span>"
-        f"{auto_tag}</div>",
-        unsafe_allow_html=True
-    )
-
-    # 수동 재생성 버튼
-    if st.button("🔄 리포트 다시 만들기", disabled=not bool(api_key)):
-        status_box = st.status("🚀 재생성 중...", expanded=True)
+    if st.button("리포트 다시 만들기", disabled=not bool(api_key)):
+        status_box = st.status("재생성 중...", expanded=True)
         daily_kws  = st.session_state.keywords[DAILY_REPORT]
         news_items = fetch_news(daily_kws, days=2, limit=NEWS_LIMIT, strict_time=False)
         if news_items:
@@ -701,14 +703,11 @@ else:
 
 # ── 아카이브 ───────────────────────────────────────────
 if history:
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-    st.markdown("<div class='si-label'>REPORT_ARCHIVE</div>", unsafe_allow_html=True)
+    st.markdown("<div class='si-label'>지난 리포트</div>", unsafe_allow_html=True)
     for entry in history:
         is_today = (entry['date'] == target_date_str)
-        with st.expander(
-            f"{'● ' if is_today else '  '}{entry['date']} · DAILY_REPORT",
-            expanded=is_today
-        ):
+        badge = " 🟢 오늘" if is_today else ""
+        with st.expander(f"{entry['date']}{badge}", expanded=is_today):
             # [수정] "##" 등 마크다운을 Streamlit 렌더러에 맡기면 div로 감싼 raw HTML
             # 블록 처리 방식과 충돌해 헤더가 스타일 없이 그대로 텍스트로 노출됨.
             # Python에서 먼저 완전한 HTML로 변환한 뒤 삽입한다.
@@ -717,15 +716,14 @@ if history:
                 f"<div class='si-report-card'>{report_html}</div>",
                 unsafe_allow_html=True
             )
-            st.markdown("<div class='si-label' style='margin-top:18px;'>REFERENCES</div>", unsafe_allow_html=True)
+            st.markdown("<div class='si-label' style='font-size:12px; margin-top:8px;'>참고 기사</div>", unsafe_allow_html=True)
             for item in entry.get('articles', []):
                 safe_link = sanitize_url(item.get('Link', '#'))
                 clean_title = re.sub(r'<[^>]+>', '', item.get('Title', ''))
                 source = re.sub(r'<[^>]+>', '', item.get('Source', ''))
                 st.markdown(
                     f"<a href='{safe_link}' target='_blank' class='si-archive-ref'>"
-                    f"<span class='si-ref-chevron'>&gt;</span>"
-                    f"<span class='si-ref-source'>[{source}]</span>"
+                    f"<span class='si-ref-source'>{source}</span>"
                     f"<span class='si-ref-title'>{clean_title}</span></a>",
                     unsafe_allow_html=True
                 )
