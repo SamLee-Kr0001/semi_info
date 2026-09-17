@@ -425,6 +425,7 @@ def generate_report_with_citations(api_key, news_data):
     }
 
     # [수정] 429 응답 시 Exponential Backoff 적용
+    last_error = "응답 없음"
     retry_wait = 1
     for attempt in range(4):
         try:
@@ -437,22 +438,27 @@ def generate_report_with_citations(api_key, news_data):
                     if len(raw_text) < 300 or "##" not in raw_text:
                         # 응답이 비정상적으로 짧거나(조기 절단) 구조가 없으면 폐기하고 재시도
                         logger.warning(f"리포트가 비정상적으로 짧음 ({len(raw_text)} chars) → 재시도")
+                        last_error = f"응답이 비정상적으로 짧음 ({len(raw_text)} chars)"
                         continue
                     return True, inject_links_to_report(raw_text, news_data)
-                break  # choices 없으면 중단
+                last_error = f"200 응답이지만 choices 없음: {response.text[:300]}"
+                break
             elif response.status_code == 429:
                 logger.warning(f"Rate limit hit, retrying in {retry_wait}s...")
+                last_error = "429 Rate limit"
                 time.sleep(retry_wait)
                 retry_wait *= 2  # Exponential backoff
                 continue
             else:
-                logger.warning(f"NVIDIA API 오류: {response.status_code} {response.text[:200]}")
+                last_error = f"{response.status_code} {response.text[:300]}"
+                logger.warning(f"NVIDIA API 오류: {last_error}")
                 break
         except Exception as e:
+            last_error = str(e)
             logger.warning(f"Report generation error: {e}")
             break
 
-    return False, "AI 분석 실패 (NVIDIA API 응답 없음)"
+    return False, f"AI 분석 실패 (NVIDIA API): {last_error}"
 
 # ==========================================
 # 4. 키워드 관리 UI
