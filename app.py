@@ -477,10 +477,24 @@ def fetch_news(keywords, days=1, limit=NEWS_LIMIT, strict_time=False, start_dt=N
     return df.head(limit).to_dict('records')
 
 # ==========================================
-# 3. AI 리포트 생성 (NVIDIA NIM, OpenAI 호환 API)
+# 3. AI 리포트 생성 (Google Gemini REST API)
 # ==========================================
-NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
-NVIDIA_MODEL = "qwen/qwen2.5-72b-instruct"
+@st.cache_data(ttl=3600)
+def get_available_models(api_key):
+    """[수정] @st.cache_data(ttl=3600) 추가 → 매번 API 호출 방지"""
+    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+    try:
+        res = requests.get(url, timeout=10)
+        if res.status_code == 200:
+            data = res.json()
+            return [
+                m['name'].replace("models/", "")
+                for m in data.get('models', [])
+                if 'generateContent' in m.get('supportedGenerationMethods', [])
+            ]
+    except Exception as e:
+        logger.warning(f"Model list fetch error: {e}")
+    return []
 
 def sanitize_url(url_str):
     """[추가] URL scheme 검증 → XSS 방지"""
@@ -526,6 +540,15 @@ def inject_links_to_report(report_text, news_data):
     return re.sub(r'\[(\d+)\]', replace_match, report_text)
 
 def generate_report_with_citations(api_key, news_data):
+    models = get_available_models(api_key)
+    if not models:
+        models = ["gemini-2.0-flash", "gemini-2.5-pro", "gemini-1.5-flash"]
+    else:
+        # gemini-2.0-flash 우선 정렬
+        preferred = [m for m in models if "2.0-flash" in m]
+        others = [m for m in models if "2.0-flash" not in m]
+        models = preferred + others
+
     news_context = ""
     for i, item in enumerate(news_data):
         clean_title = re.sub(r'<[^>]+>', '', item['Title'])
@@ -554,52 +577,58 @@ def generate_report_with_citations(api_key, news_data):
 시사점과 향후 관전 포인트를 결론부터 서술.
 """
 
-    headers = {
-        'Authorization': f'Bearer {api_key}',
-        'Content-Type': 'application/json',
-    }
+    headers = {'Content-Type': 'application/json'}
     data = {
-        "model": NVIDIA_MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.4,
-        "max_tokens": 2048,
+        "contents": [{"parts": [{"text": prompt}]}],
+        "safetySettings": [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}],
+        "generationConfig": {
+            "temperature": 0.4,
+            "maxOutputTokens": 2048,  # 무료 Gemini API 토큰 한도에 맞춘 보수적인 출력 예산
+            # gemini-2.5 계열은 기본적으로 "thinking" 토큰이 maxOutputTokens를 잠식해
+            # 실제 응답이 조기 절단될 수 있으므로 명시적으로 비활성화
+            "thinkingConfig": {"thinkingBudget": 0},
+        }
     }
 
-    # [수정] 429 응답 시 Exponential Backoff 적용
+    # [수정] 429 응답 시 Exponential Backoff 적용, 모델별로 순차 재시도
     last_error = "응답 없음"
-    retry_wait = 1
-    for attempt in range(4):
-        try:
-            response = requests.post(NVIDIA_API_URL, headers=headers, json=data, timeout=60)
-            if response.status_code == 200:
-                res_json = response.json()
-                choices = res_json.get('choices')
-                if choices:
-                    raw_text = choices[0]['message']['content']
-                    if len(raw_text) < 300 or "##" not in raw_text:
-                        # 응답이 비정상적으로 짧거나(조기 절단) 구조가 없으면 폐기하고 재시도
-                        logger.warning(f"리포트가 비정상적으로 짧음 ({len(raw_text)} chars) → 재시도")
-                        last_error = f"응답이 비정상적으로 짧음 ({len(raw_text)} chars)"
-                        continue
-                    return True, inject_links_to_report(raw_text, news_data)
-                last_error = f"200 응답이지만 choices 없음: {response.text[:300]}"
+    for model in models:
+        if "vision" in model:
+            continue
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        retry_wait = 1
+        for attempt in range(3):
+            try:
+                response = requests.post(url, headers=headers, json=data, timeout=60)
+                if response.status_code == 200:
+                    res_json = response.json()
+                    candidates = res_json.get('candidates')
+                    if candidates:
+                        raw_text = candidates[0]['content']['parts'][0]['text']
+                        if len(raw_text) < 300 or "##" not in raw_text:
+                            # 응답이 비정상적으로 짧거나(조기 절단) 구조가 없으면 폐기하고 재시도
+                            logger.warning(f"리포트가 비정상적으로 짧음 [{model}] ({len(raw_text)} chars) → 재시도")
+                            last_error = f"응답이 비정상적으로 짧음 [{model}] ({len(raw_text)} chars)"
+                            continue
+                        return True, inject_links_to_report(raw_text, news_data)
+                    last_error = f"200 응답이지만 candidates 없음 [{model}]: {response.text[:300]}"
+                    break  # candidates 없으면 다음 모델로
+                elif response.status_code == 429:
+                    logger.warning(f"Rate limit hit [{model}], retrying in {retry_wait}s...")
+                    last_error = f"429 Rate limit [{model}]"
+                    time.sleep(retry_wait)
+                    retry_wait *= 2  # Exponential backoff
+                    continue
+                else:
+                    last_error = f"{response.status_code} [{model}] {response.text[:300]}"
+                    logger.warning(f"Gemini API 오류: {last_error}")
+                    break
+            except Exception as e:
+                last_error = str(e)
+                logger.warning(f"Report generation error [{model}]: {e}")
                 break
-            elif response.status_code == 429:
-                logger.warning(f"Rate limit hit, retrying in {retry_wait}s...")
-                last_error = "429 Rate limit"
-                time.sleep(retry_wait)
-                retry_wait *= 2  # Exponential backoff
-                continue
-            else:
-                last_error = f"{response.status_code} {response.text[:300]}"
-                logger.warning(f"NVIDIA API 오류: {last_error}")
-                break
-        except Exception as e:
-            last_error = str(e)
-            logger.warning(f"Report generation error: {e}")
-            break
 
-    return False, f"AI 분석 실패 (NVIDIA API): {last_error}"
+    return False, f"AI 분석 실패 (Gemini API): {last_error}"
 
 # ==========================================
 # 4. 키워드 관리 UI
@@ -654,13 +683,13 @@ with top_r1:
         st.rerun()
 with top_r2:
     with st.popover("🔑 API Key", use_container_width=True):
-        user_key = st.text_input("NVIDIA API Key", type="password",
+        user_key = st.text_input("Gemini API Key", type="password",
                                   label_visibility="collapsed",
-                                  placeholder="NVIDIA API Key를 입력하세요")
+                                  placeholder="Gemini API Key를 입력하세요")
         if user_key:
             api_key = user_key
-        elif "NVIDIA_API_KEY" in st.secrets:
-            api_key = st.secrets["NVIDIA_API_KEY"]
+        elif "GEMINI_API_KEY" in st.secrets:
+            api_key = st.secrets["GEMINI_API_KEY"]
 with top_r3:
     if "GITHUB_TOKEN" in st.secrets:
         st.markdown(
@@ -712,7 +741,7 @@ with col_refresh:
 # ── 리포트 생성 액션 ───────────────────────────────────
 if not today_report:
     if not api_key:
-        st.info("리포트를 생성하려면 우측 상단에서 NVIDIA API Key를 먼저 입력해주세요.")
+        st.info("리포트를 생성하려면 우측 상단에서 Gemini API Key를 먼저 입력해주세요.")
 
     if st.button("리포트 생성하기", type="primary", disabled=not bool(api_key)):
         status_box = st.status("리포트 생성 중...", expanded=True)

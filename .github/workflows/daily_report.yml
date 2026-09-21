@@ -4,7 +4,7 @@
 # 수동 실행: GitHub Actions 탭 → "Run workflow"
 #
 # 필요한 GitHub Secrets (Settings → Secrets → Actions):
-#   NVIDIA_API_KEY  : NVIDIA NIM API 키
+#   GEMINI_API_KEY  : Gemini API 키
 #   REPO_NAME       : "username/repo-name" (예: sam/semi-insight-hub)
 #
 # GITHUB_TOKEN은 Actions에서 자동 제공되므로 별도 등록 불필요.
@@ -58,7 +58,7 @@ jobs:
       # ── 4. 리포트 생성 실행 ───────────────────────────────
       - name: Run report generator
         env:
-          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GITHUB_TOKEN:   ${{ secrets.GITHUB_TOKEN }}
           REPO_NAME:      ${{ secrets.REPO_NAME }}
           FORCE_DATE:     ${{ github.event.inputs.force_date }}
