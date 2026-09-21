@@ -33,7 +33,7 @@ DAILY_REPORT = "Daily Report"
 KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
 MAX_HISTORY = 30   # 아카이브 최대 보관 수 (generate_report.py와 동일하게 유지)
-NEWS_LIMIT = 40    # 기사 제목 40건은 입력 토큰 몇 천 개 수준 → 무료 티어에서도 여유 있음.
+NEWS_LIMIT = 80    # 기사 제목 80건도 입력 토큰 1만 개 안팎 수준 → Gemini 컨텍스트 윈도우에 여유 있음.
                     # 과거 응답 절단 문제의 실제 원인은 기사 수가 아니라 gemini-2.5의
                     # "thinking" 토큰이 출력 예산을 잠식한 것이었고 thinkingBudget=0으로 해결됨.
 
@@ -246,7 +246,18 @@ button[data-testid="stPopoverButton"]:active { transform: scale(0.97) !important
     transition: opacity 0.15s ease;
 }
 .si-section-body a:hover { text-decoration: underline; opacity: 0.85; }
-/* ── 참고 기사 리스트 ────────────────────────────────── */
+/* ── 참고 기사 리스트 (기본 접힘 details) ─────────────── */
+.si-refs { margin-top: 10px; }
+.si-refs summary {
+    cursor: pointer; font-size: 13px; font-weight: 600; color: TEXT !important;
+    list-style: none; padding: 8px 2px; user-select: none;
+}
+.si-refs summary::-webkit-details-marker { display: none; }
+.si-refs summary::before {
+    content: '▸'; display: inline-block; margin-right: 6px; color: MUTED; font-size: 11px;
+    transition: transform 0.2s ease;
+}
+.si-refs[open] summary::before { transform: rotate(90deg); }
 .si-archive-ref {
     display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin: 0 -12px;
     border-radius: 12px; font-size: 14px; color: TEXT !important;
@@ -384,12 +395,17 @@ def save_daily_history(new_report_data):
 # ==========================================
 # 2. 뉴스 수집
 # ==========================================
-def _fetch_keyword_news(kw, per_kw_limit, days, strict_time, start_dt, end_dt):
-    """단일 키워드 RSS를 1회만 조회하여 (시간필터 통과 목록, 원본 전체 목록)을 함께 반환.
-    시간필터 결과가 부족할 때 재크롤링 없이 원본 목록을 그대로 폴백에 사용한다."""
+# [수정] 국내(ko/KR) 에디션만 조회하면 해외 소식이 거의 잡히지 않아 글로벌 에디션(en-US/US)을
+# 함께 조회해 기사 소스 범위를 넓힌다. 두 에디션은 동시에 요청해 지연 시간을 늘리지 않는다.
+_NEWS_EDITIONS = [
+    ("hl=ko&gl=KR&ceid=KR:ko", "domestic"),
+    ("hl=en-US&gl=US&ceid=US:en", "global"),
+]
+
+def _fetch_one_edition(kw, edition_params, per_kw_limit, days, strict_time, start_dt, end_dt):
     url = (
         f"https://news.google.com/rss/search?"
-        f"q={quote(kw)}+when:{days}d&hl=ko&gl=KR&ceid=KR:ko"
+        f"q={quote(kw)}+when:{days}d&{edition_params}"
     )
     filtered, raw = [], []
     try:
@@ -425,6 +441,16 @@ def _fetch_keyword_news(kw, per_kw_limit, days, strict_time, start_dt, end_dt):
                 break
     except Exception as e:
         logger.warning(f"News fetch error [kw={kw}]: {e}")
+    return filtered, raw
+
+def _fetch_keyword_news(kw, per_kw_limit, days, strict_time, start_dt, end_dt):
+    """단일 키워드를 국내/글로벌 두 에디션에서 조회하여 (시간필터 통과 목록, 원본 전체 목록)을 함께 반환.
+    시간필터 결과가 부족할 때 재크롤링 없이 원본 목록을 그대로 폴백에 사용한다."""
+    filtered, raw = [], []
+    for edition_params, _ in _NEWS_EDITIONS:
+        f, r = _fetch_one_edition(kw, edition_params, per_kw_limit, days, strict_time, start_dt, end_dt)
+        filtered.extend(f)
+        raw.extend(r)
     return filtered, raw
 
 
@@ -811,17 +837,23 @@ def render_day_report(entry):
             f"<div class='si-report-card'>{report_html}</div>",
             unsafe_allow_html=True
         )
-    st.markdown("<div class='si-label' style='font-size:12px; margin-top:8px;'>참고 기사</div>", unsafe_allow_html=True)
-    for item in entry.get('articles', []):
+    articles = entry.get('articles', [])
+    refs_html = ""
+    for item in articles:
         safe_link = sanitize_url(item.get('Link', '#'))
         clean_title = re.sub(r'<[^>]+>', '', item.get('Title', ''))
         source = re.sub(r'<[^>]+>', '', item.get('Source', ''))
-        st.markdown(
+        refs_html += (
             f"<a href='{safe_link}' target='_blank' class='si-archive-ref'>"
             f"<span class='si-ref-source'>{source}</span>"
-            f"<span class='si-ref-title'>{clean_title}</span></a>",
-            unsafe_allow_html=True
+            f"<span class='si-ref-title'>{clean_title}</span></a>"
         )
+    # [수정] Streamlit expander는 이미 일별 토글용으로 쓰고 있어 중첩할 수 없으므로,
+    # 참고 기사 목록은 순수 HTML <details>로 기본 접힘 + 클릭 시 펼침을 구현한다.
+    st.markdown(
+        f"<details class='si-refs'><summary>참고 기사 ({len(articles)})</summary>{refs_html}</details>",
+        unsafe_allow_html=True
+    )
 
 # ── 아카이브 (월별 그룹핑, 기본 접힘 + 일별 클릭 펼침) ──────
 # [수정] Streamlit은 expander를 expander 안에 중첩할 수 없어 월 단위는

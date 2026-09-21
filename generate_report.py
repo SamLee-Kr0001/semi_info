@@ -44,7 +44,7 @@ KEYWORD_FILE  = "keywords.json"
 HISTORY_FILE  = "daily_history.json"
 DEFAULT_KEYWORDS = ["반도체", "삼성전자", "SK하이닉스", "HBM", "NAND", "파운드리"]
 MAX_HISTORY   = 30          # 아카이브 최대 보관 수
-NEWS_LIMIT    = 40          # 기사 제목 40건은 입력 토큰 몇 천 개 수준 → 무료 티어에서도 여유 있음.
+NEWS_LIMIT    = 80          # 기사 제목 80건도 입력 토큰 1만 개 안팎 수준 → Gemini 컨텍스트 윈도우에 여유 있음.
                              # 과거 응답 절단 문제의 실제 원인은 기사 수가 아니라 gemini-2.5의
                              # "thinking" 토큰이 출력 예산을 잠식한 것이었고 thinkingBudget=0으로 해결됨.
 NEWS_DAYS     = 2           # 수집 기간 (일)
@@ -128,12 +128,14 @@ def load_keywords() -> list[str]:
 # ════════════════════════════════════════════════════════════
 # 3. 뉴스 수집
 # ════════════════════════════════════════════════════════════
-def _fetch_keyword_news(kw: str, per_kw: int, start_dt: datetime, end_dt: datetime) -> tuple[list[dict], list[dict]]:
-    """단일 키워드 RSS를 1회만 조회하여 (시간필터 통과 목록, 원본 전체 목록)을 함께 반환.
-    폴백 시 재크롤링 없이 이 원본 목록을 그대로 재사용한다."""
+# [수정] 국내(ko/KR) 에디션만 조회하면 해외 소식이 거의 잡히지 않아 글로벌 에디션(en-US/US)을
+# 함께 조회해 기사 소스 범위를 넓힌다.
+_NEWS_EDITIONS = ["hl=ko&gl=KR&ceid=KR:ko", "hl=en-US&gl=US&ceid=US:en"]
+
+def _fetch_one_edition(kw: str, edition_params: str, per_kw: int, start_dt: datetime, end_dt: datetime) -> tuple[list[dict], list[dict]]:
     url = (
         f"https://news.google.com/rss/search?"
-        f"q={quote(kw)}+when:{NEWS_DAYS}d&hl=ko&gl=KR&ceid=KR:ko"
+        f"q={quote(kw)}+when:{NEWS_DAYS}d&{edition_params}"
     )
     filtered: list[dict] = []
     raw: list[dict] = []
@@ -173,6 +175,18 @@ def _fetch_keyword_news(kw: str, per_kw: int, start_dt: datetime, end_dt: dateti
                 break
     except Exception as e:
         logger.warning(f"뉴스 수집 오류 [kw={kw}]: {e}")
+    return filtered, raw
+
+
+def _fetch_keyword_news(kw: str, per_kw: int, start_dt: datetime, end_dt: datetime) -> tuple[list[dict], list[dict]]:
+    """단일 키워드를 국내/글로벌 두 에디션에서 조회하여 (시간필터 통과 목록, 원본 전체 목록)을 함께 반환.
+    폴백 시 재크롤링 없이 이 원본 목록을 그대로 재사용한다."""
+    filtered: list[dict] = []
+    raw: list[dict] = []
+    for edition_params in _NEWS_EDITIONS:
+        f, r = _fetch_one_edition(kw, edition_params, per_kw, start_dt, end_dt)
+        filtered.extend(f)
+        raw.extend(r)
     return filtered, raw
 
 
