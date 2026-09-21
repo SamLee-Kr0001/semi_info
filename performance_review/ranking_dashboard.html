@@ -720,11 +720,14 @@
       var peerScore = Math.min(peerCount, w.peerCap) / w.peerCap * 100;
       var baseScore = perfScore * w.wPerf + capScore * w.wCap + peerScore * w.wPeer;
       var adjust = adjustments[m.name] || 0;
-      var finalScore = Math.max(0, Math.min(100, baseScore + adjust));
+      // 추천가산점: 동료환산점수(20% 가중치, 4회 이상 상한)와는 별개로, 추천받은 횟수
+      // 1회당 +1점을 상한 없이 그대로 더한다 (팀장 조정점수와 같은 가산 방식).
+      var bonus = peerCount;
+      var finalScore = Math.max(0, Math.min(100, baseScore + adjust + bonus));
       return {
         name: m.name, part: m.part,
         perf: round2(perfScore), cap: round2(capScore), peer: round2(peerScore),
-        base: round2(baseScore), adjust: adjust, final: round2(finalScore),
+        base: round2(baseScore), adjust: adjust, bonus: bonus, final: round2(finalScore),
         peerCount: peerCount,
         detail: m
       };
@@ -985,6 +988,7 @@
       '<th style="width:34px;">순위</th><th>이름</th><th>파트</th>' +
       '<th class="num">성과</th><th class="num">역량</th><th class="num">동료</th>' +
       '<th class="num">자가점검기준</th><th class="num" style="width:64px;">팀장조정</th>' +
+      '<th class="num" title="추천 1회당 +1점, 상한 없음">추천가산</th>' +
       '<th class="num">최종점수</th><th style="width:130px;">분포</th>' +
       '</tr></thead><tbody>';
     rows.forEach(function (r) {
@@ -994,6 +998,7 @@
           'min="-10" max="10" step="1" value="' + (r.adjust || 0) + '" data-name="' + escapeHTML(r.name) + '" ' +
           'title="자가점수 부풀리기 보정용, -10~+10">'
         : '<span title="CSV로 불러온 데이터는 조정할 수 없습니다 — xlsx 일괄 업로드를 사용하세요.">-</span>';
+      var bonusTxt = r.bonus != null ? ("+" + r.bonus) : "-";
       html += '<tr>' +
         '<td><span class="rank-badge' + (r.rank === 1 ? ' top' : '') + '">' + escapeHTML(r.rank) + '</span></td>' +
         '<td>' + escapeHTML(r.name) + '</td>' +
@@ -1003,6 +1008,7 @@
         '<td class="num">' + fmt(r.peer) + '</td>' +
         '<td class="num">' + fmt(r.base != null ? r.base : r.final) + '</td>' +
         '<td class="num">' + adjustCell + '</td>' +
+        '<td class="num" title="추천받은 횟수 ' + (r.peerCount != null ? r.peerCount : 0) + '회 × 1점">' + escapeHTML(bonusTxt) + '</td>' +
         '<td class="num">' + fmt(r.final) + '</td>' +
         '<td><div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;"></div></div></td>' +
         '</tr>';
@@ -1052,10 +1058,17 @@
   }
 
   function adjustCaptionHTML(r, marginLeft) {
-    if (!r.adjust) return "";
-    var sign = r.adjust > 0 ? "+" : "";
+    var parts = [];
+    if (r.adjust) {
+      var asign = r.adjust > 0 ? "+" : "";
+      parts.push("팀장 조정 " + asign + r.adjust + "점");
+    }
+    if (r.bonus) {
+      parts.push("추천가산 +" + r.bonus + "점(" + r.peerCount + "회)");
+    }
+    if (!parts.length) return "";
     var ml = marginLeft == null ? 132 : marginLeft;
-    return '<div class="caption" style="margin:4px 0 0 ' + ml + 'px;">팀장 조정 ' + sign + r.adjust + '점 → 최종점수 ' + fmt(r.final) + '점</div>';
+    return '<div class="caption" style="margin:4px 0 0 ' + ml + 'px;">' + parts.join(" · ") + ' → 최종점수 ' + fmt(r.final) + '점</div>';
   }
 
   function renderBreakdownChart(rows) {
@@ -1180,9 +1193,11 @@
     var deltaEl = $("mDelta");
     var sign = delta >= 0 ? "+" : "";
     var deltaText = "팀 평균 대비 " + sign + fmt(delta) + "점";
-    if (person.adjust) {
-      var asign = person.adjust > 0 ? "+" : "";
-      deltaText += " · 자가점검 기준 " + fmt(person.base) + " (팀장 조정 " + asign + person.adjust + ")";
+    if (person.adjust || person.bonus) {
+      var extras = [];
+      if (person.adjust) extras.push("팀장 조정 " + (person.adjust > 0 ? "+" : "") + person.adjust);
+      if (person.bonus) extras.push("추천가산 +" + person.bonus);
+      deltaText += " · 자가점검 기준 " + fmt(person.base) + " (" + extras.join(", ") + ")";
     }
     deltaEl.textContent = deltaText;
     deltaEl.className = "delta" + (delta >= 0 ? " up" : "");
