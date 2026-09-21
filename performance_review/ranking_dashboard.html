@@ -104,6 +104,7 @@
   }
   .pill-tag.pill-admin { border-color: var(--primary); color: var(--primary); }
   .pill-tag.pill-member { border-color: var(--hairline-soft); color: var(--ink); }
+  .pill-tag.pill-sm { font-size: 12px; padding: 2px 10px; line-height: 18px; }
   .pill-tag .dot-ind { width: 6px; height: 6px; border-radius: 9999px; background: currentColor; }
 
   /* ---------- form controls ---------- */
@@ -129,6 +130,34 @@
   .status { font-size: 13px; margin-top: 10px; min-height: 18px; }
   .status.ok { color: var(--primary); }
   .status.err { color: var(--ink-strong); background: var(--canvas-soft); border: 1px solid var(--hairline); padding: 6px 10px; border-radius: 6px; display: inline-block; }
+
+  input[type="number"].text-input { width: 84px; padding: 8px 10px; }
+  .weights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px 20px; margin-top: 12px; }
+  .weights-grid .wf { display: flex; flex-direction: column; gap: 6px; }
+  .weights-grid .wf label { font-size: 12px; color: var(--mute); }
+
+  details.adv { border: 1px solid var(--hairline); border-radius: 8px; padding: 0; overflow: hidden; }
+  details.adv summary {
+    cursor: pointer; padding: 14px 18px; font-size: 14px; font-weight: 600; color: var(--ink);
+    list-style: none; display: flex; align-items: center; gap: 8px;
+  }
+  details.adv summary::-webkit-details-marker { display: none; }
+  details.adv summary::before { content: "▸"; color: var(--mute); font-size: 11px; transition: transform 0.12s; }
+  details.adv[open] summary::before { transform: rotate(90deg); }
+  details.adv .adv-body { padding: 0 18px 18px; border-top: 1px solid var(--hairline); padding-top: 16px; }
+
+  .file-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .file-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 8px 12px; border: 1px solid var(--hairline); border-radius: 6px; background: var(--canvas-soft);
+    font-size: 13px;
+  }
+  .file-row .fname { color: var(--ink); }
+  .file-row .fmeta { color: var(--mute); font-size: 12px; }
+  .file-row.err { border-color: var(--primary-deep); }
+  .file-row .ficon { width: 8px; height: 8px; border-radius: 9999px; flex: 0 0 auto; }
+  .file-row.ok .ficon { background: var(--primary); }
+  .file-row.err .ficon { background: var(--mute); }
 
   /* ---------- table ---------- */
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -195,6 +224,26 @@
   .lk-dash { width: 10px; height: 0; border-top: 2px dashed var(--primary-soft); display: inline-block; }
   .lk-fill { width: 10px; height: 10px; background: var(--primary); border-radius: 3px; display: inline-block; }
 
+  /* ---------- self-assessment detail (member view) ---------- */
+  .detail-list { display: flex; flex-direction: column; }
+  .detail-item { padding: 16px 0; border-bottom: 1px solid var(--hairline); }
+  .detail-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .detail-item:first-child { padding-top: 0; }
+  .detail-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .detail-label { font-size: 14px; font-weight: 600; color: var(--ink-strong); }
+  .score-chip {
+    flex: 0 0 auto; font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    color: var(--primary); background: var(--canvas-soft); border: 1px solid var(--hairline);
+    border-radius: 6px; padding: 2px 8px; white-space: nowrap;
+  }
+  .detail-goal { font-size: 13px; color: var(--mute); margin-bottom: 3px; }
+  .detail-goal b { color: var(--body); font-weight: 500; }
+  .detail-result { font-size: 14px; color: var(--body); }
+  .detail-result b { color: var(--body); font-weight: 500; }
+  .peer-made { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .peer-made .pm-row { font-size: 14px; color: var(--body); }
+  .peer-made .pm-row b { color: var(--ink); }
+
   /* ---------- modal ---------- */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(2px);
@@ -257,7 +306,7 @@
 <section class="hero-band">
   <div class="eyebrow-mono">OFFLINE PERFORMANCE REVIEW</div>
   <h1 class="display-xl">구성원 고과 순위 대시보드</h1>
-  <p class="body-lg hero-sub">1:1 리뷰용 화면입니다. 관리자 모드에서는 전체 순위와 구성원별 데이터를 볼 수 있고, 구성원 모드로 전환하면 선택한 한 사람의 데이터와 팀 대비 비교 지표만 표시됩니다 &mdash; 다른 구성원의 개별 점수는 화면에 나타나지 않습니다.</p>
+  <p class="body-lg hero-sub">구성원 자가점검표(.xlsx) 여러 개를 한 번에 올리면 전체 통계를 자동 계산합니다. 관리자 모드에서는 전체 순위를, 구성원 모드로 전환하면 선택한 한 사람의 데이터와 팀 대비 비교만 표시됩니다 &mdash; 다른 구성원의 개별 점수는 화면에 나타나지 않습니다.</p>
 </section>
 
 <div class="dashed-divider"></div>
@@ -266,27 +315,54 @@
   <div class="card-feature">
     <div class="section-head">
       <div class="eyebrow-mono" style="margin-bottom:6px;">STEP 1</div>
-      <h2 class="display-sm">데이터 불러오기</h2>
+      <h2 class="display-sm">구성원 자가점검표 일괄 업로드</h2>
     </div>
     <p class="body-md" style="margin-bottom:16px;">
-      <span class="code-chip">성과_고과_시스템.xlsx</span> 의 <span class="code-chip">계산_순위표</span> 시트를 CSV로 저장하거나 표를 복사해 붙여넣으세요.
+      <span class="code-chip">구성원_배포용/자가점검표_&lt;이름&gt;.xlsx</span> 파일들을 회신받은 그대로 모두 선택하세요. 이 페이지 안에서 바로 읽어 성과·역량·동료평가 점수를 계산합니다 (외부 전송 없음).
     </p>
     <div class="row">
-      <input type="file" id="fileInput" accept=".csv,text/csv,text/plain">
+      <input type="file" id="bulkFileInput" accept=".xlsx" multiple>
       <button class="btn btn-primary" id="sampleBtn" type="button">예시 데이터로 미리보기</button>
       <button class="btn btn-outline" id="clearBtn" type="button">초기화</button>
     </div>
-    <p class="caption" style="margin:14px 0 6px;">또는 Excel 표를 복사(Ctrl+C)한 뒤 아래에 붙여넣고 적용하세요.</p>
-    <textarea class="text-input" id="pasteArea" placeholder="이름,파트,성과환산점수(100),역량환산점수(100),동료환산점수(100),최종점수,순위"></textarea>
-    <div class="row" style="margin-top:10px;">
-      <button class="btn btn-outline btn-sm" id="applyPasteBtn" type="button">붙여넣은 데이터 적용</button>
-    </div>
     <div class="status" id="statusMsg"></div>
+    <div class="file-list" id="fileList"></div>
   </div>
 
-  <div class="card-feature">
+  <details class="adv">
+    <summary>고급 설정 — 점수 가중치 조정</summary>
+    <div class="adv-body">
+      <p class="caption">기본값은 <span class="code-chip">성과_고과_시스템.xlsx</span>의 '파라미터' 시트와 동일합니다. 값을 바꾸면 즉시 다시 계산됩니다.</p>
+      <div class="weights-grid">
+        <div class="wf"><label>성과 가중치 (%)</label><input class="text-input" type="number" id="wPerf" min="0" max="100" value="60"></div>
+        <div class="wf"><label>역량 가중치 (%)</label><input class="text-input" type="number" id="wCap" min="0" max="100" value="20"></div>
+        <div class="wf"><label>동료평가 가중치 (%)</label><input class="text-input" type="number" id="wPeer" min="0" max="100" value="20"></div>
+        <div class="wf"><label>전문성 점수 가중치 (역량 100점 중)</label><input class="text-input" type="number" id="wEffort" min="0" max="100" value="40"></div>
+        <div class="wf"><label>학점 환산 가중치 (역량 100점 중)</label><input class="text-input" type="number" id="wCredit" min="0" max="100" value="30"></div>
+        <div class="wf"><label>AI 활용 가중치 (역량 100점 중)</label><input class="text-input" type="number" id="wAi" min="0" max="100" value="30"></div>
+        <div class="wf"><label>학점 상한 (SKHU+mySuni)</label><input class="text-input" type="number" id="creditCap" min="1" value="20"></div>
+        <div class="wf"><label>동료추천 만점 기준 (횟수)</label><input class="text-input" type="number" id="peerCap" min="1" value="4"></div>
+      </div>
+      <div class="row" style="margin-top:14px;">
+        <button class="btn btn-outline btn-sm" id="resetWeightsBtn" type="button">기본값으로 재설정</button>
+      </div>
+    </div>
+  </details>
+
+  <details class="adv" style="margin-top:14px;">
+    <summary>고급 — 이미 계산된 순위표를 CSV로 붙여넣기</summary>
+    <div class="adv-body">
+      <p class="caption" style="margin-bottom:10px;">마스터 워크북의 '계산_순위표' 시트를 이미 계산해 둔 경우, 표를 복사해 여기에 붙여넣어도 됩니다.</p>
+      <textarea class="text-input" id="pasteArea" placeholder="이름,파트,성과환산점수(100),역량환산점수(100),동료환산점수(100),최종점수,순위"></textarea>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn btn-outline btn-sm" id="applyPasteBtn" type="button">붙여넣은 데이터 적용</button>
+      </div>
+    </div>
+  </details>
+
+  <div class="card-feature" style="margin-top:20px;">
     <p class="caption">
-      이 페이지는 완전히 오프라인으로 동작하며 불러온 데이터는 이 브라우저 탭의 메모리에만 존재하고 저장되지 않습니다.
+      이 페이지는 완전히 오프라인으로 동작하며 업로드한 파일은 이 브라우저 탭의 메모리에서만 처리되고 저장되거나 전송되지 않습니다.
       구성원 모드는 화면에 표시되는 내용을 제한하는 <b style="color:var(--body);">화면 보기 제한 기능</b>이며, 서버 인증을 대체하는 보안 장치는 아닙니다.
       1:1 진행 중 노트북을 구성원에게 보여줄 때 사용하고, 자리를 비울 때는 관리자 PIN으로 보호하세요.
     </p>
@@ -303,7 +379,7 @@
   </div>
 
   <div class="card-feature">
-    <div id="tableWrap"><div class="empty-state">아직 불러온 데이터가 없습니다. 위에서 CSV 파일을 선택하거나 예시 데이터를 눌러보세요.</div></div>
+    <div id="tableWrap"><div class="empty-state">아직 불러온 데이터가 없습니다. 위에서 자가점검표 파일들을 선택하거나 예시 데이터를 눌러보세요.</div></div>
   </div>
 
   <div class="card-feature">
@@ -374,6 +450,11 @@
     </div>
     <div id="memberBreakdown"></div>
   </div>
+
+  <div class="card-feature" id="memberDetailCard">
+    <h3 class="display-sm" style="margin-bottom:16px;">자가점검 상세 내용 <span class="pill-tag pill-sm" style="margin-left:8px;">1:1 참고용</span></h3>
+    <div class="detail-list" id="memberDetail"></div>
+  </div>
 </section>
 
 <footer class="footer">
@@ -390,17 +471,364 @@
 (function () {
   "use strict";
 
-  var state = { rows: [], mode: "admin", selectedMember: null, adminPin: null, pinPromptShown: false };
+  var DEFAULT_WEIGHTS = {
+    wPerf: 0.6, wCap: 0.2, wPeer: 0.2,
+    wEffort: 40, wCredit: 30, wAi: 30,
+    creditCap: 20, peerCap: 4
+  };
+
+  var state = {
+    members: [],       // raw parsed self-assessment records (xlsx path only)
+    rows: [],          // computed rows used by all renderers {name,part,perf,cap,peer,final,rank,detail?}
+    weights: Object.assign({}, DEFAULT_WEIGHTS),
+    mode: "admin", selectedMember: null, adminPin: null, pinPromptShown: false
+  };
   var $ = function (id) { return document.getElementById(id); };
   var tooltip = $("tooltip");
 
-  var SAMPLE_CSV = [
-    "이름,파트,기여도,성과도,팀장_성과정성,성과환산점수(100),SKHU학점,mySuni학점,AI자가점수,팀장_역량정성,역량환산점수(100),추천받은횟수,동료환산점수(100),최종점수,순위",
-    "김영희,개발파트,9,9,5,94.0,8,6,7,4,73.0,1,25.0,76.0,1",
-    "홍길동,개발파트,8,7,4,77.0,6,4,8,4,68.0,3,75.0,74.8,2",
-    "박민수,기획파트,6,7,4,71.0,5,5,9,5,77.0,1,25.0,63.0,3",
-    "이철수,기획파트,7,6,3,63.0,4,2,6,3,48.0,3,75.0,62.4,4"
-  ].join("\n");
+  // ======================================================================
+  // XLSX reader (ZIP central directory + DecompressionStream + DOMParser).
+  // No external library, no network request — everything runs locally.
+  // ======================================================================
+  var EOCD_SIG = 0x06054b50, CDH_SIG = 0x02014b50, LFH_SIG = 0x04034b50;
+
+  function readZipEntries(buffer) {
+    var dv = new DataView(buffer);
+    var bytes = new Uint8Array(buffer);
+    var maxBack = Math.min(buffer.byteLength, 65557);
+    var eocdOffset = -1;
+    for (var i = buffer.byteLength - 22; i >= buffer.byteLength - maxBack; i--) {
+      if (i < 0) break;
+      if (dv.getUint32(i, true) === EOCD_SIG) { eocdOffset = i; break; }
+    }
+    if (eocdOffset === -1) throw new Error("ZIP 구조를 인식할 수 없습니다 (손상되었거나 .xlsx 파일이 아닙니다).");
+
+    var cdEntries = dv.getUint16(eocdOffset + 10, true);
+    var cdOffset = dv.getUint32(eocdOffset + 16, true);
+
+    var entries = {};
+    var p = cdOffset;
+    for (var i2 = 0; i2 < cdEntries; i2++) {
+      var sig = dv.getUint32(p, true);
+      if (sig !== CDH_SIG) throw new Error("ZIP 중앙 디렉터리 항목이 올바르지 않습니다.");
+      var method = dv.getUint16(p + 10, true);
+      var compSize = dv.getUint32(p + 20, true);
+      var fnLen = dv.getUint16(p + 28, true);
+      var extraLen = dv.getUint16(p + 30, true);
+      var commentLen = dv.getUint16(p + 32, true);
+      var localOffset = dv.getUint32(p + 42, true);
+      var nameBytes = bytes.subarray(p + 46, p + 46 + fnLen);
+      var name = new TextDecoder("utf-8").decode(nameBytes);
+      entries[name] = { method: method, compSize: compSize, localOffset: localOffset };
+      p += 46 + fnLen + extraLen + commentLen;
+    }
+    return { bytes: bytes, dv: dv, entries: entries };
+  }
+
+  function extractZipEntryText(zip, name) {
+    var info = zip.entries[name];
+    if (!info) return Promise.resolve(null);
+    var dv = zip.dv, bytes = zip.bytes;
+    var lp = info.localOffset;
+    if (dv.getUint32(lp, true) !== LFH_SIG) return Promise.reject(new Error("로컬 파일 헤더가 올바르지 않습니다: " + name));
+    var fnLen = dv.getUint16(lp + 26, true);
+    var extraLen = dv.getUint16(lp + 28, true);
+    var dataStart = lp + 30 + fnLen + extraLen;
+    var compData = bytes.subarray(dataStart, dataStart + info.compSize);
+
+    if (info.method === 0) {
+      return Promise.resolve(new TextDecoder("utf-8").decode(compData));
+    }
+    if (info.method === 8) {
+      var stream = new Blob([compData]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+      return new Response(stream).arrayBuffer().then(function (ab) {
+        return new TextDecoder("utf-8").decode(new Uint8Array(ab));
+      });
+    }
+    return Promise.reject(new Error("지원하지 않는 압축 방식입니다: " + name));
+  }
+
+  function parseXml(text) { return new DOMParser().parseFromString(text, "application/xml"); }
+
+  function sharedStringsFromXml(xmlText) {
+    if (!xmlText) return [];
+    var doc = parseXml(xmlText);
+    var siEls = doc.getElementsByTagName("si");
+    var out = [];
+    for (var i = 0; i < siEls.length; i++) {
+      var tEls = siEls[i].getElementsByTagName("t");
+      var s = "";
+      for (var j = 0; j < tEls.length; j++) s += tEls[j].textContent;
+      out.push(s);
+    }
+    return out;
+  }
+
+  function cellsFromSheetXml(xmlText, sharedStrings) {
+    var doc = parseXml(xmlText);
+    var cEls = doc.getElementsByTagName("c");
+    var cells = {};
+    for (var i = 0; i < cEls.length; i++) {
+      var c = cEls[i];
+      var ref = c.getAttribute("r");
+      if (!ref) continue;
+      var t = c.getAttribute("t");
+      var value = null;
+      if (t === "inlineStr") {
+        var isEl = c.getElementsByTagName("is")[0];
+        var tEl = isEl ? isEl.getElementsByTagName("t")[0] : null;
+        value = tEl ? tEl.textContent : "";
+      } else if (t === "s") {
+        var vEl0 = c.getElementsByTagName("v")[0];
+        var idx = vEl0 ? parseInt(vEl0.textContent, 10) : -1;
+        value = sharedStrings[idx] != null ? sharedStrings[idx] : "";
+      } else {
+        var vEl = c.getElementsByTagName("v")[0];
+        if (!vEl || vEl.textContent === "") {
+          value = null;
+        } else if (t === "str" || t === "b") {
+          value = vEl.textContent;
+        } else {
+          var n = parseFloat(vEl.textContent);
+          value = isNaN(n) ? vEl.textContent : n;
+        }
+      }
+      cells[ref] = value;
+    }
+    return cells;
+  }
+
+  function resolveSheetPath(workbookXmlText, relsXmlText, sheetName) {
+    var wbDoc = parseXml(workbookXmlText);
+    var sheetEls = wbDoc.getElementsByTagName("sheet");
+    var rId = null;
+    var RELS_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+    for (var i = 0; i < sheetEls.length; i++) {
+      if (sheetEls[i].getAttribute("name") === sheetName) {
+        rId = sheetEls[i].getAttributeNS(RELS_NS, "id") || sheetEls[i].getAttribute("r:id");
+        break;
+      }
+    }
+    if (!rId) return null;
+    var relsDoc = parseXml(relsXmlText);
+    var relEls = relsDoc.getElementsByTagName("Relationship");
+    for (var j = 0; j < relEls.length; j++) {
+      if (relEls[j].getAttribute("Id") === rId) {
+        var target = relEls[j].getAttribute("Target");
+        if (target.charAt(0) === "/") return target.substring(1);
+        return "xl/" + target.replace(/^\.?\//, "");
+      }
+    }
+    return null;
+  }
+
+  function readSheetCells(arrayBuffer, sheetName) {
+    var zip = readZipEntries(arrayBuffer);
+    return Promise.all([
+      extractZipEntryText(zip, "xl/workbook.xml"),
+      extractZipEntryText(zip, "xl/_rels/workbook.xml.rels")
+    ]).then(function (res) {
+      var workbookXml = res[0], relsXml = res[1];
+      if (!workbookXml || !relsXml) throw new Error("올바른 xlsx 파일이 아닙니다.");
+      var sheetPath = resolveSheetPath(workbookXml, relsXml, sheetName);
+      if (!sheetPath) throw new Error("'" + sheetName + "' 시트를 찾을 수 없습니다. 자가점검표 개인 파일이 맞는지 확인하세요.");
+      return Promise.all([
+        extractZipEntryText(zip, "xl/sharedStrings.xml"),
+        extractZipEntryText(zip, sheetPath)
+      ]).then(function (res2) {
+        var sharedStrings = sharedStringsFromXml(res2[0]);
+        var sheetXml = res2[1];
+        if (!sheetXml) throw new Error("시트 데이터를 읽을 수 없습니다.");
+        return cellsFromSheetXml(sheetXml, sharedStrings);
+      });
+    });
+  }
+
+  // ======================================================================
+  // Self-assessment field mapping (must match performance_review 워크북 layout)
+  // ======================================================================
+  var FIELD_CELLS = {
+    name: "B3", part: "B4", grade: "B5", year: "B6",
+    t1_goal: "B9", t1_result: "B10", t1_score: "B11",
+    t2_goal: "B12", t2_result: "B13", t2_score: "B14",
+    t3_goal: "B15", t3_result: "B16", t3_score: "B17",
+    t4_goal: "B18", t4_result: "B19", t4_score: "B20",
+    regret: "B21", regret_score: "B22",
+    contrib_note: "B23", contrib_score: "B24",
+    perf_note: "B25", perf_score: "B26",
+    effort_goal: "B29", effort_result: "B30", effort_score: "B31",
+    skhu: "B32", mysuni: "B33",
+    ai_goal: "B34", ai_result: "B35", ai_score: "B36",
+    peer_same_name: "B39", peer_same_reason: "B40",
+    peer_other_name: "B41", peer_other_reason: "B42"
+  };
+
+  function memberFromCells(cells, fallbackName) {
+    var g = function (key) { return cells[FIELD_CELLS[key]]; };
+    var name = (g("name") || fallbackName || "").toString().trim();
+    return {
+      name: name,
+      part: (g("part") || "").toString().trim(),
+      grade: (g("grade") || "").toString().trim(),
+      t1: { goal: g("t1_goal") || "", result: g("t1_result") || "", score: numOrNull(g("t1_score")) },
+      t2: { goal: g("t2_goal") || "", result: g("t2_result") || "", score: numOrNull(g("t2_score")) },
+      t3: { goal: g("t3_goal") || "", result: g("t3_result") || "", score: numOrNull(g("t3_score")) },
+      t4: { goal: g("t4_goal") || "", result: g("t4_result") || "", score: numOrNull(g("t4_score")) },
+      regret: { text: g("regret") || "", score: numOrNull(g("regret_score")) },
+      contrib: { note: g("contrib_note") || "", score: numOrNull(g("contrib_score")) },
+      perf: { note: g("perf_note") || "", score: numOrNull(g("perf_score")) },
+      effort: { goal: g("effort_goal") || "", result: g("effort_result") || "", score: numOrNull(g("effort_score")) },
+      skhu: numOrNull(g("skhu")) || 0,
+      mysuni: numOrNull(g("mysuni")) || 0,
+      ai: { goal: g("ai_goal") || "", result: g("ai_result") || "", score: numOrNull(g("ai_score")) },
+      peerSame: { name: (g("peer_same_name") || "").toString().trim(), reason: g("peer_same_reason") || "" },
+      peerOther: { name: (g("peer_other_name") || "").toString().trim(), reason: g("peer_other_reason") || "" }
+    };
+  }
+
+  function numOrNull(v) {
+    if (v == null || v === "") return null;
+    var n = typeof v === "number" ? v : parseFloat(v);
+    return isNaN(n) ? null : n;
+  }
+
+  function average(nums) {
+    var vals = nums.filter(function (v) { return v != null && !isNaN(v); });
+    if (!vals.length) return 0;
+    return vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+  }
+
+  // ======================================================================
+  // Scoring — mirrors 성과_고과_시스템.xlsx '계산_순위표' formulas exactly
+  // ======================================================================
+  function computeRowsFromMembers(members, w) {
+    var counts = {};
+    members.forEach(function (m) {
+      if (m.peerSame.name) counts[m.peerSame.name] = (counts[m.peerSame.name] || 0) + 1;
+      if (m.peerOther.name) counts[m.peerOther.name] = (counts[m.peerOther.name] || 0) + 1;
+    });
+
+    var rows = members.map(function (m) {
+      var perfScore = average([m.t1.score, m.t2.score, m.t3.score, m.t4.score, m.regret.score, m.contrib.score, m.perf.score]) * 10;
+      var creditSum = (m.skhu || 0) + (m.mysuni || 0);
+      var capScore = ((m.effort.score || 0) / 10 * w.wEffort) +
+        (Math.min(creditSum, w.creditCap) / w.creditCap * w.wCredit) +
+        ((m.ai.score || 0) / 10 * w.wAi);
+      var peerCount = counts[m.name] || 0;
+      var peerScore = Math.min(peerCount, w.peerCap) / w.peerCap * 100;
+      var finalScore = perfScore * w.wPerf + capScore * w.wCap + peerScore * w.wPeer;
+      return {
+        name: m.name, part: m.part,
+        perf: round2(perfScore), cap: round2(capScore), peer: round2(peerScore), final: round2(finalScore),
+        peerCount: peerCount,
+        detail: m
+      };
+    });
+
+    rows.sort(function (a, b) { return b.final - a.final; });
+    rows.forEach(function (r, idx) { r.rank = idx + 1; });
+    return rows;
+  }
+
+  function round2(n) { return Math.round(n * 100) / 100; }
+
+  function readWeightsFromForm() {
+    function num(id, fallback) {
+      var v = parseFloat($(id).value);
+      return isNaN(v) ? fallback : v;
+    }
+    return {
+      wPerf: num("wPerf", 60) / 100,
+      wCap: num("wCap", 20) / 100,
+      wPeer: num("wPeer", 20) / 100,
+      wEffort: num("wEffort", 40),
+      wCredit: num("wCredit", 30),
+      wAi: num("wAi", 30),
+      creditCap: num("creditCap", 20) || 20,
+      peerCap: num("peerCap", 4) || 4
+    };
+  }
+
+  function recomputeFromMembers() {
+    if (!state.members.length) return;
+    state.weights = readWeightsFromForm();
+    state.rows = computeRowsFromMembers(state.members, state.weights);
+    renderAdmin(state.rows);
+    if (state.mode === "member" && state.selectedMember) {
+      var person = state.rows.filter(function (r) { return r.name === state.selectedMember; })[0];
+      if (person) renderMember(person, computeAggregates(state.rows), state.rows.length);
+    }
+  }
+
+  ["wPerf", "wCap", "wPeer", "wEffort", "wCredit", "wAi", "creditCap", "peerCap"].forEach(function (id) {
+    $(id).addEventListener("change", recomputeFromMembers);
+  });
+  $("resetWeightsBtn").addEventListener("click", function () {
+    $("wPerf").value = 60; $("wCap").value = 20; $("wPeer").value = 20;
+    $("wEffort").value = 40; $("wCredit").value = 30; $("wAi").value = 30;
+    $("creditCap").value = 20; $("peerCap").value = 4;
+    recomputeFromMembers();
+  });
+
+  // ======================================================================
+  // Built-in sample data (mirrors the example rows shipped in 성과_고과_시스템.xlsx)
+  // ======================================================================
+  function sampleMembers() {
+    return [
+      { name: "홍길동", part: "개발파트", grade: "선임",
+        t1: { goal: "공정 수율 개선 — 목표: 수율 95% 이상", result: "수율 96.2% 달성(목표 대비 +1.2%p), 불량률 30% 감소", score: 9 },
+        t2: { goal: "설비 예방정비 체계 고도화 — 목표: 비가동시간 10% 이상 단축", result: "비가동시간 15% 단축 달성", score: 8 },
+        t3: { goal: "신규 라인 셋업 지원 — 목표: 셋업 기간 3주 이내", result: "셋업 기간 2주로 단축, 목표 초과 달성", score: 9 },
+        t4: { goal: "사내 데이터 분석 스터디 운영 — 목표: 분기 4회 이상", result: "분기 4회 진행 완료", score: 7 },
+        regret: { text: "설비 장애 대응 매뉴얼 개정(목표: 상반기 완료) 대비 3주 지연", score: 6 },
+        contrib: { note: "핵심 과제 3건 모두 목표 초과 달성으로 팀 KPI 기여", score: 8 },
+        perf: { note: "선임으로서 후배 멘토링 포함 종합 성과", score: 8 },
+        effort: { goal: "통계 분석 사내교육 40시간 이수", result: "42시간 이수 완료", score: 8 },
+        skhu: 6, mysuni: 4,
+        ai: { goal: "업무에 AI 도구 월 4회 이상 활용", result: "월 평균 6회 활용(이상탐지 모델 프로토타입 등)", score: 8 },
+        peerSame: { name: "김영희", reason: "데이터 기반 문제해결 방식이 팀 전체 업무 표준화에 크게 기여함" },
+        peerOther: { name: "이철수", reason: "기획-현업 협업 시 데이터 요청에 신속하고 정확하게 대응함" } },
+      { name: "김영희", part: "개발파트", grade: "책임",
+        t1: { goal: "품질 이슈 Root Cause 분석체계 구축 — 목표: 분석 리드타임 30% 단축", result: "리드타임 40% 단축, 재발률 20%p 감소", score: 10 },
+        t2: { goal: "협력사 품질 감사 프로세스 개선 — 목표: 감사 소요일 2일 이내", result: "감사 소요일 1.5일로 단축", score: 9 },
+        t3: { goal: "신입 OJT 프로그램 설계 — 목표: 만족도 4.5/5.0 이상", result: "만족도 4.6/5.0 달성", score: 9 },
+        t4: { goal: "품질 데이터 대시보드 구축 — 목표: 부서 공용 대시보드 1건 오픈", result: "대시보드 오픈, 부서 전체 사용 중", score: 8 },
+        regret: { text: "협력사 감사 프로세스 전사 확산(목표: 3개 부서) 대비 1개 부서만 적용", score: 6 },
+        contrib: { note: "품질 체계 개선이 전사 지표에 직접 반영", score: 9 },
+        perf: { note: "", score: 9 },
+        effort: { goal: "통계 심화 과정 1개 수료", result: "과정 수료 완료", score: 8 },
+        skhu: 8, mysuni: 6,
+        ai: { goal: "불량 예측 모델 PoC 1건 진행", result: "PoC 진행, 정확도 82% 확인", score: 7 },
+        peerSame: { name: "홍길동", reason: "공정 이슈 발생 시 근본 원인 분석을 함께 리드하며 신뢰도 높은 협업을 보여줌" },
+        peerOther: { name: "이철수", reason: "품질-기획 간 일정 조율에서 상호 입장을 잘 이해하고 합리적으로 조정함" } },
+      { name: "이철수", part: "기획파트", grade: "선임",
+        t1: { goal: "연간 사업계획 수립 프로세스 개선 — 목표: 수립 기간 20% 단축", result: "수립 기간 3주 단축(약 25%)", score: 8 },
+        t2: { goal: "신규 투자 타당성 분석 — 목표: 분석 2건 완료", result: "2건 완료, 모두 승인", score: 7 },
+        t3: { goal: "경쟁사 벤치마킹 리포트 — 목표: 분기 1회 정기 발간", result: "분기별 정기 발간 체계 구축 완료", score: 7 },
+        t4: { goal: "사내 뉴스레터 기획 — 목표: 월 1회 발행", result: "월 1회 발행, 총 6회", score: 6 },
+        regret: { text: "사업계획 수립 시 현업 의견수렴(목표: 3개 부서 인터뷰) 대비 2개 부서만 진행", score: 5 },
+        contrib: { note: "", score: 7 },
+        perf: { note: "", score: 6 },
+        effort: { goal: "리더십 과정 1개 이수", result: "이수 완료", score: 6 },
+        skhu: 4, mysuni: 2,
+        ai: { goal: "AI 리서치 도구로 보고서 작성 시간 20% 단축", result: "작성 시간 15% 단축", score: 6 },
+        peerSame: { name: "박민수", reason: "사업계획 수립 과정에서 꼼꼼한 데이터 검증으로 리스크를 사전에 줄여줌" },
+        peerOther: { name: "홍길동", reason: "현업 데이터 요청에 적극적으로 협조하여 기획 품질을 높여줌" } },
+      { name: "박민수", part: "기획파트", grade: "책임",
+        t1: { goal: "중장기 R&D 로드맵 수립 — 목표: 로드맵 확정 및 승인", result: "로드맵 확정, 경영진 승인 완료", score: 8 },
+        t2: { goal: "정부 R&D 과제 기획/신청 — 목표: 1건 이상 선정", result: "1건 선정, 예산 확보", score: 8 },
+        t3: { goal: "부서간 협업 R&D 과제 조율 — 목표: 착수 지연 2주 이내", result: "착수 지연 1주로 최소화", score: 7 },
+        t4: { goal: "R&D 성과관리 체계 개선 제안 — 목표: 개선안 1건 제출", result: "개선안 제출 및 일부 채택", score: 7 },
+        regret: { text: "정부 과제 신청서 품질 목표(외부 검토 2회) 대비 1회만 진행", score: 6 },
+        contrib: { note: "", score: 6 },
+        perf: { note: "", score: 7 },
+        effort: { goal: "특허/기술동향 분석 교육 이수", result: "이수 완료", score: 7 },
+        skhu: 5, mysuni: 5,
+        ai: { goal: "AI 리서치 도구로 동향 분석 보고서 월 2건 이상 작성", result: "월 평균 3건 작성", score: 9 },
+        peerSame: { name: "이철수", reason: "복잡한 이해관계 조정 상황에서 침착하고 논리적으로 문제를 해결함" },
+        peerOther: { name: "홍길동", reason: "현업 관점에서 R&D 우선순위에 대한 현실적인 피드백을 제공함" } }
+    ];
+  }
 
   function setStatus(msg, ok) {
     var el = $("statusMsg");
@@ -408,7 +836,17 @@
     el.className = "status" + (ok === true ? " ok" : ok === false ? " err" : "");
   }
 
-  // ---------- CSV parsing (RFC4180-ish) ----------
+  function renderFileList(items) {
+    var html = items.map(function (it) {
+      return '<div class="file-row ' + (it.ok ? "ok" : "err") + '">' +
+        '<span class="fname"><span class="ficon" style="display:inline-block;margin-right:8px;"></span>' + escapeHTML(it.fileName) + '</span>' +
+        '<span class="fmeta">' + escapeHTML(it.ok ? (it.name + (it.part ? " · " + it.part : "")) : it.error) + '</span>' +
+        '</div>';
+    }).join("");
+    $("fileList").innerHTML = html;
+  }
+
+  // ---------- CSV parsing (RFC4180-ish, used by the advanced/legacy path) ----------
   function parseCSV(text) {
     text = text.replace(/^﻿/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     var rows = [];
@@ -455,7 +893,7 @@
     var iName = findCol(headers, function (h) { return h.indexOf("이름") !== -1; });
     var iPart = findCol(headers, function (h) { return h.indexOf("파트") !== -1; });
     var iPerf = findCol(headers, function (h) { return h.indexOf("성과환산") !== -1; });
-    var iCap  = findCol(headers, function (h) { return h.indexOf("역량환산") !== -1; });
+    var iCap = findCol(headers, function (h) { return h.indexOf("역량환산") !== -1; });
     var iPeer = findCol(headers, function (h) { return h.indexOf("동료환산") !== -1; });
     var iFinal = findCol(headers, function (h) { return h === "최종점수" || h.indexOf("최종점수") !== -1; });
     var iRank = findCol(headers, function (h) { return h === "순위"; });
@@ -650,6 +1088,48 @@
       '</div>';
   }
 
+  function detailItem(label, item, scoreMax) {
+    if (!item) return "";
+    var hasGoal = item.goal != null;
+    var scoreTxt = item.score == null ? "-" : (item.score + "/" + (scoreMax || 10));
+    var html = '<div class="detail-item">' +
+      '<div class="detail-top"><div class="detail-label">' + escapeHTML(label) + '</div>' +
+      '<div class="score-chip">' + escapeHTML(scoreTxt) + '</div></div>';
+    if (hasGoal) {
+      html += '<div class="detail-goal"><b>목표</b> · ' + escapeHTML(item.goal || "-") + '</div>';
+      html += '<div class="detail-result"><b>결과</b> · ' + escapeHTML(item.result || "-") + '</div>';
+    } else {
+      html += '<div class="detail-result">' + escapeHTML(item.text || item.note || "-") + '</div>';
+    }
+    return html;
+  }
+
+  function renderMemberDetail(person) {
+    var d = person.detail;
+    var card = $("memberDetailCard");
+    if (!d) { card.classList.add("hidden"); return; }
+    card.classList.remove("hidden");
+
+    var html = '<div class="detail-list">' +
+      detailItem("중점과제 1순위", d.t1) +
+      detailItem("중점과제 2순위", d.t2) +
+      detailItem("중점과제 3순위", d.t3) +
+      detailItem("추가 과제", d.t4) +
+      detailItem("가장 아쉬운 성과", d.regret) +
+      detailItem("전문성 강화 노력", d.effort) +
+      detailItem("AI 활용 역량", d.ai) +
+      '</div>';
+
+    if (d.peerSame.name || d.peerOther.name) {
+      html += '<div class="peer-made" style="margin-top:18px; padding-top:16px; border-top:1px solid var(--hairline);">';
+      html += '<div class="detail-label" style="margin-bottom:8px;">본인이 추천한 동료</div>';
+      if (d.peerSame.name) html += '<div class="pm-row"><b>' + escapeHTML(d.peerSame.name) + '</b> (본인 파트) — ' + escapeHTML(d.peerSame.reason || "-") + '</div>';
+      if (d.peerOther.name) html += '<div class="pm-row"><b>' + escapeHTML(d.peerOther.name) + '</b> (타 파트) — ' + escapeHTML(d.peerOther.reason || "-") + '</div>';
+      html += '</div>';
+    }
+    $("memberDetail").innerHTML = html;
+  }
+
   function renderMember(person, agg, totalCount) {
     $("mName").textContent = person.name;
     $("mPart").textContent = person.part || "-";
@@ -676,6 +1156,8 @@
         '<div class="score-val">' + fmt(p.perfC + p.capC + p.peerC) + '</div>' +
       '</div>';
     attachBarTooltips("#memberBreakdown .stack > div[data-tip]");
+
+    renderMemberDetail(person);
   }
 
   // ---------- mode switching ----------
@@ -705,9 +1187,10 @@
     $("navSwitchBtn").classList.add("hidden");
     $("navBackBtn").classList.remove("hidden");
     setModePill("member", name);
-    // defense-in-depth: blank the raw paste textarea so other members' rows
-    // aren't sitting in visible markup while member mode is active
+    // defense-in-depth: blank the raw paste textarea and file list so other
+    // members' rows aren't sitting in visible markup while member mode is active
     $("pasteArea").value = "";
+    $("fileList").innerHTML = "";
   }
 
   function exitToAdminMode() {
@@ -774,22 +1257,14 @@
     $("pinCheckInput").focus();
   }
 
-  // ---------- data loading ----------
-  function loadFromText(text, sourceLabel) {
-    try {
-      var rows = rowsFromCSV(text);
-      state.rows = rows;
-      renderAdmin(rows);
-      setStatus((sourceLabel || "데이터") + "를 불러왔습니다 (" + rows.length + "명).", true);
-      if (!state.pinPromptShown) {
-        state.pinPromptShown = true;
-        showSetPinModal();
-      }
-    } catch (err) {
-      setStatus("오류: " + err.message, false);
+  function maybePromptPin() {
+    if (!state.pinPromptShown) {
+      state.pinPromptShown = true;
+      showSetPinModal();
     }
   }
 
+  // ---------- data loading: bulk xlsx (primary path) ----------
   function decodeArrayBuffer(buf) {
     var utf8 = new TextDecoder("utf-8").decode(buf);
     if (utf8.indexOf("�") === -1) return utf8;
@@ -797,36 +1272,82 @@
     catch (e) { return utf8; }
   }
 
-  $("fileInput").addEventListener("change", function (e) {
-    var file = e.target.files && e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function () {
-      var text = decodeArrayBuffer(new Uint8Array(reader.result));
-      loadFromText(text, "'" + file.name + "'");
-    };
-    reader.onerror = function () { setStatus("파일을 읽는 중 오류가 발생했습니다.", false); };
-    reader.readAsArrayBuffer(file);
+  function loadMembersFromRows(members, sourceLabel) {
+    state.members = members;
+    state.weights = readWeightsFromForm();
+    state.rows = computeRowsFromMembers(members, state.weights);
+    renderAdmin(state.rows);
+    setStatus((sourceLabel || "데이터") + "를 불러왔습니다 (" + members.length + "명).", true);
+    maybePromptPin();
+  }
+
+  $("bulkFileInput").addEventListener("change", function (e) {
+    var files = Array.prototype.slice.call(e.target.files || []);
+    if (!files.length) return;
+    setStatus("파일 " + files.length + "개를 읽는 중…");
+
+    Promise.all(files.map(function (file) {
+      return file.arrayBuffer()
+        .then(function (buf) { return readSheetCells(buf, "자가점검표"); })
+        .then(function (cells) {
+          var m = memberFromCells(cells, file.name.replace(/\.xlsx$/i, ""));
+          if (!m.name) throw new Error("이름(B3) 칸이 비어 있습니다.");
+          return { ok: true, fileName: file.name, name: m.name, part: m.part, member: m };
+        })
+        .catch(function (err) {
+          return { ok: false, fileName: file.name, error: err.message };
+        });
+    })).then(function (results) {
+      renderFileList(results);
+      var okOnes = results.filter(function (r) { return r.ok; });
+      var errOnes = results.filter(function (r) { return !r.ok; });
+
+      // de-dupe by name, last file wins
+      var byName = {};
+      okOnes.forEach(function (r) { byName[r.member.name] = r.member; });
+      var members = Object.keys(byName).map(function (n) { return byName[n]; });
+
+      if (!members.length) {
+        setStatus("불러올 수 있는 자가점검표가 없습니다. 파일 목록의 오류 메시지를 확인하세요.", false);
+        return;
+      }
+      loadMembersFromRows(members, "업로드한 자가점검표");
+      if (errOnes.length) {
+        setStatus(members.length + "명을 불러왔습니다 (" + errOnes.length + "개 파일은 읽지 못했습니다. 목록을 확인하세요).", true);
+      }
+    });
   });
 
   $("applyPasteBtn").addEventListener("click", function () {
     var text = $("pasteArea").value;
     if (!text.trim()) { setStatus("붙여넣은 데이터가 없습니다.", false); return; }
-    loadFromText(text, "붙여넣은 데이터");
+    try {
+      var rows = rowsFromCSV(text);
+      state.members = [];
+      state.rows = rows;
+      renderAdmin(rows);
+      setStatus("붙여넣은 데이터를 불러왔습니다 (" + rows.length + "명). 이 경로는 구성원별 자가점검 상세 내용은 표시하지 않습니다.", true);
+      maybePromptPin();
+    } catch (err) {
+      setStatus("오류: " + err.message, false);
+    }
   });
 
   $("sampleBtn").addEventListener("click", function () {
-    $("pasteArea").value = SAMPLE_CSV;
-    loadFromText(SAMPLE_CSV, "예시 데이터");
+    $("bulkFileInput").value = "";
+    loadMembersFromRows(sampleMembers(), "예시 데이터");
+    renderFileList(sampleMembers().map(function (m) { return { ok: true, fileName: "자가점검표_" + m.name + ".xlsx (예시)", name: m.name, part: m.part }; }));
   });
 
   $("clearBtn").addEventListener("click", function () {
+    state.members = [];
     state.rows = [];
     state.pinPromptShown = false;
     state.adminPin = null;
     $("pasteArea").value = "";
-    $("fileInput").value = "";
-    $("tableWrap").innerHTML = '<div class="empty-state">아직 불러온 데이터가 없습니다. 위에서 CSV 파일을 선택하거나 예시 데이터를 눌러보세요.</div>';
+    $("bulkFileInput").value = "";
+    $("fileList").innerHTML = "";
+    $("tableWrap").innerHTML = '<div class="empty-state">아직 불러온 데이터가 없습니다. 위에서 자가점검표 파일들을 선택하거나 예시 데이터를 눌러보세요.</div>';
     $("rankChart").innerHTML = '<div class="empty-state">데이터를 불러오면 그래프가 표시됩니다.</div>';
     $("breakdownChart").innerHTML = '<div class="empty-state">데이터를 불러오면 그래프가 표시됩니다.</div>';
     populateMemberSelect([]);
