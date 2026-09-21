@@ -44,7 +44,7 @@ KEYWORD_FILE  = "keywords.json"
 HISTORY_FILE  = "daily_history.json"
 DEFAULT_KEYWORDS = ["반도체", "삼성전자", "SK하이닉스", "HBM", "NAND", "파운드리"]
 MAX_HISTORY   = 30          # 아카이브 최대 보관 수
-NEWS_LIMIT    = 80          # 기사 제목 80건도 입력 토큰 1만 개 안팎 수준 → Gemini 컨텍스트 윈도우에 여유 있음.
+NEWS_LIMIT    = 160         # 기사 제목 160건도 입력 토큰 2만 개 안팎 수준 → Gemini 컨텍스트 윈도우에 여유 있음.
                              # 과거 응답 절단 문제의 실제 원인은 기사 수가 아니라 gemini-2.5의
                              # "thinking" 토큰이 출력 예산을 잠식한 것이었고 thinkingBudget=0으로 해결됨.
 NEWS_DAYS     = 2           # 수집 기간 (일)
@@ -211,7 +211,9 @@ def fetch_news(keywords: list[str], target_date_str: str) -> list[dict]:
 
     logger.info(f"뉴스 수집 범위: {start_dt} ~ {end_dt} KST")
 
-    per_kw = max(3, NEWS_LIMIT // max(len(keywords), 1))
+    # [수정] 키워드가 많을 때(예: 20개 이상) NEWS_LIMIT // 키워드수가 바닥값(3)에 걸려
+    # NEWS_LIMIT을 올려도 실제 수집량이 늘지 않는 문제가 있어 바닥값을 8로 상향.
+    per_kw = max(8, NEWS_LIMIT // max(len(keywords), 1))
     filtered_all: list[dict] = []
     raw_all: list[dict] = []
 

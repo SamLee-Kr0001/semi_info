@@ -33,7 +33,7 @@ DAILY_REPORT = "Daily Report"
 KEYWORD_FILE = 'keywords.json'
 HISTORY_FILE = 'daily_history.json'
 MAX_HISTORY = 30   # 아카이브 최대 보관 수 (generate_report.py와 동일하게 유지)
-NEWS_LIMIT = 80    # 기사 제목 80건도 입력 토큰 1만 개 안팎 수준 → Gemini 컨텍스트 윈도우에 여유 있음.
+NEWS_LIMIT = 160   # 기사 제목 160건도 입력 토큰 2만 개 안팎 수준 → Gemini 컨텍스트 윈도우에 여유 있음.
                     # 과거 응답 절단 문제의 실제 원인은 기사 수가 아니라 gemini-2.5의
                     # "thinking" 토큰이 출력 예산을 잠식한 것이었고 thinkingBudget=0으로 해결됨.
 
@@ -469,8 +469,10 @@ def fetch_news(keywords, days=1, limit=NEWS_LIMIT, strict_time=False, start_dt=N
             end_dt -= timedelta(days=1)
         start_dt = end_dt - timedelta(hours=18)
 
-    # [수정] per_kw_limit: 전체 limit을 키워드 수로 동적 배분
-    per_kw_limit = max(3, limit // max(len(keywords), 1))
+    # [수정] per_kw_limit: 전체 limit을 키워드 수로 동적 배분.
+    # 키워드가 많을 때(예: 20개 이상) limit // 키워드수가 바닥값(3)에 걸려 NEWS_LIMIT을
+    # 올려도 실제 수집량이 늘지 않는 문제가 있어 바닥값을 8로 상향.
+    per_kw_limit = max(8, limit // max(len(keywords), 1))
 
     filtered_all, raw_all = [], []
     with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(keywords))) as executor:
