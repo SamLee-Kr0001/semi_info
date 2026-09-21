@@ -479,8 +479,9 @@
 
   var state = {
     members: [],       // raw parsed self-assessment records (xlsx path only)
-    rows: [],          // computed rows used by all renderers {name,part,perf,cap,peer,final,rank,detail?}
+    rows: [],          // computed rows used by all renderers {name,part,perf,cap,peer,base,adjust,final,rank,detail?}
     weights: Object.assign({}, DEFAULT_WEIGHTS),
+    adjustments: {},    // { memberName: -10..10 } 팀장 조정점수, keyed by name so it survives re-renders
     mode: "admin", selectedMember: null, adminPin: null, pinPromptShown: false
   };
   var $ = function (id) { return document.getElementById(id); };
@@ -701,7 +702,8 @@
   // ======================================================================
   // Scoring — mirrors 성과_고과_시스템.xlsx '계산_순위표' formulas exactly
   // ======================================================================
-  function computeRowsFromMembers(members, w) {
+  function computeRowsFromMembers(members, w, adjustments) {
+    adjustments = adjustments || {};
     var counts = {};
     members.forEach(function (m) {
       if (m.peerSame.name) counts[m.peerSame.name] = (counts[m.peerSame.name] || 0) + 1;
@@ -716,10 +718,13 @@
         ((m.ai.score || 0) / 10 * w.wAi);
       var peerCount = counts[m.name] || 0;
       var peerScore = Math.min(peerCount, w.peerCap) / w.peerCap * 100;
-      var finalScore = perfScore * w.wPerf + capScore * w.wCap + peerScore * w.wPeer;
+      var baseScore = perfScore * w.wPerf + capScore * w.wCap + peerScore * w.wPeer;
+      var adjust = adjustments[m.name] || 0;
+      var finalScore = Math.max(0, Math.min(100, baseScore + adjust));
       return {
         name: m.name, part: m.part,
-        perf: round2(perfScore), cap: round2(capScore), peer: round2(peerScore), final: round2(finalScore),
+        perf: round2(perfScore), cap: round2(capScore), peer: round2(peerScore),
+        base: round2(baseScore), adjust: adjust, final: round2(finalScore),
         peerCount: peerCount,
         detail: m
       };
@@ -752,13 +757,28 @@
   function recomputeFromMembers() {
     if (!state.members.length) return;
     state.weights = readWeightsFromForm();
-    state.rows = computeRowsFromMembers(state.members, state.weights);
+    state.rows = computeRowsFromMembers(state.members, state.weights, state.adjustments);
     renderAdmin(state.rows);
     if (state.mode === "member" && state.selectedMember) {
       var person = state.rows.filter(function (r) { return r.name === state.selectedMember; })[0];
       if (person) renderMember(person, computeAggregates(state.rows), state.rows.length);
     }
   }
+
+  function handleAdjustInputChange(e) {
+    var el = e.target.closest && e.target.closest(".adjust-input");
+    if (!el) return;
+    var name = el.getAttribute("data-name");
+    var v = parseFloat(el.value);
+    if (isNaN(v)) v = 0;
+    v = Math.max(-10, Math.min(10, v));
+    state.adjustments[name] = v;
+    // defer the table rebuild: this fires during the input's own change/blur
+    // dispatch, and replacing its container's innerHTML synchronously here
+    // throws in Chromium ("node no longer a child... moved in blur handler")
+    setTimeout(recomputeFromMembers, 0);
+  }
+  $("tableWrap").addEventListener("change", handleAdjustInputChange);
 
   ["wPerf", "wCap", "wPeer", "wEffort", "wCredit", "wAi", "creditCap", "peerCap"].forEach(function (id) {
     $(id).addEventListener("change", recomputeFromMembers);
@@ -960,13 +980,20 @@
   // ---------- admin rendering ----------
   function renderTable(rows) {
     var maxFinal = Math.max.apply(null, rows.map(function (r) { return r.final; }));
+    var editableAdjust = state.members.length > 0;
     var html = '<table><thead><tr>' +
       '<th style="width:34px;">순위</th><th>이름</th><th>파트</th>' +
       '<th class="num">성과</th><th class="num">역량</th><th class="num">동료</th>' +
+      '<th class="num">자가점검기준</th><th class="num" style="width:64px;">팀장조정</th>' +
       '<th class="num">최종점수</th><th style="width:130px;">분포</th>' +
       '</tr></thead><tbody>';
     rows.forEach(function (r) {
       var pct = maxFinal > 0 ? (r.final / maxFinal * 100) : 0;
+      var adjustCell = editableAdjust
+        ? '<input type="number" class="text-input adjust-input" style="width:64px;padding:4px 6px;text-align:right;" ' +
+          'min="-10" max="10" step="1" value="' + (r.adjust || 0) + '" data-name="' + escapeHTML(r.name) + '" ' +
+          'title="자가점수 부풀리기 보정용, -10~+10">'
+        : '<span title="CSV로 불러온 데이터는 조정할 수 없습니다 — xlsx 일괄 업로드를 사용하세요.">-</span>';
       html += '<tr>' +
         '<td><span class="rank-badge' + (r.rank === 1 ? ' top' : '') + '">' + escapeHTML(r.rank) + '</span></td>' +
         '<td>' + escapeHTML(r.name) + '</td>' +
@@ -974,6 +1001,8 @@
         '<td class="num">' + fmt(r.perf) + '</td>' +
         '<td class="num">' + fmt(r.cap) + '</td>' +
         '<td class="num">' + fmt(r.peer) + '</td>' +
+        '<td class="num">' + fmt(r.base != null ? r.base : r.final) + '</td>' +
+        '<td class="num">' + adjustCell + '</td>' +
         '<td class="num">' + fmt(r.final) + '</td>' +
         '<td><div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;"></div></div></td>' +
         '</tr>';
@@ -1001,9 +1030,10 @@
   }
 
   function breakdownParts(r) {
-    var perfC = (r.perf == null ? 0 : r.perf) * 0.6;
-    var capC = (r.cap == null ? 0 : r.cap) * 0.2;
-    var peerC = (r.peer == null ? 0 : r.peer) * 0.2;
+    var w = state.weights || DEFAULT_WEIGHTS;
+    var perfC = (r.perf == null ? 0 : r.perf) * w.wPerf;
+    var capC = (r.cap == null ? 0 : r.cap) * w.wCap;
+    var peerC = (r.peer == null ? 0 : r.peer) * w.wPeer;
     return { perfC: perfC, capC: capC, peerC: peerC, total: (perfC + capC + peerC) || 1 };
   }
 
@@ -1021,14 +1051,24 @@
       '</div>';
   }
 
+  function adjustCaptionHTML(r, marginLeft) {
+    if (!r.adjust) return "";
+    var sign = r.adjust > 0 ? "+" : "";
+    var ml = marginLeft == null ? 132 : marginLeft;
+    return '<div class="caption" style="margin:4px 0 0 ' + ml + 'px;">팀장 조정 ' + sign + r.adjust + '점 → 최종점수 ' + fmt(r.final) + '점</div>';
+  }
+
   function renderBreakdownChart(rows) {
     var html = '<div class="bars">';
     rows.forEach(function (r) {
       var p = breakdownParts(r);
-      html += '<div class="bar-row">' +
+      html += '<div>' +
+        '<div class="bar-row">' +
         '<div class="name">' + escapeHTML(r.name) + '<span class="part">' + escapeHTML(r.part) + '</span></div>' +
         stackHTML(r) +
         '<div class="score-val">' + fmt(p.perfC + p.capC + p.peerC) + '</div>' +
+        '</div>' +
+        adjustCaptionHTML(r) +
         '</div>';
     });
     html += '</div>';
@@ -1139,7 +1179,12 @@
     var delta = person.final - agg.final.avg;
     var deltaEl = $("mDelta");
     var sign = delta >= 0 ? "+" : "";
-    deltaEl.textContent = "팀 평균 대비 " + sign + fmt(delta) + "점";
+    var deltaText = "팀 평균 대비 " + sign + fmt(delta) + "점";
+    if (person.adjust) {
+      var asign = person.adjust > 0 ? "+" : "";
+      deltaText += " · 자가점검 기준 " + fmt(person.base) + " (팀장 조정 " + asign + person.adjust + ")";
+    }
+    deltaEl.textContent = deltaText;
     deltaEl.className = "delta" + (delta >= 0 ? " up" : "");
 
     var html =
@@ -1154,7 +1199,8 @@
       '<div class="bar-row" style="grid-template-columns:1fr 64px;">' +
         stackHTML(person) +
         '<div class="score-val">' + fmt(p.perfC + p.capC + p.peerC) + '</div>' +
-      '</div>';
+      '</div>' +
+      adjustCaptionHTML(person, 0);
     attachBarTooltips("#memberBreakdown .stack > div[data-tip]");
 
     renderMemberDetail(person);
@@ -1275,7 +1321,7 @@
   function loadMembersFromRows(members, sourceLabel) {
     state.members = members;
     state.weights = readWeightsFromForm();
-    state.rows = computeRowsFromMembers(members, state.weights);
+    state.rows = computeRowsFromMembers(members, state.weights, state.adjustments);
     renderAdmin(state.rows);
     setStatus((sourceLabel || "데이터") + "를 불러왔습니다 (" + members.length + "명).", true);
     maybePromptPin();
@@ -1335,6 +1381,8 @@
 
   $("sampleBtn").addEventListener("click", function () {
     $("bulkFileInput").value = "";
+    // seed example team-lead adjustments so the sample matches 성과_고과_시스템.xlsx exactly
+    state.adjustments = { "홍길동": 1, "김영희": -2, "이철수": 5, "박민수": 0 };
     loadMembersFromRows(sampleMembers(), "예시 데이터");
     renderFileList(sampleMembers().map(function (m) { return { ok: true, fileName: "자가점검표_" + m.name + ".xlsx (예시)", name: m.name, part: m.part }; }));
   });
@@ -1342,6 +1390,7 @@
   $("clearBtn").addEventListener("click", function () {
     state.members = [];
     state.rows = [];
+    state.adjustments = {};
     state.pinPromptShown = false;
     state.adminPin = null;
     $("pasteArea").value = "";
