@@ -1,0 +1,10 @@
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:400;font-display:swap;src:url('../assets/fonts/plexkr-400.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:500;font-display:swap;src:url('../assets/fonts/plexkr-500.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:600;font-display:swap;src:url('../assets/fonts/plexkr-600.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:700;font-display:swap;src:url('../assets/fonts/plexkr-700.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('../assets/fonts/plexmono-400.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('../assets/fonts/plexmono-500.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('../assets/fonts/plexmono-600.woff2') format('woff2')}
+@font-face{font-family:'Noto Sans SC';font-style:normal;font-weight:400;font-display:swap;src:url('../assets/fonts/notosc-400.woff2') format('woff2')}
+@font-face{font-family:'Noto Sans SC';font-style:normal;font-weight:500;font-display:swap;src:url('../assets/fonts/notosc-500.woff2') format('woff2')}
+@font-face{font-family:'Noto Sans SC';font-style:normal;font-weight:600;font-display:swap;src:url('../assets/fonts/notosc-600.woff2') format('woff2')}

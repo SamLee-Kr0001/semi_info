@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>중국 소재 공급망 Choke Point</title>
+<style>
+/*__FONTS__*/
+/* Layout: 1920×1080 고정 슬라이드. 상단 = 사실(기판), 하단 = 당사 판단(증착막), 중간 = 시각화 */
+:root{
+  --paper:#F4F6F7; --ink:#14181D; --muted:#5A6470; --rule:#CDD3D9;
+  --film:#2B4A8B; --film-tint:#E5EBF4;
+  --lv-l3:#9FCDB2; --lv-l23:#EBCB5C; --lv-l2:#E08A3C; --lv-l12:#B9332B; --lv-eq:#1E2228;
+  --stage:#2A2F36;
+  --sans:"IBM Plex Sans KR","Noto Sans SC",Pretendard,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --mono:"IBM Plex Mono","IBM Plex Sans KR","Noto Sans SC",ui-monospace,Menlo,Consolas,monospace;
+  --fs-h:46px; --fs-l:30px; --fs-b:24px; --fs-t:19px; --fs-s:16px; --fs-f:15px;
+  --pad-x:72px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--stage)}
+body{font-family:var(--sans);color:var(--ink);overflow:hidden}
+#deck{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+.slide{word-break:keep-all;position:absolute;inset:0;width:1920px;height:1080px;background:var(--paper);
+  padding:52px var(--pad-x) 0;display:none;grid-template-rows:auto auto minmax(0,1fr) auto auto;row-gap:20px;overflow:hidden}
+.slide.active{display:grid}
+.slide.appendix{grid-template-rows:auto minmax(0,1fr) auto}
+
+/* headline */
+.hd h1{margin:0;font-size:var(--fs-h);line-height:1.25;font-weight:600;letter-spacing:-.01em;text-wrap:balance;max-width:1700px}
+.appendix .hd h1 .ano{font-family:var(--mono);font-weight:500;color:var(--muted);margin-right:20px}
+
+/* fact / view layers */
+.layer{display:grid;grid-template-columns:96px minmax(0,1fr);column-gap:24px;align-items:start}
+.layer .tag{font-size:var(--fs-s);font-weight:600;line-height:1.3;padding-top:6px}
+.layer ul{list-style:none;margin:0;padding:0;display:grid;row-gap:4px}
+.layer li{font-size:var(--fs-b);line-height:1.45}
+.fact{border-top:2px solid var(--ink);padding-top:12px}
+.fact .tag{color:var(--ink)}
+.view{position:relative;background:var(--film-tint);padding:22px 24px 16px 0;margin:0 calc(-1 * var(--pad-x));padding-left:var(--pad-x);padding-right:var(--pad-x)}
+.view::before{content:"";position:absolute;left:0;right:0;top:0;height:8px;
+  background:repeating-linear-gradient(135deg,var(--film) 0 2px,transparent 2px 8px);border-top:2px solid var(--film)}
+.view .tag{color:var(--film)}
+.vtag{font-size:18px;color:var(--film);font-weight:500;margin-left:8px;white-space:nowrap}
+.conf{font-family:var(--mono);font-size:var(--fs-s);color:var(--muted);margin-left:6px;white-space:nowrap}
+
+/* chips */
+.g{display:inline-block;font-family:var(--mono);font-size:var(--fs-f);font-weight:500;line-height:1.3;
+  padding:0 6px;border:1.5px solid var(--ink);border-radius:2px;margin-left:8px;vertical-align:3px;white-space:nowrap;color:var(--ink)}
+.g.gA{background:var(--ink);color:var(--paper)}
+.g.gC{border-style:dashed;border-color:var(--muted);color:var(--muted)}
+.g.gE{border-style:dotted;border-color:var(--muted);color:var(--muted)}
+.lv{display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:500;font-size:var(--fs-s);
+  line-height:1.25;padding:3px 9px;border-radius:3px;white-space:nowrap;color:var(--ink)}
+.lv-L3p{background:var(--lv-l3)} .lv-L23{background:var(--lv-l23)} .lv-L2{background:var(--lv-l2)}
+.lv-L12{background:var(--lv-l12);color:#fff} .lv-EQ{background:var(--lv-eq);color:#fff}
+.lv-na,.lv-ok{background:transparent;border:1.5px dashed var(--rule);color:var(--muted)}
+
+/* visual area */
+.vis{min-height:0;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.vhead{display:flex;justify-content:space-between;align-items:center;gap:24px}
+.vtitle{font-size:var(--fs-t);font-weight:600;color:var(--ink)}
+.legend{display:flex;gap:6px;align-items:center;margin-left:auto}
+.legend .lab{font-size:var(--fs-s);color:var(--muted);margin-right:6px}
+.vbody{flex:1;min-height:0}
+.cols{display:grid;gap:40px;height:100%}
+.ptitle{font-size:var(--fs-t);font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:10px}
+.ptitle.fv{color:var(--film)}
+.ptitle.fv::before{content:"";width:22px;height:12px;background:repeating-linear-gradient(135deg,var(--film) 0 2px,transparent 2px 6px);border:1.5px solid var(--film)}
+.note{font-size:var(--fs-f);color:var(--muted);line-height:1.35}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* tables */
+table{border-collapse:collapse;width:100%;font-size:var(--fs-t);line-height:1.3}
+table.tight{font-size:18px}
+table.tight td{padding:3px 8px;line-height:1.2}
+table.tight th{padding:4px 8px}
+th{font-size:var(--fs-s);font-weight:600;color:var(--muted);text-align:left;padding:6px 10px;border-bottom:1.5px solid var(--ink);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:middle}
+th.fv{color:var(--film);border-bottom-color:var(--film);background:repeating-linear-gradient(135deg,rgba(43,74,139,.16) 0 2px,transparent 2px 7px)}
+td.fv{color:var(--film)}
+tr.top td{font-weight:600}
+tr.dim td{color:var(--muted)}
+.fvpanel{background:var(--film-tint);padding:14px 18px;border-top:2px solid var(--film)}
+.fvpanel table td{border-bottom-color:#C7D1E3}
+
+/* footer */
+.ft{display:grid;grid-template-columns:270px minmax(0,1fr) auto;column-gap:28px;align-items:center;border-top:1px solid var(--rule);
+  padding:9px 0 12px;font-size:var(--fs-f);color:var(--muted);line-height:1.35;min-height:58px}
+.ft .org{color:var(--ink);font-weight:500}
+.ft .right{display:flex;align-items:center;gap:16px;white-space:nowrap}
+.ft .gl{display:flex;gap:2px;align-items:center}
+.ft .gl .g{margin-left:6px}
+.ft .pg{font-family:var(--mono);color:var(--ink);font-weight:500;font-size:var(--fs-s)}
+
+/* s1 summary */
+.stack{display:flex;flex-direction:column;border-left:2px solid var(--ink)}
+.stack .row{display:grid;grid-template-columns:240px 1fr auto;align-items:center;gap:16px;padding:10px 0 10px 18px;border-bottom:1px solid var(--rule);font-size:22px}
+.stack .row .vd{color:var(--muted);font-size:var(--fs-t)}
+.choke{display:flex;flex-direction:column;gap:2px}
+.choke .row{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:14px;padding:8px 0;border-bottom:1px solid var(--rule);font-size:22px}
+.choke .rk{font-family:var(--mono);font-size:28px;font-weight:600}
+.eqline{display:flex;gap:12px;align-items:center;font-size:var(--fs-t);padding:10px 0}
+.impl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.impl li{font-size:20px;line-height:1.4;padding-left:16px;border-left:2px solid var(--ink)}
+
+/* timeline */
+.tl{display:grid;height:100%;column-gap:0;row-gap:0}
+.tl .yr{font-family:var(--mono);font-size:20px;font-weight:600;padding:0 10px 8px;border-bottom:2px solid var(--ink);position:relative}
+.tl .yr::after{content:"";position:absolute;left:10px;bottom:-6px;width:10px;height:10px;background:var(--ink);border-radius:50%}
+.tl .ln{font-size:var(--fs-s);font-weight:600;color:var(--muted);padding:12px 12px 0 0;border-bottom:1px solid var(--rule)}
+.tl .cell{padding:12px 10px;border-bottom:1px solid var(--rule);border-left:1px solid var(--rule);display:flex;flex-direction:column;gap:8px}
+.tl .ev{font-size:18px;line-height:1.32}
+.tl .ev .g{font-size:13px;margin-left:4px;vertical-align:1px}
+.vchip{font-family:var(--mono);font-size:13px;color:var(--muted);border:1px dashed var(--muted);padding:0 4px;margin-left:4px;white-space:nowrap}
+
+/* index bars */
+.ix{display:inline-grid;grid-template-columns:36px 46px;align-items:center;gap:6px}
+.ix .bar{position:relative;height:10px;background:transparent}
+.ix .bar i{position:absolute;left:0;top:1px;height:8px;background:var(--ink)}
+.ix .bar b{position:absolute;top:-3px;bottom:-3px;width:1.5px;background:var(--muted)}
+
+/* range charts */
+.rc{display:grid;grid-template-columns:var(--lw,330px) minmax(0,1fr) var(--rw,190px);column-gap:14px;row-gap:6px;align-items:center;font-size:var(--fs-t)}
+.rc .grp{grid-column:1/-1;font-weight:600;font-size:var(--fs-t);padding-top:6px;border-bottom:1px solid var(--rule)}
+.rc .lab{line-height:1.25}
+.rc .lab small{display:block;font-size:var(--fs-s);color:var(--muted)}
+.track{position:relative;height:22px}
+.track .gl{position:absolute;top:-6px;bottom:-6px;width:1px;background:var(--rule)}
+.track .bar{position:absolute;top:4px;height:14px;background:var(--ink)}
+.track .bar.c{background:repeating-linear-gradient(135deg,var(--muted) 0 2px,transparent 2px 6px);border:1.5px dashed var(--muted)}
+.track .bar.open::after{content:"";position:absolute;right:-12px;top:-4px;border:11px solid transparent;border-left-color:inherit;border-left:11px solid var(--muted)}
+.track .bar.vol{background:repeating-linear-gradient(135deg,var(--film) 0 2px,transparent 2px 6px);border:1.5px solid var(--film);top:0;height:10px}
+.track .bar.val{background:var(--film);top:12px;height:10px}
+.axis{position:relative;height:22px;font-family:var(--mono);font-size:var(--fs-s);color:var(--muted)}
+.axis span{position:absolute;transform:translateX(-50%);top:2px}
+.rc .val{font-family:var(--mono);font-size:var(--fs-s)}
+.rc .ev{color:var(--muted);font-size:var(--fs-s)}
+.rc .ev.rej{color:var(--lv-l12);font-weight:600}
+
+/* scale compare */
+.sq{display:grid;grid-template-columns:240px 1fr;gap:24px;align-items:end;padding:8px 0 18px;border-bottom:1px solid var(--rule)}
+.sq svg{display:block}
+.sq .t{font-size:var(--fs-t);line-height:1.4}
+.sq .t .ratio{font-family:var(--mono);font-size:var(--fs-l);font-weight:600;display:block;margin-top:6px}
+.sq .t .lbl{font-weight:600}
+
+/* ownership tree */
+.tree{display:flex;flex-direction:column;align-items:flex-start}
+.node{border:1.5px solid var(--ink);padding:7px 14px;font-size:18px;line-height:1.3;background:var(--paper);min-width:420px}
+.node small{display:block;color:var(--muted);font-size:var(--fs-s)}
+.node.hl{background:var(--ink);color:var(--paper)}
+.node.hl small{color:#C9D0D8}
+.node.hl .g{border-color:var(--paper);color:var(--paper)}
+.node.hl .g.gA{background:var(--paper);color:var(--ink)}
+.conn{height:30px;border-left:2px solid var(--ink);margin-left:28px;padding-left:10px;font-family:var(--mono);font-size:var(--fs-s);display:flex;align-items:center}
+.kids{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;border-top:2px solid var(--ink);padding-top:0;margin-left:28px;width:calc(100% - 28px)}
+.kid{display:flex;flex-direction:column}
+.kid .conn{margin-left:0;height:28px}
+.kid .node{min-width:0}
+.side{display:flex;flex-direction:column;gap:10px}
+.side p{margin:0;font-size:18px;line-height:1.4;padding-left:14px;border-left:2px solid var(--rule)}
+.verd{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.verd>div{padding:14px 18px}
+.verd .a{border-top:2px solid var(--ink)}
+.verd .b{background:var(--film-tint);border-top:2px solid var(--film)}
+.verd .k{font-size:var(--fs-s);font-weight:600;color:var(--muted)}
+.verd .b .k{color:var(--film)}
+.verd .v{font-size:26px;font-weight:600;margin:6px 0}
+.verd .b .v{color:var(--film)}
+.verd .s{font-size:18px;line-height:1.4}
+
+/* multiplier */
+.mb{display:grid;grid-template-columns:300px minmax(0,1fr) 300px;column-gap:24px;row-gap:26px;align-items:center}
+.mb .nm{font-size:var(--fs-t);font-weight:500}
+.mtrack{position:relative;height:56px}
+.mtrack .rng{position:absolute;top:12px;height:32px;border:1.5px solid var(--ink);background:repeating-linear-gradient(135deg,rgba(20,24,29,.18) 0 2px,transparent 2px 7px)}
+.mtrack .rng.open{border-right-style:dashed}
+.mtrack .rl{position:absolute;top:-14px;font-size:var(--fs-s);color:var(--muted);white-space:nowrap}
+.mtrack .pt{position:absolute;top:4px;width:6px;height:48px;background:var(--film);transform:translateX(-50%)}
+.mtrack .pl{position:absolute;top:14px;font-family:var(--mono);font-size:22px;font-weight:600;color:var(--film);white-space:nowrap}
+.mtrack .gl{position:absolute;top:0;bottom:0;width:1px;background:var(--rule)}
+.mleg{display:flex;gap:28px;font-size:var(--fs-s);color:var(--muted);align-items:center}
+.mleg i{display:inline-block;width:26px;height:14px;vertical-align:-2px;margin-right:8px}
+
+/* heatmap */
+.hm{border-collapse:separate;border-spacing:3px 2px;font-size:18px;table-layout:fixed}
+.hm th{border:none;padding:2px 8px 6px;font-size:var(--fs-s);color:var(--ink);white-space:normal;line-height:1.2}
+.hm th.est{color:var(--muted)}
+.hm td{border:none;padding:0 8px;height:22px;line-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm td.grp{overflow:visible;text-overflow:clip;font-size:var(--fs-s);font-weight:600;color:var(--muted);vertical-align:top;padding-top:2px;border-top:1.5px solid var(--ink);white-space:normal;line-height:1.2}
+.hm tr.gs td.mat,.hm tr.gs td.cell,.hm tr.gs td.eqc{box-shadow:inset 0 1.5px 0 var(--ink)}
+.hm td.mat{font-weight:500}
+.hm td.cell{text-align:center;font-family:var(--mono);font-size:var(--fs-s);font-weight:500}
+.hm td.cell small{font-family:var(--sans);font-size:13px;opacity:.85;margin-left:4px}
+.hm td.eqc{color:var(--film);font-size:16px;background:var(--film-tint)}
+.hm td.eqc small{color:var(--muted);font-size:13px;margin-left:6px}
+.hm .cr{font-family:var(--mono);font-size:13px;font-weight:600;background:var(--ink);color:var(--paper);padding:1px 5px;margin-left:8px;vertical-align:1px}
+.hm tr.eqrow td.mat{color:var(--paper);background:var(--lv-eq);padding-left:12px}
+
+/* boxes */
+.eqbox{display:flex;gap:18px;align-items:center;background:var(--lv-eq);color:#fff;padding:10px 18px;font-size:var(--fs-t)}
+.eqbox b{font-weight:600;white-space:nowrap}
+.eqbox span.it{white-space:nowrap}
+.eqbox .nt{font-size:var(--fs-f);color:#C9D0D8;margin-left:auto;max-width:640px;line-height:1.3}
+.eqbox{flex-wrap:nowrap}
+.recs{display:grid;grid-template-columns:1fr 1fr;gap:14px 36px}
+.rec{border-top:2px solid var(--ink);padding-top:8px}
+.rec h3{margin:0 0 4px;font-size:21px;font-weight:600}
+.rec p{margin:0;font-size:18px;line-height:1.4}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.split>div{padding:12px 16px;border-top:2px solid var(--ink)}
+.split h3{margin:0 0 10px;font-size:21px;display:flex;align-items:center;gap:10px}
+.split .chips{display:flex;flex-wrap:wrap;gap:8px}
+.split .chips span{font-size:18px;border:1px solid var(--rule);padding:4px 10px;background:#fff}
+.dec{border:1.5px dashed var(--ink);padding:14px 18px;display:flex;flex-direction:column;gap:12px;height:100%}
+.dec h3{margin:0;font-size:21px}
+.dec .d{font-size:20px;display:flex;gap:12px;border-bottom:1px dashed var(--rule);padding-bottom:10px;color:var(--muted)}
+.dec .d b{color:var(--ink);font-family:var(--mono)}
+.formula{font-family:var(--mono);font-size:20px;line-height:1.5;border:1.5px solid var(--ink);padding:14px 16px;background:#fff}
+.defs{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:var(--fs-t);align-items:center}
+.vsum{display:grid;grid-template-columns:1fr auto auto;gap:6px 18px;font-size:var(--fs-t);align-items:center}
+.vsum .h{font-size:var(--fs-s);color:var(--muted);font-weight:600}
+.vsum .tot{font-weight:600;border-top:1.5px solid var(--ink);padding-top:6px}
+.flag{color:var(--lv-l12);font-weight:600}
+
+/* print */
+@page{size:1920px 1080px;margin:0}
+@media print{
+  html,body{background:var(--paper);height:auto;overflow:visible}
+  #deck{position:static;transform:none!important;width:1920px;height:auto}
+  .slide{position:relative;display:grid!important;break-after:page;page-break-after:always}
+  .slide:last-child{break-after:auto;page-break-after:auto}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+:focus-visible{outline:3px solid var(--film);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="deck" aria-live="polite"></div>
+<script id="deck-data" type="application/json">__DECK_DATA__</script>
+<script>
+(function(){
+"use strict";
+var DATA = JSON.parse(document.getElementById("deck-data").textContent);
+var seen = {};
+var LVCLASS = {"L3+":"L3p","L2-3":"L23","L2":"L2","L1-2":"L12","EQ":"EQ","na":"na","ok":"ok"};
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+// {{key}} → 첫 등장은 한자(영문), 이후는 약칭
+function T(s){
+  if(s===null||s===undefined) return "";
+  return esc(s).replace(/\{\{(\w+)\}\}/g,function(m,k){
+    var e=DATA.entities[k]; if(!e) return k;
+    if(seen[k]) return esc(e.short);
+    seen[k]=true; return esc(e.full);
+  });
+}
+function gchip(g){
+  if(!g) return "";
+  var c = /C/.test(g) ? "gC" : (g==="추정" ? "gE" : (/^A$/.test(g) ? "gA" : ""));
+  return '<span class="g '+c+'">'+esc(g)+'</span>';
+}
+function lv(key,txt){
+  var c=LVCLASS[key]||"na";
+  return '<span class="lv lv-'+c+'">'+esc(txt||labelOf(key))+'</span>';
+}
+function labelOf(key){
+  var all=DATA.levels.concat(DATA.levelExtras);
+  for(var i=0;i<all.length;i++) if(all[i].key===key) return all[i].label;
+  return key;
+}
+function legend(){
+  var h='<div class="legend"><span class="lab">자립 단계</span>';
+  DATA.levels.forEach(function(l){h+=lv(l.key,l.label);});
+  return h+'</div>';
+}
+function h(tag,cls,inner){return '<'+tag+(cls?' class="'+cls+'"':'')+'>'+(inner||"")+'</'+tag+'>';}
+
+/* ---------- visual renderers ---------- */
+var R = {};
+
+R.summary = function(v){
+  var stack = v.verdicts.map(function(x){
+    return '<div class="row"><span>'+T(x.area)+'</span><span class="vd">'+T(x.verdict)+'</span>'+lv(x.lv,x.txt)+'</div>';
+  }).join("");
+  var choke = v.chokeTop3.map(function(x){
+    return '<div class="row"><span class="rk">'+x.rank+'</span><span>'+T(x.item)+'</span>'+lv(x.lv,x.txt)+'</div>';
+  }).join("");
+  var impl = v.implications.map(function(x){return '<li>'+T(x.text)+'</li>';}).join("");
+  return '<div class="cols" style="grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)">'+
+    '<div><div class="ptitle">공정별 자립 판정 (자료 A)</div><div class="stack">'+stack+'</div></div>'+
+    '<div style="display:flex;flex-direction:column;gap:14px">'+
+      '<div><div class="ptitle">Choke Point Top 3 (자료 A)</div><div class="choke">'+choke+'</div>'+
+      '<div class="eqline">'+lv("EQ","장비 병목")+'<span>'+T(v.equipment.replace(/^장비 병목\(별도\):\s*/,""))+'</span></div></div>'+
+      '<div><div class="ptitle">'+T(v.implicationsLabel)+'</div><ul class="impl">'+impl+'</ul></div>'+
+    '</div></div>';
+};
+
+R.timeline = function(v){
+  var years=[]; v.events.forEach(function(e){if(years.indexOf(e.year)<0) years.push(e.year);});
+  var cols='150px repeat('+years.length+',minmax(0,1fr))';
+  var out='<div class="tl" style="grid-template-columns:'+cols+';grid-template-rows:auto repeat('+v.lanes.length+',1fr)">';
+  out+='<div></div>'+years.map(function(y){return '<div class="yr">'+esc(y)+'</div>';}).join("");
+  // 렌더 순서를 연도 순으로 맞추기 위해 셀을 먼저 만든다
+  var cells={};
+  years.forEach(function(y){v.lanes.forEach(function(l){cells[y+"|"+l.key]="";});});
+  years.forEach(function(y){
+    v.lanes.forEach(function(l){
+      v.events.forEach(function(e){
+        if(e.year===y&&e.lane===l.key){
+          cells[y+"|"+l.key]+='<div class="ev">'+T(e.text)+gchip(e.g)+(e.verify?'<span class="vchip">검증 '+e.verify+'</span>':'')+'</div>';
+        }
+      });
+    });
+  });
+  v.lanes.forEach(function(l){
+    out+='<div class="ln">'+esc(l.label)+'</div>';
+    years.forEach(function(y){out+='<div class="cell">'+cells[y+"|"+l.key]+'</div>';});
+  });
+  return out+'</div>';
+};
+
+function ixCell(n,proxy){
+  var w=Math.min(n,150)/150*46, base=100/150*46;
+  return '<td><span class="ix"><span class="num">'+n+(proxy?'<span style="color:var(--muted)">※</span>':'')+'</span><span class="bar"><i style="width:'+w.toFixed(1)+'px"></i><b style="left:'+base.toFixed(1)+'px"></b></span></span></td>';
+}
+R.stageTable = function(v){
+  var rows=v.rows.map(function(r){
+    var lvs=r.levels.map(function(x){return lv(x.lv,x.txt);}).join(" ");
+    return '<tr><td style="font-weight:600">'+T(r.material)+'</td><td>'+T(r.china)+'</td>'+
+      r.idx.map(function(n){return ixCell(n);}).join("")+
+      '<td><div style="display:flex;flex-wrap:wrap;gap:4px">'+lvs+'</div></td></tr>';
+  }).join("");
+  var t2=v.tier2.rows.map(function(r){
+    return '<tr><td style="font-weight:600">'+T(r.group)+'</td><td>'+T(r.input)+'</td><td class="num">'+T(r.selfRate)+'</td><td>'+
+      (r.type==="구조적"?'<b>구조적</b>':'일시적')+'</td></tr>';
+  }).join("");
+  return '<div class="cols" style="grid-template-columns:minmax(0,2.05fr) minmax(0,1fr);gap:28px">'+
+    '<div><table class="tight"><colgroup><col style="width:165px"><col style="width:345px"><col><col><col><col><col style="width:270px"></colgroup><thead><tr><th>소재</th><th>중국 상위 기업</th><th>개발</th><th>품질※</th><th>가격※</th><th>Capa</th><th>DRAM 기준 자립 단계</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '</div>'+
+    '<div style="display:flex;flex-direction:column;gap:14px"><div class="fvpanel"><div class="ptitle fv">'+T(v.tier2.label)+'</div><table><thead><tr><th class="fv">소재군</th><th class="fv">핵심 원료</th><th class="fv">원료 자립도</th><th class="fv">한계 유형</th></tr></thead><tbody>'+t2+'</tbody></table></div>'+
+    '<div style="font-size:17px;line-height:1.4;padding-left:14px;border-left:2px solid var(--ink)">왼쪽 표: '+T(v.tableNote)+'. 막대의 세로선 = 100</div></div></div>';
+};
+
+function axis(max,step,suffix){
+  var s='<div class="axis">';
+  for(var x=0;x<=max;x+=step){s+='<span style="left:'+(x/max*100)+'%">'+x+suffix+'</span>';}
+  return s+'</div>';
+}
+function grid(max,step){
+  var s=''; for(var x=0;x<=max;x+=step){s+='<span class="gl" style="left:'+(x/max*100)+'%"></span>';} return s;
+}
+R.rangeCharts = function(v){
+  var f=v.factChart, m=f.max;
+  var left='<div class="rc" style="--lw:330px;--rw:210px">';
+  f.groups.forEach(function(g){
+    left+='<div class="grp">'+esc(g.label)+'</div>';
+    g.items.forEach(function(it){
+      var lo=it.lo, hi=(it.hi===null?m:it.hi);
+      var w=Math.max((hi-lo)/m*100,0.9);
+      var cls=(it.g==="C"?"bar c":"bar")+(it.hi===null?" open":"");
+      left+='<div class="lab">'+T(it.src)+' <span class="note">'+esc(it.date)+'</span>'+gchip(it.g)+'</div>'+
+        '<div class="track">'+grid(m,5)+'<span class="'+cls+'" style="left:'+(lo/m*100)+'%;width:'+w+'%"></span></div>'+
+        '<div><span class="val">'+T(it.val)+'</span> <span class="ev'+(it.eval==="기각"?" rej":"")+'">'+T(it.eval)+'</span></div>';
+    });
+  });
+  left+='<div></div>'+axis(m,5,"%")+'<div></div></div>';
+  var b=v.viewChart, bm=b.max;
+  var right='<div class="rc" style="--lw:210px;--rw:150px">';
+  b.rows.forEach(function(r){
+    right+='<div class="lab">'+T(r.material)+'</div><div class="track">'+grid(bm,20)+
+      '<span class="bar vol" style="left:'+(r.vol[0]/bm*100)+'%;width:'+((r.vol[1]-r.vol[0])/bm*100)+'%"></span>'+
+      '<span class="bar val" style="left:'+(r.val[0]/bm*100)+'%;width:'+((r.val[1]-r.val[0])/bm*100)+'%"></span></div>'+
+      '<div class="val" style="line-height:1.15">'+r.vol[0]+'~'+r.vol[1]+'%<br><b>'+r.val[0]+'~'+r.val[1]+'%</b></div>';
+  });
+  right+='<div></div>'+axis(bm,20,"%")+'<div></div></div>';
+  right+='<div class="mleg" style="margin-top:8px"><span><i style="background:repeating-linear-gradient(135deg,var(--film) 0 2px,transparent 2px 6px);border:1.5px solid var(--film)"></i>물량 기준</span><span><i style="background:var(--film)"></i>금액 기준</span></div>';
+  return '<div class="cols" style="grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:36px">'+
+    '<div><div class="ptitle">'+T(f.title)+'</div>'+left+
+    '<div class="mleg" style="margin-top:8px"><span><i style="background:var(--ink)"></i>B등급 출처</span><span><i style="background:repeating-linear-gradient(135deg,var(--muted) 0 2px,transparent 2px 6px);border:1.5px dashed var(--muted)"></i>C등급 출처</span></div></div>'+
+    '<div class="fvpanel"><div class="ptitle fv">'+T(b.title)+'</div>'+right+'</div></div>';
+};
+
+R.scaleCompare = function(v){
+  var S=210;
+  var pairs=v.pairs.map(function(p){
+    var side=S*Math.sqrt(p.part.value/p.whole.value);
+    var svg='<svg width="'+(S+4)+'" height="'+(S+4)+'" viewBox="0 0 '+(S+4)+' '+(S+4)+'" aria-hidden="true">'+
+      '<rect x="2" y="2" width="'+S+'" height="'+S+'" fill="none" stroke="#14181D" stroke-width="1.5"'+(p.whole.g==="C"?' stroke-dasharray="6 4"':'')+'/>'+
+      '<rect x="2" y="'+(2+S-side)+'" width="'+side+'" height="'+side+'" fill="#14181D"/></svg>';
+    return '<div class="sq">'+svg+'<div class="t"><div class="lbl">'+T(p.label)+'</div>'+
+      '<div>□ '+T(p.whole.text)+gchip(p.whole.g)+'</div><div>■ '+T(p.part.text)+gchip(p.part.g)+'</div>'+
+      '<span class="ratio">'+T(p.ratio)+'</span></div></div>';
+  }).join("");
+  var j=v.japanControls;
+  var rows=j.rows.map(function(r){
+    return '<tr><td>'+T(r.claim)+'</td><td>'+T(r.src)+gchip(r.g)+'</td><td>'+T(r.verdict)+'</td></tr>';
+  }).join("");
+  return '<div class="cols" style="grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:40px">'+
+    '<div><div class="ptitle">규모 비교 (면적 비례)</div>'+pairs+'</div>'+
+    '<div><div class="ptitle">'+T(j.title)+'</div><table><thead><tr><th>주장</th><th>출처</th><th>판정</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div style="margin-top:12px;font-size:20px;font-weight:600;padding-left:14px;border-left:3px solid var(--ink)">'+T(j.conclusion)+'</div></div></div>';
+};
+
+R.ownershipTree = function(v){
+  var byId={}; v.nodes.forEach(function(n){byId[n.id]=n;});
+  var chain=[], kids=[];
+  v.nodes.forEach(function(n){ if(n.parent==="sic") kids.push(n); else chain.push(n); });
+  function node(n){return '<div class="node'+(n.highlight?' hl':'')+'">'+T(n.label)+gchip(n.g)+(n.sub?'<small>'+T(n.sub)+'</small>':'')+'</div>';}
+  var t='<div class="tree">';
+  chain.forEach(function(n,i){ if(i>0) t+='<div class="conn">'+esc(n.stake)+'</div>'; t+=node(n); });
+  t+='<div class="conn" style="height:18px"></div><div class="kids">'+kids.map(function(n){
+    return '<div class="kid"><div class="conn">'+esc(n.stake)+'</div>'+node(n)+'</div>';}).join("")+'</div></div>';
+  var side=v.sideNotes.map(function(s){return '<p>'+T(s.text)+'</p>';}).join("");
+  var vd=v.verdicts.map(function(x){
+    return '<div class="'+(x.side==="fact"?"a":"b")+'"><div class="k">'+esc(x.label)+'</div><div class="v">'+T(x.verdict)+'</div><div class="s">'+T(x.basis)+'</div></div>';
+  }).join("");
+  return '<div class="cols" style="grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:40px">'+
+    '<div><div class="ptitle">지분 구조 (企查查·天眼查·安评 기준)</div>'+t+'</div>'+
+    '<div style="display:flex;flex-direction:column;gap:18px"><div class="side">'+side+'</div><div class="verd">'+vd+'</div></div></div>';
+};
+
+R.multiplierBars = function(v){
+  var M=v.axisMax;
+  var out='<div class="mb">';
+  v.items.forEach(function(it){
+    var lo=it.aLo/M*100, hi=(it.aHi===null?100:it.aHi/M*100);
+    var tr='<div class="mtrack">'+grid(M,1)+'<span class="rng'+(it.aHi===null?' open':'')+'" style="left:'+lo+'%;width:'+(hi-lo)+'%"></span>';
+    if(it.b!==null){
+      var p=it.b/M*100;
+      tr+='<span class="pt" style="left:'+p+'%"></span><span class="pl" style="left:calc('+p+'% + 10px)">'+it.b.toFixed(1)+'×</span>';
+    }
+    tr+='</div>';
+    out+='<div class="nm">'+T(it.name)+'<div class="note">A: '+T(it.aText)+(it.b===null?' · B: 수치 없음':'')+'</div></div>'+tr+'<div style="display:flex;flex-wrap:wrap;gap:6px">'+(it.levels?it.levels.map(function(x){return lv(x.lv,x.txt);}).join(""):lv(it.lv,it.lvTxt))+'</div>';
+  });
+  out+='<div></div>'+axis(M,1,"×")+'<div class="note">자립 단계 (자료 A)</div></div>';
+  var lg='<div class="mleg"><span><i style="border:1.5px solid var(--ink);background:repeating-linear-gradient(135deg,rgba(20,24,29,.18) 0 2px,transparent 2px 7px)"></i>'+T(v.legend.a)+'</span>'+
+    '<span><i style="background:var(--film);width:6px;height:22px"></i>'+T(v.legend.b)+'</span></div>';
+  return '<div style="display:flex;flex-direction:column;gap:16px">'+lg+out+'<div class="note" style="font-size:17px">'+T(v.note)+'</div></div>';
+};
+
+R.heatmap = function(v){
+  var groups=v.groups.slice();
+  // 장비 병목을 맨 위 캡 레이어로
+  groups.sort(function(a,b){return (b.equipment?1:0)-(a.equipment?1:0);});
+  var hd='<colgroup><col style="width:120px"><col style="width:400px"><col style="width:200px"><col style="width:225px"><col style="width:170px"><col style="width:175px"><col></colgroup>'+
+    '<thead><tr><th></th><th>소재 / 장비</th>'+v.columns.map(function(c){
+      return '<th'+(c.estimate?' class="est"':'')+' style="text-align:center">'+esc(c.label)+(c.estimate?'<br>(추정)':'')+'</th>';}).join("")+
+    '<th class="fv">'+T(v.viewColumn.label)+'</th></tr></thead>';
+  var body='';
+  groups.forEach(function(g){
+    g.rows.forEach(function(r,i){
+      body+='<tr class="'+(i===0?'gs ':'')+(g.equipment?'eqrow':'')+'">';
+      if(i===0) body+='<td class="grp" rowspan="'+g.rows.length+'">'+T(g.label)+'</td>';
+      body+='<td class="mat">'+T(r.material)+(r.chokeRank?'<span class="cr">Choke '+r.chokeRank+'</span>':'')+'</td>';
+      r.cells.forEach(function(c){
+        var cls=LVCLASS[c.lv]||"na";
+        body+='<td class="cell lv-'+cls+'" title="'+esc(c.note||"")+'">'+esc(c.txt)+(c.note?'<small>'+esc(c.note)+'</small>':'')+'</td>';
+      });
+      body+='<td class="eqc">'+(r.eq?T(r.eq)+'<small>'+T(r.eqSrc.replace(/^B:\s*/,""))+'</small>':'')+'</td></tr>';
+    });
+  });
+  return '<table class="hm">'+hd+'<tbody>'+body+'</tbody></table>'+
+    '<div class="note" style="margin-top:2px">'+T(v.mappingNote)+'. 셀 안 작은 글씨는 자료 A의 단서.</div>';
+};
+
+R.rankTable = function(v){
+  var rows=v.rows.map(function(r){
+    return '<tr class="'+(r.rank<=3?'top':'')+'"><td class="num" style="font-size:22px">'+r.rank+'</td><td>'+T(r.item)+'</td><td>'+T(r.process)+'</td><td>'+lv(r.lv,r.lvTxt)+'</td>'+
+      '<td class="num">'+T(r.dep)+'</td><td class="num">'+T(r.time)+'</td>'+
+      '<td class="fv num" style="font-size:22px;font-weight:600">'+(r.bScore===null?'<span style="color:var(--muted);font-weight:400">–</span>':r.bScore)+'</td>'+
+      '<td class="fv" style="font-weight:400">'+(r.bImpact?T(r.bImpact):'<span style="color:var(--muted)">B에 해당 품목 없음</span>')+'</td></tr>';
+  }).join("");
+  var eq=v.equipmentBox;
+  return '<table class="tight" style="font-size:19px"><thead><tr><th>순위</th><th>소재/원료 (자료 A)</th><th>영향 공정</th><th>자립 단계</th><th>해외 의존(추정)</th><th>대체 소요(추정)</th><th class="fv">B 점수</th><th class="fv">B: 대체 불가 시 팹 영향</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="note" style="margin:6px 0 10px">'+T(v.bOnly)+'. '+T(v.scoreNote)+'</div>'+
+    '<div class="eqbox"><b>'+lv("EQ","장비 병목")+'</b>'+eq.items.map(function(x){return '<span class="it">'+T(x.text)+'</span>';}).join('<span style="color:#6B7480">|</span>')+
+    '<span class="nt">'+T(eq.note)+'</span></div>';
+};
+
+R.factCheck = function(v){
+  var rows=v.rows.map(function(r){
+    var st=r.status==="미확인"?'<b class="flag">미확인</b>':esc(r.status);
+    return '<tr><td style="font-weight:600;white-space:nowrap">'+T(r.item)+'</td><td>'+T(r.claim)+'</td><td>'+st+'</td><td>'+gchip(r.g)+'</td></tr>';
+  }).join("");
+  var y=v.yieldRange, W=700, H=210, pad=24;
+  var sx=function(x){return pad+(x-y.min)/(y.max-y.min)*(W-2*pad);};
+  var svg='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(y.title)+'">';
+  for(var t=0;t<=100;t+=20){
+    svg+='<line x1="'+sx(t)+'" x2="'+sx(t)+'" y1="40" y2="150" stroke="#CDD3D9" stroke-width="1"/>'+
+      '<text x="'+sx(t)+'" y="176" font-family="IBM Plex Mono,monospace" font-size="16" fill="#5A6470" text-anchor="middle">'+t+'%</text>';
+  }
+  svg+='<defs><pattern id="hC" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="7" fill="#5A6470"/></pattern>'+
+       '<pattern id="hF" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.5" height="7" fill="#2B4A8B"/></pattern></defs>';
+  svg+='<rect x="'+sx(0)+'" y="94" width="'+(sx(100)-sx(0))+'" height="2" fill="#14181D"/>';
+  y.marks.forEach(function(m,i){
+    var x1=sx(m.lo), x2=sx(m.hi), yy=i===0?62:106;
+    svg+='<rect x="'+x1+'" y="'+yy+'" width="'+Math.max(x2-x1,4)+'" height="26" fill="url(#'+(m.src==="B"?"hF":"hC")+')" stroke="'+(m.src==="B"?"#2B4A8B":"#5A6470")+'" stroke-width="1.5" stroke-dasharray="5 3"/>';
+  });
+  var th=sx(y.threshold.value);
+  svg+='<line x1="'+th+'" x2="'+th+'" y1="30" y2="160" stroke="#2B4A8B" stroke-width="2.5"/>'+
+    '<text x="'+th+'" y="24" font-family="IBM Plex Mono,monospace" font-size="16" font-weight="600" fill="#2B4A8B" text-anchor="middle">80%</text></svg>';
+  var marks=y.marks.map(function(m){
+    return '<div style="display:flex;gap:10px;align-items:baseline;font-size:18px;line-height:1.35"><span style="font-family:var(--mono);font-weight:600;color:'+(m.src==="B"?'var(--film)':'var(--muted)')+'">'+(m.src==="B"?'B':'A')+'</span><span>'+T(m.label)+gchip(m.g)+'</span></div>';
+  }).join("");
+  return '<div class="cols" style="grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:40px">'+
+    '<table><thead><tr><th>항목</th><th>발표·보도 내용</th><th>양산 확인</th><th>등급</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div><div class="ptitle">'+T(y.title)+'</div>'+svg+'<div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">'+marks+
+    '<div style="display:flex;gap:10px;align-items:baseline;font-size:18px"><span style="width:14px;height:3px;background:var(--film);display:inline-block;transform:translateY(-4px)"></span><span style="color:var(--film)">'+T(y.threshold.label)+'</span></div></div></div></div>';
+};
+
+R.outlook = function(v){
+  function c(x){return lv(x.lv,x.txt)+(x.note?'<div class="note">'+T(x.note)+'</div>':'');}
+  var rows=v.rows.map(function(r){
+    return '<tr><td style="font-weight:600">'+T(r.material)+'</td><td>'+c(r.now)+'</td><td>'+c(r.y2028)+'</td><td>'+c(r.y2030)+'</td><td style="font-size:17px">'+T(r.target)+'</td></tr>';
+  }).join("");
+  var sc=v.scenarios.map(function(s){
+    return '<tr><td style="white-space:nowrap;vertical-align:top"><b>'+esc(s.label)+'</b><div class="num" style="font-size:22px;font-weight:600">'+esc(s.prob)+'</div><div class="note">A '+esc(s.probA)+' · B '+esc(s.probB)+'</div></td>'+
+      '<td style="font-size:17px;line-height:1.35;vertical-align:top;color:var(--ink)"><div style="color:var(--muted)">전제: '+T(s.premise)+'</div><div>2028: '+T(s.result)+'</div></td></tr>';
+  }).join("");
+  return '<div class="cols" style="grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:32px">'+
+    '<div><div class="ptitle">소재별 자립 단계 전망 (자료 A, 작성자 전망)</div><table><thead><tr><th>소재</th><th>2026.10</th><th>2028</th><th>2030</th><th>회사·정부 목표 (참고)</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="fvpanel"><div class="ptitle fv">3대 시나리오 (확률은 A·B 값의 범위)</div><table class="tight"><tbody>'+sc+'</tbody></table>'+
+    '<div class="ptitle fv" style="margin-top:14px">'+T(v.gapTable.title)+'</div><table class="tight"><thead><tr>'+v.gapTable.columns.map(function(c){return '<th class="fv">'+esc(c)+'</th>';}).join("")+'</tr></thead><tbody>'+
+    v.gapTable.rows.map(function(r){return '<tr><td>'+T(r.item)+'</td><td class="num">'+T(r.corp)+'</td><td class="num" style="font-weight:600">'+T(r.third)+'</td></tr>';}).join("")+'</tbody></table></div></div>';
+};
+
+R.recommendations = function(v){
+  var split=v.split.map(function(s){
+    return '<div><h3>'+lv(s.lv, s.key==="threat"?"L3 이상":"L1~L2")+T(s.label)+'</h3><div class="chips">'+s.items.map(function(i){return '<span>'+T(i)+'</span>';}).join("")+'</div></div>';
+  }).join("");
+  var recs=v.recs.map(function(r){return '<div class="rec"><h3>'+esc(r.no)+' '+T(r.title)+'</h3><p>'+T(r.text)+'</p></div>';}).join("");
+  var dec=v.decisions.map(function(d){return '<div class="d"><b>'+esc(d.no)+'</b><span>'+T(d.text)+'</span></div>';}).join("");
+  return '<div class="cols" style="grid-template-columns:minmax(0,1fr) 420px;gap:36px">'+
+    '<div style="display:flex;flex-direction:column;gap:16px"><div class="split">'+split+'</div>'+
+    '<div><div class="ptitle">'+T(v.recsLabel)+'</div><div class="recs">'+recs+'</div></div></div>'+
+    '<div class="dec"><h3>'+T(v.decisionsLabel)+'</h3>'+dec+'<div class="note">경영진 결정이 필요한 사항을 팀에서 기입</div></div></div>';
+};
+
+R.companyTable = function(v){
+  var rows=v.rows.map(function(r){
+    return '<tr><td style="font-weight:600">'+T(r.co)+'</td><td class="num" style="font-size:16px">'+T(r.listing)+'</td><td>'+T(r.biz)+'</td><td>'+T(r.kpi)+'</td><td>'+T(r.cust)+'</td><td>'+T(r.contrib)+'</td><td>'+T(r.risk)+'</td></tr>';
+  }).join("");
+  return '<table style="font-size:18px"><colgroup><col style="width:290px"><col style="width:150px"><col style="width:230px"><col style="width:430px"><col style="width:270px"><col style="width:170px"><col></colgroup><thead><tr>'+
+    v.columns.map(function(c){return '<th>'+esc(c)+'</th>';}).join("")+'</tr></thead><tbody>'+rows+'</tbody></table>';
+};
+
+R.criteria = function(v){
+  var lvs='<div class="defs">'+DATA.levelDefs.map(function(d){return '<span class="num" style="font-weight:600;font-size:20px">'+esc(d.lv)+'</span><span><b>'+esc(d.name)+'</b> · '+esc(d.desc)+'</span>';}).join("")+'</div>';
+  var sig='<div class="defs" style="margin-top:6px">'+DATA.levels.map(function(l){return lv(l.key,l.label)+'<span>'+esc(l.desc)+'</span>';}).join("")+'</div>';
+  var gr='<div class="defs">'+v.grades.map(function(g){return gchip(g.g).replace('margin-left:8px','')+'<span>'+esc(g.desc)+'</span>';}).join("")+
+    gchip("추정")+'<span>자료 A 작성자의 계산·판단</span></div>';
+  var f=v.chokeFormula;
+  var vars='<table><tbody>'+f.vars.map(function(x){return '<tr><td style="font-weight:600;white-space:nowrap">'+esc(x.name)+'</td><td>'+esc(x.scale)+'</td></tr>';}).join("")+'</tbody></table>';
+  var fx=v.fx;
+  var fxr=fx.rows.map(function(r){return '<tr><td>'+esc(r.target)+'</td><td class="num" style="font-weight:600">'+esc(r.a)+'</td><td class="num" style="white-space:nowrap">'+esc(r.b)+'</td><td style="font-size:16px'+(r.flag?';color:var(--lv-l12)':'')+'">'+esc(r.note)+'</td></tr>';}).join("");
+  return '<div class="cols" style="grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr) minmax(0,1.15fr);gap:36px">'+
+    '<div style="display:flex;flex-direction:column;gap:16px"><div><div class="ptitle">자립 단계 L1~L4</div>'+lvs+'</div><div><div class="ptitle">덱의 5단계 신호</div>'+sig+'</div><div><div class="ptitle">근거 등급</div>'+gr+'</div></div>'+
+    '<div style="display:flex;flex-direction:column;gap:12px"><div class="ptitle fv">Choke Score 산식 (자료 B 모델)</div><div class="formula">'+esc(f.expr)+'</div>'+vars+
+      '<div class="note" style="font-size:16px">'+esc(f.source)+'</div><div style="font-size:18px;line-height:1.4;padding-left:14px;border-left:3px solid var(--lv-l12)">'+esc(f.caveat)+'</div></div>'+
+    '<div><div class="ptitle">'+esc(fx.title)+'</div><table style="font-size:18px"><thead><tr>'+fx.columns.map(function(c){return '<th>'+esc(c)+'</th>';}).join("")+'</tr></thead><tbody>'+fxr+'</tbody></table>'+
+      '<div style="margin-top:12px;font-size:18px;line-height:1.4;padding-left:14px;border-left:3px solid var(--ink)">'+esc(fx.note)+'</div></div></div>';
+};
+
+R.gaps = function(v){
+  var rows=v.gaps.map(function(g){return '<tr><td style="font-weight:600">'+T(g.item)+'</td><td>'+T(g.status)+'</td><td>'+T(g.action)+'</td><td class="num" style="font-size:16px;color:var(--muted);white-space:nowrap">'+T(g.ref)+'</td></tr>';}).join("");
+  var vs=DATA.verify||{counts:{},high:{},total:0,highTotal:0};
+  var sum='<div class="vsum"><span class="h">구분</span><span class="h">항목</span><span class="h">우선 상</span>'+
+    v.verifySummary.categories.map(function(c){
+      return '<span><b class="num">'+c.key+'</b> '+esc(c.label)+'</span><span class="num">'+(vs.counts[c.key]||0)+'</span><span class="num flag">'+(vs.high[c.key]||0)+'</span>';
+    }).join("")+
+    '<span class="tot">합계</span><span class="tot num">'+vs.total+'</span><span class="tot num flag">'+vs.highTotal+'</span></div>';
+  return '<div class="cols" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:40px">'+
+    '<div><div class="ptitle">데이터 공백 (자료 A가 확인하지 못한 항목)</div><table><thead><tr><th>항목</th><th>상태</th><th>보완 방법</th><th>근거</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div><div class="ptitle">'+T(v.verifySummary.label)+'</div>'+sum+
+    '<div class="ptitle" style="margin-top:22px">우선순위 상 항목</div><table class="tight" style="font-size:18px"><tbody>'+(vs.highItems||[]).map(function(x){return '<tr><td class="num flag" style="white-space:nowrap">'+esc(x.id)+'</td><td>'+esc(x.item)+'</td></tr>';}).join("")+'</tbody></table>'+
+    '<div style="margin-top:14px;font-size:18px;line-height:1.45;padding-left:14px;border-left:3px solid var(--lv-l12)">우선 상 항목은 헤드라인·Executive Summary·의사결정에 영향. 사실관계 충돌은 자료 A, 판정 충돌은 A 사실 + B 판단 병기 원칙으로 처리했다.</div></div></div>';
+};
+
+var USES_LEGEND = {summary:1,stageTable:1,multiplierBars:1,heatmap:1,rankTable:1,outlook:1,recommendations:1};
+
+/* ---------- slide assembly ---------- */
+function slideHTML(s, idx, total){
+  var main = s.section==="main";
+  var out='<header class="hd"><h1>'+(main?'':'<span class="ano">'+esc(s.no)+'</span>')+T(s.headline)+'</h1></header>';
+  var fxFlag=false;
+  if(main){
+    out+='<section class="layer fact"><div class="tag">확인된<br>사실</div><ul>'+s.fact.map(function(f){
+      if(f.fx) fxFlag=true;
+      return '<li>'+T(f.text)+gchip(f.g)+'</li>';}).join("")+'</ul></section>';
+  }
+  var v=s.visual, vt=v.type;
+  var vh=USES_LEGEND[vt]?'<div class="vhead"><span></span>'+legend()+'</div>':'';
+  out+='<section class="vis">'+vh+'<div class="vbody">'+(R[vt]?R[vt](v):'')+'</div></section>';
+  if(main){
+    out+='<section class="layer view"><div class="tag">당사<br>판단</div><ul>'+s.view.map(function(x){
+      return '<li>'+T(x.text)+'<span class="vtag">'+esc(DATA.meta.viewTag)+'</span>'+(x.conflict?'<span class="conf">검증 '+esc(x.conflict)+'</span>':'')+'</li>';}).join("")+'</ul></section>';
+  }
+  var fn=s.footnote||{sources:[],notes:[]};
+  var src=JSON.stringify(s);
+  if(src.indexOf("†")>=0) fxFlag=true;
+  var notes=fn.notes.slice();
+  if(fxFlag && !notes.some(function(n){return n.indexOf("†")>=0;})) notes.push(DATA.meta.fxNote);
+  out+='<footer class="ft"><span class="org">'+esc(DATA.meta.org)+' | '+esc(DATA.meta.classification)+'</span>'+
+    '<span>출처: '+fn.sources.map(T).join(" / ")+(notes.length?' · '+notes.map(T).join(" · "):'')+'</span>'+
+    '<span class="right"><span class="gl">'+gchip("A")+gchip("B")+gchip("C")+'<span style="margin-left:6px">근거 등급</span></span>'+
+    '<span class="pg">'+String(idx+1).padStart(2,"0")+' / '+String(total).padStart(2,"0")+'</span></span></footer>';
+  return out;
+}
+
+var deck=document.getElementById("deck"), cur=0, slides=[];
+function render(){
+  seen={};
+  var n=DATA.slides.length;
+  deck.innerHTML=DATA.slides.map(function(s,i){
+    return '<article class="slide '+s.section+'" id="'+s.id+'" aria-label="'+esc(s.no)+'">'+slideHTML(s,i,n)+'</article>';
+  }).join("");
+  slides=[].slice.call(deck.querySelectorAll(".slide"));
+  var hash=parseInt((location.hash||"").replace("#",""),10);
+  go(isNaN(hash)?0:hash-1);
+  checkFit();
+}
+function go(i){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach(function(s,k){s.classList.toggle("active",k===cur);});
+  if(location.hash!=="#"+(cur+1)) history.replaceState(null,"","#"+(cur+1));
+}
+function fit(){
+  var sc=Math.min(window.innerWidth/1920, window.innerHeight/1080);
+  deck.style.transform="translate("+((window.innerWidth-1920*sc)/2)+"px,"+((window.innerHeight-1080*sc)/2)+"px) scale("+sc+")";
+}
+// 넘침 검사: 결과는 window.__overflow (검토용)
+function checkFit(){
+  var issues=[];
+  slides.forEach(function(s,k){
+    var was=s.classList.contains("active"); s.classList.add("active");
+    [].forEach.call(s.querySelectorAll(".vis,.vbody,.layer,.ft,.hd,td"),function(el){
+      if(el.scrollHeight>el.clientHeight+2||el.scrollWidth>el.clientWidth+2) issues.push((k+1)+":"+el.className+":"+el.tagName+":"+(el.textContent||"").slice(0,30));
+    });
+    var h1=s.querySelector(".hd h1"); var lh=parseFloat(getComputedStyle(h1).lineHeight);
+    if(h1.offsetHeight/lh > 2.2) issues.push((k+1)+":headline>2 lines");
+    if(!was) s.classList.remove("active");
+  });
+  window.__overflow=issues;
+}
+document.addEventListener("keydown",function(e){
+  if(e.key==="ArrowRight"||e.key==="PageDown"||e.key===" ") {go(cur+1);e.preventDefault();}
+  else if(e.key==="ArrowLeft"||e.key==="PageUp") {go(cur-1);e.preventDefault();}
+  else if(e.key==="Home") go(0); else if(e.key==="End") go(slides.length-1);
+});
+window.addEventListener("hashchange",function(){var n=parseInt(location.hash.slice(1),10); if(!isNaN(n)) go(n-1);});
+window.addEventListener("resize",fit);
+fit(); render();
+// http로 열면 content/slides.json을 직접 읽어 다시 그린다 (문구 수정 즉시 반영)
+if(/^https?:/.test(location.protocol)){
+  fetch("../content/slides.json",{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(j){ j.verify=DATA.verify; DATA=j; render(); }
+  }).catch(function(){});
+}
+})();
+</script>
+</body>
+</html>
