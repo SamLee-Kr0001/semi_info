@@ -51,7 +51,7 @@ body{font-family:var(--sans);color:var(--ink);overflow:hidden}
 .g.gA{background:var(--ink);color:var(--paper)}
 .g.gC{border-style:dashed;border-color:var(--muted);color:var(--muted)}
 .g.gE{border-style:dotted;border-color:var(--muted);color:var(--muted)}
-.lv{display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:500;font-size:var(--fs-s);
+.lv{display:inline-flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:600;font-size:var(--fs-s);
   line-height:1.25;padding:3px 9px;border-radius:3px;white-space:nowrap;color:var(--ink)}
 .lv-L3p{background:var(--lv-l3)} .lv-L23{background:var(--lv-l23)} .lv-L2{background:var(--lv-l2)}
 .lv-L12{background:var(--lv-l12);color:#fff} .lv-EQ{background:var(--lv-eq);color:#fff}
@@ -192,7 +192,7 @@ tr.dim td{color:var(--muted)}
 .hm td.grp{overflow:visible;text-overflow:clip;font-size:var(--fs-s);font-weight:600;color:var(--muted);vertical-align:top;padding-top:2px;border-top:1.5px solid var(--ink);white-space:normal;line-height:1.2}
 .hm tr.gs td.mat,.hm tr.gs td.cell,.hm tr.gs td.eqc{box-shadow:inset 0 1.5px 0 var(--ink)}
 .hm td.mat{font-weight:500}
-.hm td.cell{text-align:center;font-family:var(--mono);font-size:var(--fs-s);font-weight:500}
+.hm td.cell{text-align:center;font-family:var(--sans);font-size:var(--fs-s);font-weight:600}
 .hm td.cell small{font-family:var(--sans);font-size:13px;opacity:.85;margin-left:4px}
 .hm td.eqc{color:var(--film);font-size:16px;background:var(--film-tint)}
 .hm td.eqc small{color:var(--muted);font-size:13px;margin-left:6px}
@@ -236,9 +236,20 @@ tr.dim td{color:var(--muted)}
 }
 :focus-visible{outline:3px solid var(--film);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* 화면 이동 버튼: 마우스를 움직이거나 키보드로 포커스하면 나타남 */
+.ctrl{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:16px;display:flex;gap:8px;align-items:center;z-index:50;
+  background:rgba(14,27,51,.86);padding:6px;border-radius:8px;opacity:0;transition:opacity .2s ease-out;pointer-events:none}
+.ctrl.show,.ctrl:focus-within{opacity:1;pointer-events:auto}
+.ctrl button{width:48px;height:48px;border:0;border-radius:6px;background:transparent;color:#fff;cursor:pointer;display:grid;place-items:center;transition:background-color .2s ease-out}
+.ctrl button:hover{background:rgba(255,255,255,.16)}
+.ctrl button:focus-visible{outline:3px solid #7FA6DA;outline-offset:2px}
+.ctrl .cnt{color:#fff;font:600 15px/1 "IBM Plex Mono",monospace;min-width:64px;text-align:center}
+@media print{.ctrl{display:none}}
 </style>
 </head>
 <body>
+<nav class="ctrl" aria-label="슬라이드 이동"><button type="button" id="prevBtn" aria-label="이전 슬라이드"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="cnt" id="cnt" aria-live="polite"></span><button type="button" id="nextBtn" aria-label="다음 슬라이드"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button></nav>
 <div id="deck" aria-live="polite"></div>
 <script id="deck-data" type="application/json">__DECK_DATA__</script>
 <script>
@@ -324,8 +335,8 @@ R.timeline = function(v){
 };
 
 function ixCell(n,proxy){
-  var w=Math.min(n,150)/150*46, base=100/150*46;
-  return '<td><span class="ix"><span class="num">'+n+(proxy?'<span style="color:var(--muted)">※</span>':'')+'</span><span class="bar"><i style="width:'+w.toFixed(1)+'px"></i><b style="left:'+base.toFixed(1)+'px"></b></span></span></td>';
+  // 한국 대표 기업 = 100 기준: 100 이상은 굵게
+  return '<td class="num" style="text-align:right;'+(n>=100?'font-weight:700':'color:var(--muted)')+'">'+n+(proxy?'※':'')+'</td>';
 }
 R.stageTable = function(v){
   var rows=v.rows.map(function(r){
@@ -339,10 +350,10 @@ R.stageTable = function(v){
       (r.type==="구조적"?'<b>구조적</b>':'일시적')+'</td></tr>';
   }).join("");
   return '<div class="cols" style="grid-template-columns:minmax(0,2.05fr) minmax(0,1fr);gap:28px">'+
-    '<div><table class="tight"><colgroup><col style="width:165px"><col style="width:345px"><col><col><col><col><col style="width:270px"></colgroup><thead><tr><th>소재</th><th>중국 상위 기업</th><th>개발</th><th>품질※</th><th>가격※</th><th>Capa</th><th>DRAM 기준 자립 단계</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div><table class="tight"><colgroup><col style="width:165px"><col style="width:430px"><col style="width:66px"><col style="width:66px"><col style="width:66px"><col style="width:66px"><col></colgroup><thead><tr><th>소재</th><th>중국 상위 기업</th><th>개발</th><th>품질※</th><th>가격※</th><th>Capa</th><th>DRAM 기준 자립 단계</th></tr></thead><tbody>'+rows+'</tbody></table>'+
     '</div>'+
     '<div style="display:flex;flex-direction:column;gap:14px"><div class="fvpanel"><div class="ptitle fv">'+T(v.tier2.label)+'</div><table><thead><tr><th class="fv">소재군</th><th class="fv">핵심 원료</th><th class="fv">원료 자립도</th><th class="fv">한계 유형</th></tr></thead><tbody>'+t2+'</tbody></table></div>'+
-    '<div style="font-size:17px;line-height:1.4;padding-left:14px;border-left:2px solid var(--ink)">왼쪽 표: '+T(v.tableNote)+'. 막대의 세로선 = 100</div></div></div>';
+    '<div style="font-size:17px;line-height:1.4;padding-left:14px;border-left:2px solid var(--ink)">왼쪽 표: '+T(v.tableNote)+'. 100 이상은 굵게 표시</div></div></div>';
 };
 
 function axis(max,step,suffix){
@@ -446,7 +457,7 @@ R.heatmap = function(v){
   var groups=v.groups.slice();
   // 장비 병목을 맨 위 캡 레이어로
   groups.sort(function(a,b){return (b.equipment?1:0)-(a.equipment?1:0);});
-  var hd='<colgroup><col style="width:120px"><col style="width:400px"><col style="width:200px"><col style="width:225px"><col style="width:170px"><col style="width:175px"><col></colgroup>'+
+  var hd='<colgroup><col style="width:120px"><col style="width:380px"><col style="width:200px"><col style="width:225px"><col style="width:195px"><col style="width:175px"><col></colgroup>'+
     '<thead><tr><th></th><th>소재 / 장비</th>'+v.columns.map(function(c){
       return '<th'+(c.estimate?' class="est"':'')+' style="text-align:center">'+esc(c.label)+(c.estimate?'<br>(추정)':'')+'</th>';}).join("")+
     '<th class="fv">'+T(v.viewColumn.label)+'</th></tr></thead>';
@@ -530,7 +541,7 @@ R.outlook = function(v){
 
 R.recommendations = function(v){
   var split=v.split.map(function(s){
-    return '<div><h3>'+lv(s.lv, s.key==="threat"?"L3 이상":"L1~L2")+T(s.label)+'</h3><div class="chips">'+s.items.map(function(i){return '<span>'+T(i)+'</span>';}).join("")+'</div></div>';
+    return '<div><h3>'+lv(s.lv, s.key==="threat"?"핵심 양산 이상":"시제품~비핵심")+T(s.label)+'</h3><div class="chips">'+s.items.map(function(i){return '<span>'+T(i)+'</span>';}).join("")+'</div></div>';
   }).join("");
   var recs=v.recs.map(function(r){return '<div class="rec"><h3>'+esc(r.no)+' '+T(r.title)+'</h3><p>'+T(r.text)+'</p></div>';}).join("");
   var dec=v.decisions.map(function(d){return '<div class="d"><b>'+esc(d.no)+'</b><span>'+T(d.text)+'</span></div>';}).join("");
@@ -549,7 +560,7 @@ R.companyTable = function(v){
 };
 
 R.criteria = function(v){
-  var lvs='<div class="defs">'+DATA.levelDefs.map(function(d){return '<span class="num" style="font-weight:600;font-size:20px">'+esc(d.lv)+'</span><span><b>'+esc(d.name)+'</b> · '+esc(d.desc)+'</span>';}).join("")+'</div>';
+  var lvs='<div class="defs">'+DATA.levelDefs.map(function(d){return '<span style="font-weight:600;font-size:20px;white-space:nowrap">'+esc(d.name)+'</span><span>'+esc(d.desc)+' <span class="note">(원문 '+esc(d.lv)+')</span></span>';}).join("")+'</div>';
   var sig='<div class="defs" style="margin-top:6px">'+DATA.levels.map(function(l){return lv(l.key,l.label)+'<span>'+esc(l.desc)+'</span>';}).join("")+'</div>';
   var gr='<div class="defs">'+v.grades.map(function(g){return gchip(g.g).replace('margin-left:8px','')+'<span>'+esc(g.desc)+'</span>';}).join("")+
     gchip("추정")+'<span>자료 A 작성자의 계산·판단</span></div>';
@@ -558,7 +569,7 @@ R.criteria = function(v){
   var fx=v.fx;
   var fxr=fx.rows.map(function(r){return '<tr><td>'+esc(r.target)+'</td><td class="num" style="font-weight:600">'+esc(r.a)+'</td><td class="num" style="white-space:nowrap">'+esc(r.b)+'</td><td style="font-size:16px'+(r.flag?';color:var(--lv-l12)':'')+'">'+esc(r.note)+'</td></tr>';}).join("");
   return '<div class="cols" style="grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr) minmax(0,1.15fr);gap:36px">'+
-    '<div style="display:flex;flex-direction:column;gap:16px"><div><div class="ptitle">자립 단계 L1~L4</div>'+lvs+'</div><div><div class="ptitle">덱의 5단계 신호</div>'+sig+'</div><div><div class="ptitle">근거 등급</div>'+gr+'</div></div>'+
+    '<div style="display:flex;flex-direction:column;gap:16px"><div><div class="ptitle">자립 4단계</div>'+lvs+'</div><div><div class="ptitle">덱의 5단계 신호</div>'+sig+'</div><div><div class="ptitle">근거 등급</div>'+gr+'</div></div>'+
     '<div style="display:flex;flex-direction:column;gap:12px"><div class="ptitle fv">Choke Score 산식 (자료 B 모델)</div><div class="formula">'+esc(f.expr)+'</div>'+vars+
       '<div class="note" style="font-size:16px">'+esc(f.source)+'</div><div style="font-size:18px;line-height:1.4;padding-left:14px;border-left:3px solid var(--lv-l12)">'+esc(f.caveat)+'</div></div>'+
     '<div><div class="ptitle">'+esc(fx.title)+'</div><table style="font-size:18px"><thead><tr>'+fx.columns.map(function(c){return '<th>'+esc(c)+'</th>';}).join("")+'</tr></thead><tbody>'+fxr+'</tbody></table>'+
@@ -660,6 +671,17 @@ if(/^https?:/.test(location.protocol)){
     if(j){ j.verify=DATA.verify; DATA=j; render(); }
   }).catch(function(){});
 }
+})();
+
+// 화면 이동 버튼 (터치·마우스 사용자용)
+(function(){
+  var nav=document.querySelector(".ctrl"),t=null;
+  function show(){nav.classList.add("show");clearTimeout(t);t=setTimeout(function(){nav.classList.remove("show");},2500);}
+  document.getElementById("prevBtn").addEventListener("click",function(){document.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowLeft"}));show();});
+  document.getElementById("nextBtn").addEventListener("click",function(){document.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight"}));show();});
+  ["mousemove","touchstart"].forEach(function(ev){document.addEventListener(ev,show,{passive:true});});
+  function upd(){var a=document.querySelectorAll(".slide"),i=[].findIndex.call(a,function(s){return s.classList.contains("active");});document.getElementById("cnt").textContent=(i+1)+" / "+a.length;}
+  new MutationObserver(upd).observe(document.getElementById("deck"),{subtree:true,attributes:true,attributeFilter:["class"]});upd();
 })();
 </script>
 </body>
