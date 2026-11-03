@@ -1,0 +1,305 @@
+{
+  "meta": {
+    "title": "중국 반도체 소재 경쟁력 확보 현황과 구조적 한계",
+    "org": "경영전략실 / 기술전략본부 보고용",
+    "fx": "기준 환율: 1 CNY = 194.50 KRW, 1 USD = 1,385.00 KRW",
+    "gradeNote": "A등급 = 기업 공시·정부 관보 / B등급 = 시장조사기관·학술 자료 / C등급 = 팹 관계자 전언. 실무 적용 시 관련 부서의 최종 재검증 권장"
+  },
+  "slides": [
+    {
+      "id": "s01", "type": "cover",
+      "kind": "표지",
+      "title": "중국 반도체 소재 경쟁력 확보 현황과 구조적 한계",
+      "subtitle": "8대 핵심 소재 평가, 화웨이 소부장 압축 성장 검증 및 최종 Choke Point 판정 (2026.10 기준)",
+      "meta": ["경영전략실 / 기술전략본부 보고용", "기준 환율: 1 CNY = 194.50 KRW, 1 USD = 1,385.00 KRW"],
+      "cards": [
+        { "label": "양적 자립", "value": "60~75%", "tone": "blue", "text": "28nm+ 레거시 및 128단 NAND 범용 소재 국산화율 (물량 기준)", "src": "[B등급: CSIA]" },
+        { "label": "질적 종속", "value": "10~25%", "tone": "red", "text": "4F² DRAM·HBM3E+ 선단 메모리 소재 실질 자립률 (금액 기준)", "src": "[B등급: SEMI, Yole]" },
+        { "label": "최종 한계", "value": "Top Choke Points", "tone": "red", "text": "ArF-i 감광재 및 첨단 패키징 화학소재 외산 의존도 90% 상회", "src": "[B등급: TrendForce]" }
+      ]
+    },
+    {
+      "id": "s02", "type": "overview",
+      "kind": "총괄 개요",
+      "headline": "대기금 124조 원이 만든 양적 자립의 착시 — 선단 공정으로 갈수록 외산 종속 심화",
+      "left": {
+        "title": "경쟁력 확보 동인",
+        "items": [
+          { "k": "자본", "text": "대기금 1~3기 누적 6,800억 위안(약 124조 원) + 선전시 국자위(SZMII) 플랫폼 투자 [A등급: 공시/등기]" },
+          { "k": "수요", "text": "SMIC·CXMT·YMTC의 국산 우선 구매 의무화 및 R&D B-Line 강제 퀄 [B등급: 업계 종합]" },
+          { "k": "인재", "text": "글로벌 M&A(유피케미칼) 및 일본·대만 엔지니어 대거 영입 [A등급: 雅克科技 공시 / B등급: Nikkei]" }
+        ]
+      },
+      "right": {
+        "title": "국산화율 실체",
+        "bars": [
+          { "label": "물량(Volume) 기준 자립률", "value": 60, "tone": "blue", "text": "범용 세정액, 일반 가스, 옥사이드 슬러리 중심" },
+          { "label": "금액(Value) 기준 자립률", "value": 32, "tone": "red", "text": "첨단 ArF-i PR, EUV 원료, 하이브리드 본딩제 외산 점유" }
+        ]
+      }
+    },
+    {
+      "id": "s03", "type": "material", "materialKey": "PR",
+      "kind": "소재별 비교 ① 감광재 (Lithography)",
+      "short": "Photoresist",
+      "headline": "g/i-line은 70% 자급 완료, 그러나 차세대 ArF 액침 PR은 일본 의존도 95%",
+      "table": {
+        "columns": ["구분", "Global Top 기업", "중국 대표 기업", "기술 노드 및 검증 단계", "자립 단계"],
+        "levelCol": 4,
+        "rows": [
+          { "cells": ["ArF 액침 (Immersion)", "Tokyo Ohka Kogyo, JSR, Shin-Etsu (일)", "南大光电 (NATA), 珠海基石 (Cornerstone)", "28nm/40nm Non-critical 검증 완료, 선단 메모리 장기계약 전무 [A등급: 南大光电 공시]", "L1+ / L2"], "tag": "위험" },
+          { "cells": ["KrF (248nm)", "JSR, Shin-Etsu (일), 동진쎄미켐 (한)", "彤程新材 (Red Avenue / Kempur)", "14nm 로직 및 레거시 NAND 대량 납품 [A등급: 彤程新材 공시]", "L3"] },
+          { "cells": ["i-line (365nm)", "Tokyo Ohka Kogyo (일)", "晶瑞电材 (Crystal Clear)", "전 팹 대량 양산 및 장기 공급 계약 체결 [A등급: 晶瑞电材 공시]", "L3+"], "tag": "자립" }
+        ]
+      },
+      "limit": { "label": "구조적 한계", "text": "감광성 수지(Resin) 및 광산발생제(PAG) 원료 자립도 5% 미만, 전량 일본 수입 의존 [B등급: 업계 분석]." }
+    },
+    {
+      "id": "s04", "type": "material", "materialKey": "CMP",
+      "kind": "소재별 비교 ② 연마재 (Planarization)",
+      "short": "CMP Slurry/Pad",
+      "headline": "폴리우레탄 패드는 글로벌 대등 수준(L3), HBM용 하이브리드 슬러리는 파일럿 정체(L2)",
+      "table": {
+        "columns": ["품목", "Global Top 기업", "중국 대표 기업", "품질 지수 (한국=100)", "GPM", "자립 단계"],
+        "levelCol": 5,
+        "rows": [
+          { "cells": ["CMP Pad", "DuPont (미)", "鼎龙股份 (Dinglong)", "95 (28nm/14nm/232단 NAND 메인 공급)", "62.8% [A등급]", "L3 (Critical)"] },
+          { "cells": ["금속/벌크 Slurry", "CMC Materials (미), 솔브레인 (한)", "安集科技 (Anji Tech)", "88 (Cu, W, STI 슬러리 SMIC·YMTC 납품)", "54.2% [A등급]", "L3 (Critical)"] },
+          { "cells": ["Hybrid 본딩 Slurry", "CMC Materials (미), Fujimi (일)", "安集科技, 鼎龙股份", "50 (Cu-to-Cu 초평탄 연마 제어 한계)", "N/A", "L2 (Pilot)"] }
+        ]
+      },
+      "gap": {
+        "title": "차세대 공정 갭: 품질 지수와 GPM",
+        "rows": [
+          { "label": "CMP Pad (鼎龙)", "quality": 95, "gpm": 62.8 },
+          { "label": "금속/벌크 Slurry (安集)", "quality": 88, "gpm": 54.2 },
+          { "label": "Hybrid 본딩 Slurry", "quality": 50, "gpm": null }
+        ]
+      },
+      "limit": { "label": "구조적 한계", "text": "30nm 이하 구형 세리아(CeO_2) 나노입자 소성 기술 부족으로 선단 공정 스크래치 다발 [B등급: 학술자료]." }
+    },
+    {
+      "id": "s05", "type": "material", "materialKey": "PREC",
+      "kind": "소재별 비교 ③ 증착 전구체 (Deposition)",
+      "short": "Precursor",
+      "headline": "한국 기업 인수로 낸드 박막은 L3 도달, 차세대 VCT 게이트용 고유전율 전구체는 L2",
+      "table": {
+        "columns": ["전구체 종류", "Global Top 기업", "중국 대표 기업", "적용 공정 및 팹", "자립 단계"],
+        "levelCol": 4,
+        "rows": [
+          { "cells": ["High-k (HfO₂, ZrO₂)", "Adeka (일), SK트리켐 (한)", "雅克科技 (Yoke Tech)", "CXMT 커패시터, YMTC 트렌치 공급", "L3 (배합) / L2 (원료)"] },
+          { "cells": ["실리콘 산화/질화막", "Entegris (미), 솔브레인 (한)", "雅克科技, 南大光电", "3D NAND 및 일반 DRAM 박막 대량 납품", "L3 (Critical)"] },
+          { "cells": ["차세대 Ultra Low-k", "Merck (독), DuPont (미)", "鼎龙股份 (연구 단계)", "4F² DRAM 비트라인 차폐 (시제품 평가)", "L1+ (Pilot)"] }
+        ]
+      },
+      "dependency": {
+        "title": "원료 종속성: 배합과 원료를 분리",
+        "layers": [
+          { "name": "합성 배합", "lv": "L3", "text": "유피케미칼 인수로 양산 기술 확보" },
+          { "name": "기초 유기 원료", "lv": "L2", "text": "유기 리간드 내 잔류 염소(Cl) 0.1ppb 제거 정제 기술 결여" }
+        ]
+      },
+      "limit": { "label": "구조적 한계", "text": "유피케미칼 인수로 양산 기술은 확보했으나, 유기 리간드 내 잔류 염소(Cl) 0.1ppb 제거 정제 기술 결여 [A등급: 공시/특허]." }
+    },
+    {
+      "id": "s06", "type": "material", "materialKey": "GAS",
+      "kind": "소재별 비교 ④ 특수가스 (Process Gas)",
+      "short": "Process Gas",
+      "headline": "삼불화질소·육불화텅스텐은 완전 자립(L4), DUV 노광용 희가스는 혼합·정제 종속",
+      "table": {
+        "columns": ["가스 분류", "Global Top 기업", "중국 대표 기업", "국산화율", "기술 수준 및 의존도"],
+        "levelCol": 4,
+        "rows": [
+          { "cells": ["세정/증착 (NF_3, WF_6)", "SK스페셜티 (한), Linde (독)", "中船特气 (Peric)", "85% [A등급]", "원료 광물부터 합성까지 완전 자립 (L4)"], "group": "벌크 가스" },
+          { "cells": ["식각 가스 (C_4F_6, CH_2F_2)", "Resonac (일), SK스페셜티 (한)", "华特气体, 中船特气", "55% [B등급]", "HARC 식각용 고순도 정제 외산 의존 (L3-)"], "group": "에천트·희가스" },
+          { "cells": ["노광용 엑시머 가스", "Linde (독), Air Liquide (프)", "华特气体 (Huate Gas)", "40% [B등급]", "Ne/Kr 원광 추출 우위 vs 고순도 믹싱 수입 (L2+)"], "group": "에천트·희가스" }
+        ]
+      },
+      "rateBars": [
+        { "label": "세정/증착 (NF_3, WF_6)", "value": 85 },
+        { "label": "식각 가스 (C_4F_6, CH_2F_2)", "value": 55 },
+        { "label": "노광용 엑시머 가스", "value": 40 }
+      ],
+      "limit": { "label": "한계 유형", "text": "일시적 한계(정제 설비 증설로 2년 내 해결 가능) 중심이나, 액화 헬륨(He)은 천연가스 부재로 80% 수입 의존 [B등급: 관세청]." }
+    },
+    {
+      "id": "s07", "type": "material", "materialKey": "WET",
+      "kind": "소재별 비교 ⑤ 습식 화학소재 (Wet Chemical)",
+      "short": "Wet Chemical",
+      "headline": "범용 세정 황산은 G5 등급 진입(L3), 초미세 식각액 및 7N 무수불산은 해외 의존",
+      "table": {
+        "columns": ["화학소재 품목", "Global Top 기업", "중국 대표 기업", "품질 수준 (금속 불순물)", "자립 단계"],
+        "levelCol": 4,
+        "rows": [
+          { "cells": ["전자급 황산 (H_2SO_4)", "Mitsubishi Gas Chemical (일)", "江化微, 晶瑞电材", "ppt급 제어 성공 (G5 등급 양산)", "L3 (Critical)"] },
+          { "cells": ["고순도 과산화수소 (H_2O_2)", "Solvay (벨), MGC (일)", "江化微 (Jianghua Micro)", "G4/G5 등급, 메모리 세정 라인 적용", "L3 (Critical)"] },
+          { "cells": ["초고순도 무수불산 (AHF)", "Stella Chemifa, Morita (일)", "多氟多 (DFD), 滨化股份", "6N 정제 도달 vs 7N(0.1ppt) 일본 의존", "L2+ (Non-critical)"] },
+          { "cells": ["기능성 에천트/스트리퍼", "ENF테크놀로지, 동진 (한)", "安集科技, 江化微", "3D NAND 고선택비 인산 에천트 공급", "L2+ (선단 노드 미흡)"] }
+        ]
+      },
+      "chain": {
+        "title": "무수불산(AHF) 정제 밸류체인",
+        "steps": [
+          { "name": "형석 원광 채굴", "state": "세계 1위", "tone": "green" },
+          { "name": "6N 정제", "state": "도달", "tone": "yellow" },
+          { "name": "7N (0.1ppt) 정제", "state": "일본 의존", "tone": "red" }
+        ]
+      },
+      "limit": { "label": "구조적 한계", "text": "형석 채굴량은 세계 1위이나, 비소(As) 등 미세 금속 이온을 0.1 ppt 이하로 제어하는 다단 증류탑 기술 미흡 [B등급: 학술논문]." }
+    },
+    {
+      "id": "s08", "type": "material", "materialKey": "TGT", "theme": "green",
+      "kind": "소재별 비교 ⑥ 금속 타깃 (Sputtering Target)",
+      "short": "Metal Target",
+      "headline": "5nm 로직 배선 타깃 양산으로 글로벌 Top 3 진입(L3), 초고순도 잉곳 40% 수입",
+      "table": {
+        "columns": ["금속 타깃 종류", "Global Top 기업", "중국 대표 기업 (KFMI)", "공급 고객사", "자립 단계"],
+        "levelCol": 4,
+        "rows": [
+          { "cells": ["Al / Ti 타깃", "JX Advanced Metals (일)", "江丰电子 (Konfoong)", "TSMC, SMIC, SK하이닉스", "L3+ (글로벌 2위)"] },
+          { "cells": ["Cu / Ta 타깃", "Materion (미), JX (일)", "江丰电子, 有研新材", "14nm/7nm 배선 공정 공급", "L3 (Critical)"] },
+          { "cells": ["Co / Ru 첨단 타깃", "JX Metals, Honeywell (미)", "江丰电子 (R&D 진행)", "선단 파운드리 진입 미흡", "L2 (검증 단계)"] }
+        ]
+      },
+      "kpi": {
+        "title": "江丰电子 경쟁력 지표 (한국=100)",
+        "items": [ { "label": "품질 지수", "value": 98 }, { "label": "가격 경쟁력", "value": 110 } ],
+        "text": "한국=100 대비 우위. 6N 잉곳 제련 설비 증설 중 [A등급: 江丰电子 공시]."
+      },
+      "limit": { "label": "경쟁력 지표", "text": "江丰电子 품질 지수 98, 가격 경쟁력 110 (한국=100 대비 우위). 6N 잉곳 제련 설비 증설 중 [A등급: 江丰电子 공시]." }
+    },
+    {
+      "id": "s09", "type": "material", "materialKey": "WAF",
+      "kind": "소재별 비교 ⑦ 실리콘 웨이퍼 (Substrate)",
+      "short": "300mm Wafer",
+      "headline": "월 45만 장 출하로 양적 급성장(L2+), 선단 DRAM용 저결함 에피 웨이퍼는 기술 장벽",
+      "table": {
+        "columns": ["웨이퍼 규격", "Global Top 기업", "중국 대표 기업 (NSIG)", "월 생산능력 (Capa)", "자립 단계"],
+        "levelCol": 4,
+        "rows": [
+          { "cells": ["300mm 폴리시드 (PW)", "Shin-Etsu, SUMCO (일)", "沪硅产业 (상하이신성)", "300mm 월 45만 장", "L3 (CIS/모바일 파운드리)"] },
+          { "cells": ["300mm 첨단 에피 (Epi)", "Shin-Etsu (일), SK실트론 (한)", "沪硅产业, 中环领先", "월 10~15만 장 수준", "L2+ (선단 메모리 미달)"] },
+          { "cells": ["Tier-2: 11N 폴리실리콘", "Wacker (독), Hemlock (미)", "통웨이, 신텍 (태양광 편중)", "전자급 자립률 25%", "구조적 한계 (결정 결함)"] }
+        ]
+      },
+      "funnel": {
+        "title": "물량은 크고, 선단으로 갈수록 좁아짐",
+        "steps": [
+          { "label": "300mm 폴리시드 (PW)", "value": "월 45만 장", "w": 100, "tone": "green" },
+          { "label": "300mm 첨단 에피 (Epi)", "value": "월 10~15만 장", "w": 28, "tone": "yellow" },
+          { "label": "11N 폴리실리콘 전자급 자립률", "value": "25%", "w": 25, "tone": "red" }
+        ],
+        "note": "막대 길이: PW 45만 장 = 100 기준, 에피는 중간값 12.5만 장 환산. 폴리실리콘은 자립률(%)로 단위가 다름"
+      },
+      "limit": { "label": "품질 격차", "text": "인상(Ingot Pulling) 공정 중 산소 유도 미세 결함(BMD) 및 웨이퍼 평탄도(Warp/Bow) 제어 실패 [B등급: 업계 리포트]." }
+    },
+    {
+      "id": "s10", "type": "material", "materialKey": "PKG",
+      "kind": "소재별 비교 ⑧ 패키징 소재 (Packaging)",
+      "short": "PKG 소재",
+      "headline": "레거시 EMC는 1위 흡수(L3), HBM용 액상 에폭시(LMC)·NCF는 자립도 10% 미만",
+      "table": {
+        "columns": ["패키징 핵심 소재", "Global Top 기업", "중국 대표 기업", "HBM3E/4 적용 가능성", "자립 단계"],
+        "levelCol": 4,
+        "rows": [
+          { "cells": ["MR-MUF 액상수지 (LMC)", "Resonac, Sumitomo (일)", "华海诚科 (HHCK)", "불가 (점도 제어 실패, 보이드 다발)", "L1 (해외의존 92%)"], "flag": true },
+          { "cells": ["Advanced NCF (필름)", "Resonac (일), LG화학 (한)", "德邦科技, 鼎龙股份", "파일럿 검증 중 (접합 수율 50% 미달)", "L2 (해외의존 90%)"], "flag": true },
+          { "cells": ["TBDB 접착제/레이저박리액", "3M, Brewer Science (미)", "鼎龙股份, 화학 랩", "고온 견딤성 부족, 잔류물 결함", "L2 (해외의존 88%)"], "flag": true },
+          { "cells": ["레거시 EMC (에폭시몰딩)", "Sumitomo Bakelite (일)", "华海诚科 (HHCK)", "2위 업체 인수(16억 위안)로 레거시 독점", "L3 (모바일/전장 한정)"] }
+        ]
+      },
+      "limit": { "label": "구조적 한계", "text": "90% 이상 고충진 나노 실리카 분산 기술 부재로 HBM 적층 패키징 수율 확보 불가 [B등급: TrendForce]." }
+    },
+    {
+      "id": "s11", "type": "eco1",
+      "kind": "생태계 분석 ① (Governance & Structure)",
+      "headline": "선전시 국자위(SZMII)가 100% 출자하고 화웨이가 통제하는 '정부 대리 소유' 폐쇄 루프",
+      "structureTitle": "지분 및 자본 구조 (A등급 GSXT 등기 확인)",
+      "chain": ["선전시 국자위", "SZMII", "深芯恒", "SiCarrier (新凯来)"],
+      "chainStakes": ["100%", "100%", "100%"],
+      "notes": [
+        { "k": "Zhuhai Cornerstone (珠海基石)", "text": "SiCarrier 핵심 이사 위하이(余海)가 법정대표자 겸 동사장 장악", "line": "official" },
+        { "k": "화웨이(Huawei)", "text": "공식 지분 0%(제재 회피), 哈勃投资 및 R&D 인력 수천 명 파견으로 실질 지배", "line": "control" }
+      ],
+      "axes": [
+        { "k": "장비", "text": "SiCarrier(식각/CVD), 上海宇量昇(노광), ZTOP(검사)" },
+        { "k": "소재", "text": "珠海基石 (ArF-i 감광재, 첨단 케미컬, CMP 슬러리 일체 공급)" },
+        { "k": "평가 Fab", "text": "PXW(로직), PST(모바일 AP), SWX(DRAM), PJHT(패키징)" }
+      ]
+    },
+    {
+      "id": "s12", "type": "eco2",
+      "kind": "생태계 분석 ② (Fact Check & Evaluation)",
+      "headline": "설립 28개월 만의 PR 팹 진입은 사실 — 그러나 미 BIS 제재와 계측 결함으로 '수율 벽' 봉착",
+      "left": {
+        "title": "압축 성장 성과 (Velocity)",
+        "sub": "업력 대비 초고속 압축 성장",
+        "items": [
+          "2022년 6월 설립 → 28개월 만에 ArF-i PR 팹 테스트 진입 (南大光电 72개월 대비 50% 이상 단축)",
+          "400여 명 R&D 인력(석·박사 50%), 대만·일본 인력 집중 영입 [B등급: Nikkei]",
+          "장비-소재-팹 단일 루프로 주(Weekly) 단위 결함 데이터 실시간 피드백"
+        ],
+        "compare": [ { "label": "珠海基石", "months": 28 }, { "label": "南大光电", "months": 72 } ]
+      },
+      "right": {
+        "title": "실제 구조적 한계 (Yield Wall)",
+        "sub": "팩트체크 및 한계 (2024.12 제재 역풍)",
+        "items": [
+          { "k": "제재 타격", "text": "미 BIS가 SiCarrier 및 Cornerstone을 Entity List 등재 → 해외 특수 시약 수입 차단 [A등급: 관보]" },
+          { "k": "수율 장벽", "text": "ZTOP 광학 검사 장비의 해상도 한계(KLA 대비 열위)로 10nm 미세 결함 미검출" },
+          { "k": "결과", "text": "파일럿 팹 투입은 성공했으나, 브릿지 결함 다발로 최종 웨이퍼 완성 수율 50% 미만 정체 [C등급: 업계 전언]" }
+        ]
+      }
+    },
+    {
+      "id": "s13", "type": "choke",
+      "kind": "종합 리스크 매트릭스 (Choke Point Decision)",
+      "headline": "최종 Choke Point: ArF-i 감광재와 첨단 HBM 수지 — 단일 품목 차단 시 라인 정지",
+      "top5": [
+        { "name": "ArF 액침 포토레지스트", "score": 96.5, "text": "해외의존 95% | 일본 JSR·TOK 독점 | 대체 4~5년 소요" },
+        { "name": "PR 원료 (PAG & 불소화 수지)", "score": 95.0, "text": "해외의존 98% | 미·일 독점 | 자체 합성 불가" },
+        { "name": "HBM용 액상 수지 (MR-MUF LMC)", "score": 91.8, "text": "해외의존 92% | 일본 Resonac 독점" },
+        { "name": "하이브리드 본딩 Cu-to-Cu 슬러리", "score": 88.4, "text": "해외의존 88% | 미국 CMC 독점 | 파일럿 정체" },
+        { "name": "VCT 게이트용 ALD Hf/Zr 전구체", "score": 83.5, "text": "해외의존 85% | 한국·일본 독점" }
+      ],
+      "status": [
+        { "tone": "green", "label": "완전 자립", "items": ["CMP 패드", "세정가스(NF_3)", "Al/Cu 타깃", "범용 황산"] },
+        { "tone": "yellow", "label": "부분 자립", "items": ["300mm 폴리시드 웨이퍼", "증착 전구체", "고순도 무수불산"] },
+        { "tone": "red", "label": "자립 불가", "items": ["ArF-i PR", "EUV 원료", "LMC/NCF 패키징 수지", "하이브리드 본딩제"] }
+      ]
+    },
+    {
+      "id": "s14", "type": "roadmap",
+      "kind": "타임라인 전망 (Roadmap to Parity)",
+      "headline": "가스·타깃은 이미 대등, 웨이퍼는 2028년 도달 — 선단 PR과 HBM 수지는 2032년 이후에도 난망",
+      "phases": [
+        { "period": "2026~2027", "label": "글로벌 대등 / L3+ 달성 완료", "tone": "green", "start": 0, "end": 1, "items": ["공정 특수가스 (NF_3, WF_6)", "스퍼터링 Al/Cu 타깃", "폴리우레탄 CMP 패드"] },
+        { "period": "2028~2029", "label": "제한적 대등 도달 가능 / L3 진입", "tone": "yellow", "start": 1, "end": 2, "items": ["300mm 에피 웨이퍼", "초고순도 무수불산(AHF)", "High-k 전구체", "Advanced NCF"] },
+        { "period": "2030~2031", "label": "수율 손실형 자체 양산 시도", "tone": "yellow", "start": 2, "end": 3, "items": ["4F² DRAM용 ArF-i PR (자체 원료 정제 시도, 결함률 글로벌 대비 2배)", "Cu-to-Cu 하이브리드 본딩 슬러리"] },
+        { "period": "2032년 이후", "label": "도달 불확실 / 장기 Choke Point", "tone": "red", "start": 3, "end": 4, "dashed": true, "items": ["PR 핵심 광산발생제(PAG) 및 극미세 불소계 수지 분자 합성", "HBM3E/4급 초미세 실리카 고충진 MR-MUF용 액상 에폭시 수지(LMC)"] }
+      ]
+    },
+    {
+      "id": "s15", "type": "strategy",
+      "kind": "결론 및 전략 제언 (Strategy & Action Plan)",
+      "headline": "중국의 '저수율 밀어내기 및 우회로 구축' 공세 대비, 첨단 패키징 화학소재 초격차 방어",
+      "left": {
+        "title": "중국 기업의 생존 돌파 전략",
+        "items": [
+          { "k": "우회 조달 루트", "text": "동남아·중동 제3국 법인을 통한 일본·미국 Tier-2 원자재 환적 수입" },
+          { "k": "저수율 강행", "text": "4F² DRAM 수율 50% 상태에서 국표(국가표준) 서버 팹 물량 밀어내기 [C등급: 팹 관계자]" },
+          { "k": "정부 주도 강제 통합", "text": "대기금 3기 기반 소규모 화학 스타트업을 SiCarrier 생태계로 통폐합" }
+        ]
+      },
+      "right": {
+        "title": "국내 산업 대응 및 제언",
+        "items": [
+          { "k": "초격차 방어", "text": "EUV 단일 패터닝의 원가·수율 우위 극대화로 중국 SAQP 다중 노광 무력화" },
+          { "k": "공급망 보안", "text": "HBM4 하이브리드 본딩제 및 MUF 수지 글로벌 원천 특허·공급선 독점 제휴" },
+          { "k": "원료 유출 차단", "text": "PAG, 초고순도 리간드 등 Tier-2 핵심 원재료의 대중국 재수출 통제 공조" }
+        ]
+      },
+      "closing": "기업 공시 및 정부 관보 기반 근거는 A등급, 시장조사기관 및 학술 자료는 B등급, 팹 관계자 전언은 C등급으로 구분 표기하였으며, 실무 적용 시 관련 부서의 최종 재검증이 권장됩니다."
+    }
+  ]
+}

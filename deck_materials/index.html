@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>중국 소재 경쟁력 평가</title>
+<style>
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:400;font-display:swap;src:url('../assets/fonts/plexkr-400.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:500;font-display:swap;src:url('../assets/fonts/plexkr-500.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:600;font-display:swap;src:url('../assets/fonts/plexkr-600.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:700;font-display:swap;src:url('../assets/fonts/plexkr-700.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('../assets/fonts/plexmono-400.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('../assets/fonts/plexmono-500.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('../assets/fonts/plexmono-600.woff2') format('woff2')}
+@font-face{font-family:'Noto Sans SC';font-style:normal;font-weight:400;font-display:swap;src:url('../assets/fonts/notosc-400.woff2') format('woff2')}
+@font-face{font-family:'Noto Sans SC';font-style:normal;font-weight:500;font-display:swap;src:url('../assets/fonts/notosc-500.woff2') format('woff2')}
+@font-face{font-family:'Noto Sans SC';font-style:normal;font-weight:600;font-display:swap;src:url('../assets/fonts/notosc-600.woff2') format('woff2')}
+
+/* Layout: 1920×1080 고정. 표지 = 다크 네이비 + 3대 결론 카드, 본문 = 성격 라벨 + 헤드라인 + 표/도식 + 하단 한계 박스 */
+:root{
+  --navy:#0E1B33; --navy-2:#1A2C4E; --paper:#F6F7F9; --ink:#121826; --muted:#5B6474; --rule:#D3D8E0;
+  --blue:#7FA6DA; --blue-deep:#2D5BA8; --red:#C2302A; --red-tint:#FBE9E7;
+  --green:#2E8B57; --green-tint:#E5F3EA; --yellow:#D69A12; --yellow-tint:#FBF2DC;
+  --sans:"IBM Plex Sans KR","Noto Sans SC",Pretendard,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --mono:"IBM Plex Mono","IBM Plex Sans KR","Noto Sans SC",ui-monospace,Menlo,Consolas,monospace;
+  --pad-x:72px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#2A2F36}
+body{font-family:var(--sans);color:var(--ink);overflow:hidden}
+#deck{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+.slide{word-break:keep-all;position:absolute;inset:0;width:1920px;height:1080px;background:var(--paper);overflow:hidden;
+  padding:44px var(--pad-x) 0;display:none;grid-template-rows:auto minmax(0,1fr) auto;row-gap:22px}
+.slide.active{display:grid}
+
+/* header */
+.hd{border-bottom:3px solid var(--navy);padding-bottom:16px}
+.kind{font-size:18px;font-weight:600;color:var(--blue-deep);margin-bottom:8px;letter-spacing:.01em}
+.hd h1{margin:0;font-size:46px;line-height:1.24;font-weight:700;color:var(--navy);letter-spacing:-.015em;text-wrap:balance}
+.body{min-height:0;display:flex;flex-direction:column;gap:20px;overflow:hidden}
+
+/* chips */
+.g{display:inline-flex;align-items:baseline;gap:6px;font-size:17px;line-height:1.3;margin-left:8px;white-space:nowrap;vertical-align:2px;color:var(--muted)}
+.g b{font-family:var(--mono);font-weight:600;font-size:16px;border:1.5px solid var(--ink);color:var(--ink);padding:0 5px;border-radius:2px}
+.g b.gA{background:var(--ink);color:#fff}
+.g b.gC{border-style:dashed;border-color:var(--muted);color:var(--muted)}
+.lv{display:inline-block;font-family:var(--mono);font-size:20px;font-weight:600;padding:3px 10px;border-radius:3px;white-space:nowrap;line-height:1.3}
+.t-green{background:var(--green);color:#fff} .t-yellow{background:var(--yellow);color:#fff} .t-red{background:var(--red);color:#fff}
+.t-none{background:#E4E8EE;color:var(--ink)}
+.tag{display:inline-block;font-size:18px;font-weight:700;padding:2px 9px;border-radius:3px;margin-left:10px;vertical-align:2px;color:#fff}
+.flag{display:inline-flex;align-items:center;gap:6px;color:var(--red);font-weight:700;font-size:18px;margin-left:10px}
+
+/* tables */
+table{border-collapse:collapse;width:100%;font-size:24px;line-height:1.38}
+th{font-size:19px;font-weight:600;color:#fff;background:var(--navy);text-align:left;padding:14px 18px;white-space:nowrap}
+td{padding:22px 18px;border-bottom:1px solid var(--rule);vertical-align:middle;background:#fff}
+td.first{font-weight:600;color:var(--navy)}
+tr.risk td{background:var(--red-tint)}
+tr.safe td{background:var(--green-tint)}
+.lvs{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lvs .sub{font-size:19px;color:var(--muted);margin-left:2px}
+
+/* bottom row */
+.row2{display:grid;gap:28px;align-items:stretch;flex:1;min-height:0;max-height:330px}
+.limit{background:var(--navy);color:#fff;padding:26px 32px;display:flex;flex-direction:column;gap:8px;justify-content:center}
+.limit .k{font-size:20px;font-weight:700;color:#F3B3AE;letter-spacing:.02em}
+.limit p{margin:0;font-size:29px;line-height:1.5}
+.limit .g{color:#B9C3D6}
+.limit .g b{border-color:#fff;color:#fff}
+.limit .g b.gA{background:#fff;color:var(--navy)}
+.panel{background:#fff;border:1px solid var(--rule);padding:22px 26px;display:flex;flex-direction:column;justify-content:center}
+.ptitle{font-size:22px;font-weight:700;color:var(--navy);margin:0 0 12px}
+.note{font-size:17px;color:var(--muted);line-height:1.35}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* footer */
+.ft{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:28px;align-items:center;border-top:1px solid var(--rule);
+  padding:12px 0 16px;font-size:15px;color:var(--muted)}
+.ft .org{color:var(--navy);font-weight:600}
+.ft .pg{font-family:var(--mono);font-weight:600;color:var(--navy);font-size:16px}
+
+/* cover */
+.slide.cover{background:var(--navy);color:#fff;grid-template-rows:auto auto minmax(0,1fr) auto;padding-top:96px}
+.cover .kind{color:var(--blue)}
+.cover h1{margin:0;font-size:76px;line-height:1.16;font-weight:700;letter-spacing:-.02em;max-width:1500px}
+.cover .sub{font-size:30px;line-height:1.45;color:#C9D3E6;margin-top:22px;max-width:1500px}
+.cover .meta{display:flex;gap:40px;font-size:20px;color:var(--blue);margin-top:26px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;align-self:end;padding-bottom:40px}
+.card{background:var(--navy-2);border-top:6px solid var(--blue);padding:26px 30px 28px;display:flex;flex-direction:column;gap:12px}
+.card.red{border-top-color:var(--red)}
+.card .lab{font-size:22px;font-weight:600;color:#C9D3E6}
+.card .val{font-family:var(--mono);font-size:96px;line-height:1;font-weight:600;letter-spacing:-.03em;color:#fff}
+.card .val.txt{font-family:var(--sans);font-size:58px;letter-spacing:-.01em;line-height:1.05}
+.card.blue .val{color:#B6CEF0}
+.card.red .val{color:#FF8F86}
+.card p{margin:0;font-size:22px;line-height:1.4;color:#E7ECF5}
+.card .g{color:#9DAAC2;margin-left:0}
+.card .g b{border-color:#fff;color:#fff}
+.cover .ft{border-top-color:#2E4268;color:#9DAAC2}
+.cover .ft .org,.cover .ft .pg{color:#fff}
+
+/* overview */
+.ov{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:56px;height:100%}
+.drv{display:flex;flex-direction:column;gap:0}
+.drv .it{display:grid;grid-template-columns:110px minmax(0,1fr);gap:24px;padding:40px 0;border-bottom:1px solid var(--rule)}
+.drv .k{font-size:32px;font-weight:700;color:var(--navy)}
+.drv p{margin:0;font-size:28px;line-height:1.5}
+.vbars{display:flex;align-items:flex-end;gap:70px;height:560px;padding:0 40px;border-bottom:2px solid var(--navy);position:relative}
+.vb{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.vb .bar{width:100%;}
+.vb .v{font-family:var(--mono);font-size:84px;font-weight:600;margin-bottom:10px}
+.vb.blue .bar{background:var(--blue)} .vb.blue .v{color:var(--blue-deep)}
+.vb.red .bar{background:var(--red)} .vb.red .v{color:var(--red)}
+.vlab{display:flex;gap:70px;padding:12px 40px 0}
+.vlab div{flex:1;text-align:center}
+.vlab b{display:block;font-size:25px;color:var(--navy)}
+.vlab span{font-size:21px;color:var(--muted);line-height:1.4}
+.gapnote{position:absolute;right:16px;top:8px;font-size:22px;color:var(--muted)}
+
+/* small charts */
+.hb{display:grid;grid-template-columns:240px minmax(0,1fr) 90px;gap:16px 16px;align-items:center;font-size:21px}
+.hb .tr{position:relative;height:30px;background:#EEF1F5}
+.hb .tr i{position:absolute;left:0;top:0;bottom:0}
+.hb .v{font-family:var(--mono);font-weight:600;text-align:right}
+.chain{display:flex;align-items:stretch;gap:0}
+.chain .st{flex:1;padding:26px 16px;text-align:center;color:#fff;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.chain .st b{font-size:25px} .chain .st span{font-size:21px}
+.chain .ar{width:0;height:0;border-top:56px solid transparent;border-bottom:56px solid transparent;align-self:center;margin-right:-1px}
+.kpis{display:flex;gap:18px}
+.kpi{flex:1;border-top:5px solid var(--green);background:var(--green-tint);padding:22px 26px}
+.kpi .v{font-family:var(--mono);font-size:110px;font-weight:600;color:var(--green);line-height:1}
+.kpi .l{font-size:24px;font-weight:600;color:var(--navy);margin-top:6px}
+.layers{display:flex;flex-direction:column;gap:12px}
+.layer{display:grid;grid-template-columns:180px auto minmax(0,1fr);gap:16px;align-items:center;padding:22px 18px}
+.layer b{font-size:24px;color:var(--navy)}
+.layer span.t{font-size:22px;line-height:1.4}
+
+/* green theme for s08 */
+.theme-green .hd{border-bottom-color:var(--green)}
+.theme-green th{background:var(--green)}
+.theme-green .kind{color:var(--green)}
+
+/* eco1 */
+.eco{display:flex;flex-direction:column;gap:30px}
+.own{display:flex;align-items:center}
+.box{border:2px solid var(--navy);background:#fff;padding:20px 26px;font-size:27px;font-weight:600;color:var(--navy);white-space:nowrap}
+.box.dark{background:var(--navy);color:#fff}
+.arrow{display:flex;flex-direction:column;align-items:center;width:150px;font-family:var(--mono);font-size:20px;font-weight:600;color:var(--navy)}
+.arrow i{display:block;width:100%;height:2px;background:var(--navy);position:relative}
+.arrow i::after{content:"";position:absolute;right:-2px;top:-6px;border:7px solid transparent;border-left:10px solid var(--navy)}
+.ownrow2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px}
+.lnote{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:start;padding:22px 24px;background:#fff}
+.lnote.official{border:2px solid var(--navy)}
+.lnote.control{border:2.5px dashed var(--red)}
+.lnote .k{font-size:24px;font-weight:700;color:var(--navy);white-space:nowrap}
+.lnote.control .k{color:var(--red)}
+.lnote p{margin:0;font-size:24px;line-height:1.45}
+.legend2{display:flex;gap:30px;font-size:19px;color:var(--muted);align-items:center}
+.legend2 i{display:inline-block;width:46px;vertical-align:middle;margin-right:8px}
+.axes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.axis{border-top:5px solid var(--navy);background:#fff;padding:22px 26px}
+.axis .k{font-size:27px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.axis p{margin:0;font-size:25px;line-height:1.45}
+.loopline{border:2.5px dashed var(--red);padding:26px 22px 22px;position:relative}
+.loopline .lt{position:absolute;top:-15px;left:18px;background:var(--paper);padding:0 8px;font-size:19px;font-weight:700;color:var(--red)}
+
+/* eco2 */
+.vs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:36px;height:100%}
+.col{display:flex;flex-direction:column;gap:20px;padding:30px 34px;position:relative}
+.col.good{background:var(--green-tint);border-top:6px solid var(--green)}
+.col.bad{background:var(--red-tint);border-top:6px solid var(--red)}
+.col h2{margin:0;font-size:34px;display:flex;align-items:center;gap:12px}
+.col.good h2{color:var(--green)} .col.bad h2{color:var(--red)}
+.col .sub{font-size:22px;color:var(--muted);margin-top:-8px}
+.col ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:22px}
+.col li{font-size:26px;line-height:1.45;padding-left:16px;border-left:3px solid currentColor}
+.col.good li{border-left-color:var(--green)} .col.bad li{border-left-color:var(--red)}
+.col li b{color:var(--navy)}
+.stamp{position:absolute;right:30px;top:22px;transform:rotate(-8deg);border:5px solid var(--red);color:var(--red);font-weight:800;font-size:30px;padding:6px 14px;letter-spacing:.04em;text-align:center;line-height:1.15;background:rgba(255,255,255,.6)}
+
+/* choke */
+.ck{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:36px;height:100%}
+.top5{display:flex;flex-direction:column;gap:14px}
+.t5{display:grid;grid-template-columns:44px minmax(0,1fr) 130px;gap:16px;align-items:center;background:#fff;border-left:6px solid var(--red);padding:16px 20px}
+.t5 .nm{font-size:25px;font-weight:700;color:var(--navy)}
+.t5 .tx{font-size:19px;color:var(--muted);margin-top:2px}
+.t5 .gauge{height:14px;background:#EEF1F5;margin-top:8px;position:relative}
+.t5 .gauge i{position:absolute;left:0;top:0;bottom:0;background:var(--red)}
+.t5 .sc{font-family:var(--mono);font-size:44px;font-weight:600;color:var(--red);text-align:right}
+.hm{display:flex;flex-direction:column;gap:6px}
+.hm .r{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:center}
+.hm .r b{font-size:20px;color:var(--navy)}
+.hm .cells{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px}
+.hm .c{font-size:16px;line-height:1.2;padding:6px 10px;color:#fff;min-height:52px;display:flex;align-items:center}
+.stat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.stat>div{padding:14px 16px;border-top:5px solid}
+.stat .h{font-size:21px;font-weight:700;margin-bottom:6px}
+.stat ul{margin:0;padding:0 0 0 20px;font-size:19px;line-height:1.45}
+
+/* roadmap */
+.rm{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));column-gap:14px;row-gap:0;height:100%}
+.rm .yr{font-family:var(--mono);font-size:32px;font-weight:600;color:var(--navy);padding-bottom:10px;border-bottom:3px solid var(--navy);position:relative}
+.rm .yr::after{content:"";position:absolute;left:0;bottom:-9px;width:14px;height:14px;border-radius:50%;background:var(--navy)}
+.rm .bar{margin-top:30px;height:72px;display:flex;align-items:center;padding:0 18px;font-size:23px;font-weight:700;color:#fff}
+.rm .bar.dashed{background:var(--red-tint);color:var(--red);border:3px dashed var(--red)}
+.rm ul{margin:22px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:16px}
+.rm li{font-size:25px;line-height:1.42;padding:20px 20px;background:#fff;border-left:5px solid}
+
+/* strategy */
+.st2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:36px}
+.st2 .side h2{margin:0 0 18px;font-size:30px;padding:18px 24px;color:#fff}
+.st2 .cn h2{background:var(--red)} .st2 .kr h2{background:var(--blue-deep)}
+.sc2{display:flex;flex-direction:column;gap:18px}
+.sc2 .c{padding:26px 28px;background:#fff}
+.st2 .cn .c{border-left:6px solid var(--red)} .st2 .kr .c{border-left:6px solid var(--blue-deep)}
+.sc2 .k{font-size:27px;font-weight:700;margin-bottom:6px}
+.st2 .cn .k{color:var(--red)} .st2 .kr .k{color:var(--blue-deep)}
+.sc2 p{margin:0;font-size:25px;line-height:1.45}
+.closing{font-size:18px;color:var(--muted);line-height:1.45;border-top:1px solid var(--rule);padding-top:12px}
+
+@page{size:1920px 1080px;margin:0}
+@media print{
+  html,body{background:none;height:auto;overflow:visible}
+  #deck{position:static;transform:none!important}
+  .slide{position:relative;display:grid!important;break-after:page}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div id="deck"></div>
+<script id="deck-data" type="application/json">{"meta": {"title": "중국 반도체 소재 경쟁력 확보 현황과 구조적 한계", "org": "경영전략실 / 기술전략본부 보고용", "fx": "기준 환율: 1 CNY = 194.50 KRW, 1 USD = 1,385.00 KRW", "gradeNote": "A등급 = 기업 공시·정부 관보 / B등급 = 시장조사기관·학술 자료 / C등급 = 팹 관계자 전언. 실무 적용 시 관련 부서의 최종 재검증 권장"}, "slides": [{"id": "s01", "type": "cover", "kind": "표지", "title": "중국 반도체 소재 경쟁력 확보 현황과 구조적 한계", "subtitle": "8대 핵심 소재 평가, 화웨이 소부장 압축 성장 검증 및 최종 Choke Point 판정 (2026.10 기준)", "meta": ["경영전략실 / 기술전략본부 보고용", "기준 환율: 1 CNY = 194.50 KRW, 1 USD = 1,385.00 KRW"], "cards": [{"label": "양적 자립", "value": "60~75%", "tone": "blue", "text": "28nm+ 레거시 및 128단 NAND 범용 소재 국산화율 (물량 기준)", "src": "[B등급: CSIA]"}, {"label": "질적 종속", "value": "10~25%", "tone": "red", "text": "4F² DRAM·HBM3E+ 선단 메모리 소재 실질 자립률 (금액 기준)", "src": "[B등급: SEMI, Yole]"}, {"label": "최종 한계", "value": "Top Choke Points", "tone": "red", "text": "ArF-i 감광재 및 첨단 패키징 화학소재 외산 의존도 90% 상회", "src": "[B등급: TrendForce]"}]}, {"id": "s02", "type": "overview", "kind": "총괄 개요", "headline": "대기금 124조 원이 만든 양적 자립의 착시 — 선단 공정으로 갈수록 외산 종속 심화", "left": {"title": "경쟁력 확보 동인", "items": [{"k": "자본", "text": "대기금 1~3기 누적 6,800억 위안(약 124조 원) + 선전시 국자위(SZMII) 플랫폼 투자 [A등급: 공시/등기]"}, {"k": "수요", "text": "SMIC·CXMT·YMTC의 국산 우선 구매 의무화 및 R&D B-Line 강제 퀄 [B등급: 업계 종합]"}, {"k": "인재", "text": "글로벌 M&A(유피케미칼) 및 일본·대만 엔지니어 대거 영입 [A등급: 雅克科技 공시 / B등급: Nikkei]"}]}, "right": {"title": "국산화율 실체", "bars": [{"label": "물량(Volume) 기준 자립률", "value": 60, "tone": "blue", "text": "범용 세정액, 일반 가스, 옥사이드 슬러리 중심"}, {"label": "금액(Value) 기준 자립률", "value": 32, "tone": "red", "text": "첨단 ArF-i PR, EUV 원료, 하이브리드 본딩제 외산 점유"}]}}, {"id": "s03", "type": "material", "materialKey": "PR", "kind": "소재별 비교 ① 감광재 (Lithography)", "short": "Photoresist", "headline": "g/i-line은 70% 자급 완료, 그러나 차세대 ArF 액침 PR은 일본 의존도 95%", "table": {"columns": ["구분", "Global Top 기업", "중국 대표 기업", "기술 노드 및 검증 단계", "자립 단계"], "levelCol": 4, "rows": [{"cells": ["ArF 액침 (Immersion)", "Tokyo Ohka Kogyo, JSR, Shin-Etsu (일)", "南大光电 (NATA), 珠海基石 (Cornerstone)", "28nm/40nm Non-critical 검증 완료, 선단 메모리 장기계약 전무 [A등급: 南大光电 공시]", "L1+ / L2"], "tag": "위험"}, {"cells": ["KrF (248nm)", "JSR, Shin-Etsu (일), 동진쎄미켐 (한)", "彤程新材 (Red Avenue / Kempur)", "14nm 로직 및 레거시 NAND 대량 납품 [A등급: 彤程新材 공시]", "L3"]}, {"cells": ["i-line (365nm)", "Tokyo Ohka Kogyo (일)", "晶瑞电材 (Crystal Clear)", "전 팹 대량 양산 및 장기 공급 계약 체결 [A등급: 晶瑞电材 공시]", "L3+"], "tag": "자립"}]}, "limit": {"label": "구조적 한계", "text": "감광성 수지(Resin) 및 광산발생제(PAG) 원료 자립도 5% 미만, 전량 일본 수입 의존 [B등급: 업계 분석]."}}, {"id": "s04", "type": "material", "materialKey": "CMP", "kind": "소재별 비교 ② 연마재 (Planarization)", "short": "CMP Slurry/Pad", "headline": "폴리우레탄 패드는 글로벌 대등 수준(L3), HBM용 하이브리드 슬러리는 파일럿 정체(L2)", "table": {"columns": ["품목", "Global Top 기업", "중국 대표 기업", "품질 지수 (한국=100)", "GPM", "자립 단계"], "levelCol": 5, "rows": [{"cells": ["CMP Pad", "DuPont (미)", "鼎龙股份 (Dinglong)", "95 (28nm/14nm/232단 NAND 메인 공급)", "62.8% [A등급]", "L3 (Critical)"]}, {"cells": ["금속/벌크 Slurry", "CMC Materials (미), 솔브레인 (한)", "安集科技 (Anji Tech)", "88 (Cu, W, STI 슬러리 SMIC·YMTC 납품)", "54.2% [A등급]", "L3 (Critical)"]}, {"cells": ["Hybrid 본딩 Slurry", "CMC Materials (미), Fujimi (일)", "安集科技, 鼎龙股份", "50 (Cu-to-Cu 초평탄 연마 제어 한계)", "N/A", "L2 (Pilot)"]}]}, "gap": {"title": "차세대 공정 갭: 품질 지수와 GPM", "rows": [{"label": "CMP Pad (鼎龙)", "quality": 95, "gpm": 62.8}, {"label": "금속/벌크 Slurry (安集)", "quality": 88, "gpm": 54.2}, {"label": "Hybrid 본딩 Slurry", "quality": 50, "gpm": null}]}, "limit": {"label": "구조적 한계", "text": "30nm 이하 구형 세리아(CeO_2) 나노입자 소성 기술 부족으로 선단 공정 스크래치 다발 [B등급: 학술자료]."}}, {"id": "s05", "type": "material", "materialKey": "PREC", "kind": "소재별 비교 ③ 증착 전구체 (Deposition)", "short": "Precursor", "headline": "한국 기업 인수로 낸드 박막은 L3 도달, 차세대 VCT 게이트용 고유전율 전구체는 L2", "table": {"columns": ["전구체 종류", "Global Top 기업", "중국 대표 기업", "적용 공정 및 팹", "자립 단계"], "levelCol": 4, "rows": [{"cells": ["High-k (HfO₂, ZrO₂)", "Adeka (일), SK트리켐 (한)", "雅克科技 (Yoke Tech)", "CXMT 커패시터, YMTC 트렌치 공급", "L3 (배합) / L2 (원료)"]}, {"cells": ["실리콘 산화/질화막", "Entegris (미), 솔브레인 (한)", "雅克科技, 南大光电", "3D NAND 및 일반 DRAM 박막 대량 납품", "L3 (Critical)"]}, {"cells": ["차세대 Ultra Low-k", "Merck (독), DuPont (미)", "鼎龙股份 (연구 단계)", "4F² DRAM 비트라인 차폐 (시제품 평가)", "L1+ (Pilot)"]}]}, "dependency": {"title": "원료 종속성: 배합과 원료를 분리", "layers": [{"name": "합성 배합", "lv": "L3", "text": "유피케미칼 인수로 양산 기술 확보"}, {"name": "기초 유기 원료", "lv": "L2", "text": "유기 리간드 내 잔류 염소(Cl) 0.1ppb 제거 정제 기술 결여"}]}, "limit": {"label": "구조적 한계", "text": "유피케미칼 인수로 양산 기술은 확보했으나, 유기 리간드 내 잔류 염소(Cl) 0.1ppb 제거 정제 기술 결여 [A등급: 공시/특허]."}}, {"id": "s06", "type": "material", "materialKey": "GAS", "kind": "소재별 비교 ④ 특수가스 (Process Gas)", "short": "Process Gas", "headline": "삼불화질소·육불화텅스텐은 완전 자립(L4), DUV 노광용 희가스는 혼합·정제 종속", "table": {"columns": ["가스 분류", "Global Top 기업", "중국 대표 기업", "국산화율", "기술 수준 및 의존도"], "levelCol": 4, "rows": [{"cells": ["세정/증착 (NF_3, WF_6)", "SK스페셜티 (한), Linde (독)", "中船特气 (Peric)", "85% [A등급]", "원료 광물부터 합성까지 완전 자립 (L4)"], "group": "벌크 가스"}, {"cells": ["식각 가스 (C_4F_6, CH_2F_2)", "Resonac (일), SK스페셜티 (한)", "华特气体, 中船特气", "55% [B등급]", "HARC 식각용 고순도 정제 외산 의존 (L3-)"], "group": "에천트·희가스"}, {"cells": ["노광용 엑시머 가스", "Linde (독), Air Liquide (프)", "华特气体 (Huate Gas)", "40% [B등급]", "Ne/Kr 원광 추출 우위 vs 고순도 믹싱 수입 (L2+)"], "group": "에천트·희가스"}]}, "rateBars": [{"label": "세정/증착 (NF_3, WF_6)", "value": 85}, {"label": "식각 가스 (C_4F_6, CH_2F_2)", "value": 55}, {"label": "노광용 엑시머 가스", "value": 40}], "limit": {"label": "한계 유형", "text": "일시적 한계(정제 설비 증설로 2년 내 해결 가능) 중심이나, 액화 헬륨(He)은 천연가스 부재로 80% 수입 의존 [B등급: 관세청]."}}, {"id": "s07", "type": "material", "materialKey": "WET", "kind": "소재별 비교 ⑤ 습식 화학소재 (Wet Chemical)", "short": "Wet Chemical", "headline": "범용 세정 황산은 G5 등급 진입(L3), 초미세 식각액 및 7N 무수불산은 해외 의존", "table": {"columns": ["화학소재 품목", "Global Top 기업", "중국 대표 기업", "품질 수준 (금속 불순물)", "자립 단계"], "levelCol": 4, "rows": [{"cells": ["전자급 황산 (H_2SO_4)", "Mitsubishi Gas Chemical (일)", "江化微, 晶瑞电材", "ppt급 제어 성공 (G5 등급 양산)", "L3 (Critical)"]}, {"cells": ["고순도 과산화수소 (H_2O_2)", "Solvay (벨), MGC (일)", "江化微 (Jianghua Micro)", "G4/G5 등급, 메모리 세정 라인 적용", "L3 (Critical)"]}, {"cells": ["초고순도 무수불산 (AHF)", "Stella Chemifa, Morita (일)", "多氟多 (DFD), 滨化股份", "6N 정제 도달 vs 7N(0.1ppt) 일본 의존", "L2+ (Non-critical)"]}, {"cells": ["기능성 에천트/스트리퍼", "ENF테크놀로지, 동진 (한)", "安集科技, 江化微", "3D NAND 고선택비 인산 에천트 공급", "L2+ (선단 노드 미흡)"]}]}, "chain": {"title": "무수불산(AHF) 정제 밸류체인", "steps": [{"name": "형석 원광 채굴", "state": "세계 1위", "tone": "green"}, {"name": "6N 정제", "state": "도달", "tone": "yellow"}, {"name": "7N (0.1ppt) 정제", "state": "일본 의존", "tone": "red"}]}, "limit": {"label": "구조적 한계", "text": "형석 채굴량은 세계 1위이나, 비소(As) 등 미세 금속 이온을 0.1 ppt 이하로 제어하는 다단 증류탑 기술 미흡 [B등급: 학술논문]."}}, {"id": "s08", "type": "material", "materialKey": "TGT", "theme": "green", "kind": "소재별 비교 ⑥ 금속 타깃 (Sputtering Target)", "short": "Metal Target", "headline": "5nm 로직 배선 타깃 양산으로 글로벌 Top 3 진입(L3), 초고순도 잉곳 40% 수입", "table": {"columns": ["금속 타깃 종류", "Global Top 기업", "중국 대표 기업 (KFMI)", "공급 고객사", "자립 단계"], "levelCol": 4, "rows": [{"cells": ["Al / Ti 타깃", "JX Advanced Metals (일)", "江丰电子 (Konfoong)", "TSMC, SMIC, SK하이닉스", "L3+ (글로벌 2위)"]}, {"cells": ["Cu / Ta 타깃", "Materion (미), JX (일)", "江丰电子, 有研新材", "14nm/7nm 배선 공정 공급", "L3 (Critical)"]}, {"cells": ["Co / Ru 첨단 타깃", "JX Metals, Honeywell (미)", "江丰电子 (R&D 진행)", "선단 파운드리 진입 미흡", "L2 (검증 단계)"]}]}, "kpi": {"title": "江丰电子 경쟁력 지표 (한국=100)", "items": [{"label": "품질 지수", "value": 98}, {"label": "가격 경쟁력", "value": 110}], "text": "한국=100 대비 우위. 6N 잉곳 제련 설비 증설 중 [A등급: 江丰电子 공시]."}, "limit": {"label": "경쟁력 지표", "text": "江丰电子 품질 지수 98, 가격 경쟁력 110 (한국=100 대비 우위). 6N 잉곳 제련 설비 증설 중 [A등급: 江丰电子 공시]."}}, {"id": "s09", "type": "material", "materialKey": "WAF", "kind": "소재별 비교 ⑦ 실리콘 웨이퍼 (Substrate)", "short": "300mm Wafer", "headline": "월 45만 장 출하로 양적 급성장(L2+), 선단 DRAM용 저결함 에피 웨이퍼는 기술 장벽", "table": {"columns": ["웨이퍼 규격", "Global Top 기업", "중국 대표 기업 (NSIG)", "월 생산능력 (Capa)", "자립 단계"], "levelCol": 4, "rows": [{"cells": ["300mm 폴리시드 (PW)", "Shin-Etsu, SUMCO (일)", "沪硅产业 (상하이신성)", "300mm 월 45만 장", "L3 (CIS/모바일 파운드리)"]}, {"cells": ["300mm 첨단 에피 (Epi)", "Shin-Etsu (일), SK실트론 (한)", "沪硅产业, 中环领先", "월 10~15만 장 수준", "L2+ (선단 메모리 미달)"]}, {"cells": ["Tier-2: 11N 폴리실리콘", "Wacker (독), Hemlock (미)", "통웨이, 신텍 (태양광 편중)", "전자급 자립률 25%", "구조적 한계 (결정 결함)"]}]}, "funnel": {"title": "물량은 크고, 선단으로 갈수록 좁아짐", "steps": [{"label": "300mm 폴리시드 (PW)", "value": "월 45만 장", "w": 100, "tone": "green"}, {"label": "300mm 첨단 에피 (Epi)", "value": "월 10~15만 장", "w": 28, "tone": "yellow"}, {"label": "11N 폴리실리콘 전자급 자립률", "value": "25%", "w": 25, "tone": "red"}], "note": "막대 길이: PW 45만 장 = 100 기준, 에피는 중간값 12.5만 장 환산. 폴리실리콘은 자립률(%)로 단위가 다름"}, "limit": {"label": "품질 격차", "text": "인상(Ingot Pulling) 공정 중 산소 유도 미세 결함(BMD) 및 웨이퍼 평탄도(Warp/Bow) 제어 실패 [B등급: 업계 리포트]."}}, {"id": "s10", "type": "material", "materialKey": "PKG", "kind": "소재별 비교 ⑧ 패키징 소재 (Packaging)", "short": "PKG 소재", "headline": "레거시 EMC는 1위 흡수(L3), HBM용 액상 에폭시(LMC)·NCF는 자립도 10% 미만", "table": {"columns": ["패키징 핵심 소재", "Global Top 기업", "중국 대표 기업", "HBM3E/4 적용 가능성", "자립 단계"], "levelCol": 4, "rows": [{"cells": ["MR-MUF 액상수지 (LMC)", "Resonac, Sumitomo (일)", "华海诚科 (HHCK)", "불가 (점도 제어 실패, 보이드 다발)", "L1 (해외의존 92%)"], "flag": true}, {"cells": ["Advanced NCF (필름)", "Resonac (일), LG화학 (한)", "德邦科技, 鼎龙股份", "파일럿 검증 중 (접합 수율 50% 미달)", "L2 (해외의존 90%)"], "flag": true}, {"cells": ["TBDB 접착제/레이저박리액", "3M, Brewer Science (미)", "鼎龙股份, 화학 랩", "고온 견딤성 부족, 잔류물 결함", "L2 (해외의존 88%)"], "flag": true}, {"cells": ["레거시 EMC (에폭시몰딩)", "Sumitomo Bakelite (일)", "华海诚科 (HHCK)", "2위 업체 인수(16억 위안)로 레거시 독점", "L3 (모바일/전장 한정)"]}]}, "limit": {"label": "구조적 한계", "text": "90% 이상 고충진 나노 실리카 분산 기술 부재로 HBM 적층 패키징 수율 확보 불가 [B등급: TrendForce]."}}, {"id": "s11", "type": "eco1", "kind": "생태계 분석 ① (Governance & Structure)", "headline": "선전시 국자위(SZMII)가 100% 출자하고 화웨이가 통제하는 '정부 대리 소유' 폐쇄 루프", "structureTitle": "지분 및 자본 구조 (A등급 GSXT 등기 확인)", "chain": ["선전시 국자위", "SZMII", "深芯恒", "SiCarrier (新凯来)"], "chainStakes": ["100%", "100%", "100%"], "notes": [{"k": "Zhuhai Cornerstone (珠海基石)", "text": "SiCarrier 핵심 이사 위하이(余海)가 법정대표자 겸 동사장 장악", "line": "official"}, {"k": "화웨이(Huawei)", "text": "공식 지분 0%(제재 회피), 哈勃投资 및 R&D 인력 수천 명 파견으로 실질 지배", "line": "control"}], "axes": [{"k": "장비", "text": "SiCarrier(식각/CVD), 上海宇量昇(노광), ZTOP(검사)"}, {"k": "소재", "text": "珠海基石 (ArF-i 감광재, 첨단 케미컬, CMP 슬러리 일체 공급)"}, {"k": "평가 Fab", "text": "PXW(로직), PST(모바일 AP), SWX(DRAM), PJHT(패키징)"}]}, {"id": "s12", "type": "eco2", "kind": "생태계 분석 ② (Fact Check & Evaluation)", "headline": "설립 28개월 만의 PR 팹 진입은 사실 — 그러나 미 BIS 제재와 계측 결함으로 '수율 벽' 봉착", "left": {"title": "압축 성장 성과 (Velocity)", "sub": "업력 대비 초고속 압축 성장", "items": ["2022년 6월 설립 → 28개월 만에 ArF-i PR 팹 테스트 진입 (南大光电 72개월 대비 50% 이상 단축)", "400여 명 R&D 인력(석·박사 50%), 대만·일본 인력 집중 영입 [B등급: Nikkei]", "장비-소재-팹 단일 루프로 주(Weekly) 단위 결함 데이터 실시간 피드백"], "compare": [{"label": "珠海基石", "months": 28}, {"label": "南大光电", "months": 72}]}, "right": {"title": "실제 구조적 한계 (Yield Wall)", "sub": "팩트체크 및 한계 (2024.12 제재 역풍)", "items": [{"k": "제재 타격", "text": "미 BIS가 SiCarrier 및 Cornerstone을 Entity List 등재 → 해외 특수 시약 수입 차단 [A등급: 관보]"}, {"k": "수율 장벽", "text": "ZTOP 광학 검사 장비의 해상도 한계(KLA 대비 열위)로 10nm 미세 결함 미검출"}, {"k": "결과", "text": "파일럿 팹 투입은 성공했으나, 브릿지 결함 다발로 최종 웨이퍼 완성 수율 50% 미만 정체 [C등급: 업계 전언]"}]}}, {"id": "s13", "type": "choke", "kind": "종합 리스크 매트릭스 (Choke Point Decision)", "headline": "최종 Choke Point: ArF-i 감광재와 첨단 HBM 수지 — 단일 품목 차단 시 라인 정지", "top5": [{"name": "ArF 액침 포토레지스트", "score": 96.5, "text": "해외의존 95% | 일본 JSR·TOK 독점 | 대체 4~5년 소요"}, {"name": "PR 원료 (PAG & 불소화 수지)", "score": 95.0, "text": "해외의존 98% | 미·일 독점 | 자체 합성 불가"}, {"name": "HBM용 액상 수지 (MR-MUF LMC)", "score": 91.8, "text": "해외의존 92% | 일본 Resonac 독점"}, {"name": "하이브리드 본딩 Cu-to-Cu 슬러리", "score": 88.4, "text": "해외의존 88% | 미국 CMC 독점 | 파일럿 정체"}, {"name": "VCT 게이트용 ALD Hf/Zr 전구체", "score": 83.5, "text": "해외의존 85% | 한국·일본 독점"}], "status": [{"tone": "green", "label": "완전 자립", "items": ["CMP 패드", "세정가스(NF_3)", "Al/Cu 타깃", "범용 황산"]}, {"tone": "yellow", "label": "부분 자립", "items": ["300mm 폴리시드 웨이퍼", "증착 전구체", "고순도 무수불산"]}, {"tone": "red", "label": "자립 불가", "items": ["ArF-i PR", "EUV 원료", "LMC/NCF 패키징 수지", "하이브리드 본딩제"]}]}, {"id": "s14", "type": "roadmap", "kind": "타임라인 전망 (Roadmap to Parity)", "headline": "가스·타깃은 이미 대등, 웨이퍼는 2028년 도달 — 선단 PR과 HBM 수지는 2032년 이후에도 난망", "phases": [{"period": "2026~2027", "label": "글로벌 대등 / L3+ 달성 완료", "tone": "green", "start": 0, "end": 1, "items": ["공정 특수가스 (NF_3, WF_6)", "스퍼터링 Al/Cu 타깃", "폴리우레탄 CMP 패드"]}, {"period": "2028~2029", "label": "제한적 대등 도달 가능 / L3 진입", "tone": "yellow", "start": 1, "end": 2, "items": ["300mm 에피 웨이퍼", "초고순도 무수불산(AHF)", "High-k 전구체", "Advanced NCF"]}, {"period": "2030~2031", "label": "수율 손실형 자체 양산 시도", "tone": "yellow", "start": 2, "end": 3, "items": ["4F² DRAM용 ArF-i PR (자체 원료 정제 시도, 결함률 글로벌 대비 2배)", "Cu-to-Cu 하이브리드 본딩 슬러리"]}, {"period": "2032년 이후", "label": "도달 불확실 / 장기 Choke Point", "tone": "red", "start": 3, "end": 4, "dashed": true, "items": ["PR 핵심 광산발생제(PAG) 및 극미세 불소계 수지 분자 합성", "HBM3E/4급 초미세 실리카 고충진 MR-MUF용 액상 에폭시 수지(LMC)"]}]}, {"id": "s15", "type": "strategy", "kind": "결론 및 전략 제언 (Strategy & Action Plan)", "headline": "중국의 '저수율 밀어내기 및 우회로 구축' 공세 대비, 첨단 패키징 화학소재 초격차 방어", "left": {"title": "중국 기업의 생존 돌파 전략", "items": [{"k": "우회 조달 루트", "text": "동남아·중동 제3국 법인을 통한 일본·미국 Tier-2 원자재 환적 수입"}, {"k": "저수율 강행", "text": "4F² DRAM 수율 50% 상태에서 국표(국가표준) 서버 팹 물량 밀어내기 [C등급: 팹 관계자]"}, {"k": "정부 주도 강제 통합", "text": "대기금 3기 기반 소규모 화학 스타트업을 SiCarrier 생태계로 통폐합"}]}, "right": {"title": "국내 산업 대응 및 제언", "items": [{"k": "초격차 방어", "text": "EUV 단일 패터닝의 원가·수율 우위 극대화로 중국 SAQP 다중 노광 무력화"}, {"k": "공급망 보안", "text": "HBM4 하이브리드 본딩제 및 MUF 수지 글로벌 원천 특허·공급선 독점 제휴"}, {"k": "원료 유출 차단", "text": "PAG, 초고순도 리간드 등 Tier-2 핵심 원재료의 대중국 재수출 통제 공조"}]}, "closing": "기업 공시 및 정부 관보 기반 근거는 A등급, 시장조사기관 및 학술 자료는 B등급, 팹 관계자 전언은 C등급으로 구분 표기하였으며, 실무 적용 시 관련 부서의 최종 재검증이 권장됩니다."}]}</script>
+<script>
+(function(){
+"use strict";
+var DATA=JSON.parse(document.getElementById("deck-data").textContent);
+var TONE={green:"var(--green)",yellow:"var(--yellow)",red:"var(--red)",blue:"var(--blue)"};
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+// 아래첨자(NF_3 → NF₃)와 [A등급: 출처] → 등급 칩
+function T(s){
+  if(s===null||s===undefined) return "";
+  var h=esc(s).replace(/([A-Za-z)])_(\d+)/g,function(m,a,d){return a+"<sub>"+d+"</sub>";});
+  return h.replace(/\s*\[([^\]]*등급[^\]]*)\]/g,function(m,inner){
+    return inner.split(/\s*\/\s*(?=[ABC]등급)/).map(function(p){
+      var mm=p.match(/([ABC])등급(?::\s*(.+))?/); if(!mm) return "";
+      return '<span class="g"><b class="g'+mm[1]+'">'+mm[1]+'</b>'+(mm[2]?mm[2]:"")+'</span>';
+    }).join("");
+  });
+}
+function tone(t){
+  if(/구조적 한계/.test(t)) return "red";
+  if(/L1/.test(t)) return "red";
+  if(/L2|L3-/.test(t)) return "yellow";
+  if(/L3|L4/.test(t)) return "green";
+  return "none";
+}
+function lvChips(t){
+  return '<div class="lvs">'+t.split(/\s+\/\s+/).map(function(p){
+    var m=p.match(/^(L\d[+-]?|구조적 한계)\s*(.*)$/);
+    var head=m?m[1]:p, rest=m?m[2]:"";
+    return '<span class="lv t-'+tone(p)+'">'+esc(head)+'</span>'+(rest?'<span class="sub">'+T(rest)+'</span>':'');
+  }).join("")+'</div>';
+}
+function lvInline(t){ // 문장 끝 (L4) 같은 표기에서 단계 칩 추출
+  var m=t.match(/^(.*)\((L\d[+-]?)\)\s*$/);
+  if(!m) return T(t);
+  return T(m[1])+' <span class="lv t-'+tone(m[2])+'">'+m[2]+'</span>';
+}
+function warnIcon(c){return '<svg width="22" height="20" viewBox="0 0 22 20" aria-hidden="true"><path d="M11 1 L21 19 H1 Z" fill="'+c+'"/><rect x="10" y="7" width="2" height="6" fill="#fff"/><rect x="10" y="15" width="2" height="2" fill="#fff"/></svg>';}
+
+var R={};
+R.cover=function(s){
+  return '<div><div class="kind">'+esc(s.kind)+'</div><h1>'+T(s.title)+'</h1><div class="sub">'+T(s.subtitle)+'</div>'+
+    '<div class="meta">'+s.meta.map(function(m){return '<span>'+esc(m)+'</span>';}).join("")+'</div></div>'+
+    '<div></div><div class="cards">'+s.cards.map(function(c){
+      return '<div class="card '+c.tone+'"><div class="lab">'+esc(c.label)+'</div><div class="val'+(/\d/.test(c.value)?'':' txt')+'">'+esc(c.value)+'</div><p>'+T(c.text)+'</p>'+T(" "+c.src)+'</div>';
+    }).join("")+'</div>';
+};
+R.overview=function(s){
+  var l=s.left.items.map(function(i){return '<div class="it"><div class="k">'+esc(i.k)+'</div><p>'+T(i.text)+'</p></div>';}).join("");
+  var b=s.right.bars, gap=b[0].value-b[1].value;
+  var bars=b.map(function(x){return '<div class="vb '+x.tone+'"><div class="v">'+x.value+'%</div><div class="bar" style="height:'+(x.value/100*450)+'px"></div></div>';}).join("");
+  var labs=b.map(function(x){return '<div><b>'+esc(x.label)+'</b><span>'+T(x.text)+'</span></div>';}).join("");
+  return '<div class="ov"><div><div class="ptitle" style="font-size:22px">'+esc(s.left.title)+'</div><div class="drv">'+l+'</div></div>'+
+    '<div><div class="ptitle" style="font-size:22px">'+esc(s.right.title)+'</div><div class="vbars"><span class="gapnote">격차 <b class="num" style="color:var(--red);font-size:34px">'+gap+'%p</b></span>'+bars+'</div><div class="vlab">'+labs+'</div></div></div>';
+};
+function table(t){
+  var head='<tr>'+t.columns.map(function(c){return '<th>'+esc(c)+'</th>';}).join("")+'</tr>';
+  var body=t.rows.map(function(r){
+    var cls=r.tag==="위험"||r.flag?"risk":(r.tag==="자립"?"safe":"");
+    return '<tr class="'+cls+'">'+r.cells.map(function(c,i){
+      var inner;
+      if(i===t.levelCol) inner=/\(L\d[+-]?\)\s*$/.test(c)?lvInline(c):lvChips(c);
+      else inner=T(c);
+      if(i===0){
+        if(r.tag) inner+='<span class="tag '+(r.tag==="위험"?"t-red":"t-green")+'">'+esc(r.tag)+'</span>';
+        if(r.flag) inner+='<span class="flag">'+warnIcon("#C2302A")+'HBM 핵심</span>';
+      }
+      return '<td class="'+(i===0?'first':'')+'">'+inner+'</td>';
+    }).join("")+'</tr>';
+  }).join("");
+  return '<table><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';
+}
+function limitBox(l){return '<div class="limit"><div class="k">'+esc(l.label)+'</div><p>'+T(l.text)+'</p></div>';}
+R.material=function(s){
+  var extra="", cols="1fr";
+  if(s.gap){
+    cols="minmax(0,1fr) minmax(0,1fr)";
+    extra='<div class="panel"><div class="ptitle">'+esc(s.gap.title)+'</div><div class="hb" style="grid-template-columns:230px minmax(0,1fr) 70px minmax(0,.7fr) 80px">'+
+      '<span class="note">품목</span><span class="note">품질 지수 (한국=100)</span><span></span><span class="note">GPM</span><span></span>'+
+      s.gap.rows.map(function(r){
+        var c=r.quality>=80?"var(--green)":"var(--yellow)";
+        return '<span>'+T(r.label)+'</span><span class="tr"><i style="width:'+r.quality+'%;background:'+c+'"></i></span><span class="v">'+r.quality+'</span>'+
+          '<span class="tr">'+(r.gpm===null?'':'<i style="width:'+r.gpm+'%;background:var(--navy)"></i>')+'</span><span class="v">'+(r.gpm===null?'N/A':r.gpm+'%')+'</span>';
+      }).join("")+'</div></div>';
+  } else if(s.dependency){
+    cols="minmax(0,1fr) minmax(0,1fr)";
+    extra='<div class="panel"><div class="ptitle">'+esc(s.dependency.title)+'</div><div class="layers">'+s.dependency.layers.map(function(l){
+      var t=tone(l.lv);
+      return '<div class="layer" style="background:var(--'+t+'-tint);border-left:6px solid var(--'+t+')"><b>'+esc(l.name)+'</b><span class="lv t-'+t+'">'+l.lv+'</span><span class="t">'+T(l.text)+'</span></div>';
+    }).join("")+'</div></div>';
+  } else if(s.rateBars){
+    cols="minmax(0,1fr) minmax(0,1fr)";
+    extra='<div class="panel"><div class="ptitle">국산화율 비교</div><div class="hb" style="grid-template-columns:300px minmax(0,1fr) 70px">'+s.rateBars.map(function(r,i){
+      var c=i===0?"var(--green)":"var(--yellow)";
+      return '<span>'+T(r.label)+'</span><span class="tr"><i style="width:'+r.value+'%;background:'+c+'"></i></span><span class="v">'+r.value+'%</span>';
+    }).join("")+'</div></div>';
+  } else if(s.chain){
+    cols="minmax(0,1fr) minmax(0,1fr)";
+    var st=s.chain.steps.map(function(x,i){
+      return (i?'<span class="ar" style="border-left:26px solid var(--'+s.chain.steps[i-1].tone+')"></span>':'')+
+        '<div class="st" style="background:var(--'+x.tone+')"><b>'+esc(x.name)+'</b><span>'+esc(x.state)+'</span></div>';
+    }).join("");
+    extra='<div class="panel"><div class="ptitle">'+esc(s.chain.title)+'</div><div class="chain">'+st+'</div><div class="note" style="margin-top:10px">원광 채굴 우위가 초고순도 정제 단계에서 일본 의존으로 끊김</div></div>';
+  } else if(s.kpi){
+    cols="minmax(0,1fr) minmax(0,1fr)";
+    extra='<div class="panel" style="border-color:var(--green)"><div class="ptitle" style="color:var(--green)">'+esc(s.kpi.title)+'</div><div class="kpis">'+s.kpi.items.map(function(k){
+      return '<div class="kpi"><div class="v">'+k.value+'</div><div class="l">'+esc(k.label)+'</div></div>';}).join("")+'</div></div>';
+  } else if(s.funnel){
+    cols="minmax(0,1fr) minmax(0,1fr)";
+    extra='<div class="panel"><div class="ptitle">'+esc(s.funnel.title)+'</div><div class="hb" style="grid-template-columns:270px minmax(0,1fr) 190px">'+s.funnel.steps.map(function(f){
+      return '<span>'+T(f.label)+'</span><span class="tr"><i style="width:'+f.w+'%;background:var(--'+f.tone+')"></i></span><span class="v">'+esc(f.value)+'</span>';
+    }).join("")+'</div><div class="note" style="margin-top:8px">'+esc(s.funnel.note)+'</div></div>';
+  }
+  return table(s.table)+'<div class="row2" style="grid-template-columns:'+cols+'">'+limitBox(s.limit)+extra+'</div>';
+};
+R.eco1=function(s){
+  var own='<div class="own">'+s.chain.map(function(c,i){
+    return (i?'<div class="arrow"><span>'+esc(s.chainStakes[i-1])+'</span><i></i></div>':'')+'<div class="box'+(i===s.chain.length-1?' dark':'')+'">'+T(c)+'</div>';
+  }).join("")+'</div>';
+  var notes=s.notes.map(function(n){return '<div class="lnote '+n.line+'"><div class="k">'+T(n.k)+'</div><p>'+T(n.text)+'</p></div>';}).join("");
+  var axes=s.axes.map(function(a){return '<div class="axis"><div class="k">'+esc(a.k)+'</div><p>'+T(a.text)+'</p></div>';}).join("");
+  return '<div class="eco"><div class="ptitle" style="font-size:22px;margin:0">'+esc(s.structureTitle)+'</div>'+own+
+    '<div class="ownrow2">'+notes+'</div>'+
+    '<div class="legend2"><span><i style="border-top:3px solid var(--navy)"></i>공식 지분·등기 관계 (실선)</span><span><i style="border-top:3px dashed var(--red)"></i>화웨이 실질 통제선 (점선)</span></div>'+
+    '<div class="loopline"><span class="lt">3대 수직계열화 축</span><div class="axes">'+axes+'</div></div></div>';
+};
+R.eco2=function(s){
+  var up='<svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3 L31 19 H22 V31 H12 V19 H3 Z" fill="#2E8B57"/></svg>';
+  var cmp=s.left.compare, mx=Math.max.apply(null,cmp.map(function(c){return c.months;}));
+  var cbars='<div class="hb" style="grid-template-columns:150px minmax(0,1fr) 120px;margin-top:6px">'+cmp.map(function(c,i){
+    return '<span style="font-weight:600">'+esc(c.label)+'</span><span class="tr"><i style="width:'+(c.months/mx*100)+'%;background:'+(i?'var(--muted)':'var(--green)')+'"></i></span><span class="v">'+c.months+'개월</span>';
+  }).join("")+'</div>';
+  var L='<div class="col good"><h2>'+up+esc(s.left.title)+'</h2><div class="sub">'+esc(s.left.sub)+'</div><ul>'+s.left.items.map(function(i){return '<li>'+T(i)+'</li>';}).join("")+'</ul>'+
+    '<div class="ptitle" style="margin:14px 0 0;font-size:22px">팹 테스트 진입까지 소요 기간</div>'+cbars+'</div>';
+  var Rr='<div class="col bad"><div class="stamp">수율 정체<br>STOP</div><h2>'+esc(s.right.title)+'</h2><div class="sub">'+esc(s.right.sub)+'</div><ul>'+
+    s.right.items.map(function(i){return '<li><b>'+esc(i.k)+':</b> '+T(i.text)+'</li>';}).join("")+'</ul></div>';
+  return '<div class="vs">'+L+Rr+'</div>';
+};
+R.choke=function(s){
+  var t5=s.top5.map(function(t,i){
+    return '<div class="t5"><div>'+warnIcon("#C2302A")+'</div><div><div class="nm">'+T(t.name)+'</div><div class="tx">'+T(t.text)+'</div><div class="gauge"><i style="width:'+t.score+'%"></i></div></div><div class="sc">'+t.score.toFixed(1)+'</div></div>';
+  }).join("");
+  var mats=DATA.slides.filter(function(x){return x.type==="material";});
+  var hm=mats.map(function(m){
+    var lc=m.table.levelCol;
+    return '<div class="r"><b>'+esc(m.short)+'</b><div class="cells">'+m.table.rows.map(function(r){
+      var t=tone(r.cells[lc]);
+      return '<div class="c" style="background:var(--'+(t==="none"?"muted":t)+')">'+T(r.cells[0])+'</div>';
+    }).join("")+'</div></div>';
+  }).join("");
+  var st=s.status.map(function(g){
+    return '<div style="border-top-color:var(--'+g.tone+');background:var(--'+g.tone+'-tint)"><div class="h" style="color:var(--'+g.tone+')">'+esc(g.label)+'</div><ul>'+g.items.map(function(i){return '<li>'+T(i)+'</li>';}).join("")+'</ul></div>';
+  }).join("");
+  return '<div class="ck"><div><div class="ptitle" style="font-size:20px">8대 소재 취약도 히트맵 <span class="note" style="font-weight:400">셀 색 = 각 소재 슬라이드의 자립 단계</span></div><div class="hm">'+hm+'</div><div class="stat">'+st+'</div></div>'+
+    '<div><div class="ptitle" style="font-size:20px">Choke Point Top 5 판정 (대체 불가 치명적 병목)</div><div class="top5">'+t5+'</div><div class="note" style="margin-top:8px">게이지: Choke Score (0~100)</div></div></div>';
+};
+R.roadmap=function(s){
+  var yr=s.phases.map(function(p){return '<div class="yr">'+esc(p.period)+'</div>';}).join("");
+  var bars=s.phases.map(function(p){
+    return p.dashed?'<div class="bar dashed"><span>'+esc(p.label)+'</span></div>':'<div class="bar" style="background:var(--'+p.tone+')">'+esc(p.label)+'</div>';
+  }).join("");
+  var items=s.phases.map(function(p){return '<ul>'+p.items.map(function(i){return '<li style="border-left-color:var(--'+p.tone+')'+(p.dashed?';border-left-style:dashed':'')+'">'+T(i)+'</li>';}).join("")+'</ul>';}).join("");
+  return '<div class="rm" style="grid-template-rows:auto auto 1fr">'+yr+bars+items+'</div>';
+};
+R.strategy=function(s){
+  function side(x,cls){return '<div class="side '+cls+'"><h2>'+esc(x.title)+'</h2><div class="sc2">'+x.items.map(function(i){return '<div class="c"><div class="k">'+esc(i.k)+'</div><p>'+T(i.text)+'</p></div>';}).join("")+'</div></div>';}
+  return '<div class="st2">'+side(s.left,"cn")+side(s.right,"kr")+'</div><div class="closing">'+T(s.closing)+'</div>';
+};
+
+function slideHTML(s,i,n){
+  var foot='<footer class="ft"><span class="org">'+esc(DATA.meta.org)+'</span><span>'+esc(DATA.meta.gradeNote)+'</span><span class="pg">'+String(i+1).padStart(2,"0")+' / '+String(n).padStart(2,"0")+'</span></footer>';
+  if(s.type==="cover") return R.cover(s)+foot;
+  return '<header class="hd"><div class="kind">'+esc(s.kind)+'</div><h1>'+T(s.headline)+'</h1></header><section class="body">'+R[s.type](s)+'</section>'+foot;
+}
+var deck=document.getElementById("deck"),cur=0,slides=[];
+function render(){
+  var n=DATA.slides.length;
+  deck.innerHTML=DATA.slides.map(function(s,i){return '<article class="slide '+s.type+(s.theme?' theme-'+s.theme:'')+'" id="'+s.id+'">'+slideHTML(s,i,n)+'</article>';}).join("");
+  slides=[].slice.call(deck.querySelectorAll(".slide"));
+  var h=parseInt((location.hash||"").slice(1),10); go(isNaN(h)?0:h-1); check();
+}
+function go(i){cur=Math.max(0,Math.min(slides.length-1,i));slides.forEach(function(s,k){s.classList.toggle("active",k===cur);});
+  if(location.hash!=="#"+(cur+1)) history.replaceState(null,"","#"+(cur+1));}
+function fit(){var sc=Math.min(innerWidth/1920,innerHeight/1080);deck.style.transform="translate("+((innerWidth-1920*sc)/2)+"px,"+((innerHeight-1080*sc)/2)+"px) scale("+sc+")";}
+function check(){
+  var out=[];
+  slides.forEach(function(s,k){var a=s.classList.contains("active");s.classList.add("active");
+    [].forEach.call(s.querySelectorAll(".body,.ft,.hd,td,.slide>div"),function(e){if(e.scrollHeight>e.clientHeight+2||e.scrollWidth>e.clientWidth+2) out.push((k+1)+":"+e.className+":"+(e.textContent||"").slice(0,24));});
+    var h1=s.querySelector("h1"); if(h1&&!s.classList.contains("cover")&&h1.offsetHeight/parseFloat(getComputedStyle(h1).lineHeight)>2.2) out.push((k+1)+":headline>2");
+    if(!a) s.classList.remove("active");});
+  window.__overflow=out;
+}
+document.addEventListener("keydown",function(e){
+  if(e.key==="ArrowRight"||e.key==="PageDown"||e.key===" "){go(cur+1);e.preventDefault();}
+  else if(e.key==="ArrowLeft"||e.key==="PageUp"){go(cur-1);e.preventDefault();}
+  else if(e.key==="Home") go(0); else if(e.key==="End") go(slides.length-1);
+});
+addEventListener("hashchange",function(){var n=parseInt(location.hash.slice(1),10);if(!isNaN(n)) go(n-1);});
+addEventListener("resize",fit); fit(); render();
+if(/^https?:/.test(location.protocol)){fetch("slides.json",{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){if(j){DATA=j;render();}}).catch(function(){});}
+})();
+</script>
+</body>
+</html>
