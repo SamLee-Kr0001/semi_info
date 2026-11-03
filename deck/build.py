@@ -22,7 +22,7 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
 
 FAMILIES = [
     # (css family name, google family spec, file prefix)
-    ("IBM Plex Sans KR", "IBM+Plex+Sans+KR:wght@400;500;600;700", "plexkr"),
+    ("Noto Sans KR", "Noto+Sans+KR:wght@400;500;600;700", "notokr"),
     ("IBM Plex Mono", "IBM+Plex+Mono:wght@400;500;600", "plexmono"),
     ("Noto Sans SC", "Noto+Sans+SC:wght@400;500;600", "notosc"),
 ]
