@@ -1,5 +1,615 @@
 [
   {
+    "date": "2026-11-16",
+    "report": "## 📌 핵심 요약 (Executive Brief)\n미국은 러트닉과 젠슨 황 파문으로 인해 AI 반도체 수출 규제 완화를 추진하는 동시에, 중국의 AI 반도체 확보 노력에 대응하여 규제를 강화하는 이중적 태도를 보이고 있다 [1][2][3][5][23][27]. 중국은 미국의 반도체 규제 강화에 대해 희토류 맞대응을 경고하며 [4], HBM 밀수 등 다양한 수단을 동원해 AI 및 반도체 기술 확보에 총력을 기울이고 있다 [24][25][26]. 한국은 삼성과 SK가 HBM 경쟁력을 바탕으로 중국의 AI 반도체 추격에도 기술 격차를 유지하고 있으나 [22], 반도체 호황이 내수 경제에 미치는 낙수 효과는 대만보다 더딜 수 있다는 우려가 제기된다 [36][37][38][39][40][41][42].\n\n## 🚨 핵심 이슈 심층 분석\n\n### 1. 미국 반도체 규제 정책의 이중적 스탠스 심화\n미국은 러트닉이 가족 회사와 연관된 반도체 수출 규제 완화를 추진하고 [1][3][55], 젠슨 황 파문 이후 클라우드 규제 급물살과 함께 AI 반도체 수출 규제 속도를 내는 등 [2][23][27] 상반된 정책 기조를 동시에 보여주고 있다. 이는 APEC 정상회의에서 반도체 규제가 불안 요소로 언급된 것과 같이 [7], 미국 내부에서도 반도체 규제에 대한 일관된 방향성 부재와 이해관계자 간의 복잡한 역학 관계가 작용하고 있음을 시사한다. 특히, 젠슨 황 스캔들은 미국 내 생산 확대 압박으로 이어질 수 있으며 [58], 미국과 동맹국들은 중국으로부터 AI 공급망을 보호하기 위한 합의를 도출하고 있다 [71].\n\n### 2. 중국의 반도체 기술 확보를 위한 전방위적 노력과 미국의 견제\n중국은 미국의 반도체 규제 강화에 대해 희토류로 맞대응할 것을 경고하며 [4], HBM 밀수 [26], 미인계 및 해킹 [24][25] 등 수단과 방법을 가리지 않고 AI 및 반도체 기술 확보에 총력을 기울이고 있다. 이는 엔비디아의 중국 AI 반도체 우회 공급망을 흔들고 동남아 데이터센터 투자 위기로 이어질 수 있으며 [78], 삼성과 SK는 HBM 경쟁력을 통해 중국과의 기술 격차를 유지하고 있다 [22]. 미국 상무부는 양자 컴퓨팅 스타트업에 최대 1억 달러를 투입하며 반도체 공급망 정책과 연계하는 등 [77], 중국의 기술 추격을 견제하고 자국 기술 우위를 확보하려는 노력을 강화하고 있다.\n\n### 3. 한국 반도체 호황의 내수 파급 효과 제약\n한국은 반도체 산업의 초호황에도 불구하고 [38][41], 내수 경제에는 찬바람이 불고 있으며 [37][38][39], 반도체 호황의 낙수 효과가 대만보다 더디게 나타날 수 있다는 우려가 제기된다 [36][40][42]. 이는 K자형 경제구조로 인해 반도체 성과급이 수억 원에 달해도 소비 회복으로 이어지지 않는 등 [39][41], 내수 파급 효과가 제약되고 있음을 보여준다. 또한, 반도체 수출 호황이 대미 흑자 부담으로 이어져 [56], '수출 1조 달러의 저주'를 피하기 위한 전략 마련이 필요하다는 지적도 있다 [50].\n\n## 🕸️ 공급망 및 기술 동향\n\n아데카코리아는 전북 완주에 900억원을 추가 투자하여 반도체 소재 생산기반을 확대하고 [16][17][18], 미쓰이화학의 JSR 인수는 삼성과 SK의 소재 공급망에 영향을 미칠 것으로 예상된다 [10]. ASML은 필립스의 스핀오프에서 유럽에서 가장 가치 있는 기업으로 성장했으며 [11][12], 애플과 엔비디아가 대체할 수 없는 핵심 기업으로 평가받고 있다 [14]. 웨이퍼 세정 장비 시장은 첨단 노드 세정 수요에 따라 2035년까지 성장이 전망되며 [64][66], 전자제품 세정용 용제 시장도 첨단 전자제품 제조 확대로 수요가 가속화될 것으로 보인다 [83]. 삼성과 SK는 HBM 다음으로 첨단 패키징 기술을 통해 AI 반도체 주도권 경쟁의 새로운 전선을 구축하고 있다 [48]. 일본 라피더스는 2나노 반도체 양산을 내년 말에서 내후년 초에 시작할 계획이며 [52], 머스크의 테라팹은 반도체 공급망 구축을 본격화하여 국내 소부장 기업에 새로운 기회를 제공할 것으로 기대된다 [31][32][65].\n\n## 💡 Analyst's View (시사점)\n\n미국의 반도체 규제 정책은 내부 이해관계와 대중국 견제라는 상충되는 목표 사이에서 불확실성을 증폭시키고 있어, 한국 기업들은 급변하는 정책 방향에 대한 면밀한 모니터링과 유연한 대응 전략 수립이 필수적이다. 중국의 전방위적인 반도체 기술 확보 노력은 한국 HBM 및 첨단 패키징 기술의 중요성을 더욱 부각시키며 [22][48], 기술 격차 유지를 위한 지속적인 R&D 투자와 보안 강화가 필요하다. 한국 반도체 산업의 성장이 내수 경제로의 파급 효과가 제한적인 현상은 [36][37][38][39][40][41][42], 반도체 소부장 생산기지 구축 [29] 및 지역 제조 혁신 [34][35][84][85]을 통해 산업 생태계 전반의 동반 성장을 유도하고, 대미 흑자 부담 완화를 위한 다각적인 수출 시장 개척 노력이 요구된다 [50][56].",
+    "articles": [
+      {
+        "Title": "\"러트닉, 가족 회사와 연관된 반도체 수출규제 완화 추진\" - 연합뉴스",
+        "Link": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE1vNm4tb0pKQ2s2Z2pZcGVNUWxRSEo0TEF3MzBHMXJLUmprcV8wQXY3dEJHajFHWmVIcjI5anZnZ2hmQVNNbTg1SmZQYUZrVHozaEQzNm41Zkg3RGvSAWBBVV95cUxQLThuWVVwR0hJSlNackZlUkdGZUJVaHhvLXYwaVU5Z2JsbU9YQjdSZWhhakVGMHliQnBWNWZiekRCeVg3c3JLOURkVktXVU5GV1VkUC1QUFgtWGxtSWw4WmM?oc=5",
+        "Date": "Sun, 15 Nov 2026 17:16:51 GMT",
+        "Source": "연합뉴스",
+        "ParsedDate": "2026-11-16 02:16:51"
+      },
+      {
+        "Title": "젠슨 황 파문에 美·中 AI 전쟁 새 국면…클라우드 규제 급물살 : 네이버 블로그 - Naver Blog",
+        "Link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNd1p0czFZSFJNcXI1OS1vT3FyT2pUeG1oaE9SVGk4LVQ5aFZXSkZzMDlBZklQaXN3eTg0LVJxUC1McWhXZW4ycXE0VFNCUnVJY0RBQ09IdnBDX0VrNHRnemJ2eWdrUmx3bkc5WWZpUWxGb1JiOXl3UExEQVo0am82ZzlYTXhYSGdsc0FpNkpnRQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 10:16:18 GMT",
+        "Source": "Naver Blog",
+        "ParsedDate": "2026-11-15 19:16:18"
+      },
+      {
+        "Title": "Lutnick, 가족 사업과 맞물린 반도체 규제 완화 추진 - GeekNews",
+        "Link": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE9ERXFnbF9WeEUyaENLeUEwX0VJblNiZkFsOHVMellUQ3Z2YV9UVEhEYWszd2JSZTBfWm10ZVhQZnlXZGxVOEVuT194bw?oc=5",
+        "Date": "Sun, 15 Nov 2026 16:42:53 GMT",
+        "Source": "GeekNews",
+        "ParsedDate": "2026-11-16 01:42:53"
+      },
+      {
+        "Title": "中 전문가 \"美 반도체 규제 강화하면 희토류로 맞대응\"…정상회담 앞두고 경고 - 솔루션뉴스",
+        "Link": "https://news.google.com/rss/articles/CBMia0FVX3lxTE00M3JoYzdObFRKeUN2X0daazVweFRHb1NBbEk1clZOcWV1V2NWc1JHZjdpWGhqUXpHMXRMYnhfcE45UHFBazVyUHlCZ3MxZ0tfRm9aZlBxUVpHYTJBZ0hLVkpRcy04UEYza1Jz?oc=5",
+        "Date": "Sun, 15 Nov 2026 03:02:00 GMT",
+        "Source": "솔루션뉴스",
+        "ParsedDate": "2026-11-15 12:02:00"
+      },
+      {
+        "Title": "'오락가락 美반도체 규제' 뒤엔 젠슨 황 그녀? - 한국경제",
+        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9QZ20tak1GUkRLbG1ZZHcxeU9rZlB0bkFLcFNGNGF4OGs0aXNjem5leEJERFVVa0Y4QUY1VjcwejBpOVZzb2x2WHR2UWVGNElPY3FfSDhHeGV0Zw?oc=5",
+        "Date": "Sun, 15 Nov 2026 08:51:35 GMT",
+        "Source": "한국경제",
+        "ParsedDate": "2026-11-15 17:51:35"
+      },
+      {
+        "Title": "Megaspeed “전 Nvidia CEO와 연관된 임원, 2025년 퇴사” - Investing.com 한국어",
+        "Link": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBrOFFPZ3h5Q2RxT2d2eS1oQU5PeUhmTFRGT2o0TFdmb0w4UlVxTy1PbGk2WjlwSGI5akkzTE5HWHRuM2JhY1lEZFI4R2lMZjBIOVR0QmhHeTI5YlpaVUNpYy1UTC0tT3pDamJTak9fMjE?oc=5",
+        "Date": "Sun, 15 Nov 2026 11:14:00 GMT",
+        "Source": "Investing.com 한국어",
+        "ParsedDate": "2026-11-15 20:14:00"
+      },
+      {
+        "Title": "[APEC 정상회의] 관세 완화·유가 안정은 기회…반도체 규제·LNG 수급은 불안 - 아주경제",
+        "Link": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE5uTFNrd1RrYXJXZUpZRTB2N0JSTHZWb0NWeThXbXBtbU14c2Z3VTh5X185Mk44OVBUaHdaNDlmek13YzBBQ2RhdC1wS01FcEloM29VWHNTRGzSAVhBVV95cUxObkxTa3dUa2FyV2VKWUUwdjdCUkx2Vm9DVnk4V21wbW1NeHNmd1U4eV9fOTJOODlQVGh3WjQ5ZnpNd2MwQUNkYXQtcEtNRXBJaDNvVVhzU0Rs?oc=5",
+        "Date": "Sun, 15 Nov 2026 08:41:28 GMT",
+        "Source": "아주경제",
+        "ParsedDate": "2026-11-15 17:41:28"
+      },
+      {
+        "Title": "中 공급과잉에 韓日 화학사 사업 다각화…반도체 소재로 돌파구 모색 - 글로벌이코노믹",
+        "Link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxNOVo2TElKQ3dfV3ZrRGQtYnBkbEdjT1Zfa3BpYzVYRzBxdjFHNWRTNVNtaEdqWTlwN2x2cGNHVFUyaXFDX1Jqc3lqOGs2X0VtbVNxQXBvZnQxbkxLQ0dZSm5sSjNHLXZfUERYMlBYQW02emNlRzZIYTg2aDdlc0FjSEdxUExOUQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 08:00:00 GMT",
+        "Source": "글로벌이코노믹",
+        "ParsedDate": "2026-11-15 17:00:00"
+      },
+      {
+        "Title": "브레인포트개발공사 “지속적으로 공동 책임 지는 구조 만들어야” [AI 산업 부울경이 이끈다] - 부산일보",
+        "Link": "https://news.google.com/rss/articles/CBMidEFVX3lxTE5yM1dBMXprSHdzTm9IdTVHNTRXajNzZi1renE4dUxSbjZTN0F1ZnJqOTNUZXBiWmFsZ3c5ejFHWG1Oc2FoYXdpWE9rNTdTNnVVcnZOTFRwSHRzcklBWUtEMkVVNk1oZXQzVFJIQ2ZVQ1lydk15?oc=5",
+        "Date": "Sun, 15 Nov 2026 09:15:34 GMT",
+        "Source": "부산일보",
+        "ParsedDate": "2026-11-15 18:15:34"
+      },
+      {
+        "Title": "[손기호의 일본탐방] 미쓰이화학, JSR 인수…삼성·SK 소재 공급망 영향은? - 뷰어스",
+        "Link": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE9YUUdIMXQ5NjVpNmFScTJjVTVwOFM4aTZwZEtQNmxyUlZKVGN0R1ItNUpTVlB5NFk1cnVIMFBiSGdrN3FwVkN1bUZ2VFQwNjhPa3g1R0FQQmk?oc=5",
+        "Date": "Sun, 15 Nov 2026 12:00:10 GMT",
+        "Source": "뷰어스",
+        "ParsedDate": "2026-11-15 21:00:10"
+      },
+      {
+        "Title": "필립스가 세운 아인트호벤, ASML로 AI 호황 맞아 [AI 산업 부울경이 이끈다] - 부산일보",
+        "Link": "https://news.google.com/rss/articles/CBMidEFVX3lxTE9BLTlDQmRpNVBQbDJOSWN0eFZYaG5uajFKdjNfZFBqRXZ6MUtlZkI1WEFlZnVRX25ZeURXNmJVYWhBMUhEQVBzQVRDbFVJVjQtc3NhN3ZCX1ZNQ281R1lfcjlQUjhmX09ZckNSWU5rMmt5UjFu?oc=5",
+        "Date": "Sun, 15 Nov 2026 07:36:06 GMT",
+        "Source": "부산일보",
+        "ParsedDate": "2026-11-15 16:36:06"
+      },
+      {
+        "Title": "Lessons Learned From ASML: From Philips Spin-Off To Europe’s Most Valuable Company - Book Review - Eurasia Review",
+        "Link": "https://news.google.com/rss/articles/CBMizAFBVV95cUxOa1c2T1oyYXRiVGFJNTVTeUFfNjU3eVFGUWR4MHI1VUstTVhObmVhSDFNbkZFcEpGZnpxSDVwYW1qRUtMLVVoX0twbklDNzRXV0lzZHlyaGdIR25NeVM4MFBxWll0SUNKSm1heG5Lc3Jaa0M5ckVsOERRYzJhdFRiazNtYjFyMVhRWFVYa3RMTHAwZjFtbE5BN1R5Y1liUnpPQWwzN29mcTZybWVNSUFYY0czMFhWUEJZV3liRVJvT3NGcGV5bEFtU0MxOUw?oc=5",
+        "Date": "Sun, 15 Nov 2026 20:58:23 GMT",
+        "Source": "Eurasia Review",
+        "ParsedDate": "2026-11-16 05:58:23"
+      },
+      {
+        "Title": "2027 Chevy Bolt EV 75 MPH Highway Range Test. Here’s How America's Cheapest EV Performs. - InsideEVs",
+        "Link": "https://news.google.com/rss/articles/CBMie0FVX3lxTE9RTnBzRGxuc1JTM2NBcTZKVXZXUG1pYmxuQkRrM2VVUGpob29FNzZxU2lwdnhrRkVPeFVPODY2ZkxFVWFuUlRLWkNlaWVtLTV0VEZwR1M0ZjhWendaaGU4R0dZM2daT1R0SmZ1Ny1GUWVCdmRaZHpCTk1Qaw?oc=5",
+        "Date": "Sun, 15 Nov 2026 05:56:37 GMT",
+        "Source": "InsideEVs",
+        "ParsedDate": "2026-11-15 14:56:37"
+      },
+      {
+        "Title": "The One Company Apple And Nvidia Cannot Replace! ($ASML Stock Analysis) Business Insider (Pq8hb4g1Qc) - Unisba Media",
+        "Link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxPLW15VlFpU2ZiZnFkU0NfX0RqdE90azJfWmt4ZWx3STJFcm5ObzBRc09ZdmEtWXZsX25pLTZrOG9yV1JxWkoxYUsxb184dURkbTFhWG9JcndhNVlaem1nU2twcHptc2hvTmIyclMzaXdBMFlWZnNpS2dUamRvajAtZF9B?oc=5",
+        "Date": "Sun, 15 Nov 2026 07:25:01 GMT",
+        "Source": "Unisba Media",
+        "ParsedDate": "2026-11-15 16:25:01"
+      },
+      {
+        "Title": "ASML's Real Test Isn't Friday's Tape — It's Whether Customers Keep Knocking - ad-hoc-news.de",
+        "Link": "https://news.google.com/rss/articles/CBMi3gFBVV95cUxQaGl2WDVVVlZlRFZ3bFROTWZXVzRESzJwTlBjOTd4SnZweGpuX2ViWFdqRGE5LXRKTXExcEVVTXJmX25UU1ZiSjdBTnlMSm5fVVBvdGhzY1NSaWZaSEFjc1FRcV85aXNWbERZZndnVmRCNmFteVU1VG9IVHRtcEVwdks1Y2xKV0dSNnVzNzdHZE9mUURNQ0xwUW5lWU54V2FhRXY1N1gzdVFyeUpVMzZub1V2Vm9uSDNJdnZsNGd3LTN6SWM1OEljWFRTVnI1X193TU5vQjVUTXZ1bTFzMWc?oc=5",
+        "Date": "Sun, 15 Nov 2026 12:01:45 GMT",
+        "Source": "ad-hoc-news.de",
+        "ParsedDate": "2026-11-15 21:01:45"
+      },
+      {
+        "Title": "‘반도체 소재생산’ 아데카코리아 전북에 900억 추가 투자 - 전북중앙",
+        "Link": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE5SVHItUVMyQ0dxM3A4VW1KejlGY2lsRklUTWJGX1dxckZpdFFGemp3d0FucXY1QnQ5RFVqLWZJdGhKbi1LaHliOXA4YnhyMy00RjYwUGZ2aTFpZVgxV05HWGM0U0t4X2vSAWtBVV95cUxQUnFEWFhSZjZ4bWp0blJFZHYxeFl6VXhIQUJNVHVlOUFkdGlGNTVYS0tYUEplSmNTRUVWdTlKNEE4RWJIbkRUYW56d2hmbG82aHRGQjAzeU5VSWo5SFpNdkQ0c2VfWXRjRGx1UQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 09:51:23 GMT",
+        "Source": "전북중앙",
+        "ParsedDate": "2026-11-15 18:51:23"
+      },
+      {
+        "Title": "아데카코리아, 완주에 900억원 추가 투자…반도체 소재 생산기반 확대 - 전라일보",
+        "Link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE9zeFlxb0tTbGxjeFFweG42bFJ2anBFZ280dHRxcTQzRW1id2tvemhYd1MxNlZvZ0VweVVpVk9rcENZaExZdUdFb3lxMS1XekEzd1ZkU29USVExTHZsN0N3QUVsdTdmOXlyLXpUZdIBcEFVX3lxTE1VNWR2azkyUkhGc1Y2Tl9EUndGNWV2TFFWWG9lZ2pRR2hVSkwxbmNadWYwTXJqT2hFZXpLa1RHcmJod0lsVVAxUUwxajc3QmFyM1Y5Y3dnS2NybTA5elFiUGRuZGlvdVFUMk1fRDVBR2c?oc=5",
+        "Date": "Sun, 15 Nov 2026 06:54:55 GMT",
+        "Source": "전라일보",
+        "ParsedDate": "2026-11-15 15:54:55"
+      },
+      {
+        "Title": "아데카코리아, 완주 반도체 소재 생산시설에 900억원 투자 - 전민일보",
+        "Link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE5qUHBYa2V0NWtRQkpETWhGdnNBaDhDcmxOZnRqZmFPQXFWUzRNTzM1ZHN3c1U4SWRDa1RTbW8ybWhURVFJWnZtSzZKWlR4bGhzZDZIT1dHX0x5XzB1OFdlcTdlNzcwMGFGeTJaag?oc=5",
+        "Date": "Sun, 15 Nov 2026 03:03:59 GMT",
+        "Source": "전민일보",
+        "ParsedDate": "2026-11-15 12:03:59"
+      },
+      {
+        "Title": "반도체 소부장 ETF 일주일새 32% 질주 - 서울경제",
+        "Link": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE5IZWotQzUwS0NJQThmRjRlSmh5YlFlS3kxcVlyQmM5bXRyVEYyVU9IcFZPTVkxMUZCUldxbm44V3o0NHllSmhod1gzX0RvZDZHZmfSAVNBVV95cUxQRHY5M2RSYlV6a2pmTlV4VWFZMnFucS1mekp2c0RyOUgtQWJHSHNzZ2djelhfMkxCN3dBMHptUTF5c3NLV2dGZE5lZDNHV1I3NTcxQQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 08:32:51 GMT",
+        "Source": "서울경제",
+        "ParsedDate": "2026-11-15 17:32:51"
+      },
+      {
+        "Title": "광양경자청, 중국서 200억원 규모 증설 투자협약 체결 - 아시아투데이",
+        "Link": "https://news.google.com/rss/articles/CBMibkFVX3lxTE04dEg0WTRSb29wcXljZ043YjhtdzFVYUF5NUZDQURibmJlOVFha0FwVGdnVWFISlJjNFZlNHcxVTFrQXAyQlYtc0ljWW9RSmlwYkJUVThVQTBha0xkckNUaE5IbDhJRWlOZDM4a01n?oc=5",
+        "Date": "Sun, 15 Nov 2026 07:22:04 GMT",
+        "Source": "아시아투데이",
+        "ParsedDate": "2026-11-15 16:22:04"
+      },
+      {
+        "Title": "광양경자청, 중국 밀착 투자유치 활동 ‘눈길’ - 남도닷컴",
+        "Link": "https://news.google.com/rss/articles/CBMia0FVX3lxTE5KVHJ1SDdrcWlUdjJBTWlZWG42NmRlZjJBaTFYdlVfSDdGbG1rcHlsZE9LY2FKYnFTVVNqMnVNM0s4T2kwcE5oSmE1a2NibTZVSF9LTThJQUdHRW84cG9DQW5MWkFaZGhpeFpZ?oc=5",
+        "Date": "Sun, 15 Nov 2026 09:52:00 GMT",
+        "Source": "남도닷컴",
+        "ParsedDate": "2026-11-15 18:52:00"
+      },
+      {
+        "Title": "삼성·SK, 중국 AI 반도체 추격에도 기술격차 유지…HBM 경쟁력 부각 - PRESS9",
+        "Link": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5Heklla3JfbXdkeWNiNng4NGFBenhNMjJXRVFNNk1fRnRUbUhpSWxZQmNPbHZXRVJHSVM1SlViNHJYN3BwV1NERzNFU3U1WFFmc0liSThtTW02bmp3Tl9UTzkzNGs?oc=5",
+        "Date": "Sun, 15 Nov 2026 21:00:00 GMT",
+        "Source": "PRESS9",
+        "ParsedDate": "2026-11-16 06:00:00"
+      },
+      {
+        "Title": "[국제 경제 흐름 읽기] 엔비디아 사태, 美 대중 반도체 통제 강화로 번지나 - 포커스온경제",
+        "Link": "https://news.google.com/rss/articles/CBMiXkFVX3lxTE90dm9HN1QyRlJxZDcyUEN2bWdsenA2UUtkXzF0RnhPSUpQM1NSV2dtanRkdHAyT1FxQzNWYkQ2eURvMS1EWEtvRlU2OXJRbkRISFZjNHZXeHBGNEdHR1E?oc=5",
+        "Date": "Sun, 15 Nov 2026 19:03:20 GMT",
+        "Source": "포커스온경제",
+        "ParsedDate": "2026-11-16 04:03:20"
+      },
+      {
+        "Title": "미인계·해킹… 반도체·AI 노린 中 첩보전 - 머니투데이 - 머니투데이",
+        "Link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE0tbTd6OHh2eHowVDBVMmZxZVdoeVpJdnV0VUpGaVoteGRHMVEyMzYxOWJIR3NwMk1yS2RrVW9PTHNmc1lRY3U4SXB2X0dBQ3ctU0ZjdGdMazQtOW5UM052aTl0Q0F1c2x10gFuQVVfeXFMUFNIVF9jWUliUi1zUWpnMTNZYUtzQ3BDMlJjVkl1d2hiRUZRZXhYRDRqMVdqbjhNWlRHTkgxdWdlZlFNcW9sbzFHSkRCRjVWNlNBM3FRSUlMTU9mNVVZSm11RmR3WDM5eG9xMm9nemc?oc=5",
+        "Date": "Sun, 15 Nov 2026 19:12:00 GMT",
+        "Source": "머니투데이",
+        "ParsedDate": "2026-11-16 04:12:00"
+      },
+      {
+        "Title": "미인계·해킹 수단방법 안가린다…“중국, AI·반도체 확보 총동원 정보전” - 중앙일보",
+        "Link": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE1PZGJmcjYtUFJjS1V6ZEZWVllDZl9DMkhld0pNdC1wQjgxd3Z2UEJ5OE9IbjVQdWs2UGtvem1HVEw1RXBsMW5rWHVtREx2b2EzczRsRW93?oc=5",
+        "Date": "Sun, 15 Nov 2026 07:06:42 GMT",
+        "Source": "중앙일보",
+        "ParsedDate": "2026-11-15 16:06:42"
+      },
+      {
+        "Title": "[비즈톡톡] HBM 하나에 500만원 주고 밀수하는 中… 반도체 굴기에도 못 넘는 ‘메모리 장벽’ - Chosunbiz",
+        "Link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxOWlpfMXZFVUxIdEpiU2RlbzJQY0U2UUFHSFlhLVNrc194d0t3dzNTcVpPdWNmaXpYaW43RExRNElUM0hlMTA3S01tcHoyOVdFekZnWlB6OTJxU0NNZmZZeVFqYXd2WEljWDkyN2ZUWjRoYTVZVWxRRk9QV1IwZmF6aHFR0gGWAUFVX3lxTE5Dc3AxcUx3WWNtenowcUV2ek5CX21rY0JNR2lsOU5NNVRXd24xNU5meVVGcUZlSmpsUHQ5OEctQTgyVFpDVVFCbkVaNnF0R2hWX3hqWk9BY3dPcHo3M0FqNG81NGlEWkloVE0xOXR3U0lBczh0SkFnVnQ4aWNIdl9HTXN0ZGs2WjZ4ZFlEdERBWVJwMmpfUQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 21:00:00 GMT",
+        "Source": "Chosunbiz",
+        "ParsedDate": "2026-11-16 06:00:00"
+      },
+      {
+        "Title": "젠슨 황 스캔들 후폭풍…美 의회, 中 AI 반도체 수출 규제 속도 - 뉴시스",
+        "Link": "https://news.google.com/rss/articles/CBMiYEFVX3lxTFAyNWd0TDk3VkhYTUUtLTZwTDhsNDdJVzJQRl9oejg1dDVRcXlMZ21nYWk3ZVVYbFFodWFwemxab25hT0J0Vm93aWJtTl93RnRZYmVUTlV4Vk1TU0RqTUlSa9IBeEFVX3lxTE1FeDczb1Noamk3SDNFbDA0QUdvQzlwTXBvSWVZaUFxYkNJbnFIcm9UODVVWGlmVndJNTVsUXlZUlZ2aEZRZlEwLUNqcDVLdnJUMjA3b01HTkpTZG8ta28zOFhtY1dkdGExaW9iU0lmdm5TUTk2V0ZxRA?oc=5",
+        "Date": "Sun, 15 Nov 2026 14:03:54 GMT",
+        "Source": "뉴시스",
+        "ParsedDate": "2026-11-15 23:03:54"
+      },
+      {
+        "Title": "반도체 패권 전쟁…한국의 길 찾는다 - 한국경제",
+        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5rZEtBcFpUWkJjdUljYmdKLUU5RXpTMnNJUmZ1UV9fQ2ZrSmI2anpKVFBqbE9CeXlVREZtcXBSQkFXbmYyQU9RNEVvNmNLT0dkRXJxaGhsZFdvdw?oc=5",
+        "Date": "Sun, 15 Nov 2026 08:52:26 GMT",
+        "Source": "한국경제",
+        "ParsedDate": "2026-11-15 17:52:26"
+      },
+      {
+        "Title": "\"800조 반도체 배후지…'소부장 생산기지’로 도시 체질 개선\" [로컬포커스] - 파이낸셜뉴스",
+        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE1LTnFqRzVrREtCQ0FsdDlRaU1TVndmZ2xRd3dPMlBRUEI2WGlRQ0FvLVkyOURVOVk2WWlhanh5NDZWTk9hMkpHb2tLSUIyYW1FTk5MMlZQOUpDUQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 09:35:33 GMT",
+        "Source": "파이낸셜뉴스",
+        "ParsedDate": "2026-11-15 18:35:33"
+      },
+      {
+        "Title": "반도체 소부장 ETF, 주간 수익률 상위권 휩쓸어 - Traders Union",
+        "Link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxNM0tjamFVSTVIR2stZzRPOTNkWlE4MkN6Rk9CeGh1YVdoNEo1OWNhcXo1aVRBTU1XY3hGVlVvMS0xVTg2VDk2MEY0Umcya2M3T3VZeTNyWkpqaDZUT0NycGVrZkVSUmJDVnE2VUgxamxHU3d0alUteGYxV3NMUnlnUUhjYzd5OVRHaThkZzQ0aS1QWE05?oc=5",
+        "Date": "Sun, 15 Nov 2026 08:35:28 GMT",
+        "Source": "Traders Union",
+        "ParsedDate": "2026-11-15 17:35:28"
+      },
+      {
+        "Title": "머스크 테라팹, 반도체 공급망 구축 본격화…국내 소부장에 새 기회 - 산업일보",
+        "Link": "https://news.google.com/rss/articles/CBMiREFVX3lxTE03cS10TTlYdHE5b0JYT19xdVRPSXRaUXJqWFVUcnQ2eFRkTDFURVFjbHJsdFZvUWxmZ3p1V2owd2RrcmF3?oc=5",
+        "Date": "Sun, 15 Nov 2026 06:24:41 GMT",
+        "Source": "산업일보",
+        "ParsedDate": "2026-11-15 15:24:41"
+      },
+      {
+        "Title": "머스크가 꽂힌 반도체…한국에도 수혜받는 주식이 있다? [주末머니] - 아시아경제",
+        "Link": "https://news.google.com/rss/articles/CBMiYkFVX3lxTFBLQ1FpVVFZbll0Wjg5QkUzMUtWRi1HOWVEZ3ExeERFUFFvWGNVNFplUzdlbG91UmNEdndJcXpvOEZoN3lPMmFpaEY1ZUdfeHhQVFRqaHFteV9palNYeDJZZGhR?oc=5",
+        "Date": "Sun, 15 Nov 2026 10:08:00 GMT",
+        "Source": "아시아경제",
+        "ParsedDate": "2026-11-15 19:08:00"
+      },
+      {
+        "Title": "다시 반도체... 11월 둘째주 '반도체 ETF' 수익률 상위 7개 중 5개 - 시장경제신문",
+        "Link": "https://news.google.com/rss/articles/CBMicEFVX3lxTE44SGtOSVVZcU53Q2I0WVgxelYyWE4xYlRFYmt4ck1Yc1BqZW5vUnJBQi1TemR1V0tnMHhLc2FIVUY1ZXpCalVkN3dEQnhzU1NUYk1ualZPdWVMQ1B3bkpsYVM5YTBUUGhVSVdJbEJPMkU?oc=5",
+        "Date": "Sun, 15 Nov 2026 04:00:00 GMT",
+        "Source": "시장경제신문",
+        "ParsedDate": "2026-11-15 13:00:00"
+      },
+      {
+        "Title": "AI 제조혁신·첨단 소부장 한자리에…대구국제기계산업대전 17일 개막 - 경북일보",
+        "Link": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9PODl4Nm1FeGd5TVhQN3VMTXhiTXZGRTFHeUpicXRrckkyTkVLTVdLQWl6dDhOTHd3S3d3bTNkWExyVHRxWnpPQXQ0VklFaDFTNW10bHgycnVPNldkcUhhY3VCUG9sWjk0OU9sWWFoaw?oc=5",
+        "Date": "Sun, 15 Nov 2026 06:39:21 GMT",
+        "Source": "경북일보",
+        "ParsedDate": "2026-11-15 15:39:21"
+      },
+      {
+        "Title": "지역 제조 AX·첨단 소부장 집결…‘2026 대구국제기계산업대전’ 개막 - www.hidomin.com",
+        "Link": "https://news.google.com/rss/articles/CBMiakFVX3lxTE85N1ZMTFdqXzh0d3Azek9vbW9GTzF1NVE4U0tFWFk3YXdHajFqSkcza3FpVjFqdG9NOF8yRi1ldHNESUpwNXpqYXBsRHRrcVdabnFTSVZ2MVZQYzNkTFVYd003R1k5SmxyZWc?oc=5",
+        "Date": "Sun, 15 Nov 2026 07:19:00 GMT",
+        "Source": "www.hidomin.com",
+        "ParsedDate": "2026-11-15 16:19:00"
+      },
+      {
+        "Title": "“韓 반도체 낙수효과, 대만보다 더디게 나타날 수도” - 국민일보",
+        "Link": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE84MS1MRjZmMjhPalMxXzVHd09RcUQ3d0pYRlNmOFU5YW1lRUlYTzkzUGI2amxPY3JmOUpoNS1FSHBKNngzTXBzZlAydzFZRFRyNkY1QkVwZU0?oc=5",
+        "Date": "Sun, 15 Nov 2026 17:26:00 GMT",
+        "Source": "국민일보",
+        "ParsedDate": "2026-11-16 02:26:00"
+      },
+      {
+        "Title": "반도체 잘나가도 내수는 찬바람…한국 IT 일자리, 대만의 5분의 1 - 중앙일보",
+        "Link": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE9TYmNwY3V1LUFsemhSX2h4TE1qQm5yNExvNWNDWlh0UnBORVFiRGxLZ1ppV2JHNG95M0FFcGpFS2hsM2E3RExyNlZqYnpkU09zX01DSzVB?oc=5",
+        "Date": "Sun, 15 Nov 2026 06:30:02 GMT",
+        "Source": "중앙일보",
+        "ParsedDate": "2026-11-15 15:30:02"
+      },
+      {
+        "Title": "반도체는 초호황, 내수는 한겨울…한국 소비 대만보다 더딜 듯 - OBC 뉴스",
+        "Link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE1KbUUzZUozd1kxc2tDdUR0WWsyZmJiSFZkVUZERXdGYlQ1czMycDcwMGhscDA5eTdfblRfQm5UNkxpcC1iNW1fQkYwQXhBd0Z5dXFfSWk2eXJJRkhBclZ0Y2ZhdTJ6NGRl?oc=5",
+        "Date": "Sun, 15 Nov 2026 10:57:53 GMT",
+        "Source": "OBC 뉴스",
+        "ParsedDate": "2026-11-15 19:57:53"
+      },
+      {
+        "Title": "K반도체 ‘억’ 소리나는데 성장 온기는?···“K자형 경제구조, 내수 파급 제약” - 경향신문",
+        "Link": "https://news.google.com/rss/articles/CBMiX0FVX3lxTE9HYzNWX3BIY2RPczB0a255MnJkQ0h1Q0xBQlhPS3VFaDVOR0ljMk1SZ3dLc2tEalE0VmJqcGpUWkFhV0kzVkw1LVJLS2Y1S3dWVkRTNTI2cUFXa1JuQzJF0gFfQVVfeXFMT0djM1ZfcEhjZE9zMHRrbnkycmRDSHVDTEFCWE9LdUVoNU5HSWMyTVJnd0tza0RqUTRWYmpwalRaQWFXSTNWTDUtUktLZjVLd1ZWRFM1MjZxQVdrUm5DMkU?oc=5",
+        "Date": "Sun, 15 Nov 2026 08:02:00 GMT",
+        "Source": "경향신문",
+        "ParsedDate": "2026-11-15 17:02:00"
+      },
+      {
+        "Title": "대만은 웃고 한국은 울고? '반도체 호황' 성적표 보니 > 뉴스 - 지데일리",
+        "Link": "https://news.google.com/rss/articles/CBMibEFVX3lxTFBUQkJ4SWs4alZsZXl0M1hLUzZoVlZEbTVaQURFX3U5cFZ5SnRsbXcweDljZ3lsb25WYUJXSDR1REJvQ1VpaHhGOF8teDUwV0RrUkYyTVN5RHVnSFpUU2d0YjR4NjFQMVpndjBPUg?oc=5",
+        "Date": "Sun, 15 Nov 2026 04:56:00 GMT",
+        "Source": "지데일리",
+        "ParsedDate": "2026-11-15 13:56:00"
+      },
+      {
+        "Title": "'그들만의 호황'…반도체 수억 원 성과급에도 '소비 회복' 안돼 - 뉴스1",
+        "Link": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE5obnM3S2ZXWnQ4Qzdoc1BoendLZTJteDRaWmRKMlMyLVZvZW5mZGQ0aWR3UklzUU90aV95YWVJVUlES05NRnJkbG45V1RWZzg4NVdUUw?oc=5",
+        "Date": "Sun, 15 Nov 2026 06:04:27 GMT",
+        "Source": "뉴스1",
+        "ParsedDate": "2026-11-15 15:04:27"
+      },
+      {
+        "Title": "반도체 호황에도 소비 진작 더딜 듯…낙수 효과 ‘제약’ - 금강일보",
+        "Link": "https://news.google.com/rss/articles/CBMiakFVX3lxTFBmRjkzOEZ5bEFaWllKT29IU1lXYXN0RU1nWGRrT1JMNWxlMnFFQkdxbVpFWXM5X0JoMDUxa19xdnloYlV0Si1qM3d5ZW51TVpKRnVVTUJhSWlOWkViWUhCVUxMT3VZcW8xN2c?oc=5",
+        "Date": "Sun, 15 Nov 2026 06:29:42 GMT",
+        "Source": "금강일보",
+        "ParsedDate": "2026-11-15 15:29:42"
+      },
+      {
+        "Title": "[지방시대 新성장엔진]〈3〉 “충북은 36년 쌓아 온 사업 기반”…필리핀에서 돌아온 네패스 - 전자신문",
+        "Link": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE9JdTR2ZzI2bVB1OHp3d1JSdnlEemd1Ul9zcnRUdGZXdWxWNEZpamdlR25lWEg2QWMzNFpJc3lQVXhYcEh5RHVEdUNYQUhFZw?oc=5",
+        "Date": "Sun, 15 Nov 2026 05:15:00 GMT",
+        "Source": "전자신문",
+        "ParsedDate": "2026-11-15 14:15:00"
+      },
+      {
+        "Title": "코팅 접이식 상자판지 시장 2035년 전망: 프리미엄 패키징 수요가 성장 견인 - 뉴스 및 통계 - IndexBox",
+        "Link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxOMXVVQmh2NVZVTlFocVBkdnczbklsTGllc1FaWlFiVWNvU0FPY2stWV9jV0xaSTdYcHdabXBrcU5qb3R5WVpCdW5ZTVNNaU5Ra1ZERWFrdlBocjZ1UFhXNHJEeFJISjhaYkszeHpwZ2RLWW1NT0JPSXRtWWZsT3RoV0ZMUVNxd210NjU3UmIyM2xXWXdKVVREMG9vaDJ5eFRRWmU2SHROTEFGM2R4UnlwM2FnUmxsdw?oc=5",
+        "Date": "Sun, 15 Nov 2026 04:31:08 GMT",
+        "Source": "IndexBox",
+        "ParsedDate": "2026-11-15 13:31:08"
+      },
+      {
+        "Title": "UNIST, 동남권 딥테크 기업-자본시장 연결 - 울산제일일보",
+        "Link": "https://news.google.com/rss/articles/CBMiZkFVX3lxTFBfb1pIMllUbko5aG1CMjlrNEQtbU9TckYxcVNIaWNOMWlRVXl5X1FvcURIQ1R1S2w2RjloTWlkTm13aFN4SzhFeWJROU9qdm1jMzd6b2t3bGFReW5xRGpJSGlMb1hudw?oc=5",
+        "Date": "Sun, 15 Nov 2026 09:03:00 GMT",
+        "Source": "울산제일일보",
+        "ParsedDate": "2026-11-15 18:03:00"
+      },
+      {
+        "Title": "피에스케이 10%대 급등…밸류업 관련 종목 매수 온기 '눈에 띄네' - 핀포인트뉴스",
+        "Link": "https://news.google.com/rss/articles/CBMid0FVX3lxTE90QUFlM2VBQVdwYmZTcC1meGRGdXlZdjJPdDB4ZlpITy0yQjlMOVN2M3dmaWkweTJtVFNUTmItWHBmbzd1ZEJtLU5wZ2hrbi1iTzZlbUxVY0VFSU81WHZiYS00S2hFUEJWSC1sdW5YMFdrTVB5S2ZZ0gF3QVVfeXFMT3RBQWUzZUFBV3BiZlNwLWZ4ZEZ1eVl2Mk90MHhmWkhPLTJCOUw5U3Yzd2ZpaTB5Mm1UU1ROYi1YcGZvN3VkQm0tTnBnaGtuLWJPNmVtTFVjRUVJTzVYdmJhLTRLaEVQQlZILWx1blgwV2tNUHlLZlk?oc=5",
+        "Date": "Sun, 15 Nov 2026 10:10:03 GMT",
+        "Source": "핀포인트뉴스",
+        "ParsedDate": "2026-11-15 19:10:03"
+      },
+      {
+        "Title": "세라믹기술원, 6G·위성통신용 저손실 세라믹 소재 개발 - 전기신문",
+        "Link": "https://news.google.com/rss/articles/CBMicEFVX3lxTE9QTFA3YU4xY2ItY01vNG5pazluVWdNYTZ4dFJtbHl4eE93d05tS0x5TUhheGVSR1lENkxTSVE1YTNvYlJsd0VzM1E1R1U3NTVxdk1Ccmp0N0NwTlhhQXRheGxycW5PbzA5TDZuVkEwYXrSAXBBVV95cUxPUExQN2FOMWNiLWNNbzRuaWs5blVnTWE2eHRSbWx5eHhPd3dObUtMeU1IYXhlUkdZRDZMU0lRNWEzb2JSbHdFczNRNUdVNzU1cXZNQnJqdDdDcE5YYUF0YXhscnFuT28wOUw2blZBMGF6?oc=5",
+        "Date": "Sun, 15 Nov 2026 09:26:58 GMT",
+        "Source": "전기신문",
+        "ParsedDate": "2026-11-15 18:26:58"
+      },
+      {
+        "Title": "HBM 다음은 첨단 패키징⋯ 삼성·SK, AI 반도체 주도권 경쟁 새 전선 - 브릿지경제",
+        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE0tS3hRQ0t6Y21iVE5FXzI0NXdlWExpa01vY1pCN0xWMl8yM1d0WERyaVd0ZHktRTZRTFVFeUdDMTIwZExzU2NpZWppTmFYakxGaEZySkNXYXE4dw?oc=5",
+        "Date": "Sun, 15 Nov 2026 06:17:00 GMT",
+        "Source": "브릿지경제",
+        "ParsedDate": "2026-11-15 15:17:00"
+      },
+      {
+        "Title": "UNIST, 투자기관 30곳 울산 집결…동남권 스타트업 성장 지원 - 울산매일 - 울산최초, 최고의 조간신문",
+        "Link": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBwUlRxVXFUSWZ1amt5cHByU01BVmFsNk1ISS1VaHB3enZnaHg5cGw4Nm5yZmQ5d1JPWGREell3OEdNVWpJNmdydkxxVk12MjA1blBPQUd5UXRGajJPMDdHdm5hTTZCLXl6bG5QZVlR0gFuQVVfeXFMUHBSVHFVcVRJZnVqa3lwcHJTTUFWYWw2TUhJLVVocHd6dmdoeDlwbDg2bnJmZDl3Uk9YZER6WXc4R01Vakk2Z3J2THFWTXYyMDVuUE9BR3lRdEZqMk8wN0d2bmFNNkIteXpsblBlWVE?oc=5",
+        "Date": "Sun, 15 Nov 2026 08:25:01 GMT",
+        "Source": "울산매일 - 울산최초, 최고의 조간신문",
+        "ParsedDate": "2026-11-15 17:25:01"
+      },
+      {
+        "Title": "\"한국만 남는 장사\" 청구서 날아드나…수출 '1조달러의 저주' 피하려면 - 머니투데이 - 머니투데이",
+        "Link": "https://news.google.com/rss/articles/CBMicEFVX3lxTE1iU2lFZjNTZDE3YjAtZFVTNHowQkczVlA3S3dMV0RMWERrRXdTMnRIWHdHcFJLZEwzN3E1UkRlakgzRE9ObVpRaG04RXZnOHppRFZYb01HMGQ1bzd5c2hsVTM3aUZ2TmRNa1VBamszRGbSAXBBVV95cUxNYlNpRWYzU2QxN2IwLWRVUzR6MEJHM1ZQN0t3TFdETFhEa0V3UzJ0SFh3R3BSS2RMMzdxNVJEZWpIM0RPTm1aUWhtOEV2Zzh6aURWWG9NRzBkNW83eXNobFUzN2lGdk5kTWtVQWprM0Rm?oc=5",
+        "Date": "Sun, 15 Nov 2026 19:00:00 GMT",
+        "Source": "머니투데이",
+        "ParsedDate": "2026-11-16 04:00:00"
+      },
+      {
+        "Title": "일본제철, 27년 1월부터 유통향 탄소강 강관 5% 인상 - 스틸데일리",
+        "Link": "https://news.google.com/rss/articles/CBMidEFVX3lxTFBIOFoxUThtSnFuSHMzYU5IcEFXX2hCa1c4OGkyTlZtN1Vod3NFclRBT1lKZGtyRXdHX29GVVZkZnpBLVZRaHRSVWlVdEZGVkpPUEc1OVI0UGQzbTRKVFpJcy1KS3EzTHdUd2NoYlpvcmpLWFcw0gF0QVVfeXFMUEg4WjFROG1KcW5IczNhTkhwQVdfaEJrVzg4aTJOVm03VWh3c0VyVEFPWUpka3JFd0dfb0ZVVmRmekEtVlFodFJVaVV0RkZWSk9QRzU5UjRQZDNtNEpUWklzLUpLcTNMd1R3Y2hiWm9yaktYVzA?oc=5",
+        "Date": "Sun, 15 Nov 2026 20:00:57 GMT",
+        "Source": "스틸데일리",
+        "ParsedDate": "2026-11-16 05:00:57"
+      },
+      {
+        "Title": "日 라피더스 \"2나노 반도체 양산, 내년 말~내후년 초 시작\" - 한국일보",
+        "Link": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBfbkxfNGNhWVZsSDVNcVZ0VEk3UHdJd3ZDVTE1UjFmd1VlR0JMd1MxdGdtMTg1a1hWVTlLc0U4UWUxMmsxQ1NmZklWUm1UQUNXQXNkMGVxYUdObV8tdk1jTmIwVWYzYXNDTFB0NXJB0gFzQVVfeXFMUFgteC1XTTRjcmlOOFRQVkNQeWpHb3htVGpxaVVia1VaNTVDbjl6dmlhNlVsVzNTSWpMOV8yY0FBOHdrMVR1Nks1WTFVcFZTVktCR1dQWUFXWmN1NWV0X2hlLUJwTm0zVXVqZDhKNWpub2tBRQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 06:38:00 GMT",
+        "Source": "한국일보",
+        "ParsedDate": "2026-11-15 15:38:00"
+      },
+      {
+        "Title": "뱀 잡아 팔던 나라가 반도체 강국으로…80년 만에 벌어진 일 - 한국경제",
+        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTFB6a3hleTlpWnM1YXNZWklSY2xVc3JuMWZKZ3lpQXhfQ1BHMkdkeWxHTENwY2JMTEpzLVJ4Y3llZzh2MFU1ajZHeUtBa0FZU0hKWXJ5WVBWTXRrUQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 08:50:51 GMT",
+        "Source": "한국경제",
+        "ParsedDate": "2026-11-15 17:50:51"
+      },
+      {
+        "Title": "워런 버핏이 일본 5대 종합상사 주식은 절대 팔지 않겠다고 하는 까닭은? - 조선일보",
+        "Link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxPOW9QUThUTGNlQjFUZ0dVLWJHWnVrR3ZhRDZRLUVjaDQ5Mm9ZZnFWdzZ5V0RZLUdSQ3ZVY21qVXRqbk4xYlpPVjZFREUzN2g5Y2ZBTi1vdWNpZnhhdnhBT1BRU2RyS2xYX1pZajZYOEdPM2V0Nlk0NVo1ckJGc2dlMDNmR0dYZw?oc=5",
+        "Date": "Sun, 15 Nov 2026 18:00:00 GMT",
+        "Source": "조선일보",
+        "ParsedDate": "2026-11-16 03:00:00"
+      },
+      {
+        "Title": "\"러트닉, 가족 회사와 연관된 반도체 수출규제 완화 추진\" - 연합뉴스 한민족센터",
+        "Link": "https://news.google.com/rss/articles/CBMidEFVX3lxTE00QzFfYks4UnpENDZrLUo4eXgxa2hNT1dfSnhLRjdSX3lDb0JUTU1jTnBHRFNYN3BnWWZqVkNTUjlmRDNBR0lhYzZSWXk5cU90ajc4R1BUS1UyUndmRndZaXZCb0lLZ1JTbWJFUGI5V2Rydl9M?oc=5",
+        "Date": "Sun, 15 Nov 2026 17:16:51 GMT",
+        "Source": "연합뉴스 한민족센터",
+        "ParsedDate": "2026-11-16 02:16:51"
+      },
+      {
+        "Title": "반도체 나홀로 호황, 커지는 對美흑자 부담… ‘수출 1조달러 돌파’ 큰 행사 안 연다는데… - 조선일보",
+        "Link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNalR4WFlTOU5qNWdXYmpGc0ViQ2ZEcVBwbTlENTJGNVYyM2VxaTNmYWR0UFBULTlWYTBDb0dwcE1QMDVHSVdfWnlqZXh5S2JRX1pSUzVNcWljdEx3d2xPelhxOGdkUmZsbW43b3M4RUlTR1lxZ1FaWklKRVpQSEpjM3FLUE9jRU14Sng5Y01LUQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 15:32:00 GMT",
+        "Source": "조선일보",
+        "ParsedDate": "2026-11-16 00:32:00"
+      },
+      {
+        "Title": "한미반도체, 베트남 법인 청산 완료…북미 시장 공략은 속도 - 아시아투데이",
+        "Link": "https://news.google.com/rss/articles/CBMibkFVX3lxTE1YYmtfZDF3XzB1YzdOY1NvSkJQRDB5b1N2aHZiZndOOGV1Z2I5cVdGeV9lNFcwUEk2UW9JSnNaR2J1R1dPWWMyTWIzdlBIaU1CZVpSWEF6TGY2VUtDT1IxZWlKV2pRRnBuZkE5aWpB?oc=5",
+        "Date": "Sun, 15 Nov 2026 06:39:32 GMT",
+        "Source": "아시아투데이",
+        "ParsedDate": "2026-11-15 15:39:32"
+      },
+      {
+        "Title": "\"젠슨 황 스캔들, K칩에 불똥…미국 내 생산 확대 압박 거세질 것\" - 이데일리",
+        "Link": "https://news.google.com/rss/articles/CBMigAFBVV95cUxNU0M0cFZLV0ZOQ0xELUxyRDhwTGdwdmpHVGc0YUE1RWU2RW5oQkZNLVBVMG1QWjZaRlZUTXBINDFyWlZaZ0l0TVhlcDJKaTlrNU03cVByZEVPSk1BZW1tSnNUN2lQVU5XcU14Y1Y2ckNNdnFObndoMkQ2b1czMGdSMw?oc=5",
+        "Date": "Sun, 15 Nov 2026 09:02:23 GMT",
+        "Source": "이데일리",
+        "ParsedDate": "2026-11-15 18:02:23"
+      },
+      {
+        "Title": "Denver leaders hope Democrats’ conference is precursor to 2028 DNC - The Denver Post",
+        "Link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxQUTAwZVU1UDdranNkR3ppckZnVjZOY2FUT0pqX2R2d2xucll6bzEyTDhWMy1ybnB4eG5ybE9NZHVrdHVWZmZOUkJpY19mZnhvd3RrallHZU5yV2hRVXFETkE0Q29TNVM4bTMtLXFYeTBlVW5tM3YwVlFXT25hU0NLd0ZB?oc=5",
+        "Date": "Sun, 15 Nov 2026 11:00:09 GMT",
+        "Source": "The Denver Post",
+        "ParsedDate": "2026-11-15 20:00:09"
+      },
+      {
+        "Title": "Eco&Dream Revenue Rises as Saemangeum Plant Ramps Up - THE ELEC, Korea Electronics Industry Media",
+        "Link": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE5YSldjTEJPZmZmb0Z0aGJlc1h2TGRCellMc1pYZThxU1FOSUFrUHZJcHk4SG1iNlJGUE9MRGUxY1pJQ1Y0QzlBNm9LNVMwRi1fMi1TeWxSTU9zUHpuM0JsN2xrMVNsZWs?oc=5",
+        "Date": "Sun, 15 Nov 2026 04:23:48 GMT",
+        "Source": "THE ELEC, Korea Electronics Industry Media",
+        "ParsedDate": "2026-11-15 13:23:48"
+      },
+      {
+        "Title": "Review Finds Circulating tRNA Fragments Lack Rigorous Clinical Validation as Cancer Biomarkers - Bioengineer.org",
+        "Link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQMkNvMDBLOFdWTnRHNWdJanRtMnRFUlVPMThjZlQ5aUhLTm83V2VzcGswa2NIUkd4UjJ4N1RvRDc4NVM4ejZkZVpDTVJsTm41dWNaQmtoc29fekZ6aGdQNjE2MDVYU2RxdXlhVGNEOHQ5M3ZtTkw5R0lTRVhmOE1YYUZYRTVQd2V5XzF4SEtPdEJETHdqc3h6Q01PMVJlR0M1WElVVHRLVFpPQ2dfakstR3lkT1B0WTZOQ0ln?oc=5",
+        "Date": "Sun, 15 Nov 2026 19:39:20 GMT",
+        "Source": "Bioengineer.org",
+        "ParsedDate": "2026-11-16 04:39:20"
+      },
+      {
+        "Title": "EcoPro Unveils Cathode Material Technology and Materials Roadmap at Pohang Battery Expo - 파이낸셜뉴스",
+        "Link": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE1FRlFVQnNkYk5aTjBOSkVwOXpSd2V1RXNVNlRwREppVTZpeDNNSWhsbTJ0UWhJb01fUWtiekk1VzRnOEU1MV94OXRTMjllMC1yQWN3QXRjNDE?oc=5",
+        "Date": "Sun, 15 Nov 2026 04:34:05 GMT",
+        "Source": "파이낸셜뉴스",
+        "ParsedDate": "2026-11-15 13:34:05"
+      },
+      {
+        "Title": "Top 5 Best L Arginine Supplement 2026 - Pixelfy.me",
+        "Link": "https://news.google.com/rss/articles/CBMibEFVX3lxTFBlQV9iQWpad3RlbjRqUzV3MndwZkh1T1VCakZVSld6N01UcXR6bURUbVlsSEpQSWhQVDh2dDNxQWJwZGlDMTBDVm1ueHRLUDdjX3JpZkxwQ2x6U2ZDcURENnotMlcxWnpmMFBrbQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 10:55:10 GMT",
+        "Source": "Pixelfy.me",
+        "ParsedDate": "2026-11-15 19:55:10"
+      },
+      {
+        "Title": "2035년 웨이퍼 세정 장비 시장 전망: 첨단 노드 세정 수요가 성장 견인 - IndexBox",
+        "Link": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxQRXl3a1BEYjhuOWM0bW1Bb0s1b3VRTGNhdXhKUjcyRDFZN3dfQWI1QUNZd0Y4RW5oU21TM0dnV09nNXVPQnQtaFVvNERUZkFfR1NXbnlpOXJQZVhPWkV4bjhEb045NFJtZlBfa2YxQlNHdUYzTFU4TlV0V0VXVWVuSWlrdUlrTUtmZTZ5clZuNXgwdFFORXo4dkFmemJBX0hiRVRDTE01bWxlem82azNxdV82bzE4MUxjWUlMdktRNUVNZEU?oc=5",
+        "Date": "Sun, 15 Nov 2026 14:46:05 GMT",
+        "Source": "IndexBox",
+        "ParsedDate": "2026-11-15 23:46:05"
+      },
+      {
+        "Title": "Musk’s Terafab Rises as Jensen Huang Exit Sparks NVIDIA Backlash - 사이언스모니터",
+        "Link": "https://news.google.com/rss/articles/CBMidkFVX3lxTFBBRS05cmpCVldqMnpBQXFQZWU0bTJiZW9WbTM3VTMtOTZqSmlEMEN0Z1EzSW04TGtGckNxQWd4QnNaQmVNLThNRlpRZlpORlBkZG9rSnNHNnZiZTVzMWZMeThDdFFDV0pYeHVwYTY4dUkwZUlCMXc?oc=5",
+        "Date": "Sun, 15 Nov 2026 05:09:06 GMT",
+        "Source": "사이언스모니터",
+        "ParsedDate": "2026-11-15 14:09:06"
+      },
+      {
+        "Title": "Wafer Cleaning Equipment Market To 2035: Advanced-Node Cleaning Demand Drives Growth - News and Statistics - IndexBox",
+        "Link": "https://news.google.com/rss/articles/CBMivwFBVV95cUxPa2Z3eTlJTHNRVm02RnNxcWJmUWxGanFBUTludkRuWk1CUFRBbzg0VlRhWXJMbDUxZFQtSzhSQmNreDJNMWp0X0FIMnJWanRFaE15WU81SnpFajJ6cDhPRGRNZVhlNHVZRVNrM1lwTzJ4WFpyN3RDeVM5dm4zX1VKSUlOeEhkdUo3cVBvTkEtN1ZwZDlwZWJHSEtqdTJsWjJmSll0UlZUbkJyYjBSUzFoUElSLTVLUVFmRGx6VzBvcw?oc=5",
+        "Date": "Sun, 15 Nov 2026 14:46:05 GMT",
+        "Source": "IndexBox",
+        "ParsedDate": "2026-11-15 23:46:05"
+      },
+      {
+        "Title": "Top 10 Semiconductor Wafer sawing Blade Companies in 2026 - EIN Presswire",
+        "Link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxOSzc5NnZaQjBPRXlhUi01Nm1RMU1qWWRGUXdhaUdiWk5PdnI1RGk1eVF3Q1JFUS1xVmw4M2hybG9NX0xDMjgwTnowZ3o3M2JJUmFQb2lYYUxZbXhPR0tlaXNVb1lFLXlqU29yZ1hnVjF4OWNJZ2VuM2c1QkxmZFdhSjl0VHhic2pGcW5oUGdWdFlXYW1VNld5V2FnN0F2MUlFWmhHWjN2MA?oc=5",
+        "Date": "Sun, 15 Nov 2026 08:53:00 GMT",
+        "Source": "EIN Presswire",
+        "ParsedDate": "2026-11-15 17:53:00"
+      },
+      {
+        "Title": "Top 10 Semiconductor Wafer Dicing Blade Companies in 2026 - EIN News",
+        "Link": "https://news.google.com/rss/articles/CBMioAFBVV95cUxNZnJyOGhVOGt5WEI2ek8xZzM2Uy12ZmRmMjRHZm9CRVRmeTNKVXpLemEzR0Rxel9fMmV4RW92Wk10WWtDelRNLUxsME0xZ1ctM09jdlNWbHFIbEZsYmRibzFtbFp6N0VOZkNyVFBqSFpleWV3ZFJEemFOOFduaFZrNFZxeHpHckNRX1BEU3pLRG5yakZyV3FyVHhzM2dVMG5p?oc=5",
+        "Date": "Sun, 15 Nov 2026 09:55:00 GMT",
+        "Source": "EIN News",
+        "ParsedDate": "2026-11-15 18:55:00"
+      },
+      {
+        "Title": "Top 10 Semiconductor Wafer sawing Blade Companies in 2026 - lincolnjournal.com",
+        "Link": "https://news.google.com/rss/articles/CBMi_gFBVV95cUxOLVFmQTA1MFhYUEIxV1V1QnFFd2tPUTgwaWJSSnZZNHdDckFUc3NWXzd4Y0JLVEFGYTFobVJId25tenM2NWxYVUV6X1p1eTVDM2owQ0JqeHBtaEZ3aTlGOTlURXVHcTBIZkt6a1Ffa2JIX3I4TDhweDM4aDBUb0Y0Qncyb254VVVwRTloUnFJYk01bjhZZkFvWFQ2QlV3eWRxYmw4RjNad29XUlZwczBWWnNKalJialY1cC1GdjF5clB3MVBSbUtWRWxuOEYzdFJ3YTV1NFNKaDJFd1lwekNwYUtKSkw0ZjBnMnNvWDh6VGRrOFU4Q211Y012UDNBUQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 08:53:07 GMT",
+        "Source": "lincolnjournal.com",
+        "ParsedDate": "2026-11-15 17:53:07"
+      },
+      {
+        "Title": "Cerebras (NASDAQ:CBRS) Gaps Higher on Results. What’s Next? - Kalkine Media",
+        "Link": "https://news.google.com/rss/articles/CBMioAFBVV95cUxPRVloVmtwM2pqaWYyOVUxeDBlUndaZzltQjliMHhpSVliYl8xYTdFcnlvQ1NRWXRzNi1yS1JQcEJ6VHl2MDY3dmNNcWxGU0ZuMzFRVi1kQm96YzA5R2doa3U0MnhuSHhLRjFoeHBjSm03VV9OWWlXV2VaWVlXTDl1VnFmY1hmb3N0SE04bnpJR0diYlVIdm5lWmJGSDNmWFVE?oc=5",
+        "Date": "Sun, 15 Nov 2026 06:16:00 GMT",
+        "Source": "Kalkine Media",
+        "ParsedDate": "2026-11-15 15:16:00"
+      },
+      {
+        "Title": "US, Allies Agree to Guard AI Supply Chains From China, FT Says - Bloomberg.com",
+        "Link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxNYWdZazV1cGI2aFI0Ymdpb2hhRTU1Z3FjZ1hTdkZWVlRzT0Y4RzZnZXMzSXdPS2VEaFp4NGg2STQxdzhxQ2tGN1AxZzJQc3BkUjE4RnVoenRnM3dwN2t5TzV1dVpyUjAyd254NU1kM1ZSTTdoZkVnU3V3dUJxSE1LVFBiQWxWQzFkSHNIanRhQVRlU3ExV3MzYnpEeVhlZUZjbkRBZ1o4bVQ1YnlsdVl4TA?oc=5",
+        "Date": "Sun, 15 Nov 2026 20:16:10 GMT",
+        "Source": "Bloomberg.com",
+        "ParsedDate": "2026-11-16 05:16:10"
+      },
+      {
+        "Title": "Judge Lets DRAM Antitrust Case Against Samsung, SK Hynix and Micron Proceed - TOKENPOST",
+        "Link": "https://news.google.com/rss/articles/CBMiW0FVX3lxTFBCZ1I4cVIwMkZQTGVVMlZFRW40QVRpOUlreHNGQW9pZ0xDYUk3dHJuQTg2QlJmakM4azdjTUQtMnN6RmhHbDZlbUFmdEdhZ3R5blVFNkYzalJOaHc?oc=5",
+        "Date": "Sun, 15 Nov 2026 13:19:18 GMT",
+        "Source": "TOKENPOST",
+        "ParsedDate": "2026-11-15 22:19:18"
+      },
+      {
+        "Title": "Jefferies’ Christopher Wood Says India May Gain as AI Focus Fades - www.tokenpost.com",
+        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTFBocE1CQng4dnN2eEZxWG1uUmI1c0tHUVpsRWU3VkVVdHMtUE1iYUhFeWh0bmNyVHNVZ2MxMmw5dFktTzd2NDcyNEIxS29ocDBlaXBLbXlyVGlwdw?oc=5",
+        "Date": "Sun, 15 Nov 2026 17:51:35 GMT",
+        "Source": "www.tokenpost.com",
+        "ParsedDate": "2026-11-16 02:51:35"
+      },
+      {
+        "Title": "[심층 분석] 고려아연, 미국 핵심광물 공급망의 전략 거점 구축…10조원 테네시 제련소, 전력 230MW 확보 - 뉴스밸류",
+        "Link": "https://news.google.com/rss/articles/CBMiakFVX3lxTE9KUlVRYzJBMDRHV19xMVRUUHVWLTNuaVZiMjRRTGlSd1c5QlJRRWZDcXdNN3dNS0pFa29nM2xZcEtHSVJ2YWVfbzMyQ0l1V2tCT1BlQ19EV3lrblN5S1ZvLURoUkJoS0NYcVE?oc=5",
+        "Date": "Sun, 15 Nov 2026 04:00:00 GMT",
+        "Source": "뉴스밸류",
+        "ParsedDate": "2026-11-15 13:00:00"
+      },
+      {
+        "Title": "에코프로, 포항에서 배터리 소재 기술력 및 글로벌 공급망 공개 - 머니투데이 - 머니투데이",
+        "Link": "https://news.google.com/rss/articles/CBMiekFVX3lxTE1MLUdWbnl6dWhZNnE4ZUNPQlFrb3daYkpwNXdRNWJkdG5PNXgyT1lGU1VNMHo4eTlKcF9mMjNteFJnMGFGU29xSFExa1hlQWVQYjEtdTBRXzJiZ0l1N1hEcGRMTHk2WnJLVERoSlp2ak14THR6djBMd3RR0gF_QVVfeXFMTlVvMTdOMm9fNmlnWGhqdzFvMm5JRmswVDgtdVZkaWlBNmRUenNRNmhaRnRrTXdlUGJ0V25LNkl5YmpLS1kzcGFveGhTUmt5aF9YMGtjMXJ6S3o1X1NyZGxMUFBUbE9YUHUyRVVYZVh6dnRjX3hpSTY3MU1udEQ5OA?oc=5",
+        "Date": "Sun, 15 Nov 2026 04:44:16 GMT",
+        "Source": "머니투데이",
+        "ParsedDate": "2026-11-15 13:44:16"
+      },
+      {
+        "Title": "핵융합 발전 26기 추진, IAEA “상용화 800억달러 필요” - 에너지안전신문",
+        "Link": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5qNUlVX1U1QkJyWkhqQV9KcVo2eTd4VWwwb1N5UzhoVk9fdERYMXJlcmFFYXNtSTRfZ0VwLXlrR3dQc09Xc1VoTGpmR3Rwc29XWnFmZTJRMTdMb181UV9Pekkwb2o?oc=5",
+        "Date": "Sun, 15 Nov 2026 20:03:52 GMT",
+        "Source": "에너지안전신문",
+        "ParsedDate": "2026-11-16 05:03:52"
+      },
+      {
+        "Title": "미 상무부, 양자 컴퓨팅 스타트업에 최대 1억 달러 투입…반도체 공급망 정책과 연계 - https://www.didimkorea.net/",
+        "Link": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE03YWY2cXZJVXA4d1dMamVtS0xRSDE4SEdYUmZCcF85UnRranhSTzFZeC1EZWRxdF84dWFBNzBmMGRScTh2R2J6TVA4YXB5QjA?oc=5",
+        "Date": "Sun, 15 Nov 2026 16:14:06 GMT",
+        "Source": "https://www.didimkorea.net/",
+        "ParsedDate": "2026-11-16 01:14:06"
+      },
+      {
+        "Title": "엔비디아 中 AI 반도체 우회 공급망 흔들…동남아 데이터센터 340억달러 투자 위기 : 국제 - 재경일보",
+        "Link": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE04R0d1eW1FN3NFRVRKYmh6WGFCbDFqTW1zZlplSXhubkxidXVCVjdpZi1xVkFCd003LW1DbzJFNjlta1Bock8wUFA2bw?oc=5",
+        "Date": "Sun, 15 Nov 2026 07:46:00 GMT",
+        "Source": "재경일보",
+        "ParsedDate": "2026-11-15 16:46:00"
+      },
+      {
+        "Title": "광양시, 서남권 반도체 투자에 지역기업 참여 길 찾는다…17일 정책토론회 - 지이코노미",
+        "Link": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE1vZmhSZmh4d202NzlMUzJVOVNlMGgydFA1ZEZleGdPcTAyaW45aEZjb0NRYlhZbzRqLUx2Zk1rWFFkQ1Q3Vzdsc3NvVko1bnhXNmdib29CenBEZDBLQ0JsdXhIeHQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 13:06:36 GMT",
+        "Source": "지이코노미",
+        "ParsedDate": "2026-11-15 22:06:36"
+      },
+      {
+        "Title": "한국, APEC서 에너지 공급망 협력 강조...AI·인구구조 변화 공동 대응 촉구 - M이코노미뉴스",
+        "Link": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE1aODZWZjRBQ2VyWHVMYkkzaWlYT1p1VHNvQkFGRlRTT0gydUlPbGN6TTc3S1ZreFdvcjJXRTRuX1ptM1JEbTlWRDd4Yjh1RkNfNkNmMHV5Q2dmUkljbnpnS21sQmtJRmM?oc=5",
+        "Date": "Sun, 15 Nov 2026 07:29:45 GMT",
+        "Source": "M이코노미뉴스",
+        "ParsedDate": "2026-11-15 16:29:45"
+      },
+      {
+        "Title": "[르포] “반도체 공장 1000평 소부장에 내준다”…SK하이닉스의 세계 유일 파격 실험 - 헤럴드경제 미주판",
+        "Link": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE1UTXdGQ0V2Y0FSSksxQkhJcjZTZkV0dDBoMVR1VkJfTTlzMnB2RVFCdUozcXo2dkZJX2c0Q2dhTnFLdngtQzNRc3JhRmVNX2JXX2Y5Qk9iVE4tLTVwTG9QZA?oc=5",
+        "Date": "Sun, 15 Nov 2026 07:07:00 GMT",
+        "Source": "헤럴드경제 미주판",
+        "ParsedDate": "2026-11-15 16:07:00"
+      },
+      {
+        "Title": "2035년까지 이어지는 마일드 하이브리드 차량 시장 성장세: 저비용 배출가스 규제 대응이 성장 동력 - 뉴스 및 통계 - IndexBox",
+        "Link": "https://news.google.com/rss/articles/CBMi3AFBVV95cUxOd3R2QVEzaDJ3SUZ6cEZjVEdUOVZiTDRVTFFOMkVRVnMwV1k1QmJKUGkyOWF3eWU1Nkl3MlJoUHJYNUdMTE1GTEVDWndqQmVhdERqTHRLT0hKd0Z3TUw3ajVjcS0yVXU0eVctWV9ZZng3VUdDS1BkQUxpTDJEVjJYRE9GUEI2T2VpZFBoVjFDMTNxTlpfUDVjWUwzQ2tiUlpFUWV3N0pIa2psU2ZmWThOUllaZW1fcmVybVRGWW01dHNWd0FCSlltLWhfU3h6VmtuLVZ3eHEwLUlxSmli?oc=5",
+        "Date": "Sun, 15 Nov 2026 04:56:07 GMT",
+        "Source": "IndexBox",
+        "ParsedDate": "2026-11-15 13:56:07"
+      },
+      {
+        "Title": "전자제품 세정용 용제 시장 2035년 전망: 첨단 전자제품 제조 확대로 수요 가속 - 뉴스 및 통계 - IndexBox",
+        "Link": "https://news.google.com/rss/articles/CBMi3AFBVV95cUxOQm1zdWRXcGdrNlczZUNvYkVvYkJWRkdYd2IxUFM3QXp1QmlIVDJ1TzVycHRNUThKalgxeFdaTGJlWFA2ZVJVM2Y3N0VmcUNDNEI2WkFOQ1lpZzFQVTE2YUtnNmRTWGxHYWNLV2Q0YnBTNWFSTjY3ZjAwX0R4QzgzSEpJMW9pQkJlQUxLelEtS2NPcGw3Mzh3TWtkcERka0txOGtVR1F5MTdlX2FKNXhaMlBEcHNXbk11TFpmcUcyQ0lUbjhkeW1xYlBsaTFLM1FyZUl6MU40cWdxbDhK?oc=5",
+        "Date": "Sun, 15 Nov 2026 18:51:07 GMT",
+        "Source": "IndexBox",
+        "ParsedDate": "2026-11-16 03:51:07"
+      },
+      {
+        "Title": "13개국 274개사 대구에 모인다…국제기계산업대전 17일 개막 - 이데일리",
+        "Link": "https://news.google.com/rss/articles/CBMigAFBVV95cUxPbmdEeURyTHE3WU02ZlBOWFVZeWx2amNzZllsZUNSVTV2Xzk3NmN5NDhKdTlTWFVlR09JVklUdGFzbVhNOFhqbDdiMWUwbWpDOF9wWmt1M0JrdnFUQXg2UE04eC03b3dqWEFFSllBU281Z1FnOTNRVDFLRk1tU2VqVg?oc=5",
+        "Date": "Sun, 15 Nov 2026 09:39:31 GMT",
+        "Source": "이데일리",
+        "ParsedDate": "2026-11-15 18:39:31"
+      },
+      {
+        "Title": "'2026 대구국제기계산업대전' 개막…제조혁신의 미래를 연다 - 전자신문",
+        "Link": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE1DVElla1ZVUWFZdWt6dnJVcGRyNWJzejJpTjNDYWtvZWZoUUVDNUpPQTVEbHhual9KLWFCYmNlNjhaVVh3NDI0ajJnVXRjUQ?oc=5",
+        "Date": "Sun, 15 Nov 2026 03:31:46 GMT",
+        "Source": "전자신문",
+        "ParsedDate": "2026-11-15 12:31:46"
+      },
+      {
+        "Title": "씽크풀 : 케이씨텍(281820)밀릴때마다 물량 모아둘 기회로 보이며 이후 전망 및 대응전략. - ThinkPool",
+        "Link": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE80Unl2M3d2STdOa0JjZzNNSlc4Ujl0bDctd05CRDhVRGpXTFczaldTSUJ2bVRPWGlHbVJxeEZUTUd0alRmSElXWlM3YVJGcTAzWG42ODlhSGR1bUEt?oc=5",
+        "Date": "Sun, 15 Nov 2026 10:37:00 GMT",
+        "Source": "ThinkPool",
+        "ParsedDate": "2026-11-15 19:37:00"
+      }
+    ],
+    "auto_generated": true,
+    "generated_at": "2026-11-16 00:31 UTC"
+  },
+  {
     "date": "2026-11-15",
     "report": "## 📌 핵심 요약 (Executive Brief)\n미국과 중국 간 반도체 갈등이 젠슨 황 엔비디아 CEO의 퇴진 논란과 트럼프 전 대통령의 엔비디아 주식 매입 의혹으로 재점화될 조짐을 보이며, 중국은 미국의 추가 반도체 규제 시 희토류 통제로 맞설 가능성을 시사했다 [1][2][3][4][5][6][7][8][19][20]. AI 반도체 수요 증가에 따라 2026년 HBM4, 2nm, CPO 기술이 반도체 가치사슬을 재편할 것으로 예상되며 [45][59][68], ASML은 2029년 8천억 달러 기업 가치 달성이 전망되나 [23] 내부 조직 개편 및 생산 능력 확보에 어려움을 겪고 있다 [25][26]. 한국은 반도체 수출 호조로 중국 수입 시장 1위를 탈환했으나 [28][30], 반도체 산업의 성장이 국내 소비 진작으로 이어지는 데는 시차가 존재한다 [35][36].\n\n## 🚨 핵심 이슈 심층 분석\n\n### 1. 미-중 반도체 갈등, 희토류 통제로 확전 가능성\n젠슨 황 엔비디아 CEO의 퇴진 논란과 트럼프 전 대통령의 엔비디아 주식 매입 및 AI 반도체 규제 완화 의혹이 불거지면서 [4][5][6][7][8][14][15][16][17][19][20][43], 미중 반도체 갈등이 재점화될 우려가 커지고 있다. 중국 전문가들은 미국이 반도체 수출 규제를 강화할 경우, 중국이 희토류 통제로 맞대응할 수 있다고 경고했다 [1][2][3][4][5][6][7][8][19][20]. 이는 반도체 생산에 필수적인 희토류의 공급망 불안정을 야기하여, 글로벌 반도체 산업에 심각한 영향을 미칠 수 있다 [56]. 또한, 앨리스 황이 중국 정보기관 반도체팀 소속이라는 대만 매체의 보도는 [27][39] 중국의 반도체 기술 유출 의혹과 산업 보안 위협을 고조시키고 있다 [29][44].\n\n### 2. 차세대 반도체 기술 및 소재 개발 가속화\nAI 반도체 시장의 급격한 성장에 힘입어 2026년 HBM4, 2nm 공정, CPO(Co-Packaged Optics) 기술이 반도체 가치사슬을 재편할 핵심 동력이 될 것으로 전망된다 [45][59][68]. 이러한 기술 발전을 뒷받침하기 위해 차세대 소재 개발이 활발히 이루어지고 있다. 충남대학교 김영헌 교수팀은 다이아몬드 박막의 균열 원인을 규명하며 차세대 반도체 소재 개발에 기여할 것으로 기대된다 [11]. 또한, 2차원 소재는 더 작고 전력 효율이 높은 칩 구현의 가능성을 열어주고 있다 [9]. 반도체 팹 증설과 미세화에 따라 벌크 특수가스 및 화학기상증착(CVD), 이온 펌프 시장의 성장이 전망되며 [62][65][67], 이는 관련 소재 및 장비 산업의 동반 성장을 의미한다.\n\n## 🕸️ 공급망 및 기술 동향\n\nEUV 마스크 블랭크 공급 부족과 ASML의 생산 능력 확보 난항이 반도체 공급망에 영향을 미칠 수 있다. Hoya는 삼성전자의 2027년 EUV 마스크 블랭크 수요를 충족시키기 어려울 것으로 보이며 [22], ASML은 2029년 8천억 달러 기업 가치 달성이 예측되지만 [23], 내부 조직 개편과 인력 확보에 어려움을 겪고 있어 생산 능력 확충에 도전 과제가 존재한다 [25][26]. 한편, GlobalFoundries는 미국-일본 협력하에 첫 신규 웨이퍼 팹 기공식을 가졌으며 2029년 생산 시작을 목표로 하고 있어 [49], 글로벌 파운드리 시장의 경쟁 구도에 변화를 가져올 수 있다 [52]. 국내에서는 도레이첨단소재가 구미5공장을 증설하여 MLCC 이형필름 생산을 확대할 계획이다 [57].\n\n## 💡 Analyst's View (시사점)\n\n미중 반도체 갈등 심화에 대비하여 핵심 광물 공급망 다변화 및 국내 비축량 확보 전략을 강화해야 한다. 중국의 희토류 통제 가능성 [1][2][3][4][5][6][7][8][19][20]은 반도체 소재 공급망의 취약성을 드러내므로, 광해광업공단과 같은 기관의 산업계 인력 양성 확대 [56] 및 대체 소재 개발 투자가 시급하다. 또한, AI 반도체 기술 경쟁 심화에 맞춰 HBM4, 2nm, CPO 등 차세대 기술 개발에 집중하고 [45][59][68], 관련 소부장 기업의 국내 투자를 유치하는 노력이 필요하다 [13][31]. 특히, 용인 죽능산단 개발 본격화 [13] 및 광양알루미늄의 중국 투자 유치 [10] 등 지역 산업 단지 활성화를 통해 반도체 소부장 생태계를 강화해야 한다. 한국의 반도체 수출 호조가 국내 경제 전반으로 확산되기까지 시차가 존재하므로 [35][36], 반도체 산업의 성과가 내수 활성화로 이어질 수 있는 정책적 방안 마련도 고려해야 한다.",
     "articles": [
@@ -20264,783 +20874,5 @@
     ],
     "auto_generated": true,
     "generated_at": "2026-10-15 23:24 UTC"
-  },
-  {
-    "date": "2026-10-15",
-    "report": "## 📌 핵심 요약 (Executive Brief)\nASML은 2028년까지 AI 반도체 장비 공급 부족을 예상하며 2030년 주문 문의까지 받고 있어 [16][17][20][21][24][29], AI 반도체 수요 증가가 장비 시장의 핵심 동력으로 작용하고 있다 [22]. 중국은 미국의 규제에도 불구하고 반도체 수출이 136% 폭증하고 CXMT, YMTC 등 자국 기업의 기술 발전으로 D램 및 낸드 시장에서 추격을 가속화하고 있어 [5][8][11][12][15][30][38][45][46][47][48][49][50][51], 글로벌 반도체 공급망에 대한 불확실성이 증대되고 있다. 한국의 K-소부장 기업들은 인텔, 마이크론을 뚫고 HBM4까지 기술력을 앞세워 고군분투하고 있으며 [2][3], 삼성전자와 SK하이닉스는 zHBM 및 HBF 등 AI 메모리 청사진을 제시하며 기술 경쟁을 심화하고 있다 [4][86].\n\n## 🚨 핵심 이슈 심층 분석\n\n### 1. ASML의 장비 공급 부족 심화 및 AI 반도체 수요 견인\nASML은 2028년까지 반도체 장비 공급 부족이 지속될 것이며 [17][21][29], 2030년 장비 주문 문의까지 받고 있다고 밝혔다 [16][20]. 이는 AI 반도체 수요 급증에 따른 것으로 [22][24], ASML은 3분기 최대 매출을 기록하며 증산 규모를 확대할 계획이다 [18][22]. 특히 ASML의 EUV 장비는 Zeiss와의 협력을 통해 확장되고 있으며 [23], 인텔, 삼성, TSMC 등 주요 고객사들이 High-NA EUV 장비 도입을 앞두고 있어 [26] 첨단 반도체 생산에 필수적인 장비 수요는 더욱 증가할 전망이다.\n\n### 2. 중국의 반도체 자립 가속화와 글로벌 공급망 불안정성 증대\n중국의 9월 반도체 수출은 136% 폭증했으며 [5][12], ASML의 대중국 장비 판매도 109% 급증했다 [30]. CXMT는 D램 신기술로 삼성전자와 SK하이닉스 주가를 흔들었고 [8][49][51], YMTC는 낸드 출하량 세계 3위를 기록하며 IPO를 통해 추격을 가속화하고 있다 [11][15]. 미국 규제로 엔비디아의 중국 AI 반도체 점유율이 34%로 급락했음에도 [7], 중국은 AI 반도체 자립을 가속화하며 기술 격차를 좁히고 있다 [15][50]. 이러한 중국의 추격은 글로벌 메모리 반도체 가격 변동성 및 공급망 불안정성을 심화시킬 수 있다 [45][46][47].\n\n### 3. 한국 소부장 기업의 기술 경쟁력 강화 및 AI 메모리 시장 주도권 경쟁\n한국의 K-소부장 기업들은 인텔과 마이크론을 뚫고 HBM4까지 기술력을 확장하며 고군분투하고 있다 [2][3]. 삼성전자는 zHBM을, SK하이닉스는 HBF를 각각 AI 메모리 청사진으로 제시하며 차세대 메모리 기술 경쟁을 펼치고 있다 [4][86]. 또한, 한울반도체는 일본 독점 기술을 깨고 대만에 MLCC 초음파 탐상기를 납품하며 [53][58][59] 국내 소부장 기업의 기술 자립 및 해외 시장 진출 역량을 입증했다. 이러한 기술 경쟁력은 AI 반도체 시장의 성장에 발맞춰 한국 반도체 산업의 핵심 동력이 될 것으로 보인다.\n\n## 🕸️ 공급망 및 기술 동향\n일본 3개사와 ASML 등 주요 소부장 기업들의 가격 인상이 지속되며 '칩플레이션'이 이어지고 있다 [1]. ASML은 2028년까지 장비 공급 부족을 예상하며 [17][21][29], AI 반도체 수요가 장비 시장을 견인하고 있다 [22]. 엔비디아는 반도체 소재 시뮬레이션 가속화 기술인 '큐포텐셜'을 공개하며 GPU 대비 3배 빠른 성능을 제시했다 [31]. 국내에서는 삼성전자와 SK하이닉스가 각각 zHBM과 HBF를 통해 AI 메모리 기술 경쟁을 심화하고 있으며 [4][86], K-소부장 기업들은 HBM4까지 기술력을 확장하며 인텔, 마이크론 등 글로벌 기업에 납품하고 있다 [2][3]. 미국은 '메이드 인 USA' 반도체 생산을 강조하며 [13], 트럼프 전 대통령은 일본 자금 210억 달러를 투입해 뉴욕에 글로벌파운드리스 반도체 공장 건설을 발표했다 [14][56][60][61][62][63][66][68]. 중국은 희토류 수출량이 9월에 6.7% 증가했으나 올해 누적 수출량은 9.6% 감소했다 [6].\n\n## 💡 Analyst's View (시사점)\nASML의 장비 공급 부족 장기화와 일본 소부장 기업들의 가격 인상은 AI 반도체 생산 비용 상승으로 이어져 '칩플레이션'을 가속화할 것이다 [1]. 따라서, 국내 반도체 기업들은 핵심 장비 및 소재의 안정적인 확보를 위한 공급망 다변화 전략을 강화해야 한다. 중국의 D램 및 낸드 기술 추격은 글로벌 메모리 시장의 경쟁 심화와 가격 변동성 확대를 야기할 수 있으므로 [8][11][15][45], 한국 기업들은 초격차 기술 개발에 집중하여 시장 주도권을 유지해야 한다 [4][38]. 특히, HBM4와 같은 차세대 AI 메모리 기술 개발 및 K-소부장 기업과의 협력을 통한 기술 자립은 필수적이다 [2][3]. 미국이 자국 내 반도체 생산을 강화하고 일본의 투자를 유치하는 등 [13][14], 글로벌 반도체 공급망 재편 움직임이 가속화되고 있어, 한국 정부와 기업은 이에 대한 면밀한 분석과 전략적 대응이 필요하다 [56].",
-    "articles": [
-      {
-        "Title": "日3社·ASML‘소부장’줄인상… 칩플레이션 계속된다 - 문화일보",
-        "Link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE9pdEpjVGJtZFY5d2J5QmVPNjJrVWtjazhlYWJza0FzRVpCelVJcFJQbkt2MFZ0b2NpLTNwQWstQUVBclRHVnduVzRRNlN0ck9H?oc=5",
-        "Date": "Wed, 14 Oct 2026 03:03:42 GMT",
-        "Source": "문화일보",
-        "ParsedDate": "2026-10-14 12:03:42"
-      },
-      {
-        "Title": "인텔·마이크론 뚫고 HBM4까지…기술 앞세워 '고군분투' K소부장 - 글로벌이코노믹",
-        "Link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxNZXpZVU14VjZkWGRLeS1FUHYxYjZUaDVzMHNuV3BMb0RUVnpWZkJMVzh1aERCRVdkcEVVa205V3hkbHlmSG02eGVELU9Zb0Y5eDhVaG1QNVplamZ3T1RvLVphaFN2ZEU5TTNLX3FwcXBvX3NkUWt0a1RCR1pqTHpZX2ttb3dxQQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 06:42:58 GMT",
-        "Source": "글로벌이코노믹",
-        "ParsedDate": "2026-10-14 15:42:58"
-      },
-      {
-        "Title": "AI 반도체 戰의 숨은 주역들…대기업 뒤엔 K-소부장이 있다 - www.ebn.co.kr",
-        "Link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTFBzSjNNWWdnNmVwYk43V2N0NmZDbkJRcTNOVlF6aXdsZTFTTXFoUmtod3NIU01jUEJqS1IzMVhzQ05HdFNSM2tWNVlRSjVBTGNTYVc2bmx4T04zbVhzX2hSRUpsT3ZHZnAt?oc=5",
-        "Date": "Wed, 14 Oct 2026 09:25:32 GMT",
-        "Source": "www.ebn.co.kr",
-        "ParsedDate": "2026-10-14 18:25:32"
-      },
-      {
-        "Title": "[SEDEX 2026] 삼성전자 'zHBM' vs 하이닉스 'HBF'…AI 메모리 청사진 대결 - 녹색경제신문",
-        "Link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE16Tl9oTlJhWkFzZU5zdTdTb3hXLVAzMXZ1NVNzUC1yUWRLV3V1WEZzcDI0RmhYa3JOd2hwaFFIZHI3QnBHcngzR3JWcUhVeXZUZi1OMzNvakRfUUlFSENGMlpOd25XUzhV?oc=5",
-        "Date": "Wed, 14 Oct 2026 07:42:51 GMT",
-        "Source": "녹색경제신문",
-        "ParsedDate": "2026-10-14 16:42:51"
-      },
-      {
-        "Title": "중국 9월 수출 36.3% 급증, 반도체 수출 136% 폭증 - 뉴스핌",
-        "Link": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE5vVkNhYXVJZDV2VDFkRmdiWm1yWGxUV0hmWFp0MFV3R2J6V3hHLWJaeW5GVnN2cnA2dFh0dEV6UlRHZjdGNmRkNElRLXlJeDJJbkpnU21IQlRla3Jz?oc=5",
-        "Date": "Wed, 14 Oct 2026 06:46:00 GMT",
-        "Source": "뉴스핌",
-        "ParsedDate": "2026-10-14 15:46:00"
-      },
-      {
-        "Title": "중국 9월 희토류 수출량 6.7% 증가, 올해 들어 누적 수출량은 9.6% 감소 - 비즈니스포스트",
-        "Link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE1EZDFlX1NPWHk4b2ZhNUlYMjhyZE5wY2VwSUdZUDdTMzBxc2MwX1pIa0ljNDhUTWx3T25lYlNwVjNJaDFvMi1KVTZHNTJoWnZOQ0FLS0c1UkpHQVJPMDFneUR4SUlyaWFrUFRGMUhKZUJxeGc?oc=5",
-        "Date": "Wed, 14 Oct 2026 08:06:51 GMT",
-        "Source": "비즈니스포스트",
-        "ParsedDate": "2026-10-14 17:06:51"
-      },
-      {
-        "Title": "美 규제에 발목 잡힌 엔비디아…中 AI 반도체 점유율 34%로 급락 - 블루밍비트",
-        "Link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTFBQNldRQjFWTm4ybnAwZWJRNFdycTR4NEFrZHFxMUFtby1zTnJyUXhvTVFTRE14Nkd0VTJpM0xoX2VuSW1QbV9tdmlJVklTYThq?oc=5",
-        "Date": "Wed, 14 Oct 2026 05:35:11 GMT",
-        "Source": "블루밍비트",
-        "ParsedDate": "2026-10-14 14:35:11"
-      },
-      {
-        "Title": "中 CXMT 반도체 신기술, 왜 삼전닉스 주가 흔들었나 - 조선일보",
-        "Link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxQRjYxSEpUU1RQMVJzOWtfdnlPQzBoTnp1NWFkby1uOW1IcmljbFpNeUdaU3VmUV81NHFuRkdOanZHeXg3WE9IWXpuODJZOWNnTVRLUlZLRE1PV1djT2lqRkJLUTAtVHdkUzkwWDZvM25WOW9OandfbnlQTTBfbzVXTmVaZw?oc=5",
-        "Date": "Wed, 14 Oct 2026 15:31:00 GMT",
-        "Source": "조선일보",
-        "ParsedDate": "2026-10-15 00:31:00"
-      },
-      {
-        "Title": "오늘의 프리미엄9 콘텐츠 다이제스트(10월 14일) - 한국경제",
-        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9NelA3cjFVbXpXb1d3TmNQUTN3WGE0MFV1SlhQckZFOElZcDAxOVBMZDRtbm5EU2h0WmlnZldlZkduSWRTd1dveUhET0FnWnphcHV6RDM4cF9Qdw?oc=5",
-        "Date": "Wed, 14 Oct 2026 08:37:27 GMT",
-        "Source": "한국경제",
-        "ParsedDate": "2026-10-14 17:37:27"
-      },
-      {
-        "Title": "용인시, \"반도체산단 건설 근로자 숙소 적기 공급위해 PF 규제 완화해 달라\" - 중앙신문",
-        "Link": "https://news.google.com/rss/articles/CBMiuANBVV95cUxORkJ6UFhLbG9RTEV5MnQzX29iakpFX2NPdDZ2a2VoWUlMcXN0TW1fWVhqTkFUa3Y3X21jOHhOY0pkV2Rxd05DT1dhNW5FencwdWZXd3oxcHhRSW5UTktFRnNVSHRDYUQ3cmdiNEM0aExRZ3ZxdUdVSWtmRjNPVFRyRmNGZ3FCcU1lV2VJczRpQXFubzlZNXB5c3RIUnNYV2VIWjRGRnFscGsxRXc0NlIwXzN1MlBZUUJKMXllbzVSNzhlVG02TVlOX05nQkk4MXFZbTlvZC1oQmQyUHYyNXhUTGwwaVJrYTZkeWl2RF9HOWNKRnByS0tKZ0czcW1kcHlPb1VSTmxEaHhYaFpWNll4eXZac0JOQjJER1FidlNlZXJIQkxTcFhTNzBjSmJGblZNU3BHTENQTzBJbnpmSkpVOXByemNWMnpvRWdoZjZ5QUdhOThXa1BEd01CQ05qblIwZWtQbmcyZXozTUk4NkMtTTgta1ZVOHJ5d1M0blNKS3Y5Y0Z2a1hHczhibjBOaVJhdkhWOHI4SUZ3Y1dUVmhBVDBQeTJEWU94MUpYbTVOcUhIVFFhRzFzUA?oc=5",
-        "Date": "Wed, 14 Oct 2026 15:22:27 GMT",
-        "Source": "중앙신문",
-        "ParsedDate": "2026-10-15 00:22:27"
-      },
-      {
-        "Title": "中 YMTC, 낸드 출하량 세계 3위… IPO 나서며 추격 가속 - 조선일보",
-        "Link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxNT0phWDZGdTZRa2kzcTJKV19neElDUFVHd1FDc19RTldjZkFyNlZWVUZ6YjZ0UGM1emRRUEhsQ01vZUJ6Y1BhaVNQOUNRWExQTkc2M0wxMjNEZm5PN3J1X2JYZWtya3ZGT3FFYThHMl91Qi1HQ3lTSTBxaUxfaTR0VmxYOA?oc=5",
-        "Date": "Wed, 14 Oct 2026 06:05:38 GMT",
-        "Source": "조선일보",
-        "ParsedDate": "2026-10-14 15:05:38"
-      },
-      {
-        "Title": "반도체 가격 급등에 '중국산 반도체' 수출액도 2배 뛰었다 - 한국경제",
-        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9lOEtWQkd3d01KZ2M3VElGck82ZndEdTZQckk0S203THBxeldpOEZsMzV0Q3pUdnU4dm53UkQ5aHk3S2I0eHBCRUI0NmJ5QVZGdGxaVEQ5Q2hmZw?oc=5",
-        "Date": "Wed, 14 Oct 2026 09:07:11 GMT",
-        "Source": "한국경제",
-        "ParsedDate": "2026-10-14 18:07:11"
-      },
-      {
-        "Title": "칩에 독립선언문 새긴 美…메모리부터 소재까지 '메이드 인 USA' - 한국경제",
-        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5ERVZiU3lBcW05LXE2alE5Ym1Bak5NTC1HRHN2TDNtLXpjOV8zTEZFNmFCRkRyVXRIQUJ0enRWV1VWaWE1RjgzNlJEU1BVbXQtUmdhbEZmN2s3Zw?oc=5",
-        "Date": "Wed, 14 Oct 2026 05:25:10 GMT",
-        "Source": "한국경제",
-        "ParsedDate": "2026-10-14 14:25:10"
-      },
-      {
-        "Title": "트럼프, 일본 자금 210억달러 투입 글로벌파운드리스 반도체 공장 건설 발표 - 블루밍비트",
-        "Link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE90c1Jub3N2X3U4TUd5dG1LR1VDSWdWZllERGgtQWxZdndFSTIySWZVLUlXSkllM0FZRDdTaVhFcTRROWZYMDFmU0hjNkVoc0hv?oc=5",
-        "Date": "Wed, 14 Oct 2026 18:00:03 GMT",
-        "Source": "블루밍비트",
-        "ParsedDate": "2026-10-15 03:00:03"
-      },
-      {
-        "Title": "EUV 막혀도 기술격차 좁힌다…거세지는 中 반도체 추격 - www.ebn.co.kr",
-        "Link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTFAxMG9pUnB4dUZ5TkNhaUZRczBsSm5xTUJiNlg1RnB5bzlxYjhZd2E3bzR4eThOa2VKNFdGak9OeGR2QUExYWpJU0pPY29JRklGTFBuQ3JVeElxekdJd1d3c2JFOTBXODBt?oc=5",
-        "Date": "Wed, 14 Oct 2026 21:00:00 GMT",
-        "Source": "www.ebn.co.kr",
-        "ParsedDate": "2026-10-15 06:00:00"
-      },
-      {
-        "Title": "EUV 독점 ASML 앞에 줄 섰다…고객사들 2030년 장비까지 눈독 들인다 - 뉴시스",
-        "Link": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE82azdaNGVSQXhUdFJ0RDlzSWhBeTZVeTZUbXM3UFBQcG5obG1iZ3JYeVphWEJFQXRiYzZkWEFLbFl4QVVJMDJiMXJxWVlldmJkR0FsYWI2VVNwTGM1dFJsQdIBeEFVX3lxTE82SmZLV0ZGUFVQZnU2dnRfX0xNM000Q08zekx0U2M3M2x3OWNnSGY1TnJPY1Q0bTlBZmZxSVgtTmFXcEdPODBnS3ctOURWTzQ5Um1CSklpRjljT0l1aXM3b3NjNXg2VzB1ZmVFeXU4bjNNQWZGc0NGZA?oc=5",
-        "Date": "Wed, 14 Oct 2026 10:24:23 GMT",
-        "Source": "뉴시스",
-        "ParsedDate": "2026-10-14 19:24:23"
-      },
-      {
-        "Title": "ASML \"2028년까지 수요 충족 못해…추가 증설 검토\" - 연합뉴스",
-        "Link": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE9GUzlHV0NZSTFDdk5vSkp0LXdPc2xSWEd6c2h5eFJPVmRjUXZ1V1BPTmxjeWRDY2xFS3NvOFV5OXV2dmV4bjJZQXVCOE9xUUR3RkItQmx6d3R3R0pGeWVDcdIBYEFVX3lxTE9GUzlHV0NZSTFDdk5vSkp0LXdPc2xSWEd6c2h5eFJPVmRjUXZ1V1BPTmxjeWRDY2xFS3NvOFV5OXV2dmV4bjJZQXVCOE9xUUR3RkItQmx6d3R3R0pGeWVDcQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 06:46:58 GMT",
-        "Source": "연합뉴스",
-        "ParsedDate": "2026-10-14 15:46:58"
-      },
-      {
-        "Title": "ASML, 3분기 최대 매출…\"증산 규모 더 키울 것\" - 한국경제",
-        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5KdmEtVkF4dGxoY0kyWnctdnVHd1N1QjE0M05Cdjhqbkxndk9ablU3WXZNM1pYVkZ1c0pKUk05QWpQenllcmRvY2Z3bkN1ZjhFbzBjY0VoWHE2QQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 08:45:00 GMT",
-        "Source": "한국경제",
-        "ParsedDate": "2026-10-14 17:45:00"
-      },
-      {
-        "Title": "심벌이 사라진 뒤의 나크시마을 도박 후속 진행 설명 - Calgary Roughnecks",
-        "Link": "https://news.google.com/rss/articles/CBMi2AFBVV95cUxNVU5YeS1Cc1VzRy1UVEhkWHVOTUVhQlA2ZGZBenJqUkhUbV91eUE0VGpxN0JUTEhBSjlYdV9zWnMzOUN5MXVmbkpYNm1zWlFkRE5na1R5bUFkQ1ZNeFlXWkEzbmJ0X2FxUHgtWnNfSlFiWU1aNDI4YjJ0NGZXbHRFNUk4Nk9xWVdHLXpPSVNnRlNhLXIxNmpFRVpQU000cUJVWDBzYzRhRWNPMHFWQU1NMGs5TzNzS256UVJ1dGdadzhqcUlEemdJbVBxN2RESnZiRFp6ZUQtaTI?oc=5",
-        "Date": "Wed, 14 Oct 2026 07:49:08 GMT",
-        "Source": "Calgary Roughnecks",
-        "ParsedDate": "2026-10-14 16:49:08"
-      },
-      {
-        "Title": "ASML \"AI 반도체 장비 2028년까지 공급부족…2030년 주문 문의도\" - 뉴스1",
-        "Link": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE1NR0k0V2tJQTNFaGxvYkdGV1gweENqTUpoQ1NIdC10QVpYS0ZPNl92RHRmREo1NmpMOS1XRVhCdTJ1SjBtWWRJaGxwbDBGYVFVdEdrSWJIT05XZmVnSVNuaTJGZjdJM2s?oc=5",
-        "Date": "Wed, 14 Oct 2026 06:21:06 GMT",
-        "Source": "뉴스1",
-        "ParsedDate": "2026-10-14 15:21:06"
-      },
-      {
-        "Title": "ASML \"2028년까지 반도체 장비 공급 부족\"…韓 최대 시장 - 아이뉴스24",
-        "Link": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE41RGxhc1JKLWN0cEY1bHhEQ016NmlTNkE0Nkx6cWxiSDNZb21UbmlSenNFd2NVYllsNUZRRk1QX1BtMmR1R012M0pkRQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 08:07:41 GMT",
-        "Source": "아이뉴스24",
-        "ParsedDate": "2026-10-14 17:07:41"
-      },
-      {
-        "Title": "AI가 키운 반도체 장비 시장…세계 최대 노광장비 업체 ASML 3분기 매출 55% 급증 - 진일보",
-        "Link": "https://news.google.com/rss/articles/CBMib0FVX3lxTFBzOHlvcFVOT2p5SjJkY01Ea3dReFpvNHVaMkFjWVRybEhGTHBTeGF5TlYxbk9jZlR6VzJBQXVLNm5uc1otcXlUdkdTc3lfQzhOSWdqZllTcF8zTFFrZ0ltVWw0c2ExZ2hUb0xqaTRubw?oc=5",
-        "Date": "Wed, 14 Oct 2026 07:42:18 GMT",
-        "Source": "진일보",
-        "ParsedDate": "2026-10-14 16:42:18"
-      },
-      {
-        "Title": "ASML’s EUV Expansion Runs Through Zeiss - EE Times",
-        "Link": "https://news.google.com/rss/articles/CBMib0FVX3lxTE1aLUg1Zzl6dkN2Q0VTMkx5RzlxQlBrV2JDN0xGQU1haE56YUdLVE4ycGVMQlN5bEpkMGxlZnQ5SUZaM09xWUFjbWFWYnh6dUxTd1RsMFJKN0k5bVNXaEZYeWtfSFY4VmJXaVUxNjNkdw?oc=5",
-        "Date": "Wed, 14 Oct 2026 12:51:09 GMT",
-        "Source": "EE Times",
-        "ParsedDate": "2026-10-14 21:51:09"
-      },
-      {
-        "Title": "ASML cannot build EUV machines fast enough to meet AI chip demand - Startup Fortune",
-        "Link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxOOFNaZ05kamlEN1BHb1EtX0lINFNPRkw3WDdpWl9vYXlJd1ktQ0hkVTJJSDUwa0wwMWJVZHhsWm9jMS1qcnBEVzdVVklPTy0yMjFFMDVVVUNtQy1HcDBNdHhydV8tT2VVMUs1X2xDUkdROGV2UFVLaFF1UVY0d3UwbjA5QXk1UmhDVW1sRnVjMlRXNmRRblhTQw?oc=5",
-        "Date": "Wed, 14 Oct 2026 20:35:16 GMT",
-        "Source": "Startup Fortune",
-        "ParsedDate": "2026-10-15 05:35:16"
-      },
-      {
-        "Title": "Terafab will reportedly receive its first ASML EUV tool in mid-2027 - Tom's Hardware",
-        "Link": "https://news.google.com/rss/articles/CBMizgJBVV95cUxNOGhlNmNqQ003SURSczdXdV9hcTBYeVVpdXYwck01QlNkVGh6eGxlWC1MaEtrY0xuV1VhVlBDQ0p6M3N1S19wSWJsOU41NnFsdERON05BRHV2bkVVRmc2emQ4VV9BN2Y3V2RYLU9tNFY4RGFqS1Q2amZ0bkdETUZZRlpZQ2ktQk5HZ0VQQ1RoY2pDTHF6YlE3dDFENDFiR1JteW96cG5pem5KRTRHcm80X3cyV2pBUGo1VHdRNkRQS0tUdGUxMURSUk91bXcxUDBuUlB0eXp4TVFGVFAwVjNJdTcza0RIRGttdmY5dkhCVW1FVkJhb19DVmgxbGx3YUJTS2xXTVpZZW9razZxY0k1amxET2JlUVhfby1WTEZuUS01Umk4VnFuTVpmcUU5OTQ5S2UzcHJZNEZqQTBTZjFuQ2M3NWx1bldxZWp0WldR?oc=5",
-        "Date": "Wed, 14 Oct 2026 12:30:00 GMT",
-        "Source": "Tom's Hardware",
-        "ParsedDate": "2026-10-14 21:30:00"
-      },
-      {
-        "Title": "ASML High-NA EUV: Intel, Samsung and TSMC Timelines - ASML Holding (NASDAQ:ASML) - Benzinga",
-        "Link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxNNkd3TGxUQmJEZC1lWjdJZ0tuZlhWeVZZOVpjbjhGTV9iZm9xb25xZ1U5aFJjRUZtbzhJN19kYTZjV1NzSE9JMW02U193RGExckNvOGg1WjFJb0NUTWZSNXMtNHhMSjVLTFdIWm90ODgwdTRtTlhxdzZaNm5oZHBUWWNQelJTc25xa2F3Rlp5WnI3c3Yx?oc=5",
-        "Date": "Wed, 14 Oct 2026 16:22:06 GMT",
-        "Source": "Benzinga",
-        "ParsedDate": "2026-10-15 01:22:06"
-      },
-      {
-        "Title": "Siemens transforms computational lithography with NVDIA - Siemens Newsroom",
-        "Link": "https://news.google.com/rss/articles/CBMib0FVX3lxTE1FZklLVlFHMld3UTZVSUpiRzZNOXdFSVBVSEpkal82UTFrblBkVEhRbXpDVmc2ai1BQlpJYTRXY3Q3b0lqREJnaDBQZk15MXVHY0trd2d2X3FNS0ZvN1RDT1lFY1ljcDlVUDBSTFV5TQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 20:33:08 GMT",
-        "Source": "Siemens Newsroom",
-        "ParsedDate": "2026-10-15 05:33:08"
-      },
-      {
-        "Title": "ASML (ASML) Q3 2026 Earnings Call Transcript - The Globe and Mail",
-        "Link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxORXpuRzMxSjhEZlVuWW9tUmxCVkJkVTZZQXNteXFTUDN2M0lpTTFFV0FfZUFjdUpuWlVOa3I0ZzJFc3pkaWprY0lOTGNsSHlBbUhCcS00OXRmQzdUV0dJQlhNbXVQanNaWjV0V29jUjRsWXZFZEtxUVVCR2dBVURyeWwyWnBZb3dqTVVkcnIza1dBV2V2cXNicjV3YUxoRTc2dkRoX3RzUmc0R3ZHSXRONy1zX0xha3ZWTV9nVVZ0WC1tTHFXSllSdw?oc=5",
-        "Date": "Wed, 14 Oct 2026 18:52:08 GMT",
-        "Source": "The Globe and Mail",
-        "ParsedDate": "2026-10-15 03:52:08"
-      },
-      {
-        "Title": "ASML Says Its Customers Want More Machines Than It Can Build Through 2028 - 24/7 Wall St.",
-        "Link": "https://news.google.com/rss/articles/CBMi5wFBVV95cUxQQWk0cnNWZU1WYXhLSW5pUnhBMWd0Y3NZWWlhTlJDMXI1ejJaSVdLdnFyQUJ3dzJkckl5MDJYdXA1XzJKX2UxSTBDM1FoSlQxSVhMNnFjRWt5V0FFbUJHdjluaXRXU1lLZzYwREtyYWpLa2YtTXI1aDRwUXFnN3o1ZTRmU1NfVHJtRnNHQy1Ud0lPUzhSbXE2SWtGLXp2U2JmLWFKQUJ3YWRGVTRBZ2hOXzlmSDMwamVGWmp3S0hxMnVvSHhoTzJ5VjFsc3FXV09nREpFTjNMRk9TTzZzNGVnd0NrdG42ME0?oc=5",
-        "Date": "Wed, 14 Oct 2026 11:10:00 GMT",
-        "Source": "24/7 Wall St.",
-        "ParsedDate": "2026-10-14 20:10:00"
-      },
-      {
-        "Title": "ASML’s chip equipment sales to China soar 109% despite US export curb push - South China Morning Post",
-        "Link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxQcHVPYlNqUFY2RWZJaUY2NFhFRWhEUnBFUVVvOG45RHpQNUdJSXl0cXB6WmwwZkd0ZENoc0gxN2VVTGhkWFo4TFhhUHlkN0l2aFJHUlQ4LUZkMXJCM1hUVTBhSEh2aG1FZldLSHAzeUFOcXQ3M2ZRMHlPNjNFby1qQkFHVU9LSWRPQjI5dG1ILWdLVHZOSkhPMHpGTkJfWWloT3JZMG9CQ3EwWnotSF9MelRuc3lLVXZRR1Vkb9IBvAFBVV95cUxQcHVPYlNqUFY2RWZJaUY2NFhFRWhEUnBFUVVvOG45RHpQNUdJSXl0cXB6WmwwZkd0ZENoc0gxN2VVTGhkWFo4TFhhUHlkN0l2aFJHUlQ4LUZkMXJCM1hUVTBhSEh2aG1FZldLSHAzeUFOcXQ3M2ZRMHlPNjNFby1qQkFHVU9LSWRPQjI5dG1ILWdLVHZOSkhPMHpGTkJfWWloT3JZMG9CQ3EwWnotSF9MelRuc3lLVXZRR1Vkbw?oc=5",
-        "Date": "Wed, 14 Oct 2026 14:00:12 GMT",
-        "Source": "South China Morning Post",
-        "ParsedDate": "2026-10-14 23:00:12"
-      },
-      {
-        "Title": "엔비디아, 반도체 소재 시뮬레이션 가속 '큐포텐셜' 첫 공개… GPU 대비 3배 빨라 - 전자신문",
-        "Link": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE1ZN1ZGbzZ4Q1B1QzNWV1NnNWoyWDZNcW9ublhXMWMtbENoYmhVZWxGdjg5NU5CZmRYTjJ0bl84YlVDclctZm0weEdoX1dTQQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 18:38:53 GMT",
-        "Source": "전자신문",
-        "ParsedDate": "2026-10-15 03:38:53"
-      },
-      {
-        "Title": "\"여수산단 50년 기술력, 반도체·배터리 소재로...산업 대전환 필요\"[와이드이슈] - KBC광주방송",
-        "Link": "https://news.google.com/rss/articles/CBMiYkFVX3lxTFBxYTBhaFRzU2Jkd0djaU9BWXpKMXEwT0gtcWhkVDdiSWJYa0JjUzJyZlgyVjZTS1Vrc1BvQ1pBZ3Y2M05GTXAyeXdiNThEME16N3V2dHNZSzktTmctaVhYUS13?oc=5",
-        "Date": "Wed, 14 Oct 2026 09:00:01 GMT",
-        "Source": "KBC광주방송",
-        "ParsedDate": "2026-10-14 18:00:01"
-      },
-      {
-        "Title": "'꿈의 소재' 잉크처럼 발랐더니…6G·우주통신서 쓸 반도체 '뚝딱' - 머니투데이 - 머니투데이",
-        "Link": "https://news.google.com/rss/articles/CBMiakFVX3lxTE55V0Y1RmRrTWs1cnJOYVJka0dNYjlYNjBjMkoyVkZwZHFGci1rYTdMSEtkVy00UDlCTUMzVGRsSHVydmk5X3c2S1RMX29NUkVEZTlRT1B1OGpsQ3pyU2U4Wmthd3B2TEhLNkHSAW9BVV95cUxPWmFsVHFTY1V6cU93QlNCS0R0TGxzX3R6bTZuREZZeU5OODBlaVVxVkhlQUQxaDc3VWRGWENTMjhFdG1zel90bTJLQ05OWjBsRWRzX2RIa2Y1czRReEtqRTFaZXNzaW5Lc3RWZFR4TDA?oc=5",
-        "Date": "Wed, 14 Oct 2026 20:30:00 GMT",
-        "Source": "머니투데이",
-        "ParsedDate": "2026-10-15 05:30:00"
-      },
-      {
-        "Title": "중국의 반도체 소재 생산 확대가 닛산 케미칼(TSE:4021)에 대한 투자 매력도를 바꾸고 있는가? - Simply Wall Street",
-        "Link": "https://news.google.com/rss/articles/CBMipAFBVV95cUxOdGY2eWVNQWViY2tFdFRTNWlZOWktQmpCR0xvcXkyeG9JV3kxamtnTVROeUVUQzBsYmRaQXZOT0xZVXVzclJQQl9FTWJaVDhLT1NTQ3RPUXJRbzFhRDcwS1Iyc2x2Y3F1RDRhUEYwaGcwRkVMUGJSRU9HWWlsOEdZRDRkRTN2RnJiS0w3UnhpMERfN2d5N1NVc1RJczVRV0E1WDlfQdIBpAFBVV95cUxOdGY2eWVNQWViY2tFdFRTNWlZOWktQmpCR0xvcXkyeG9JV3kxamtnTVROeUVUQzBsYmRaQXZOT0xZVXVzclJQQl9FTWJaVDhLT1NTQ3RPUXJRbzFhRDcwS1Iyc2x2Y3F1RDRhUEYwaGcwRkVMUGJSRU9HWWlsOEdZRDRkRTN2RnJiS0w3UnhpMERfN2d5N1NVc1RJczVRV0E1WDlfQQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 11:37:21 GMT",
-        "Source": "Simply Wall Street",
-        "ParsedDate": "2026-10-14 20:37:21"
-      },
-      {
-        "Title": "“햇빛으로 수소 만드는 광전극, 수명 100배 늘렸다”... UNIST·성균관대, 유기 반도체 한계 돌파 - 특허뉴스",
-        "Link": "https://news.google.com/rss/articles/CBMiSEFVX3lxTE1PNktEM1pxYTEtZ2ZnelFyN083OXRHbUpLWW8yRnJRQk1kRFdYVlZpenViYkFfNWdTVVVGbi1TWXU3UDBRNTRUZw?oc=5",
-        "Date": "Wed, 14 Oct 2026 07:51:00 GMT",
-        "Source": "특허뉴스",
-        "ParsedDate": "2026-10-14 16:51:00"
-      },
-      {
-        "Title": "'SOL 반도체 소부장 ETF 3종' 개인 순매수 한 달간 2231억원 - 코리아리포트",
-        "Link": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBIdEdMU1N1QWxKd2FxQVdIb1ZldjBUajNFeFI3MUlmeHVteGpVUlJDMjFpT1J6VVY2TGY5c2V1OUh1ekxvcXZ6bW1GZ2NIV2ZqZ0hVaVU3Z05TSnl4YnB6bEZ2aWJHbTZOMk9qLW45UGs?oc=5",
-        "Date": "Wed, 14 Oct 2026 14:52:33 GMT",
-        "Source": "코리아리포트",
-        "ParsedDate": "2026-10-14 23:52:33"
-      },
-      {
-        "Title": "새만금, 이차전지 넘어 반도체 ‘소부장’ 기업 유치전 - 국민일보",
-        "Link": "https://news.google.com/rss/articles/CBMibEFVX3lxTFBFTFpsemlPN3dHTlNRSm9BWTFRdnp5V3hEZG0xSEZoeC0xcFNzYWotbVRmZXlRc3pWUTJ5bXBYZWl2dV9RdUl0LTQyOVJjbklMT2dGZERYZ1VEUkxGaC1ia1c4ak1LWV9DUUJCNNIBbEFVX3lxTFBFTFpsemlPN3dHTlNRSm9BWTFRdnp5V3hEZG0xSEZoeC0xcFNzYWotbVRmZXlRc3pWUTJ5bXBYZWl2dV9RdUl0LTQyOVJjbklMT2dGZERYZ1VEUkxGaC1ia1c4ak1LWV9DUUJCNA?oc=5",
-        "Date": "Wed, 14 Oct 2026 05:19:00 GMT",
-        "Source": "국민일보",
-        "ParsedDate": "2026-10-14 14:19:00"
-      },
-      {
-        "Title": "中반도체의 거센 추격… ‘K-반도체’, 기술 경쟁력으로 응수할까 - 시사위크",
-        "Link": "https://news.google.com/rss/articles/CBMib0FVX3lxTE1NZHF0Z1Y0dUdBMEF6ZHBVVko3SXp0NTNDOU9ucE5rakpDY2p0OW51cUNJU09kS1pfbXBVSHp1WTl5RDNFbHA5eURXblBDZnY4MlJESEhKcEMtZ3p0NUJLdktoZVVfbmEtdnJTekVVd9IBb0FVX3lxTE1NZHF0Z1Y0dUdBMEF6ZHBVVko3SXp0NTNDOU9ucE5rakpDY2p0OW51cUNJU09kS1pfbXBVSHp1WTl5RDNFbHA5eURXblBDZnY4MlJESEhKcEMtZ3p0NUJLdktoZVVfbmEtdnJTekVVdw?oc=5",
-        "Date": "Wed, 14 Oct 2026 11:30:34 GMT",
-        "Source": "시사위크",
-        "ParsedDate": "2026-10-14 20:30:34"
-      },
-      {
-        "Title": "코스피 박스권 장세에도… 반도체 소부장-건설 중소형주 탄력 - 동아일보",
-        "Link": "https://news.google.com/rss/articles/CBMidkFVX3lxTE5QM0s5T1VreU55WVRYN094QkVRZHNmeWFKTGhPdWFzbF93dXFEcUNUUG5HcHFGUzFyeGkzdzRfUjB4MHVvWHJrQ2F2Zlg2eHhnc0pkRXZHc3RwUXk3aUJ3bHViMFdlcVFPMVplU1E0eXNDdTl6cFHSAWZBVV95cUxQT2tCb3lKa1VTNHNibEdDRHBsWTdCZW13SUZTRVNzSXVteHhzQUxpcGpfakZuTDJkeDZGWmlnMjJWYlVwNUZ1aFVTZlBlV01admRNblFLQXplM0s0Z3NIcnV1Nk5ra1E?oc=5",
-        "Date": "Wed, 14 Oct 2026 15:30:00 GMT",
-        "Source": "동아일보",
-        "ParsedDate": "2026-10-15 00:30:00"
-      },
-      {
-        "Title": "신한자산운용 'SOL 반도체 소부장' ETF 3종, 1달 개인 순매수금 2231억원 기록 - 비즈월드",
-        "Link": "https://news.google.com/rss/articles/CBMiakFVX3lxTE9JaFNURW5GaVpIUXNPVU1uWVk2SnhOQ1lOR3ZSdjc2My1JN0RtYkpLVlcwZ1lDeUNaR0F0Z0hwRll1cUx0SHdubFBTUXozX2l4VTdmOUdWLXlYNDRYR290cWJJdnZvNTdRU2c?oc=5",
-        "Date": "Wed, 14 Oct 2026 12:38:00 GMT",
-        "Source": "비즈월드",
-        "ParsedDate": "2026-10-14 21:38:00"
-      },
-      {
-        "Title": "신한자산운용 ‘SOL 반도체 소부장 ETF 3종’, 한 달간 순매수 2200억 돌파 - 글로벌이코노믹",
-        "Link": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxOUnRfVWtER2RId1JOLV9Yc2t0VE0yT3dHYU1KWk1zdF9ra1NWS3R4Q2JXQzFfWkZCMDhWUjJKMWxqWkxSV3UyeDAxZTJ5NHZQcVRLTlM4X0QtTXp2ZHZ2eTNwcWs4bEJBeXBWaV9lM0Y2RkVMcVRFV1RlS3djYVowVkQyVWJWRGlI?oc=5",
-        "Date": "Wed, 14 Oct 2026 07:43:41 GMT",
-        "Source": "글로벌이코노믹",
-        "ParsedDate": "2026-10-14 16:43:41"
-      },
-      {
-        "Title": "반도체 소부장·전력 인프라·로봇株…'천스닥' 기대 이어간다 - 블루밍비트",
-        "Link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE00azdvd3k1TldibExGclUtdzJnT29YOGlhLUNWdVNnVzNWRXlyTW9mMWNmcWx2Vkc2TzR6VHp1ampvLWdldk83WktQRFd2NGJE?oc=5",
-        "Date": "Wed, 14 Oct 2026 07:54:40 GMT",
-        "Source": "블루밍비트",
-        "ParsedDate": "2026-10-14 16:54:40"
-      },
-      {
-        "Title": "류기준 \"반도체 용수 수몰지 화순에 소부장 단지로 보상을\" - 뉴스1",
-        "Link": "https://news.google.com/rss/articles/CBMiX0FVX3lxTFBsYU5YWTV0N1AyRVVBMXJtTmk5Z1pOcjM3RVN0alJxX2lRbzhNblVFZ2d5aTh2MEZIbGJFXzNFdzRnT0w0elloaWk5RW9QY0QyV2NGcG1PR1ZaYnJFTmdz?oc=5",
-        "Date": "Wed, 14 Oct 2026 09:04:46 GMT",
-        "Source": "뉴스1",
-        "ParsedDate": "2026-10-14 18:04:46"
-      },
-      {
-        "Title": "반도체 소부장 ETF에 한 달 새 2200억…개인 매수세 이어져 - 파이낸셜뉴스",
-        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE1qQXBYQVkwamIyb3BZMnZEZDhnSmR3TERYNng2V2ZPZFpMTkRnQ2FwMllNZk1KMWtONjdGSVZSVHRfbk5qTEdGUnJaQ203SklWVlJNLUVUcVhpdw?oc=5",
-        "Date": "Wed, 14 Oct 2026 05:21:55 GMT",
-        "Source": "파이낸셜뉴스",
-        "ParsedDate": "2026-10-14 14:21:55"
-      },
-      {
-        "Title": "’돈나무 언니’ 캐시 우드, 메모리 반도체 투자 기피…중국 증설에 가격 급변 우려 By The Guru - Investing.com 한국어",
-        "Link": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBRbmw5WlBZX2p4RXU5aC01MXZWMXNaM3lVemkweGhWbzBnTEthd2dHSkVzRW5FTk5kTzdoLWlfZl9lYkJhbEltU0xwQ0F0OHlPRkpHY0w3bFBmdmppbkdCbUtGdThVdXplXzdkMzFKNzQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 15:23:08 GMT",
-        "Source": "Investing.com 한국어",
-        "ParsedDate": "2026-10-15 00:23:08"
-      },
-      {
-        "Title": "중국 D램 추격 속도 위협적이지만… ‘기술 과장’ 의구심 - 국민일보",
-        "Link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE1nUi14OVp4clFybkJNWVFjNFYtVzRKS3FxVlRMZWtZVks2LXhpTWhGQmpRa0tNRllFQVh3TGFWOFp3WHJWa2tzV3VDNnlpSTdGQzFjMDBNbzFaVlVVcEttNXpSQXJYUXhGR0duTNIBbEFVX3lxTE1nUi14OVp4clFybkJNWVFjNFYtVzRKS3FxVlRMZWtZVks2LXhpTWhGQmpRa0tNRllFQVh3TGFWOFp3WHJWa2tzV3VDNnlpSTdGQzFjMDBNbzFaVlVVcEttNXpSQXJYUXhGR0duTA?oc=5",
-        "Date": "Wed, 14 Oct 2026 15:08:00 GMT",
-        "Source": "국민일보",
-        "ParsedDate": "2026-10-15 00:08:00"
-      },
-      {
-        "Title": "'중국 쇼크'에 '수익성 우려'까지...AI 관련 주가의 미래는? - YTN",
-        "Link": "https://news.google.com/rss/articles/CBMiXkFVX3lxTE9DOWFnTGtJdmdQMkt0LVZVdUhHX1V4RnAwWTd6UkF5VmRJV05taWRhbDR5U3RLTnlWVlQ0bENqeEZwZTZmLUtoZUZGSXZfS0lKaUUxRm1fVGRpbURPVHc?oc=5",
-        "Date": "Wed, 14 Oct 2026 14:06:00 GMT",
-        "Source": "YTN",
-        "ParsedDate": "2026-10-14 23:06:00"
-      },
-      {
-        "Title": "창신메모리는 양치기? ‘중국 반도체 굴기’ 두렵지 않은 이유 [뉴스톡 웰스톡] - 뉴스웰",
-        "Link": "https://news.google.com/rss/articles/CBMibEFVX3lxTFA5Y0ViNU5UdzFWblNPZzZyWkJhWlEzMEZxU08xU0M0RVZMN0VjYlVleEdjTVFDeTFJOGltd0hWZzNPSkZkSUZwc21MUEl5YWZPSnJRbTg4aDlTUDRnLWRkR2VUbmNKSFZFbjFVVw?oc=5",
-        "Date": "Wed, 14 Oct 2026 06:40:31 GMT",
-        "Source": "뉴스웰",
-        "ParsedDate": "2026-10-14 15:40:31"
-      },
-      {
-        "Title": "[야고부-한윤조] CXMT 쇼크 - 매일신문",
-        "Link": "https://news.google.com/rss/articles/CBMiYkFVX3lxTFBHMG9kbDJDOU16enpVQ2FMdkltTkFuelFFSHVCUUhfTDB3YmZwU2RaWE0xNmtWb2hldzdzM0hhc3VIVmhmeHZuLXJ1dHJDblpEMnFkejBxanNpcHNoWVpMMGlB?oc=5",
-        "Date": "Wed, 14 Oct 2026 20:00:00 GMT",
-        "Source": "매일신문",
-        "ParsedDate": "2026-10-15 05:00:00"
-      },
-      {
-        "Title": "중국, AI반도체 자립 가속…쫓기는 K반도체 - 서울신문",
-        "Link": "https://news.google.com/rss/articles/CBMie0FVX3lxTE94dkw2WnFVOTJ0cjFDYXNOdVMxRlY0anFGYi1SbHlMZU1OM1VYVGZ5czFWczlESVR1TlJ1NFRYaVNYM1VJY2xGcHNsQnFXOFRTSUhWQUhBQTl5M2RZOXlBc19RRUZhbDdwNGJ0Z3c0NHZXYy02T0lNRGhpWQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 11:19:22 GMT",
-        "Source": "서울신문",
-        "ParsedDate": "2026-10-14 20:19:22"
-      },
-      {
-        "Title": "삼성보다 먼저?…중국 CXMT, D램 판 흔드나 - 연합뉴스TV",
-        "Link": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTFAwZ0VSZ1RUTkN5cG9fMzc2dlF0S2VEYnlvMjIwMFI3enFUelo0Q1ZNa3QtWkVNYm5PTVlPckpHaG5vYlhkVklDNEwwTHJ3NjV5OVJpQmJVTWp2UmhDdzBVdmVjdmJ5UkE?oc=5",
-        "Date": "Wed, 14 Oct 2026 04:26:00 GMT",
-        "Source": "연합뉴스TV",
-        "ParsedDate": "2026-10-14 13:26:00"
-      },
-      {
-        "Title": "과로 기업, 얼마나 나아졌을까… 대만 반도체·전기전자 노동자에게 물었다 - 한겨레21",
-        "Link": "https://news.google.com/rss/articles/CBMib0FVX3lxTE5pMWh4YV9ZSWhkTXFkNmFhbEdlaFd3TDg2ZUxPVzM4clNYOXNOQUxpazZnV196YnBTZFJpV0U0eXN2YllQNGoyNVNKV1dtSmhhemFYQk9jOHVjLWN4ekEzNDZGaTBxbTdydGk4N2dFOA?oc=5",
-        "Date": "Wed, 14 Oct 2026 07:56:00 GMT",
-        "Source": "한겨레21",
-        "ParsedDate": "2026-10-14 16:56:00"
-      },
-      {
-        "Title": "한울반도체, 일본 독점 깼다...대만에 MLCC 초음파 탐상기 납품 - 디일렉",
-        "Link": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE5wRUFZVDRQNnFHLUtUWGVjYzVmS00wdXRmNWJLUkRHa3otd2Vya3NRdF9UVFFyeXVOdUhfRXJLTFpkTndrVDZPSE80akhSQmZDRGxQUDZjYTBueTlrYlRQYWtnY1VrZw?oc=5",
-        "Date": "Wed, 14 Oct 2026 08:43:05 GMT",
-        "Source": "디일렉",
-        "ParsedDate": "2026-10-14 17:43:05"
-      },
-      {
-        "Title": "반도체 만들듯 드론도 찍어낸다…물량 급한 美 방산업체들, 대만 러시 - 매일경제",
-        "Link": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE1YZFJfamxBaHE0OUkxdkFKdWFzZ0xOckFYa2RUcjZQTGtqX2U1Rkd6UThKejlwVGZ0TmVUV2c2dmFMbUtScW5kdFZjalV2c1Y3WHc?oc=5",
-        "Date": "Wed, 14 Oct 2026 12:03:18 GMT",
-        "Source": "매일경제",
-        "ParsedDate": "2026-10-14 21:03:18"
-      },
-      {
-        "Title": "TSMC, 순이익 65% 급증 전망…AI 반도체 호황 이어질까 - 이데일리",
-        "Link": "https://news.google.com/rss/articles/CBMigAFBVV95cUxOMVVLTTBLWWhZTVJTbUVMUkZpVnl4cWxSNWVkdWllNm9YWERNb0ZwZFY2TDFtUi13YzloTGZEb3ZldEZzNGVMdG9IazlTZTk3LXQtTGFlTG1Xb3hHNDlCXzk5VUgyZUNoUVV6WGF1VmZHRjJCanlfUTBXenFjTlphMg?oc=5",
-        "Date": "Wed, 14 Oct 2026 15:00:04 GMT",
-        "Source": "이데일리",
-        "ParsedDate": "2026-10-15 00:00:04"
-      },
-      {
-        "Title": "트럼프 “日 투자로 美 뉴욕에 반도체 공장 2곳 건설… 한국·대만 약속도 사업화” - 조선비즈 - Chosunbiz",
-        "Link": "https://news.google.com/rss/articles/CBMingFBVV95cUxNeWI1Vkxmd1p4WXVRZWRNZ1FrWlJJSUx3YVVQVlU4X3VIV3pRZFBZTmdGY0RhczJBTVp6OGZhTmdINDlZY1pLQ2xQemxPQzVsT3hienBRUXJMNnZZVFhFeHQ3U0RoUjkwRTBXdW8xR2h0RlhsUmNCYTlxOTYxa1N0aTc1ZlRnc1FicnJBaTd3U0l5a0VTWmhkWnpjUjNId9IBsgFBVV95cUxPVTU1VU1aMjhpRWdMdHcxZE9zS3pEU0VNS3Z2MDRvMUQ1eml2M0hBWGlwZEU0X2N6Tjc0ZVFOY1Z3bFVuaUpsQ3N6aDM5Y3RMYjFMd0YtLWJ3eGpfNWVXWm5JNmZ0OUUzZVNHeklBVjBQQmlHQTR0VHRaZXpyVVpwN2VlX0hScDZ0XzlCOWFuUV9NdnFaMDd4T2NrZWJLQXVWLVNidFEyZTF0blo1QlNrUDdn?oc=5",
-        "Date": "Wed, 14 Oct 2026 16:49:00 GMT",
-        "Source": "Chosunbiz",
-        "ParsedDate": "2026-10-15 01:49:00"
-      },
-      {
-        "Title": "트럼프 \"韓 500억·대만 800억·日 210억불 투자·구매 약속\"(종합) - 연합뉴스",
-        "Link": "https://news.google.com/rss/articles/CBMiYEFVX3lxTFBHMnpPOHQ1dmNLOGxFZlMxdVZHUkJqaU5yRE5sbXpCd2dSWVBZM3daTUpmWDBpaC1wSVNZUm14UHNNMEhTeXVjOVdYdVN2cmtIcHViSV9pRXEyNW5DeEM4VtIBYEFVX3lxTFBHMnpPOHQ1dmNLOGxFZlMxdVZHUkJqaU5yRE5sbXpCd2dSWVBZM3daTUpmWDBpaC1wSVNZUm14UHNNMEhTeXVjOVdYdVN2cmtIcHViSV9pRXEyNW5DeEM4Vg?oc=5",
-        "Date": "Wed, 14 Oct 2026 18:23:28 GMT",
-        "Source": "연합뉴스",
-        "ParsedDate": "2026-10-15 03:23:28"
-      },
-      {
-        "Title": "[더벨]한울반도체, 대만 델타전자 자회사에 MLCC 검사 장비 공급 - 머니투데이 - 머니투데이",
-        "Link": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBqbUlETTJhUUY1TTZHYjRqbUpuNXNFbElva3RKTi1xNXBaUXh0MGNwb0dmSnJoZjRMcDZKTUp2Y1JGWFRjYVFIUHhYLTFpUFRYT1RvdXRHVkFDc1IxUkc3S05DUE00blhDbnp6V3FB0gFuQVVfeXFMUGptSURNMmFRRjVNNkdiNGptSm41c0VsSW9rdEpOLXE1cFpReHQwY3BvR2ZKcmhmNExwNkpNSnZjUkZYVGNhUUhQeFgtMWlQVFhPVG91dEdWQUNzUjFSRzdLTkNQTTRuWENuenpXcUE?oc=5",
-        "Date": "Wed, 14 Oct 2026 05:43:42 GMT",
-        "Source": "머니투데이",
-        "ParsedDate": "2026-10-14 14:43:42"
-      },
-      {
-        "Title": "한울반도체, 대만 델타전자 자회사서 MLCC 초음파 탐상기 수주 - 서울경제TV",
-        "Link": "https://news.google.com/rss/articles/CBMiZEFVX3lxTFBzNXlHdWFsWFgtdUEtT215c2VvU25pajh2NHpiWUQ0d2pfS1owQVdDaUVKOGw1THFOWHhyMTJnZHh2UzJoNzh6ZVVwUnBfaWFPRjJuWGttaHlCcTV6V2tPRUVCeFY?oc=5",
-        "Date": "Wed, 14 Oct 2026 05:28:37 GMT",
-        "Source": "서울경제TV",
-        "ParsedDate": "2026-10-14 14:28:37"
-      },
-      {
-        "Title": "트럼프 \"日 자본 210억 달러로 뉴욕 반도체 공장 2곳 투자\" - 뉴스핌",
-        "Link": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE83cUpRTDFpakFzUkZsRDBub3hLMlIzTm5aWFFtQ3gxNHFnb3UyWHo1d1NtZDJmWFlBZHRtdDZSTkdhWHI5ZTVnVHBScTdtbHRFOFlvQS0xSlhMUzNn?oc=5",
-        "Date": "Wed, 14 Oct 2026 18:02:00 GMT",
-        "Source": "뉴스핌",
-        "ParsedDate": "2026-10-15 03:02:00"
-      },
-      {
-        "Title": "트럼프 \"뉴욕주에 반도체 공장 2곳 건설…일본이 210억 달러 투자\" - 뉴스1",
-        "Link": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE9MRE0teGV1amY2Y25mX3B2NHhtUnNiYzZyR2RENHRqZHp4QjZLQVdqUTNvcVZ5Z1RJLXVHUHRiektqN0xfQ0xwNHR2a0ZEajBOb2M2V3Bfck8?oc=5",
-        "Date": "Wed, 14 Oct 2026 17:03:56 GMT",
-        "Source": "뉴스1",
-        "ParsedDate": "2026-10-15 02:03:56"
-      },
-      {
-        "Title": "[속보] 뉴욕주 반도체 공장 2곳 건설…일본 210억불 투자 - 스페셜타임스",
-        "Link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE9LOFhqa20xYTFxSk9qNzJXR1pPa2djU0d3X1dqclpiQ0VLV2c1RGxlYUdOaVhnX2J1YWVjeVcwXzNTQTdlUlNZVWd4MlV3d0JRZVdPWU43YVRuMXBIekNBYkYwTmg5eFBjUFZUUjdkcVNXRUU?oc=5",
-        "Date": "Wed, 14 Oct 2026 16:53:26 GMT",
-        "Source": "스페셜타임스",
-        "ParsedDate": "2026-10-15 01:53:26"
-      },
-      {
-        "Title": "[속보]트럼프 \"일본, 뉴욕 반도체 공장 건설에 210억달러 투자\" - 뉴시스",
-        "Link": "https://news.google.com/rss/articles/CBMieEFVX3lxTFBuWndTbjRqYVZPTFMwdjJVNTRoTnZRV1daemhidzd0ZjgzYnNaZ3k5NWstN09MZDhwaGIwenlIdmV1dTRjRnlwV1hWSFVydkI3am5SaHZiMl9leXdST040RXJFeVdzNmN4Qm1SSkc5ZVdfSmVSOXgyNtIBeEFVX3lxTFBuWndTbjRqYVZPTFMwdjJVNTRoTnZRV1daemhidzd0ZjgzYnNaZ3k5NWstN09MZDhwaGIwenlIdmV1dTRjRnlwV1hWSFVydkI3am5SaHZiMl9leXdST040RXJFeVdzNmN4Qm1SSkc5ZVdfSmVSOXgyNg?oc=5",
-        "Date": "Wed, 14 Oct 2026 17:38:35 GMT",
-        "Source": "뉴시스",
-        "ParsedDate": "2026-10-15 02:38:35"
-      },
-      {
-        "Title": "K반도체 털리자 日 증시도 비상…외신이 '사이드카' 특필한 속내 - 글로벌이코노믹",
-        "Link": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxNdVFXeXVycFJLV3VSRndBYTU4a1NaV0dIN25fZHBvVTFIamtUbGRkOVZaRzlJem9EdkZTRmUwZzRyd1RDN01tZlpfMm9QTk1NQmJBaURQRm44eWNVSmlmMzVTTWFYTDFyRUxiQWRfdmkzSm93b0hydE9tTGdXOVJTS3dycXE3X25F?oc=5",
-        "Date": "Wed, 14 Oct 2026 06:44:00 GMT",
-        "Source": "글로벌이코노믹",
-        "ParsedDate": "2026-10-14 15:44:00"
-      },
-      {
-        "Title": "美 CPI 쇼크에 반도체 또 4%↓…오늘 '삼전닉스' 외국인 투매 멈출까 - 녹색경제신문",
-        "Link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE5aVWowOTBBVzAtaVF0SHg4VHR2U1JMa3lPbzU5ODN0RXczZzh3MEdvVFZUbm9XOE1nM1EzeldmbXNkWWpvX2ZkZnJzNlJwRHpDX2hmSnUwN0xxaS1aRVBaMmhvUTh5dmJh?oc=5",
-        "Date": "Wed, 14 Oct 2026 18:48:11 GMT",
-        "Source": "녹색경제신문",
-        "ParsedDate": "2026-10-15 03:48:11"
-      },
-      {
-        "Title": "트럼프 \"뉴욕주에 반도체 공장 2곳 신설\"…日 210억달러 투자 - 머니투데이 - 머니투데이",
-        "Link": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBPajVJTzB1SllWazNJZno1WTdXc3FNLXJvM3BmVnJWdk5MWEctV3c4aVdkcDhwS1BEOEpMblp4Q0hyblBFNUxqRWVweFB2SGkzWVN1SXMwNEFmTVhxMFEzTDhHUlRTcDl5QUJucGJR0gFuQVVfeXFMUE9qNUlPMHVKWVZrM0lmejVZN1dzcU0tcm8zcGZWclZ2TkxYRy1XdzhpV2RwOHBLUEQ4SkxuWnhDSHJuUEU1TGpFZXB4UHZIaTNZU3VJczA0QWZNWHEwUTNMOEdSVFNwOXlBQm5wYlE?oc=5",
-        "Date": "Wed, 14 Oct 2026 17:13:09 GMT",
-        "Source": "머니투데이",
-        "ParsedDate": "2026-10-15 02:13:09"
-      },
-      {
-        "Title": "트럼프 \"한국, 알래스카 LNG에 500억달러 투자\" 재차 강조 - 마켓인",
-        "Link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE1XY2FkUXRtNGltbHZ4TnZ5bnB4QTF6LUZ2NjBFZ2hua0JPaW1qOU55RHVxMWhZWjRYUE9uR1RiSGphYzBZNGVTTHc5TTd1LUFzNXZabFNiY1RIQnZmOExXam1MdnRadkFVZFA2UW1iSjd2dFE?oc=5",
-        "Date": "Wed, 14 Oct 2026 19:18:48 GMT",
-        "Source": "마켓인",
-        "ParsedDate": "2026-10-15 04:18:48"
-      },
-      {
-        "Title": "트럼프 \"日, 뉴욕주 반도체 공장 건설에 210억달러 투자\" - 뉴시스",
-        "Link": "https://news.google.com/rss/articles/CBMiYEFVX3lxTFBvaHhYZFlhLWd6by1VMlRPUVFoXzlhMjJYZmdGZWhoem12NHkxdEFXZEZTajRlWDlERzBXX08ySWN1V21Kd1l5WG5FWlpza2dkUE1DbjZJY2VFX1BSM0NnS9IBeEFVX3lxTE0tX2NWTkh1SVlYbmpwdVVvalJxMFllTG1pYUZBdnEtMU5qRVFVSnVxUGNzMG5kY2J4T3lQa3ZoVmVJUkRaUlNEVWVxenZhMUtid1JaU1d2ckpScFhJbzFHcWFrUlY3WFZxQnI1VlVSaVlvQzl4REdwNQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 18:00:04 GMT",
-        "Source": "뉴시스",
-        "ParsedDate": "2026-10-15 03:00:04"
-      },
-      {
-        "Title": "미국 물가 지표 발표를 앞두고 반도체 업체들의 주가가 반등하면서 증시는 보합세를 보이고 있다 - TradingView",
-        "Link": "https://news.google.com/rss/articles/CBMid0FVX3lxTE5fTkp4S2JQRldHdlY5SWVIa2NwRFZhYXM5cGs5MjZfU1dUTkRKVGNWLWN0YXUyUzJndWJqVzhTelRCcS1udTl6MkdERk5fSGJmRXV1S01oMU5XOFBqNWlfdjR0eURnOGVxcmNqTzJxY0Vyc3VKUS00?oc=5",
-        "Date": "Wed, 14 Oct 2026 08:52:37 GMT",
-        "Source": "TradingView",
-        "ParsedDate": "2026-10-14 17:52:37"
-      },
-      {
-        "Title": "큐니티, AI 칩 제조 필수 소재로 성장 지속…'매수'-트루이스트 - 이데일리",
-        "Link": "https://news.google.com/rss/articles/CBMigAFBVV95cUxNLXp0eWRPbFlJM2R4enJVTmxhRFplMlU3VWlMRklxT19idnJ0TFh6LVBlMy1WajNpNGlSRWtjQ3hYWmZoLVNSRnFadzdJMXJyQnN3VjJnMlcyUFVZNkFORE1MTDM2RGl4R0h6QndoeXNDODA3bDZ1UzBuNWFyZEY3VA?oc=5",
-        "Date": "Wed, 14 Oct 2026 15:04:19 GMT",
-        "Source": "이데일리",
-        "ParsedDate": "2026-10-15 00:04:19"
-      },
-      {
-        "Title": "LG화학, 아시아 최대 포장 전문 박람회 ‘TOKYO PACK 2026’ 참가 - 경인뷰",
-        "Link": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE9UcTZSdXRaUU1tbjFyUW1Cc2R4LXI1TDlyZjB0UmllRnpGYTRUSG5yUWFHN3RTR18yenlUV1E4eEdDSWtFck1mWHRsSGxzRzREbjdNdUV6ckZyal9RN0I4UFZ3?oc=5",
-        "Date": "Wed, 14 Oct 2026 05:59:04 GMT",
-        "Source": "경인뷰",
-        "ParsedDate": "2026-10-14 14:59:04"
-      },
-      {
-        "Title": "[현장] AI 반도체 경쟁, 첨단 패키징으로 확산… 3D 집적·전력 효율 주목 - 시사프라임",
-        "Link": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9lbUxZVWZ5MFhhUmpVMkNkU3F1NmlMR3VYUTE1LUVWVmhlajZPRVBxbmQxT3g0ekpBUUpJc1hqd0M0aUN1MlhjVDRYM242WDV4b3FPdFdUaHdOWklJUktqeFEtbFloZ0xzamg3NTJn0gFyQVVfeXFMUGh6cjBoYmhpRWhnRTVlcGpsSVI1NVQ5enRaZXEyQXZiYWVLQm1oVmUxNXFzOUFHeS1vRDZzVWNrSXBJUFdSQ2MzSGtHOHp4ZnVBcjdQZFBCd1NQUFY4d2ZBRXlOSnZYcnBtRnZ6UUpzd1Nn?oc=5",
-        "Date": "Wed, 14 Oct 2026 08:33:38 GMT",
-        "Source": "시사프라임",
-        "ParsedDate": "2026-10-14 17:33:38"
-      },
-      {
-        "Title": "어플라이드 \"2030년까지 시장 점유율 2%포인트 확대\" - 디일렉",
-        "Link": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE53VGlvdTJBSnFRYTN3czVTeDlCNGZocXdvQUlmQ3Y4V0Uydmx5QlVseG50OFF3RzZLOUNac0dEbFBQQVFVdGM2SE1paXF1R3plenM2V2g5cktKMjJYOWRzbV9RWlNVQQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 09:13:59 GMT",
-        "Source": "디일렉",
-        "ParsedDate": "2026-10-14 18:13:59"
-      },
-      {
-        "Title": "Advanced Energy launches Centra Smart Hub for wafer temperature control - Engineering.com",
-        "Link": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOX0FWamhELWhhem1aZXFhSDZvZVE0V3ViWDFkdEhNcUZtQzk2Q1ZqT1oxYU9qMFZZUXF1UjZWRjd6SHNIcUxXVkNIRmoxSFY4a3ZOWldDaVRCQVg3anV6WTgtTU9neldxZlc3Rm83Z1UyejNCVVJraDNpSVJHckRPOWJETFBKMUgzczNRZDhqcXhHaVBDc0FESjZzbExsWGt5dnc?oc=5",
-        "Date": "Wed, 14 Oct 2026 10:27:44 GMT",
-        "Source": "Engineering.com",
-        "ParsedDate": "2026-10-14 19:27:44"
-      },
-      {
-        "Title": "CBRS Stock Tanks 15% After-Hours — Touted As Nvidia Rival, Cerebras’ Wafer Tech Finds Fewer Buyers - Stocktwits",
-        "Link": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxPTDd4blYwYVZjTzlBSG9veDJQWHZ0Vl9NcDkybG5USTdFWXFkajJsMGE1bzVObGo2WmZlTlVqVEpKckhkdWpma0RueDlHNnNVR0VDZ1dIY3h5SjBvTnRnaTJDeWpqM2pxd2IzTzk2VHhUSHVkblNXUFVrZG1RYldkZVpOSHFoaUxHUkRuMDhzZzBzMHNSbUFEUDAzR3h4bUJUMzRFaF80NlNaUndFVDBnSEZVZHl0aTZkWTZ1Z1lGeFl6M3c?oc=5",
-        "Date": "Wed, 14 Oct 2026 17:52:17 GMT",
-        "Source": "Stocktwits",
-        "ParsedDate": "2026-10-15 02:52:17"
-      },
-      {
-        "Title": "GlobalFoundries to Build Two New Wafer Plants in New York with $955 Million in Funding and a 4% Equity Stake - KuCoin",
-        "Link": "https://news.google.com/rss/articles/CBMixwFBVV95cUxNRmlNWndNU2tJYXoyQW5qY0doQ1JSQ214TEJ4VEZSWjlxSmpuZUo5UzVjdGtldE5BSU5VeEF5aW5ENGRHVDB2S2x2MUxmVG95Z0ZmOHdPdDNCVlpmb3hHaEdNREpEeWxFNndEUDE4RTlDM0Vzb1B0WHU2dUhXMXJoUUtja2RxZFVMZVVnN3U2Q3BjVG53ams2UVVLdWhMTHpVbnpyLWFZY3BLWDV4bDJlSWNQZFE0MXBTZ00xb2syT204dDRWbHpn?oc=5",
-        "Date": "Wed, 14 Oct 2026 13:58:33 GMT",
-        "Source": "KuCoin",
-        "ParsedDate": "2026-10-14 22:58:33"
-      },
-      {
-        "Title": "Global Research Selection | JPMorgan: Semiconductor boom continues; wafer fab equipment spending may increase by 38% in 2027 - Moomoo",
-        "Link": "https://news.google.com/rss/articles/CBMixgFBVV95cUxPcmVsMFdPbjNnV0I3NjE4ZzRaZFlwQ1F3MGRYMTFRaDlfa2E1d0VrX2RPVllxa3pzSmRHTEpKbFAyZVhPMTc3allGeTl6bmw3cWNsY05fdTJyaWE4Y25sS0gzTzRLZXBQZHV0WkJIb1RKQWJLQldnQVJqb0NQZE9PUXZaRl9fSWVTUVBSb3lLRUdWWW1CcW1XNVU4aDJHM2ZucW01UmtLQVpuLTk1OFZnQXVDN2YzenE1a3FyYWNnSk9xdUdVWUE?oc=5",
-        "Date": "Wed, 14 Oct 2026 12:27:54 GMT",
-        "Source": "Moomoo",
-        "ParsedDate": "2026-10-14 21:27:54"
-      },
-      {
-        "Title": "JPMorgan: AI Supply Bottlenecks to Dominate Semiconductors; Wafer Fab Equipment Spending Seen Rising 38% in 2027 - BigGo Finance",
-        "Link": "https://news.google.com/rss/articles/CBMidkFVX3lxTE8zNmNoeEV6dHJsNFZpQlZXMDd0MHN0SkJlcnQzQzZZLWNOUkdGd1VHcVFqQW9tZWR3MDRyOE5YT3NXVExKU0Q5a0NtM0dNdjk4RFBTQk9ZQV9JS2tsSXh3SF81eG80OXJKX21MQWJBRHFXSUFZd1E?oc=5",
-        "Date": "Wed, 14 Oct 2026 12:55:00 GMT",
-        "Source": "BigGo Finance",
-        "ParsedDate": "2026-10-14 21:55:00"
-      },
-      {
-        "Title": "RRP Electronics Opens Advanced Wafer-Level Packaging Facility in Navi Mumbai - Electronics For You BUSINESS",
-        "Link": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxQVFRfeVZnU2o0NWJTWkdTTHJIenBzMkFTQkVXSjBaNkE5VExjalk1Nnp0YkQzM21zdXRDX1RfYmM2b2xKcmdOV29aUS00R3o3Ukd0MDFpSjczd01vaHdkbGVFZ0puOFR3NGc4U0VjajJVSjRaV1c0ekRlaXJfNE41czhMNXhQNzNEd2xWV2VDSWIwaXNHQzVWRGhoZXZxT2RBRi1qSGZ6TDBrNlV0LUxhbGxSaGNKTlJVcnB4b2FKMFVnc1U?oc=5",
-        "Date": "Wed, 14 Oct 2026 04:50:00 GMT",
-        "Source": "Electronics For You BUSINESS",
-        "ParsedDate": "2026-10-14 13:50:00"
-      },
-      {
-        "Title": "RRP Electronics Inaugurates Advanced Wafer-Level Packaging Facility in Navi Mumbai to Expand Semiconductor Capabilities - Dalal Street Investment Journal",
-        "Link": "https://news.google.com/rss/articles/CBMi_AFBVV95cUxOOXFqRjFucU5vcGZLTmV2YW5MNU8wT1l2QV9tMkhQOGh1Sm9hNzg3Q1dPcXdDdUdpSExxcWs2QUV2QV8tUTlsWHhxRDh3ZWNOVzhXX2JVSmNJdXJ6SlhjQUc2V2VUSWs3ejJaUE9zNE9MeUtmWElLYk1uamhtMWxMdExsYWpwMWVmWVlFREhoZEx6UzZQcmFiWGlxYW1SMEJNRHdjWWdLOXNaUEZwY0dHaFN2aGozcHlpVC1uQXBiX1hpTnFHaUJQWUs1al9lREVWcHdyWjN0QVY2OGFtclQ4WDVvMURKcXBWQ1lJb002YWFFRmxCTzl0ZEpHT2M?oc=5",
-        "Date": "Wed, 14 Oct 2026 03:09:46 GMT",
-        "Source": "Dalal Street Investment Journal",
-        "ParsedDate": "2026-10-14 12:09:46"
-      },
-      {
-        "Title": "Emmvee H1 Profit Rises 79%, Plans Rs 5,500 Cr Ingot-Wafer Expansios - BW Businessworld",
-        "Link": "https://news.google.com/rss/articles/CBMirgFBVV95cUxPbkUyeTJBbWRRSkVMaW9kWDBuV1dXV25XWFc1WmVKSkxLTllpWHhRR2Q4YzFNQ3VzcDR6emJKc3lTTEgtdUU0ajlxWi1laDZDOXJicVpKRnhBMVlOZUhqNnh3aVI4MW5LQkhDVjZ6RUN2MmRVOE5qWUpIbzVYS2Mtdl85VU5Fb3hwM0dMcWNSSDJHZWdOZUtlSzl2dzdzUlp5Q0gtNnpHS1RLMWZRQmc?oc=5",
-        "Date": "Wed, 14 Oct 2026 04:30:05 GMT",
-        "Source": "BW Businessworld",
-        "ParsedDate": "2026-10-14 13:30:05"
-      },
-      {
-        "Title": "미세한 틈새 증발하지 않는 물 원리 규명…반도체 공정 응용 가능 - DongA Science",
-        "Link": "https://news.google.com/rss/articles/CBMiVEFVX3lxTFA0bHJ3VVlvN1pYdldJRWlRSXNla2VESGZuRE5ZVEVIYngxSTJoZUYycngtLUhTd2o0MUEweF9XN2YtRVZ0TjVOVVFWVmhheVlzMWdYRA?oc=5",
-        "Date": "Wed, 14 Oct 2026 08:46:00 GMT",
-        "Source": "DongA Science",
-        "ParsedDate": "2026-10-14 17:46:00"
-      },
-      {
-        "Title": "[해외기고문] 반도체 산업을 위한 베올리아의 지속 가능한 솔루션 - 워터저널",
-        "Link": "https://news.google.com/rss/articles/CBMidkFVX3lxTFBocXlJSnNJcEFNUEcyTi1JYmVpZm5BbmdaSUpOakVjME9aekRta1JGOWFfS19IS2FoTzl3RmUyTzhtQ0dVcFZiSmtzRG1ENURibVNfTWFEMjUzSFE0cUxHdE1OMnBwUlhqNlhMM2ZwLU5wS2dMeEHSAXZBVV95cUxQaHF5SUpzSXBBTVBHMk4tSWJlaWZuQW5nWklKTmpFYzBPWnpEbWtSRjlhX0tfSEthaE85d0ZlMk84bUNHVXBWYkprc0RtRDVEYm1TX01hRDI1M0hRNHFMR3RNTjJwcFJYajZYTDNmcC1OcEtnTHhB?oc=5",
-        "Date": "Wed, 14 Oct 2026 11:39:50 GMT",
-        "Source": "워터저널",
-        "ParsedDate": "2026-10-14 20:39:50"
-      },
-      {
-        "Title": "글로벌 반도체 시장 변화와 쿠어스텍의 생산 확대 계획 | 쿠어스텍코리아(유)의 비즈니스 뉴스 | 쿠어스텍코리아(유) - 잡플래닛",
-        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE1ST1NUTUh6ZkpzMS1wZW8yTDZmbXRHRHA1MG5FMjQxSHJlUjJVbWExU1pwNGJMdkIxamwyTWRnNWNTMlhNVm1kdHAzOF8wR1FmbWN1SDh0bl9YZw?oc=5",
-        "Date": "Wed, 14 Oct 2026 07:18:45 GMT",
-        "Source": "잡플래닛",
-        "ParsedDate": "2026-10-14 16:18:45"
-      },
-      {
-        "Title": "성균관대 원병묵 교수팀 , ‘마르지 않는 물’의 비밀 풀었다, 반도체 불량 줄일 새 길 열어 - 이뉴스투데이",
-        "Link": "https://news.google.com/rss/articles/CBMidEFVX3lxTFBGWXhYbmM4UnVob2NXNm9QNWhfaWd3UEswX0FKODE2SEdQTVN3MlYzZFBoRkZqQURNX0IzcWwtY3lqNGdmSlVLQW44bnpycWFoY2tpRXNsVnF1SnRqY0pLaGxaY0xiekRKdE1YTlBTc0VWY2Jh0gF0QVVfeXFMUEZZeFhuYzhSdWhvY1c2b1A1aF9pZ3dQSzBfQUo4MTZIR1BNU3cyVjNkUGhGRmpBRE1fQjNxbC1jeWo0Z2ZKVUtBbjhuenJxYWhja2lFc2xWcXVKdGpjSktobFpjTGJ6REp0TVhOUFNzRVZjYmE?oc=5",
-        "Date": "Wed, 14 Oct 2026 03:47:27 GMT",
-        "Source": "이뉴스투데이",
-        "ParsedDate": "2026-10-14 12:47:27"
-      },
-      {
-        "Title": "반도체대전 2026` 개막…차세대 메모리 내세운 삼성전자·SK하이닉스 - 디지털데일리",
-        "Link": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE9BdGNrV2J3TncyZzB6eXJoTFIzazh0UDJFREVhZElDUVhIRmp4b2ZVOWRINndjX0xOemoyNGFfT1dJVGNuUEFqZ1Y5NEU4R0E0dS1jREtRYmgtaUhlRUVUOVJ6c0c?oc=5",
-        "Date": "Wed, 14 Oct 2026 06:20:18 GMT",
-        "Source": "디지털데일리",
-        "ParsedDate": "2026-10-14 15:20:18"
-      },
-      {
-        "Title": "[더벨]제이케이시냅스, 상반기 반도체 공정 소재 매출 50억 - 머니투데이 - 머니투데이",
-        "Link": "https://news.google.com/rss/articles/CBMibkFVX3lxTE5JQzloVmdlZjB2aFBJQ0NjandVMWg1TGRBd1pVZlVaSWQyQ3NfdDhhV2s5SVZYZFEtTjFhWkgxVkxSVlFRVUU4ZzN3ZW44NlZBZkpxX2RqUDV0Z19BOTFMS1pCemE5eE9ZT2JwZC1B0gFuQVVfeXFMTklDOWhWZ2VmMHZoUElDQ2Nqd1UxaDVMZEF3WlVmVVpJZDJDc190OGFXazlJVlhkUS1OMWFaSDFWTFJWUVFVRThnM3dlbjg2VkFmSnFfZGpQNXRnX0E5MUxLWkJ6YTl4T1lPYnBkLUE?oc=5",
-        "Date": "Wed, 14 Oct 2026 04:30:04 GMT",
-        "Source": "머니투데이",
-        "ParsedDate": "2026-10-14 13:30:04"
-      },
-      {
-        "Title": "문갑태 특별시의원, 시정질문 통해 여수산단 산업전환·해양보호구역 확대·돔구장 건립 등 3대 현안 촉구 - 여수넷통뉴스",
-        "Link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE1FNW9CNUpyUTNuSWtIVGx5dnlPNktSRE5hTExVNWw3cE5aejdfMnpseVBudGNCSWYzQ05FdE01bjRiS1ZDek9sdFN3U2psTmtnY0ptcHg0bnphR3RqZlRjTXU1aHhxWGlS?oc=5",
-        "Date": "Wed, 14 Oct 2026 11:18:22 GMT",
-        "Source": "여수넷통뉴스",
-        "ParsedDate": "2026-10-14 20:18:22"
-      },
-      {
-        "Title": "산업부, ‘반도체혁신성장지원단’ 신설… 메가프로젝트와 특별법 이행 본격화 - 아이씨엔매거진",
-        "Link": "https://news.google.com/rss/articles/CBMioAJBVV95cUxNUHNPT3ZhWG8tX3E5T1VJNV9VZTZEbnhoWmZjNWs5TzdzblFQY0tjZ1NzWHNWOFFUdjdqMVVQaXJYdmJaMkt0SjNBblpuVEdGaGpEZ2lPal9IWFhIQl80UW5rWE1lWURNb1VLQlQ5U0dPTkhwUnY5cmNNYU5FX0FTVndVRkJZWmJ3QXdUM1FBMzk0X1EyeVVJWW05ckY4RmFsVXM0SDZJWFpQYm91M084UkY0dklYblBCdkFpYlBhZFFJZzZZc0ZMRzBmYjdFQld2T1dBbnRDclN5NE9BZ3dYSHdKMV9RRjBVZkhNYnhPdmJEYS14WjF4RHJfNHYzQjNoTjdEN2FYeEFJWjYwYUk0dTRESHVRbVZEYUhZT08zQWU?oc=5",
-        "Date": "Wed, 14 Oct 2026 10:12:56 GMT",
-        "Source": "아이씨엔매거진",
-        "ParsedDate": "2026-10-14 19:12:56"
-      },
-      {
-        "Title": "한중 교역량 증가세 지속…핵심 소재 공급망 불안 지속 - 폴리뉴스 Polinews",
-        "Link": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9SWlljWGtuNlN3blIyN3JSS2ZxV3p5LVJFQkQ5NmdZUDQ4bWQyaFpvQlI2TGtJMjJBN1M4M3N2b0NuS2tWbjhFa0NsSDNIR3dNblV5WHBJVEtkRHRCWkpVSGxHeEhJQjA5d0NRRll3?oc=5",
-        "Date": "Wed, 14 Oct 2026 05:46:42 GMT",
-        "Source": "폴리뉴스 Polinews",
-        "ParsedDate": "2026-10-14 14:46:42"
-      },
-      {
-        "Title": "베트남 반도체 수출, 20년간 연 32%씩 증가… 아시아·태평양 공급망 핵심 거점 부상 - 파이낸셜뉴스",
-        "Link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE41X0dKSU9kWFduZGhWN3p0dGZPdlA0VEJSTlVSR2Q3NHB1cUs3c1pVQkNNaHVaQXNsb1ktVl9WR3ZUb1BnUTdySmJZSGdwWDgtQk1LcTExQUFydw?oc=5",
-        "Date": "Wed, 14 Oct 2026 06:53:11 GMT",
-        "Source": "파이낸셜뉴스",
-        "ParsedDate": "2026-10-14 15:53:11"
-      },
-      {
-        "Title": "日 방산 소부장 공략 가속⋯K방산 공급망 경쟁력 시험대 - 이투데이",
-        "Link": "https://news.google.com/rss/articles/CBMibkFVX3lxTE1ONHBDaWV0OGNCMnlmZGdJNXdkdmx1Tm1kWXBZU0gyODA5X3ZfYy1saTZLYkhFdFNjVElKdWZ5T0FNc3gwTk9aUjdQXzdoWnpPLTg3R0FyeWFJZnFnYkx2WGNmSVlHcnZiNEJYYVdR?oc=5",
-        "Date": "Wed, 14 Oct 2026 07:42:00 GMT",
-        "Source": "이투데이",
-        "ParsedDate": "2026-10-14 16:42:00"
-      },
-      {
-        "Title": "하나마이크론·동진쎄미켐·유니테크, 인도 공급망 영토 확장 '시동' - 더구루",
-        "Link": "https://news.google.com/rss/articles/CBMiY0FVX3lxTE1Zb0l1RFVIY3NfVWxlbUFUbjdTM0pKOGVkZUpfanBwNlVVMEROaFlLY3A2VktrcUxBMHFSRkM0Nm9LSVVOS1lOdy1Zb3h2R2gyekNQQVBWOU5ZYU5fcnpVREVmSQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 06:53:48 GMT",
-        "Source": "더구루",
-        "ParsedDate": "2026-10-14 15:53:48"
-      },
-      {
-        "Title": "\"기술변화 뒤처질라 … 기업들, 반도체 소부장 M&A 문의 급증\" - 매일경제",
-        "Link": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE9vQmtnZXZPM2dlLTlISjZaQ1FRak54VWQ4NldJTFMwbUs2SW81Y1hhX0U2cjZKMWxuc0xxbGtjZE5GN3dBaDh5c01wamg2TWZGeDkydw?oc=5",
-        "Date": "Wed, 14 Oct 2026 07:43:54 GMT",
-        "Source": "매일경제",
-        "ParsedDate": "2026-10-14 16:43:54"
-      },
-      {
-        "Title": "엘앤에프 자회사 JHC, 폐배터리 재활용 사업 본격 확대 - 전기신문",
-        "Link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE1WeS1vUk1lemJNMG1mV3Rpa2RKVWdmelR1dXJiWVhocU1MTm9Bak9kOU5oeV8yQ2RodjMtUzJyX25QQ0twSFRHeVgwQk1mVmg5NUNNcE9fQ0thYkpSVXpkRTBNY1VlU1FoM0ZBddIBcEFVX3lxTE1wTW0tVFlIQlNGMUZzSmYwTmJZa3hNNi1INmZnU21EVXJJU3ZzNklTdk10ajRPQTIxNE0wbmtFVVZEbll1LXpHMDZvclJvdXhfdklvMC1hYVVNZUtmcUJYY1pvVFllcHdTbEtLd2tNcDc?oc=5",
-        "Date": "Wed, 14 Oct 2026 08:17:35 GMT",
-        "Source": "전기신문",
-        "ParsedDate": "2026-10-14 17:17:35"
-      },
-      {
-        "Title": "기후위기 시대, 수출 경쟁력의 요건 달라지나? - 전기저널",
-        "Link": "https://news.google.com/rss/articles/CBMiYkFVX3lxTFB2MG5iS1F4QldjR2x4aUw2TmtPVm14aTBuNGltQ0dXRGRaM1RRZ3l1QUFQUjZfR1pDUFlibGZINGFTMnlyM01fMVNFOWVHc1c3UE5Ya2p0dE01cTk4Qk5wbWN3?oc=5",
-        "Date": "Wed, 14 Oct 2026 06:25:38 GMT",
-        "Source": "전기저널",
-        "ParsedDate": "2026-10-14 15:25:38"
-      },
-      {
-        "Title": "‘자원안보 전초기지’ 고려아연, 인터배터리서 소재·전략광물 핵심 경쟁력 강조 - 동아일보",
-        "Link": "https://news.google.com/rss/articles/CBMizgVBVV95cUxPSTlhNWNmNkZlc3YwbE50VzI3TjFkUjEzMC12eGc4dUxDVXpOWThvWkFYNmttV1AwNG84cjdzZkhTTm50akpjZkZEeEdGOE1MRkFJazVWLVRQWWJ5NzlvVWNhMXFSQUhWc2s5U0t2TjFBVURNbDFwOEpESXlvQ0ZYbTJmUXl6Q2dYcnZ0RWY1LXVDa19zeW0tb0JTMEV2RGI2THkyVllvcHR6OUoxQS1NT0pUVVdMN2hhQmhVdHVHLTNfSGxNazVXeFpPZWdhTUxJa3RCbllRVjFfMkRPc2UtamtaMWhBQ3hiSlp4Y1pvTTB5X09mdVYxdmtvbHE3S0Y1MFhlYTZyNk5mNnhyYzluQ2N2UHBNakNlb2pVSWNYSThFVjkyYVMyYXh3MFdlaktOSXlHeEFveFJMOU9jNlRlaU9aOXB0RU5wdnRUMjE0MERiOFZOODdHVHZPa2FULVBKSEtoaGE3QVJWdHp1dDlCWDJxUUVmTGpVN3hVSEdJbGxQWV9DTEptM2hUbzNnUm9uaDBvZFlqVTBHTXN3TVRBNDIxTk9Lb2lUZy11MUZHMGVMMUEwTGt1UkY5a3QyOURqWjY1S2RBVlhhR2kwMnc2WXVOREVvWmdvNHZ3T3NCSnBScWIxSjlQSUdUTzc1ZjdSUHc1LTBTYldfV2w4bDFjT0F0M1lDaUY5OWFPd1NFY2pKejNaZXlMczBpRzRRS2hzNDI2MkNoT01BdUFUdlVMYkNUZkw4dThFTnUyX3ZLeE1qdUk1SW82S3N5MWpYTVF1YkIxX0lRM1dISFBXRlh2V0V4bHNqZk9RTGtDSEk1dFF6Q09Ncl9MeGtLdjZMcm9PRWVGOUtIdkZSUC1nYkhRWmtqbDFWWFlaRWZWaGx5T3IySzdIS09FZVFJVHFsRFN2U2JMRFplUnFXV0ZqRHlNbjU5dnNqeE1Od0duRGp30gFmQVVfeXFMT1FJeTZvR28xZjBoSmZvZmk2SERuZVJPVUkwYXE3NFVoTllNbUtWNXFhMlI1ZUVLZXZRZkNMNEdhTFNZSy1XRG9JQjZJNEE3VUpLV3RqNjluSC0tcURSTWF5aGU1WUNB?oc=5",
-        "Date": "Wed, 14 Oct 2026 03:32:56 GMT",
-        "Source": "동아일보",
-        "ParsedDate": "2026-10-14 12:32:56"
-      },
-      {
-        "Title": "[조상권의 경제이야기] K-배터리 3사, ESS 사업 성장과 보상금 효과로 3분기 실적 대폭 개선 전망 - 한국공공정책신문",
-        "Link": "https://news.google.com/rss/articles/CBMiQ0FVX3lxTFBjVWdSdlRVcE5zOFl3TmlhZ0ZzcXdyU3plU282aDA3N2FjLU84OXpUUUJDSmtGSVhNSlhfa19ybGw2cVU?oc=5",
-        "Date": "Wed, 14 Oct 2026 13:06:18 GMT",
-        "Source": "한국공공정책신문",
-        "ParsedDate": "2026-10-14 22:06:18"
-      },
-      {
-        "Title": "IBK기업은행, 9년 만에 베트남 '빗장' 열었다...현지법인 공식 출범 - 아세안데일리 뉴스",
-        "Link": "https://news.google.com/rss/articles/CBMickFVX3lxTE80aVdJRVJPZEVhRFFwcWlUangyMHctV291TlllUGM2bTZLUG0zcl9ZYnVBQVRCZ0tSUUoxZlFTRVo5SWFkRUNuNzh6SlpRRUVSaC1zRF9aUi1aeG1DRl9LMVFfVjBoaHpwS1pVUHI5LWxVZw?oc=5",
-        "Date": "Wed, 14 Oct 2026 13:44:39 GMT",
-        "Source": "아세안데일리 뉴스",
-        "ParsedDate": "2026-10-14 22:44:39"
-      },
-      {
-        "Title": "“반도체 호황, 하청노동자도 나눠야”… 산재·고용·처우 차별 질타 - 현장언론 민플러스",
-        "Link": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBZMXJIcE9KM0xEbjRLcUFORTVsRzJOVHhDZWlkeThnQy1KX3dvM0wxb2k0eFZVdzFNMjl6TWlFclRmMGU5VWo3VDhyNDRLR1laWU55S0pzbXEwUU10c3ExR2swSWg3ZkI2N2dCS3RR?oc=5",
-        "Date": "Wed, 14 Oct 2026 09:26:15 GMT",
-        "Source": "현장언론 민플러스",
-        "ParsedDate": "2026-10-14 18:26:15"
-      },
-      {
-        "Title": "BGF에코머티리얼즈, 주주 돈으로 산 KNW 327억 손실 안고 지주사에 매각…주주 이익 침해 논란 - 녹색경제신문",
-        "Link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE5tZjFZRjJaTEdHbDdBNUlLb3BrdmlTMzRjUDBEZVhZYVdLNUUwOFhhZzNiNldjc2dGMGQzaHE4NE12MkRTV2tDeEpjLUtCeVRIYnd5X3piMVpIMEtpMUdOYWJvMkRZa3V5?oc=5",
-        "Date": "Wed, 14 Oct 2026 08:06:55 GMT",
-        "Source": "녹색경제신문",
-        "ParsedDate": "2026-10-14 17:06:55"
-      },
-      {
-        "Title": "[마감분석] 후성, 뚜렷한 공시 부재 속 소폭 반등해 1만4100원 마감 : 기업주식정보 - 재경일보",
-        "Link": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE92d0lueWx1a0FWT2ZHem1QRGZ3Q0hSUFEzSnZGUS1NVkNhSGoxSHB6bnhuRkNBZ09VaTl6X1JtbXZqUFVPcHVXTDFxMA?oc=5",
-        "Date": "Wed, 14 Oct 2026 07:24:00 GMT",
-        "Source": "재경일보",
-        "ParsedDate": "2026-10-14 16:24:00"
-      },
-      {
-        "Title": "Plasma-Treated Cellulose Fibers Make Cement Composites Tougher, Study Finds - Bioengineer.org",
-        "Link": "https://news.google.com/rss/articles/CBMioAFBVV95cUxOWWFUQ3VKNEFIQ1ZnVnVjNnVFeUljQVU0U0FFVUhYLUo1WHNXaUcwcnJZQXMwUnJfRWtDZExrbk5RTGFkanZWeFdoZDB5cWVQbEZreWRzT2lmSWVfdkJ6dFYtTnpES1pkVlp6c1NDQlphNTA1VXlPU2c5ZFM4NjlObnhEa2VFcm9zWW1TNklBNzZFNG91YTYxWGRMeHZCckM2?oc=5",
-        "Date": "Wed, 14 Oct 2026 16:03:52 GMT",
-        "Source": "Bioengineer.org",
-        "ParsedDate": "2026-10-15 01:03:52"
-      },
-      {
-        "Title": "Popular erectile dysfunction pill may deliver additional boost to aging men - New York Post",
-        "Link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxPTlpXTHJaVGhocDJ0cjNTUHBLeXJiUkxOYUdxV3RmcUZnVEdjX1VGQUg4dHYtS1E3U1JaWVgwejc2T2V4dWxnYUpmNm9fb05tb2hVX0JUVFVvUW0tYmd0cU1ocmpab1JYdFZUYlJNY0Q1Qjh0eTl6eUtyc05iUEJmdk5WQnJ5S0hhMC1sNmo1ZS02VW91RkNjcXJWWFBCVGVFSHV2UG96NDZlXzVhTDN2RmRSTQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 08:43:00 GMT",
-        "Source": "New York Post",
-        "ParsedDate": "2026-10-14 17:43:00"
-      },
-      {
-        "Title": "The Chinese 'Breaking Bad': a retired chemistry professor and his empire of \"zombie vapes\" - El Mundo America",
-        "Link": "https://news.google.com/rss/articles/CBMif0FVX3lxTFBpemNJemtidmY5V0RtdzNpR3ZfcTJFN2ljaWJzbUo2Z2VuQXY3TEJ1WEgzbkNlc3AxX2xkc2hxUkxmVm5YV0FMcWxMN2w4UFZDM1lZQWp6eENmQkx1Qzdmb0cwMmZHb3dqWmdRRW1xRU9ZTjV6ZThkYktWeGRSVFU?oc=5",
-        "Date": "Wed, 14 Oct 2026 09:26:51 GMT",
-        "Source": "El Mundo America",
-        "ParsedDate": "2026-10-14 18:26:51"
-      },
-      {
-        "Title": "The 10 most shocking Oscars snubs of the 1990s - Far Out Magazine",
-        "Link": "https://news.google.com/rss/articles/CBMieEFVX3lxTE5JbEpOckZOMUpvR0wtdW5YYnJJS2lzWVZPUmxnTGdvWjhhcmdjMjRNUFdrR0h5YjdLVFc0YUZlZTBlbV8zVnp6TGRfa2dsR0I0eFkzTVVtRjdyeDlSREo1WlB6Y1RxQmFqeUZsVWREd05QOE1OdC1lcw?oc=5",
-        "Date": "Wed, 14 Oct 2026 13:30:00 GMT",
-        "Source": "Far Out Magazine",
-        "ParsedDate": "2026-10-14 22:30:00"
-      },
-      {
-        "Title": "Glencore makes Australian debut, eyes potential ASX 200 inclusion - TradingView",
-        "Link": "https://news.google.com/rss/articles/CBMixgFBVV95cUxOVndzdFU1eHV6Wi1wMDNvd3AxVlB2T21vaURralg5YkdpV1p3VHhoT3REcTRSYmFzYjJvUHVycmhKTmlDMUtvRjBOUDBtSmFXMEdlU2FVUnVVVTJSdHVPdVlZMVkxdTBDa2pQREVFSFJxVkxoQ2l1RUhUR1NYampvWnhxN1Y3WWpRR0tybFdiTDA4djEyY092Y29halY1LURvbzVlcGlESC1mU1NjRUpEaHh6cDJtZnF6eks0SHlkdnppV2poLXc?oc=5",
-        "Date": "Wed, 14 Oct 2026 06:23:00 GMT",
-        "Source": "TradingView",
-        "ParsedDate": "2026-10-14 15:23:00"
-      },
-      {
-        "Title": "NAN Silox GreenMet Names Vijay Pasupathy CEO, Eyes Major Recycling Plant - Rediff",
-        "Link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxQTktGb2oyOTRQTG9lYmVPdHJCWFgtR1lPbWtSall5b0FxVFBBMHpCbXFaaDZPTG9HRS1aaXY0VGdDRW5zSk80NW9pWXR1cFQ0bHF5QWUwLWNCVXVYbjFDSTA1UUhMcFlKbnNhRmlrTUxFQXpUMEVzNkJyQ1ZZVFAyaHhnYlRNd2o1NjZkMEk0VHJ1eXhWM3c5TG5iSVZVNE1iNVVWSVFyekV4Nm12Uk55blNuelBHck5LUTQtcE9oc0l0a1JSTHFEVNIByAFBVV95cUxQTktGb2oyOTRQTG9lYmVPdHJCWFgtR1lPbWtSall5b0FxVFBBMHpCbXFaaDZPTG9HRS1aaXY0VGdDRW5zSk80NW9pWXR1cFQ0bHF5QWUwLWNCVXVYbjFDSTA1UUhMcFlKbnNhRmlrTUxFQXpUMEVzNkJyQ1ZZVFAyaHhnYlRNd2o1NjZkMEk0VHJ1eXhWM3c5TG5iSVZVNE1iNVVWSVFyekV4Nm12Uk55blNuelBHck5LUTQtcE9oc0l0a1JSTHFEVA?oc=5",
-        "Date": "Wed, 14 Oct 2026 10:04:29 GMT",
-        "Source": "Rediff",
-        "ParsedDate": "2026-10-14 19:04:29"
-      },
-      {
-        "Title": "N.A.N. Silox GreenMet names Vijay Pasupathy CEO, breaks ground on Rs. 1,400 crore AP battery plant - Indian Chemical News",
-        "Link": "https://news.google.com/rss/articles/CBMi2AFBVV95cUxPZ2hXVUZUbmEwX25aX3YtZW4wOWc4TmN5bXU1YVJHQWNxTEFUTC1KMkN2cVJWTU5FUHFfOG16NXRQeGVNQUN6VllpVnVTY204TE5RT3lFS0l6N3h6YXFnQWZrcFlkeXlvREdyMkFLb3QwZmcxVlhxZWtsVVBvNk0teGRabjY1X2NmSF9sbzhObTNYemtCRFZyTThRS0FBOTNtcFJ1Y3RBSHBYT2xpZWRHNjQ4TGxkTEFhemd1THozOU1vMDFxbzZfX2RtR1RFYXVJaWZnaXZ1bUbSAd8BQVVfeXFMTkFOdmVSLW1NYzBqMGxfYmJ1VHdualVzaDdKcjd0Y0xSNWJNNnh1Nzk4SEtMYzZ4S1h6N2Q3MU40aDVVTFA0c0tvbWpURHRJeUFQNTdnWkhqcFpvZkU1SFBXSnZfTnlCU1JycHB6WXlmNFVzN0RkRGdQN09qVmIwT01QREJkTUgxUjRqNGJtQnRCb1lLalEyY3ZyZEZXY1VCYTl6S2RRLV90dXFBR2JVUXRwaEFjM2xtaGlMMXQySEdNc183cGUwZTFaal9PNVZvVXc2VlJhR3ZXZk1wZEhiQQ?oc=5",
-        "Date": "Wed, 14 Oct 2026 11:44:57 GMT",
-        "Source": "Indian Chemical News",
-        "ParsedDate": "2026-10-14 20:44:57"
-      },
-      {
-        "Title": "Movie Review: Rom-com or sib-com? Sisterhood rules in a 21st-century take on ‘Sense and Sensibility’ - ABC News - Breaking News, Latest News and Videos",
-        "Link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxQNHZzV0k4NU9NbTJWRE1kWktaUUtDdVl1aWlsY1JBUkNNb1NTaVZ4cHM3SjM5WF9qdmJmOEhxZWlCNWQxLWRGQ0hSZi1XWEg3dU1JblpINUprdlVmTXNDVGR0VVh5aF9FYXUtWmRKcDB4cmdRdEszd0szcE9LNm91NXR2dXo5dUlUWmt5LUx0MU53R0VTSlBiWkhvVS1rNzFzcmtvTmROMNIBrAFBVV95cUxQcXZMUDgzX1VmdFRjeGNSMmVZbzlER0plalZibGNoN09CMTh6cko3TVhTWU56Qm4tc1hvb3lzVUZNMVFxMndyZDVFMjJXNHZxb0RUaEN3Wnk0TGpLTExXLUMydGEtajVoZ01vUTJFZWpRNkstYTV2TnVtamhDNER5V1hmcHhEQ1VBYXo1a1dEb2VkVExLOWxVM3Nkd3A5WW5MNDNNYnczWmliWUxy?oc=5",
-        "Date": "Wed, 14 Oct 2026 18:19:50 GMT",
-        "Source": "ABC News - Breaking News, Latest News and Videos",
-        "ParsedDate": "2026-10-15 03:19:50"
-      }
-    ],
-    "auto_generated": true,
-    "generated_at": "2026-10-14 23:32 UTC"
   }
 ]
