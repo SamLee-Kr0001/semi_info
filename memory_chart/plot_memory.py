@@ -3,10 +3,12 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # Font: Noto Sans KR (provided by the Noto Sans CJK KR family on Linux: apt install fonts-noto-cjk)
-plt.rcParams["font.family"] = ["Noto Sans KR", "Noto Sans CJK KR", "sans-serif"]
+from matplotlib import font_manager
+_names = {f.name for f in font_manager.fontManager.ttflist}
+FONT = next((n for n in ["Noto Sans KR", "Noto Sans CJK KR"] if n in _names), "sans-serif")
+plt.rcParams["font.family"] = FONT
 plt.rcParams["mathtext.fontset"] = "custom"
 plt.rcParams["mathtext.rm"] = FONT
-plt.rcParams["mathtext.rm"] = "Noto Sans CJK KR"
 plt.rcParams["axes.unicode_minus"] = False
 
 # (name, capacity GB, bandwidth GB/s, unit/basis, color, estimated?)
