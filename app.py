@@ -149,7 +149,7 @@ div.stButton > button p, button[data-testid="stPopoverButton"] p { color: inheri
 }
 .stTextInput input:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-soft) !important; }
 [data-testid="stToggle"] label p, .stCheckbox label p { color: var(--muted) !important; font-size: 13px !important; }
-[data-testid="stAlert"] { background: var(--surface) !important; border: 1px solid var(--line) !important; border-radius: var(--r-md) !important; }
+[data-testid="stAlert"], [data-testid="stAlertContainer"] { background: var(--surface) !important; border: 1px solid var(--line) !important; border-radius: var(--r-md) !important; color: var(--ink2) !important; }
 [data-testid="stAlert"] p { color: var(--ink2) !important; }
 [data-testid="stStatusWidget"], [data-testid="stExpander"] { background: var(--surface) !important; border-color: var(--line) !important; }
 
@@ -788,7 +788,7 @@ if view_entry:
         "<section class='si-hero'>"
         "<div>"
         f"<div class='si-kicker'><span class='si-dot{kicker_state}'></span>{kicker_text}</div>"
-        f"<h1 class='si-h1'>{when}의 반도체 소재 브리핑. <span class='si-q'>기사 {len(articles)}건을 읽고 정리했습니다.</span></h1>"
+        f"<h1 class='si-h1'>{when}의 반도체 소재 브리핑</h1>"
         f"<p class='si-lead'>{_with_citations(lead_html, articles)}</p>"
         "</div>"
         "<aside class='si-panel' aria-label='이번 브리핑 수치'>"
