@@ -1,0 +1,661 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1470" viewBox="0 0 1600 1470">
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f2430"/></marker></defs>
+<rect x="0" y="0" width="1600" height="1470" fill="#ffffff" stroke="none" stroke-width="1" rx="0" />
+<text x="800.0" y="48" font-size="30" fill="#1f2430" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Wafer-to-Wafer vs Chip-to-Wafer 하이브리드 본딩</text>
+<text x="800.0" y="80" font-size="17" fill="#5b6472" text-anchor="middle" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Cu–Cu + SiO₂–SiO₂ 직접 접합(범프 없음) · 단면 공정 흐름</text>
+<rect x="40" y="105" width="740" height="64" fill="#4a6fd6" stroke="none" stroke-width="1" rx="10" />
+<text x="410.0" y="136" font-size="22" fill="#fff" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Wafer-to-Wafer (W2W)</text>
+<text x="410.0" y="159" font-size="15" fill="#fff" text-anchor="middle" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">웨이퍼 전체를 웨이퍼에 한 번에 접합</text>
+<rect x="820" y="105" width="740" height="64" fill="#7b4fc9" stroke="none" stroke-width="1" rx="10" />
+<text x="1190.0" y="136" font-size="22" fill="#fff" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Chip-to-Wafer (C2W)</text>
+<text x="1190.0" y="159" font-size="15" fill="#fff" text-anchor="middle" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품 칩(KGD)을 골라 웨이퍼 위에 하나씩 접합</text>
+<rect x="40" y="190" width="740" height="211" fill="#f7f8fb" stroke="#e2e5ec" stroke-width="1" rx="8" />
+<circle cx="62" cy="214" r="13" fill="#1f2430"/>
+<text x="62" y="219" font-size="14" fill="#fff" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">1</text>
+<text x="84" y="220" font-size="17" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">상·하부 웨이퍼 준비 (본딩층: 산화막 + Cu 패드)</text>
+<rect x="110" y="242" width="600" height="40" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="110" y="282" width="600" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="110" y="292" width="600" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="114" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="128" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="142" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="156" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="170" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="184" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="198" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="212" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="226" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="240" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="254" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="268" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="282" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="296" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="310" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="324" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="338" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="352" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="366" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="380" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="394" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="408" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="422" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="436" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="450" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="464" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="478" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="492" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="506" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="520" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="534" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="548" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="562" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="576" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="590" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="604" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="618" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="632" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="646" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="660" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="674" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="688" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="702" y="293" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<text x="720" y="270" font-size="14" fill="#4a6fd6" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Wafer A</text>
+<text x="720" y="287" font-size="12" fill="#5b6472" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">(메모리/센서)</text>
+<line x1="410.0" y1="314" x2="410.0" y2="330" stroke="#1f2430" stroke-width="2"  marker-end="url(#arr)"/>
+<text x="422.0" y="327" font-size="12" fill="#5b6472" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Face-to-Face</text>
+<rect x="110" y="352" width="600" height="40" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="110" y="342" width="600" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="110" y="336" width="600" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="114" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="128" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="142" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="156" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="170" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="184" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="198" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="212" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="226" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="240" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="254" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="268" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="282" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="296" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="310" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="324" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="338" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="352" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="366" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="380" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="394" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="408" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="422" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="436" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="450" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="464" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="478" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="492" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="506" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="520" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="534" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="548" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="562" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="576" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="590" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="604" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="618" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="632" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="646" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="660" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="674" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="688" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="702" y="337" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<text x="720" y="365" font-size="14" fill="#e8893a" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Wafer B</text>
+<text x="720" y="382" font-size="12" fill="#5b6472" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">(로직)</text>
+<rect x="40" y="415" width="740" height="211" fill="#f7f8fb" stroke="#e2e5ec" stroke-width="1" rx="8" />
+<circle cx="62" cy="439" r="13" fill="#1f2430"/>
+<text x="62" y="444" font-size="14" fill="#fff" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">2</text>
+<text x="84" y="445" font-size="17" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">웨이퍼 단위 정렬 → 상온 접합 → 어닐링 (Cu 확산 접합)</text>
+<rect x="110" y="467" width="600" height="40" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="110" y="507" width="600" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="110" y="517" width="600" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="114" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="128" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="142" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="156" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="170" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="184" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="198" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="212" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="226" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="240" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="254" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="268" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="282" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="296" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="310" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="324" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="338" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="352" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="366" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="380" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="394" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="408" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="422" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="436" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="450" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="464" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="478" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="492" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="506" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="520" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="534" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="548" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="562" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="576" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="590" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="604" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="618" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="632" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="646" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="660" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="674" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="688" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="702" y="518" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="110" y="539" width="600" height="40" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="110" y="529" width="600" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="110" y="523" width="600" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="114" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="128" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="142" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="156" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="170" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="184" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="198" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="212" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="226" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="240" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="254" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="268" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="282" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="296" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="310" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="324" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="338" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="352" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="366" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="380" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="394" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="408" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="422" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="436" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="450" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="464" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="478" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="492" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="506" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="520" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="534" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="548" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="562" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="576" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="590" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="604" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="618" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="632" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="646" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="660" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="674" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="688" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="702" y="524" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="104" y="514" width="612" height="18" fill="none" stroke="#d62728" stroke-width="2" rx="3" stroke-dasharray="5 3"/>
+<text x="410.0" y="611" font-size="14" fill="#5b6472" text-anchor="middle" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">접합 계면: 웨이퍼 전면이 한 번에 결합 (정렬 오차 ≈ 0.1–0.2 µm)</text>
+<rect x="40" y="640" width="740" height="211" fill="#f7f8fb" stroke="#e2e5ec" stroke-width="1" rx="8" />
+<circle cx="62" cy="664" r="13" fill="#1f2430"/>
+<text x="62" y="669" font-size="14" fill="#fff" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">3</text>
+<text x="84" y="670" font-size="17" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">상부 웨이퍼 백그라인딩 → TSV 노출 · 재배선</text>
+<rect x="110" y="710" width="600" height="14" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="110" y="724" width="600" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="110" y="734" width="600" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="114" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="128" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="142" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="156" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="170" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="184" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="198" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="212" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="226" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="240" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="254" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="268" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="282" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="296" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="310" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="324" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="338" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="352" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="366" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="380" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="394" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="408" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="422" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="436" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="450" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="464" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="478" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="492" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="506" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="520" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="534" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="548" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="562" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="576" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="590" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="604" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="618" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="632" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="646" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="660" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="674" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="688" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="702" y="735" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="110" y="756" width="600" height="40" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="110" y="746" width="600" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="123.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="153.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="183.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="213.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="243.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="273.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="303.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="333.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="363.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="393.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="423.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="453.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="483.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="513.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="543.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="573.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="603.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="633.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="663.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="693.0" y="710" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="110" y="704" width="600" height="6" fill="#8a94a6" stroke="none" stroke-width="1" rx="0" />
+<text x="720" y="722" font-size="13" fill="#5b6472" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">← 박막화</text>
+<text x="410.0" y="830" font-size="14" fill="#5b6472" text-anchor="middle" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">상부 Si 두께 수 µm 까지 연삭 (TSV로 신호 인출)</text>
+<rect x="40" y="865" width="740" height="211" fill="#f7f8fb" stroke="#e2e5ec" stroke-width="1" rx="8" />
+<circle cx="62" cy="889" r="13" fill="#1f2430"/>
+<text x="62" y="894" font-size="14" fill="#fff" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">4</text>
+<text x="84" y="895" font-size="17" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">다이싱 → 적층 다이</text>
+<rect x="118" y="935" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="118" y="945" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="118" y="951" width="64" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="118" y="961" width="64" height="30" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="150.0" y="1015" font-size="13" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품</text>
+<rect x="192" y="935" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="192" y="945" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="192" y="951" width="64" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="192" y="961" width="64" height="30" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="224.0" y="1015" font-size="13" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품</text>
+<rect x="266" y="935" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="266" y="945" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="266" y="951" width="64" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="266" y="961" width="64" height="30" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="298.0" y="931" font-size="14" fill="#d62728" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">✕</text>
+<text x="298.0" y="1015" font-size="13" fill="#d62728" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">폐기</text>
+<rect x="340" y="935" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="340" y="945" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="340" y="951" width="64" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="340" y="961" width="64" height="30" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="372.0" y="1015" font-size="13" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품</text>
+<rect x="414" y="935" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="414" y="945" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="414" y="951" width="64" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="414" y="961" width="64" height="30" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="446.0" y="981" font-size="14" fill="#d62728" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">✕</text>
+<text x="446.0" y="1015" font-size="13" fill="#d62728" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">폐기</text>
+<rect x="488" y="935" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="488" y="945" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="488" y="951" width="64" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="488" y="961" width="64" height="30" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="520.0" y="1015" font-size="13" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품</text>
+<rect x="562" y="935" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="562" y="945" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="562" y="951" width="64" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="562" y="961" width="64" height="30" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="594.0" y="1015" font-size="13" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품</text>
+<rect x="636" y="935" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="636" y="945" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="636" y="951" width="64" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="636" y="961" width="64" height="30" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="668.0" y="1015" font-size="13" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품</text>
+<text x="410.0" y="1055" font-size="14" fill="#d62728" text-anchor="middle" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">한쪽 불량이어도 짝 다이와 함께 폐기 → 수율 = Y(A) × Y(B)</text>
+<rect x="820" y="190" width="740" height="211" fill="#f7f8fb" stroke="#e2e5ec" stroke-width="1" rx="8" />
+<circle cx="842" cy="214" r="13" fill="#1f2430"/>
+<text x="842" y="219" font-size="14" fill="#fff" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">1</text>
+<text x="864" y="220" font-size="17" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">상부 웨이퍼 테스트(KGD 선별) → 다이싱</text>
+<rect x="890" y="266" width="280" height="36" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="890" y="256" width="280" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="890" y="250" width="280" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="894" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="908" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="922" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="936" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="950" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="964" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="978" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="992" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1006" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1020" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1034" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1048" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1062" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1076" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1090" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1104" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1118" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1132" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1146" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1160" y="251" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<line x1="946.0" y1="246" x2="946.0" y2="306" stroke="#5b6472" stroke-width="1" stroke-dasharray="4 3" />
+<line x1="1002.0" y1="246" x2="1002.0" y2="306" stroke="#5b6472" stroke-width="1" stroke-dasharray="4 3" />
+<line x1="1058.0" y1="246" x2="1058.0" y2="306" stroke="#5b6472" stroke-width="1" stroke-dasharray="4 3" />
+<line x1="1114.0" y1="246" x2="1114.0" y2="306" stroke="#5b6472" stroke-width="1" stroke-dasharray="4 3" />
+<text x="918" y="326" font-size="16" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">✓</text>
+<text x="974" y="326" font-size="16" fill="#d62728" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">✕</text>
+<text x="1030" y="326" font-size="16" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">✓</text>
+<text x="1086" y="326" font-size="16" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">✓</text>
+<text x="1142" y="326" font-size="16" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">✓</text>
+<line x1="1190" y1="276" x2="1240" y2="276" stroke="#1f2430" stroke-width="2"  marker-end="url(#arr)"/>
+<text x="1215" y="266" font-size="12" fill="#5b6472" text-anchor="middle" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">다이싱</text>
+<rect x="1255" y="272" width="40" height="26" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1255" y="262" width="40" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1255" y="256" width="40" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1259" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1273" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1287" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<text x="1275" y="326" font-size="16" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">✓</text>
+<rect x="1303" y="272" width="40" height="26" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1303" y="262" width="40" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1303" y="256" width="40" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1307" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1321" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1335" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<text x="1323" y="326" font-size="16" fill="#d62728" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">✕</text>
+<rect x="1351" y="272" width="40" height="26" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1351" y="262" width="40" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1351" y="256" width="40" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1355" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1369" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1383" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<text x="1371" y="326" font-size="16" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">✓</text>
+<rect x="1399" y="272" width="40" height="26" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1399" y="262" width="40" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1399" y="256" width="40" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1403" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1417" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1431" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<text x="1419" y="326" font-size="16" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">✓</text>
+<rect x="1447" y="272" width="40" height="26" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1447" y="262" width="40" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1447" y="256" width="40" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1451" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1465" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1479" y="257" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<text x="1467" y="326" font-size="16" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">✓</text>
+<text x="1190.0" y="380" font-size="14" fill="#2ca02c" text-anchor="middle" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품 칩만 사용 (Known Good Die)</text>
+<rect x="820" y="415" width="740" height="211" fill="#f7f8fb" stroke="#e2e5ec" stroke-width="1" rx="8" />
+<circle cx="842" cy="439" r="13" fill="#1f2430"/>
+<text x="842" y="444" font-size="14" fill="#fff" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">2</text>
+<text x="864" y="445" font-size="17" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">KGD 픽앤플레이스 (뒤집어서 칩 단위 정렬·접합)</text>
+<rect x="890" y="555" width="600" height="40" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="890" y="545" width="600" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="890" y="539" width="600" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="894" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="908" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="922" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="936" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="950" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="964" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="978" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="992" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1006" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1020" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1034" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1048" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1062" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1076" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1090" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1104" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1118" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1132" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1146" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1160" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1174" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1188" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1202" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1216" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1230" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1244" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1258" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1272" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1286" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1300" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1314" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1328" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1342" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1356" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1370" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1384" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1398" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1412" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1426" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1440" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1454" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1468" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1482" y="540" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<line x1="990.0" y1="535" x2="990.0" y2="599" stroke="#5b6472" stroke-width="1" stroke-dasharray="4 3" />
+<line x1="1090.0" y1="535" x2="1090.0" y2="599" stroke="#5b6472" stroke-width="1" stroke-dasharray="4 3" />
+<line x1="1190.0" y1="535" x2="1190.0" y2="599" stroke="#5b6472" stroke-width="1" stroke-dasharray="4 3" />
+<line x1="1290.0" y1="535" x2="1290.0" y2="599" stroke="#5b6472" stroke-width="1" stroke-dasharray="4 3" />
+<line x1="1390.0" y1="535" x2="1390.0" y2="599" stroke="#5b6472" stroke-width="1" stroke-dasharray="4 3" />
+<rect x="908.0" y="503" width="64" height="20" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="908.0" y="523" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="908.0" y="533" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="912.0" y="534" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="926.0" y="534" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="940.0" y="534" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="954.0" y="534" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1008.0" y="503" width="64" height="20" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1008.0" y="523" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1008.0" y="533" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1012.0" y="534" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1026.0" y="534" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1040.0" y="534" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1054.0" y="534" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1108.0" y="503" width="64" height="20" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1108.0" y="523" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1108.0" y="533" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1112.0" y="534" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1126.0" y="534" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1140.0" y="534" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1154.0" y="534" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1200.0" y="455" width="80" height="16" fill="#5b6472" stroke="none" stroke-width="1" rx="3" />
+<text x="1240.0" y="467" font-size="11" fill="#fff" text-anchor="middle" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Bond head</text>
+<rect x="1208.0" y="471" width="64" height="20" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1208.0" y="491" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1208.0" y="501" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1212.0" y="502" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1226.0" y="502" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1240.0" y="502" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1254.0" y="502" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<line x1="1240.0" y1="511" x2="1240.0" y2="531" stroke="#1f2430" stroke-width="2"  marker-end="url(#arr)"/>
+<text x="1190.0" y="613" font-size="14" fill="#5b6472" text-anchor="middle" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">칩마다 개별 정렬 (정렬 오차 ≈ 0.5–1 µm) · 하부 다이보다 작은 칩도 가능</text>
+<rect x="820" y="640" width="740" height="211" fill="#f7f8fb" stroke="#e2e5ec" stroke-width="1" rx="8" />
+<circle cx="842" cy="664" r="13" fill="#1f2430"/>
+<text x="842" y="669" font-size="14" fill="#fff" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">3</text>
+<text x="864" y="670" font-size="17" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">어닐링 → 갭필(산화막/몰드) → 상부 칩 박막화</text>
+<rect x="890" y="766" width="600" height="40" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="890" y="756" width="600" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="890" y="710" width="600" height="40" fill="#d9cdf0" stroke="none" stroke-width="1" rx="0" />
+<rect x="908.0" y="720" width="64" height="14" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="908.0" y="734" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="908.0" y="744" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="912.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="924.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="936.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="948.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="960.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="914.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="930.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="946.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="962.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1008.0" y="720" width="64" height="14" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1008.0" y="734" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1008.0" y="744" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1012.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1024.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1036.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1048.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1060.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1014.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1030.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1046.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1062.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1108.0" y="720" width="64" height="14" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1108.0" y="734" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1108.0" y="744" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1112.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1124.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1136.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1148.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1160.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1114.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1130.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1146.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1162.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1208.0" y="720" width="64" height="14" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1208.0" y="734" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1208.0" y="744" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1212.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1224.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1236.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1248.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1260.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1214.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1230.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1246.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1262.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1308.0" y="720" width="64" height="14" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1308.0" y="734" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1308.0" y="744" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1312.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1324.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1336.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1348.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1360.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1314.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1330.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1346.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1362.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1408.0" y="720" width="64" height="14" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<rect x="1408.0" y="734" width="64" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1408.0" y="744" width="64" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1412.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1424.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1436.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1448.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1460.0" y="745" width="6" height="4" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1414.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1430.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1446.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1462.0" y="720" width="4" height="24" fill="#b86b2a" stroke="none" stroke-width="1" rx="0" />
+<text x="1498" y="732" font-size="13" fill="#7b4fc9" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">갭필</text>
+<text x="1190.0" y="830" font-size="14" fill="#5b6472" text-anchor="middle" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">칩 사이 빈 공간을 채워 평탄화 후 연삭</text>
+<rect x="820" y="865" width="740" height="211" fill="#f7f8fb" stroke="#e2e5ec" stroke-width="1" rx="8" />
+<circle cx="842" cy="889" r="13" fill="#1f2430"/>
+<text x="842" y="894" font-size="14" fill="#fff" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">4</text>
+<text x="864" y="895" font-size="17" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">다이싱 → 적층 다이</text>
+<rect x="894" y="935" width="88" height="20" fill="#d9cdf0" stroke="none" stroke-width="1" rx="0" />
+<rect x="908" y="937" width="60" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="894" y="955" width="88" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="894" y="961" width="88" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="894" y="971" width="88" height="26" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="938.0" y="1021" font-size="13" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품</text>
+<rect x="996" y="935" width="88" height="20" fill="#d9cdf0" stroke="none" stroke-width="1" rx="0" />
+<rect x="1010" y="937" width="60" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="996" y="955" width="88" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="996" y="961" width="88" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="996" y="971" width="88" height="26" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="1040.0" y="1021" font-size="13" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품</text>
+<rect x="1098" y="935" width="88" height="20" fill="#d9cdf0" stroke="none" stroke-width="1" rx="0" />
+<rect x="1112" y="937" width="60" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1098" y="955" width="88" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1098" y="961" width="88" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1098" y="971" width="88" height="26" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="1142.0" y="1021" font-size="13" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품</text>
+<rect x="1200" y="935" width="88" height="20" fill="#d9cdf0" stroke="none" stroke-width="1" rx="0" />
+<rect x="1214" y="937" width="60" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1200" y="955" width="88" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1200" y="961" width="88" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1200" y="971" width="88" height="26" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="1244.0" y="1021" font-size="13" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품</text>
+<rect x="1302" y="935" width="88" height="20" fill="#d9cdf0" stroke="none" stroke-width="1" rx="0" />
+<rect x="1316" y="937" width="60" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1302" y="955" width="88" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1302" y="961" width="88" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1302" y="971" width="88" height="26" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="1346.0" y="1021" font-size="13" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품</text>
+<rect x="1404" y="935" width="88" height="20" fill="#d9cdf0" stroke="none" stroke-width="1" rx="0" />
+<rect x="1418" y="937" width="60" height="10" fill="#4a6fd6" stroke="none" stroke-width="1" rx="0" />
+<rect x="1404" y="955" width="88" height="6" fill="#eef1f7" stroke="none" stroke-width="1" rx="0" />
+<rect x="1404" y="961" width="88" height="10" fill="#e8893a" stroke="none" stroke-width="1" rx="0" />
+<rect x="1404" y="971" width="88" height="26" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.8" rx="0" />
+<text x="1448.0" y="1021" font-size="13" fill="#2ca02c" text-anchor="middle" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품</text>
+<text x="1190.0" y="1055" font-size="14" fill="#2ca02c" text-anchor="middle" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">양품 칩만 적층 → 수율 ≈ Y(B) · 상·하부 크기·공정 달라도 됨</text>
+<rect x="60" y="1096" width="22" height="14" fill="#c9ced6" stroke="#9aa2ad" stroke-width="0.6" rx="0" />
+<text x="90" y="1108" font-size="14" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Si 기판</text>
+<rect x="195" y="1096" width="22" height="14" fill="#4a6fd6" stroke="#9aa2ad" stroke-width="0.6" rx="0" />
+<text x="225" y="1108" font-size="14" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">상부 소자층 (메모리/센서)</text>
+<rect x="460" y="1096" width="22" height="14" fill="#e8893a" stroke="#9aa2ad" stroke-width="0.6" rx="0" />
+<text x="490" y="1108" font-size="14" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">하부 소자층 (로직)</text>
+<rect x="673" y="1096" width="22" height="14" fill="#eef1f7" stroke="#9aa2ad" stroke-width="0.6" rx="0" />
+<text x="703" y="1108" font-size="14" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">본딩 산화막 (SiO₂/SiCN)</text>
+<rect x="977" y="1096" width="22" height="14" fill="#b86b2a" stroke="#9aa2ad" stroke-width="0.6" rx="0" />
+<text x="1007" y="1108" font-size="14" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Cu 패드 / TSV</text>
+<rect x="1190" y="1096" width="22" height="14" fill="#d9cdf0" stroke="#9aa2ad" stroke-width="0.6" rx="0" />
+<text x="1220" y="1108" font-size="14" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">갭필</text>
+<rect x="40" y="1136" width="1520" height="38" fill="#1f2430" stroke="#e2e5ec" stroke-width="1" rx="0" />
+<text x="54" y="1161" font-size="15" fill="#fff" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">항목</text>
+<text x="300" y="1161" font-size="15" fill="#fff" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Wafer-to-Wafer</text>
+<text x="930" y="1161" font-size="15" fill="#fff" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Chip-to-Wafer</text>
+<rect x="40" y="1174" width="1520" height="38" fill="#f7f8fb" stroke="#e2e5ec" stroke-width="1" rx="0" />
+<text x="54" y="1199" font-size="15" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">접합 단위</text>
+<text x="300" y="1199" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">웨이퍼 ↔ 웨이퍼 (1회)</text>
+<text x="930" y="1199" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">칩 ↔ 웨이퍼 (칩 수만큼 반복)</text>
+<rect x="40" y="1212" width="1520" height="38" fill="#ffffff" stroke="#e2e5ec" stroke-width="1" rx="0" />
+<text x="54" y="1237" font-size="15" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">정렬 정밀도 / 피치</text>
+<text x="300" y="1237" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">≈0.1–0.2 µm / ~1 µm 이하 가능</text>
+<text x="930" y="1237" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">≈0.5–1 µm / 수 µm (~3–9 µm)</text>
+<rect x="40" y="1250" width="1520" height="38" fill="#f7f8fb" stroke="#e2e5ec" stroke-width="1" rx="0" />
+<text x="54" y="1275" font-size="15" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">처리량</text>
+<text x="300" y="1275" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">높음</text>
+<text x="930" y="1275" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">낮음 (집단 접합 D2W로 보완)</text>
+<rect x="40" y="1288" width="1520" height="38" fill="#ffffff" stroke="#e2e5ec" stroke-width="1" rx="0" />
+<text x="54" y="1313" font-size="15" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">수율</text>
+<text x="300" y="1313" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">Y(A)×Y(B) — KGD 선별 불가</text>
+<text x="930" y="1313" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">KGD만 적층 → 높음</text>
+<rect x="40" y="1326" width="1520" height="38" fill="#f7f8fb" stroke="#e2e5ec" stroke-width="1" rx="0" />
+<text x="54" y="1351" font-size="15" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">다이 크기·공정</text>
+<text x="300" y="1351" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">상·하부 동일 다이 크기·웨이퍼 크기</text>
+<text x="930" y="1351" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">크기·노드·웨이퍼 달라도 됨 (이종 집적)</text>
+<rect x="40" y="1364" width="1520" height="38" fill="#ffffff" stroke="#e2e5ec" stroke-width="1" rx="0" />
+<text x="54" y="1389" font-size="15" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">공정 난이도</text>
+<text x="300" y="1389" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">웨이퍼 휨(bow)·정렬 관리</text>
+<text x="930" y="1389" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">다이싱 파티클·칩 표면 청정도 관리</text>
+<rect x="40" y="1402" width="1520" height="38" fill="#f7f8fb" stroke="#e2e5ec" stroke-width="1" rx="0" />
+<text x="54" y="1427" font-size="15" fill="#1f2430" text-anchor="start" font-weight="bold" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">대표 적용</text>
+<text x="300" y="1427" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">적층형 CIS, 3D NAND(CMOS 본딩 어레이)</text>
+<text x="930" y="1427" font-size="15" fill="#1f2430" text-anchor="start" font-weight="normal" font-family="'Noto Sans KR','Noto Sans CJK KR',sans-serif">AMD 3D V-Cache(TSMC SoIC), 차세대 하이브리드 본딩 HBM</text>
+</svg>
