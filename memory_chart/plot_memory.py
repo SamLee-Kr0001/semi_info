@@ -2,6 +2,13 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+# Font: Noto Sans KR (provided by the Noto Sans CJK KR family on Linux: apt install fonts-noto-cjk)
+plt.rcParams["font.family"] = ["Noto Sans KR", "Noto Sans CJK KR", "sans-serif"]
+plt.rcParams["mathtext.fontset"] = "custom"
+plt.rcParams["mathtext.rm"] = FONT
+plt.rcParams["mathtext.rm"] = "Noto Sans CJK KR"
+plt.rcParams["axes.unicode_minus"] = False
+
 # (name, capacity GB, bandwidth GB/s, unit/basis, color, estimated?)
 # NOTE: point positions were placed manually per user's sketch (not raw spec values)
 # Values were originally per single device: HBM = 1 stack, GDDR = 1 chip, LPDDR = 1 package, DDR = 1 DIMM
@@ -29,7 +36,7 @@ for name, cap, bw, unit, color, est in data:
                    "DDR4": ((-10, 0), "right", "center")}.get(label, ((10, 0), "left", "center"))
     ax.annotate(label, (cap, bw), textcoords="offset points",
                 xytext=off, ha=ha, fontsize=32 if est else 16, color=color, va=va,
-                fontstyle="italic" if est else "normal")
+                fontweight="bold" if est else "normal")
 
 import numpy as np
 xs = np.array([1, 200])
